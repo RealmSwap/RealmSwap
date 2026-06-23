@@ -22,6 +22,7 @@ import {
   Info,
   Settings
 } from "lucide-react";
+import DefinitionParamFields from "./DefinitionParamFields";
 
 interface CreateServerViewProps {
   user: any;
@@ -46,7 +47,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
   const [enableUpnp, setEnableUpnp] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paramValues] = useState<Record<string, any>>({});
+  const [paramValues, setParamValues] = useState<Record<string, any>>({});
 
   useEffect(() => {
     fetch("/api/definitions")
@@ -57,6 +58,9 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
         if (list.length > 0) {
           setSelectedGame(list[0]);
           setRam(list[0].recommendedRamGB ?? 4);
+          const init: Record<string, any> = {};
+          (list[0].spec?.params ?? []).forEach((p: any) => { if (p.default !== undefined) init[p.key] = p.default; });
+          setParamValues(init);
         }
       })
       .catch((err) => {
@@ -67,6 +71,9 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
   const handleGameSelect = (game: any) => {
     setSelectedGame(game);
     setRam(game.recommendedRamGB ?? 4);
+    const init: Record<string, any> = {};
+    (game.spec?.params ?? []).forEach((p: any) => { if (p.default !== undefined) init[p.key] = p.default; });
+    setParamValues(init);
   };
 
   const handleLogout = async () => {
@@ -378,6 +385,13 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                 </span>
               </div>
             )}
+
+            {/* Game-specific params */}
+            <DefinitionParamFields
+              params={selectedGame?.spec?.params ?? []}
+              values={paramValues}
+              onChange={(k, v) => setParamValues((s) => ({ ...s, [k]: v }))}
+            />
 
             <div className="grid md:grid-cols-2 gap-8">
               {/* RAM Allocation Slider */}
