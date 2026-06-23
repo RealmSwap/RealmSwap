@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Server as ServerIcon, User, Mail, Lock, ShieldAlert } from "lucide-react";
 
 function RegisterForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -137,7 +136,6 @@ function RegisterForm() {
                 {loading ? "Creating Account..." : "Create Account & Register"}
               </button>
             </div>
-          </div>
 
         </form>
       </div>
