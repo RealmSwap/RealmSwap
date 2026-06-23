@@ -5,6 +5,11 @@ import https from "https";
 import { prisma } from "./db";
 import { mapPort, unmapPort, getPublicIP } from "./upnp";
 import { startMonitoring, stopMonitoring, clearStatsHistory } from "./processMonitor";
+import { parseSpec } from "./definitions/serialize";
+import { buildContext } from "./definitions/context";
+import { planInstall, planConfigFiles, planLaunch, planPorts } from "./definitions/plan";
+import { writeStrategyConfig } from "./definitions/strategies";
+import type { GameDefinitionSpec } from "./definitions/types";
 
 // Global process map to persist running processes across Next.js dev server hot-reloads
 const globalForRunner = globalThis as unknown as {
@@ -30,7 +35,7 @@ const crashCounters = globalForRunner.crashCounters;
 const CRASH_MAX_RETRIES = 3;
 const CRASH_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
-// SteamCMD info mapping for each game
+// SteamCMD info mapping for each game (kept for backwards compat; no longer used by the runner)
 export function getGameSteamInfo(game: string): { appId: string; installSubDir: string; checkFile: string } | null {
   switch (game.toUpperCase()) {
     case "VALHEIM": return { appId: "896660", installSubDir: "valheim-server", checkFile: "valheim_server.exe" };
@@ -44,7 +49,6 @@ export function getGameSteamInfo(game: string): { appId: string; installSubDir: 
   }
 }
 
-const MINECRAFT_JAR_URL = "https://piston-data.mojang.com/v1/objects/8dd1a358e2c3885906f21b6dbec6d7cae504c86a/server.jar"; // 1.20.4
 const STEAMCMD_ZIP_URL = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
 
 // Check if Java is installed (Required only for Minecraft)
@@ -62,7 +66,7 @@ export function checkJavaInstalled(): Promise<boolean> {
 
 // Ensure local directories exist
 function getLocalServerDir(serverId: string, sub?: string): string {
-  const dir = sub 
+  const dir = sub
     ? path.join(process.cwd(), "local-servers", serverId, sub)
     : path.join(process.cwd(), "local-servers", serverId);
   if (!fs.existsSync(dir)) {
@@ -111,7 +115,7 @@ export function setupSteamCMD(onLog: (msg: string) => void): Promise<string> {
 
       await downloadFile(STEAMCMD_ZIP_URL, zipPath);
       onLog("Extracting steamcmd.zip using Windows PowerShell...");
-      
+
       const extractCmd = `powershell -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${steamcmdDir}' -Force"`;
       exec(extractCmd, (err) => {
         try { fs.unlinkSync(zipPath); } catch (_) {}
@@ -162,7 +166,7 @@ export function ensureSteamCmdUpdated(steamcmdExe: string, onLog: (msg: string) 
     const runUpdateCheck = () => {
       attempts++;
       onLog(`SteamCMD self-update check (Attempt ${attempts}/${maxAttempts})...`);
-      
+
       const child = spawn(steamcmdExe, ["+quit"]);
 
       child.stdout.on("data", (data) => {
@@ -204,6 +208,7 @@ function installSteamCmdApp(
   appName: string,
   installDir: string,
   checkFile: string,
+  requiredGB: number,
   onLog: (msg: string) => void
 ): Promise<void> {
   return new Promise(async (resolve, reject) => {
@@ -217,15 +222,6 @@ function installSteamCmdApp(
       // Check free disk space before any SteamCMD action
       const freeSpace = await getFreeDiskSpaceGB(installDir);
       if (freeSpace !== -1) {
-        let requiredGB = 3.0; // default minimum
-        if (appId === "896660") requiredGB = 2.5; // Valheim
-        if (appId === "2278520") requiredGB = 4.0; // Enshrouded
-        if (appId === "380870") requiredGB = 3.0; // Zomboid
-        if (appId === "376030") requiredGB = 15.0; // ARK
-        if (appId === "282440") requiredGB = 1.0; // Terraria
-        if (appId === "2394010") requiredGB = 4.0; // Palworld
-        if (appId === "258550") requiredGB = 10.0; // Rust
-
         // SteamCMD itself requires at least 250MB (0.25GB) free space to download and bootstrap
         const minSteamCmdGB = 0.25;
         const totalRequiredGB = Math.max(requiredGB, minSteamCmdGB);
@@ -296,86 +292,6 @@ function installSteamCmdApp(
   });
 }
 
-// Writes Enshrouded configuration files
-function writeEnshroudedConfig(serverDir: string, serverName: string, password?: string) {
-  const configPath = path.join(serverDir, "enshrouded_server.json");
-
-  // Enshrouded uses a role-based userGroups password configuration.
-  // Passwords for each group MUST be unique because the server uses the password
-  // typed by the client to determine which group they belong to.
-  const defaultGroups = password ? [
-    {
-      name: "Admin",
-      password: `${password}_admin`, // Admin password: <password>_admin
-      canKickBan: true,
-      canAccessInventories: true,
-      canEditBase: true,
-      canExtendBase: true,
-      reservedSlots: 2
-    },
-    {
-      name: "Friend",
-      password: password, // Main password
-      canKickBan: false,
-      canAccessInventories: true,
-      canEditBase: true,
-      canExtendBase: true,
-      reservedSlots: 0
-    }
-  ] : [];
-
-  const config = {
-    name: serverName,
-    password: "", // Keep simple password empty for role-based userGroups system
-    saveDirectory: "./savegame",
-    logDirectory: "./logs",
-    ip: "0.0.0.0",
-    gamePort: 15636,
-    queryPort: 15637,
-    slotCount: 16,
-    userGroups: defaultGroups
-  };
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-}
-
-// Writes Project Zomboid configuration files
-function writeZomboidConfig(serverDir: string, password?: string) {
-  const serverConfigDir = path.join(serverDir, "zomboid-data", "Server");
-  if (!fs.existsSync(serverConfigDir)) {
-    fs.mkdirSync(serverConfigDir, { recursive: true });
-  }
-  const iniPath = path.join(serverConfigDir, "servertest.ini");
-  let iniContent = "";
-  if (fs.existsSync(iniPath)) {
-    iniContent = fs.readFileSync(iniPath, "utf-8");
-  }
-  
-  // Update/Insert Password setting
-  const passwordLine = `Password=${password || ""}`;
-  if (iniContent.includes("Password=")) {
-    iniContent = iniContent.replace(/^Password=.*$/m, passwordLine);
-  } else {
-    iniContent += `\n${passwordLine}\n`;
-  }
-  
-  fs.writeFileSync(iniPath, iniContent);
-}
-
-// Writes Minecraft configuration files (EULA & Properties)
-function writeMinecraftConfigs(serverDir: string, port: number, serverName: string) {
-  fs.writeFileSync(path.join(serverDir, "eula.txt"), "eula=true\n");
-
-  const properties = [
-    `server-port=${port}`,
-    "query.port=25565",
-    "online-mode=false", // set to false for local debugging ease
-    "max-players=10",
-    `motd=GameVault Local Runner Minecraft Server - ${serverName}`
-  ].join("\n");
-  
-  fs.writeFileSync(path.join(serverDir, "server.properties"), properties);
-}
-
 // Log writer helper
 function appendLog(serverDir: string, message: string) {
   const logFile = path.join(serverDir, "server.log");
@@ -383,7 +299,28 @@ function appendLog(serverDir: string, message: string) {
   fs.appendFileSync(logFile, `[GameVault Local Runner ${timestamp}] ${message}\n`);
 }
 
-// Main: Start a local game server (Minecraft or Valheim)
+// Run a custom install shell script
+function runShellScript(script: string, cwd: string, onLog: (m: string) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    onLog("[Custom Script] Executing install script...");
+    const child = spawn("cmd.exe", ["/c", script], { cwd });
+    child.stdout.on("data", (d) => onLog(`[Custom Script] ${d.toString().trim()}`));
+    child.stderr.on("data", (d) => onLog(`[Custom Script] ${d.toString().trim()}`));
+    child.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`Custom install script exited with code ${code}`))));
+  });
+}
+
+// Resolve a game definition from the database (by definitionId or built-in slug fallback)
+async function resolveDefinition(server: { definitionId: string | null; game: string }): Promise<{ spec: GameDefinitionSpec; installMethod: string; requiresJava: boolean }> {
+  let record = server.definitionId
+    ? await prisma.gameDefinition.findUnique({ where: { id: server.definitionId } })
+    : await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug: server.game.toUpperCase() } });
+  if (!record) throw new Error(`No game definition found for server (game=${server.game}).`);
+  const spec = parseSpec(record.spec);
+  return { spec, installMethod: record.installMethod, requiresJava: !!spec.requiresJava };
+}
+
+// Main: Start a local game server
 export async function startLocalServer(serverId: string, game: string, ramAllocation: number): Promise<any> {
   const baseDir = getLocalServerDir(serverId);
   const logFile = path.join(baseDir, "server.log");
@@ -423,38 +360,23 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
     logWriter(`[IP Resolver Warning] Could not resolve public WAN IP address: ${ipErr.message}`);
   }
 
+  // Resolve game definition (from DB by definitionId, or built-in by slug)
+  const { spec, installMethod, requiresJava } = await resolveDefinition(server);
+  const ctx = buildContext({
+    name: server.name,
+    password: server.password,
+    port: server.port,
+    ram: ramAllocation,
+    paramValuesJson: server.paramValues,
+    spec,
+  });
+
   // 2. Map router ports using UPnP if requested or enabled by default
   if (server.enableUpnp || server.runnerType === "LOCAL") {
     logWriter("[UPnP] Requesting router port forwarding rules...");
     try {
-      if (game.toUpperCase() === "MINECRAFT") {
-        await mapPort(25565, "TCP", `GameVault MC - ${server.name}`);
-        await mapPort(25565, "UDP", `GameVault MC - ${server.name}`);
-      } else if (game.toUpperCase() === "VALHEIM") {
-        await mapPort(2456, "UDP", `GameVault VH - ${server.name}`);
-        await mapPort(2457, "UDP", `GameVault VH - ${server.name}`);
-        await mapPort(2458, "UDP", `GameVault VH - ${server.name}`);
-      } else if (game.toUpperCase() === "ENSHROUDED") {
-        await mapPort(15636, "TCP", `GameVault EN - ${server.name}`);
-        await mapPort(15636, "UDP", `GameVault EN - ${server.name}`);
-        await mapPort(15637, "TCP", `GameVault EN - ${server.name}`);
-        await mapPort(15637, "UDP", `GameVault EN - ${server.name}`);
-      } else if (game.toUpperCase() === "ZOMBOID") {
-        await mapPort(16261, "UDP", `GameVault PZ - ${server.name}`);
-        await mapPort(16262, "UDP", `GameVault PZ - ${server.name}`);
-        await mapPort(8766, "UDP", `GameVault PZ - ${server.name}`);
-      } else if (game.toUpperCase() === "ARK") {
-        await mapPort(7777, "UDP", `GameVault ARK - ${server.name}`);
-        await mapPort(7778, "UDP", `GameVault ARK - ${server.name}`);
-        await mapPort(27015, "UDP", `GameVault ARK - ${server.name}`);
-      } else if (game.toUpperCase() === "TERRARIA") {
-        await mapPort(7777, "TCP", `GameVault TR - ${server.name}`);
-        await mapPort(7777, "UDP", `GameVault TR - ${server.name}`);
-      } else if (game.toUpperCase() === "PALWORLD") {
-        await mapPort(8211, "UDP", `GameVault PW - ${server.name}`);
-      } else if (game.toUpperCase() === "RUST") {
-        await mapPort(28015, "UDP", `GameVault RS - ${server.name}`);
-        await mapPort(28016, "TCP", `GameVault RS RCON - ${server.name}`);
+      for (const pm of planPorts(spec, ctx)) {
+        await mapPort(pm.port, pm.protocol, `GameVault - ${server.name}`);
       }
       logWriter("[UPnP] Success! Router port forward mapping completed successfully.");
     } catch (e: any) {
@@ -465,431 +387,144 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
     }
   }
 
-  if (game.toUpperCase() === "MINECRAFT") {
-    // Check Java
-    const isJavaOk = await checkJavaInstalled();
-    if (!isJavaOk) {
+  // 3. Install if needed
+  if (requiresJava) {
+    if (!(await checkJavaInstalled())) {
       throw new Error("Java Runtime Environment (JRE) was not found on your system. Please install Java (JDK/JRE 17+) to run Minecraft servers locally.");
     }
+  }
 
-    const jarPath = path.join(baseDir, "server.jar");
+  const installPlan = planInstall(spec, installMethod as any);
+  const installDir = installPlan.installSubDir ? getLocalServerDir(serverId, installPlan.installSubDir) : baseDir;
 
-    // Download jar if missing
-    if (!fs.existsSync(jarPath)) {
-      logWriter("Server jar not found. Initializing Mojang download stream...");
+  if (installPlan.method === "STEAMCMD") {
+    const exePath = path.join(installDir, installPlan.checkFile!);
+    if (!fs.existsSync(exePath)) {
       try {
-        await prisma.server.update({
-          where: { id: serverId },
-          data: { status: "STARTING" },
-        });
-        await downloadFile(MINECRAFT_JAR_URL, jarPath);
-        logWriter("Download completed. server.jar cached successfully.");
+        await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING" } });
+        await installSteamCmdApp(
+          serverId,
+          installPlan.appId!,
+          server.name,
+          installDir,
+          installPlan.checkFile!,
+          installPlan.requiredDiskGB ?? 3,
+          logWriter
+        );
+      } catch (err: any) {
+        logWriter(`Installation failed: ${err.message}`);
+        throw new Error(`Server install failed: ${err.message}`);
+      }
+    }
+  } else if (installPlan.method === "DOWNLOAD") {
+    const target = path.join(installDir, installPlan.fileName!);
+    if (!fs.existsSync(path.join(installDir, installPlan.checkFile!))) {
+      try {
+        await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING" } });
+        logWriter("Server binary not found. Downloading...");
+        await downloadFile(installPlan.url!, target);
+        logWriter("Download completed successfully.");
+        // Unzip if needed (e.g. zip archives)
+        if (installPlan.unzip) {
+          logWriter("Extracting archive using Windows PowerShell...");
+          await new Promise<void>((resolve, reject) => {
+            const extractCmd = `powershell -Command "Expand-Archive -Path '${target}' -DestinationPath '${installDir}' -Force"`;
+            exec(extractCmd, (err) => {
+              try { fs.unlinkSync(target); } catch (_) {}
+              if (err) reject(new Error(`Failed to extract archive: ${err.message}`));
+              else resolve();
+            });
+          });
+          logWriter("Extraction complete.");
+        }
       } catch (err: any) {
         logWriter(`Download failed: ${err.message}`);
         throw new Error(`Failed to download game server binaries: ${err.message}`);
       }
     }
-
-    writeMinecraftConfigs(baseDir, 25565, server.name);
-    logWriter(`Spawning Minecraft process: java -Xmx${ramAllocation}G -jar server.jar`);
-
-    const child = spawn("java", [
-      `-Xms512M`,
-      `-Xmx${ramAllocation}G`,
-      "-jar",
-      "server.jar",
-      "nogui"
-    ], {
-      cwd: baseDir,
-      stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env }
-    });
-
-    if (!child.pid) throw new Error("Failed to spawn Java child process.");
-    
-    localProcesses.set(serverId, child);
-
-    await prisma.server.update({
-      where: { id: serverId },
-      data: { 
-        status: "RUNNING", 
-        pid: child.pid, 
-        ipAddress: currentIp,
-        cpuUsage: 0, 
-        memoryUsage: 0 
-      },
-    });
-
-    startMonitoring(serverId, child.pid);
-
-    // Pipe outputs to file
-    const logStream = fs.createWriteStream(logFile, { flags: "a" });
-    child.stdout.pipe(logStream);
-    child.stderr.pipe(logStream);
-
-    child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
-
-  } else if (game.toUpperCase() === "VALHEIM") {
-    const valheimDir = getLocalServerDir(serverId, "valheim-server");
-    const exePath = path.join(valheimDir, "valheim_server.exe");
-
-    // Install Valheim if missing
-    if (!fs.existsSync(exePath)) {
-      try {
-        await prisma.server.update({
-          where: { id: serverId },
-          data: { status: "STARTING" },
-        });
-        await installSteamCmdApp(serverId, "896660", "Valheim Dedicated Server", valheimDir, "valheim_server.exe", logWriter);
-      } catch (err: any) {
-        logWriter(`Valheim Installation failed: ${err.message}`);
-        throw new Error(`Valheim install failed: ${err.message}`);
-      }
-    }
-
-    // Set custom password (Valheim requires minimum of 5 characters)
-    const password = (server.password && server.password.length >= 5) ? server.password : "viking123";
-    logWriter(`Launching Valheim server with password: "${password}"`);
-    
-    // Spawn Valheim server process with -crossplay to support Microsoft PlayFab NAT punchthrough & Join Codes
-    const child = spawn(exePath, [
-      "-nographics",
-      "-batchmode",
-      "-name", server.name,
-      "-port", "2456",
-      "-world", "Dedicated",
-      "-password", password,
-      "-public", "1",
-      "-crossplay"
-    ], {
-      cwd: valheimDir,
-      stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env }
-    });
-
-    if (!child.pid) throw new Error("Failed to spawn Valheim child process.");
-
-    localProcesses.set(serverId, child);
-
-    // Listen to stdout in real-time to extract PlayFab Crossplay Join Code
-    child.stdout.on("data", (chunk) => {
-      const logStr = chunk.toString();
-      const match = logStr.match(/registered with join code (\w+)/i);
-      if (match && match[1]) {
-        const joinCode = match[1];
-        logWriter(`[PlayFab] Success! Server registered with join code: ${joinCode}`);
-        prisma.server.update({
-          where: { id: serverId },
-          data: { ipAddress: `Join Code: ${joinCode}` }
-        }).catch(err => console.error("Error updating Valheim join code in DB:", err));
-      }
-    });
-
-    await prisma.server.update({
-      where: { id: serverId },
-      data: { 
-        status: "RUNNING", 
-        pid: child.pid, 
-        ipAddress: currentIp,
-        cpuUsage: 0, 
-        memoryUsage: 0 
-      },
-    });
-
-    startMonitoring(serverId, child.pid);
-
-    const logStream = fs.createWriteStream(logFile, { flags: "a" });
-    child.stdout.pipe(logStream);
-    child.stderr.pipe(logStream);
-
-    child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
-
-  } else if (game.toUpperCase() === "ENSHROUDED") {
-    const enshroudedDir = getLocalServerDir(serverId, "enshrouded-server");
-    const exePath = path.join(enshroudedDir, "enshrouded_server.exe");
-
-    // Install Enshrouded if missing
-    if (!fs.existsSync(exePath)) {
-      try {
-        await prisma.server.update({
-          where: { id: serverId },
-          data: { status: "STARTING" },
-        });
-        await installSteamCmdApp(serverId, "2278520", "Enshrouded Dedicated Server", enshroudedDir, "enshrouded_server.exe", logWriter);
-      } catch (err: any) {
-        logWriter(`Enshrouded Installation failed: ${err.message}`);
-        throw new Error(`Enshrouded install failed: ${err.message}`);
-      }
-    }
-
-    // Write JSON Config
-    writeEnshroudedConfig(enshroudedDir, server.name, server.password || undefined);
-
-    logWriter("Launching Enshrouded dedicated server...");
-    
-    // Spawn Enshrouded process
-    const child = spawn(exePath, [], {
-      cwd: enshroudedDir,
-      stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env }
-    });
-
-    if (!child.pid) throw new Error("Failed to spawn Enshrouded child process.");
-
-    localProcesses.set(serverId, child);
-
-    await prisma.server.update({
-      where: { id: serverId },
-      data: { 
-        status: "RUNNING", 
-        pid: child.pid, 
-        ipAddress: currentIp, 
-        cpuUsage: 0, 
-        memoryUsage: 0 
-      },
-    });
-
-    startMonitoring(serverId, child.pid);
-
-    const logStream = fs.createWriteStream(logFile, { flags: "a" });
-    child.stdout.pipe(logStream);
-    child.stderr.pipe(logStream);
-
-    child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
-
-  } else if (game.toUpperCase() === "ZOMBOID") {
-    const zomboidDir = getLocalServerDir(serverId, "zomboid-server");
-    const batchPath = path.join(zomboidDir, "StartServer64.bat");
-
-    // Install Zomboid if missing
-    if (!fs.existsSync(batchPath)) {
-      try {
-        await prisma.server.update({
-          where: { id: serverId },
-          data: { status: "STARTING" },
-        });
-        await installSteamCmdApp(serverId, "380870", "Project Zomboid Dedicated Server", zomboidDir, "StartServer64.bat", logWriter);
-      } catch (err: any) {
-        logWriter(`Zomboid Installation failed: ${err.message}`);
-        throw new Error(`Project Zomboid install failed: ${err.message}`);
-      }
-    }
-
-    // Write INI Config inside zomboid-data/Server/servertest.ini
-    writeZomboidConfig(zomboidDir, server.password || undefined);
-
-    logWriter("Launching Project Zomboid dedicated server...");
-    
-    // Spawn Zomboid process using Cmd.exe to execute the batch file
-    const child = spawn("cmd.exe", [
-      "/c", "StartServer64.bat",
-      "-cachedir=./zomboid-data",
-      "-servername", "servertest"
-    ], {
-      cwd: zomboidDir,
-      stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env }
-    });
-
-    if (!child.pid) throw new Error("Failed to spawn Project Zomboid child process.");
-
-    localProcesses.set(serverId, child);
-
-    await prisma.server.update({
-      where: { id: serverId },
-      data: { 
-        status: "RUNNING", 
-        pid: child.pid, 
-        ipAddress: currentIp, 
-        cpuUsage: 0, 
-        memoryUsage: 0 
-      },
-    });
-
-    startMonitoring(serverId, child.pid);
-
-    const logStream = fs.createWriteStream(logFile, { flags: "a" });
-    child.stdout.pipe(logStream);
-    child.stderr.pipe(logStream);
-
-    child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
-
-  } else if (game.toUpperCase() === "ARK") {
-    const arkDir = getLocalServerDir(serverId, "ark-server");
-    const exePath = path.join(arkDir, "ShooterGame", "Binaries", "Win64", "ShooterGameServer.exe");
-
-    // Install ARK if missing
-    if (!fs.existsSync(exePath)) {
-      try {
-        await prisma.server.update({
-          where: { id: serverId },
-          data: { status: "STARTING" },
-        });
-        await installSteamCmdApp(serverId, "376030", "ARK Dedicated Server", arkDir, "ShooterGame/Binaries/Win64/ShooterGameServer.exe", logWriter);
-      } catch (err: any) {
-        logWriter(`ARK Installation failed: ${err.message}`);
-        throw new Error(`ARK dedicated server install failed: ${err.message}`);
-      }
-    }
-
-    logWriter("Launching ARK: Survival Evolved dedicated server...");
-    
-    const arkParams = `TheIsland?SessionName=${server.name}${server.password ? `?ServerPassword=${server.password}` : ""}?Port=7777?QueryPort=27015?MaxPlayers=20`;
-    
-    // Spawn ARK Server process
-    const child = spawn(exePath, [
-      arkParams,
-      "-server",
-      "-nosound",
-      "-QueryPort=27015"
-    ], {
-      cwd: path.join(arkDir, "ShooterGame", "Binaries", "Win64"),
-      stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env }
-    });
-
-    if (!child.pid) throw new Error("Failed to spawn ARK child process.");
-
-    localProcesses.set(serverId, child);
-
-    await prisma.server.update({
-      where: { id: serverId },
-      data: { 
-        status: "RUNNING", 
-        pid: child.pid, 
-        ipAddress: currentIp, 
-        cpuUsage: 0, 
-        memoryUsage: 0 
-      },
-    });
-
-    startMonitoring(serverId, child.pid);
-
-    const logStream = fs.createWriteStream(logFile, { flags: "a" });
-    child.stdout.pipe(logStream);
-    child.stderr.pipe(logStream);
-
-    child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
-
-  } else if (game.toUpperCase() === "TERRARIA") {
-    const terrariaDir = getLocalServerDir(serverId, "terraria-server");
-    const exePath = path.join(terrariaDir, "TerrariaServer.exe");
-
-    if (!fs.existsSync(exePath)) {
-      try {
-        await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING" } });
-        await installSteamCmdApp(serverId, "282440", "Terraria Dedicated Server", terrariaDir, "TerrariaServer.exe", logWriter);
-      } catch (err: any) {
-        logWriter(`Terraria Installation failed: ${err.message}`);
-        throw new Error(`Terraria install failed: ${err.message}`);
-      }
-    }
-
-    const worldsDir = path.join(terrariaDir, "worlds");
-    if (!fs.existsSync(worldsDir)) fs.mkdirSync(worldsDir, { recursive: true });
-
-    const password = server.password || "";
-    const passwordArgs = password ? ["-pass", password] : [];
-    logWriter(`Launching Terraria dedicated server on port 7777...`);
-
-    const child = spawn(exePath, [
-      "-port", "7777", "-players", "8", ...passwordArgs,
-      "-autocreate", "1", "-worldname", server.name.replace(/[^a-zA-Z0-9]/g, "_"),
-      "-world", path.join(worldsDir, `${server.name.replace(/[^a-zA-Z0-9]/g, "_")}.wld`),
-    ], { cwd: terrariaDir, stdio: ["pipe", "pipe", "pipe"], env: { ...process.env } });
-
-    if (!child.pid) throw new Error("Failed to spawn Terraria child process.");
-    localProcesses.set(serverId, child);
-
-    await prisma.server.update({
-      where: { id: serverId },
-      data: { status: "RUNNING", pid: child.pid, ipAddress: currentIp, cpuUsage: 0, memoryUsage: 0 },
-    });
-    startMonitoring(serverId, child.pid);
-
-    const logStream = fs.createWriteStream(logFile, { flags: "a" });
-    child.stdout.pipe(logStream);
-    child.stderr.pipe(logStream);
-    child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
-
-  } else if (game.toUpperCase() === "PALWORLD") {
-    const palworldDir = getLocalServerDir(serverId, "palworld-server");
-    const exePath = path.join(palworldDir, "PalServer.exe");
-
-    if (!fs.existsSync(exePath)) {
-      try {
-        await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING" } });
-        await installSteamCmdApp(serverId, "2394010", "Palworld Dedicated Server", palworldDir, "PalServer.exe", logWriter);
-      } catch (err: any) {
-        logWriter(`Palworld Installation failed: ${err.message}`);
-        throw new Error(`Palworld install failed: ${err.message}`);
-      }
-    }
-
-    const password = server.password || "";
-    const portArg = "?port=8211";
-    const playersArg = "?players=16";
-    const passwordArg = password ? `?AdminPassword=${password}` : "";
-    logWriter(`Launching Palworld dedicated server on port 8211...`);
-
-    const child = spawn(exePath, [
-      `${portArg}${playersArg}${passwordArg}`, "-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS"
-    ], { cwd: palworldDir, stdio: ["pipe", "pipe", "pipe"], env: { ...process.env } });
-
-    if (!child.pid) throw new Error("Failed to spawn Palworld child process.");
-    localProcesses.set(serverId, child);
-
-    await prisma.server.update({
-      where: { id: serverId },
-      data: { status: "RUNNING", pid: child.pid, ipAddress: currentIp, cpuUsage: 0, memoryUsage: 0 },
-    });
-    startMonitoring(serverId, child.pid);
-
-    const logStream = fs.createWriteStream(logFile, { flags: "a" });
-    child.stdout.pipe(logStream);
-    child.stderr.pipe(logStream);
-    child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
-
-  } else if (game.toUpperCase() === "RUST") {
-    const rustDir = getLocalServerDir(serverId, "rust-server");
-    const exePath = path.join(rustDir, "RustDedicated.exe");
-
-    if (!fs.existsSync(exePath)) {
-      try {
-        await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING" } });
-        await installSteamCmdApp(serverId, "258550", "Rust Dedicated Server", rustDir, "RustDedicated.exe", logWriter);
-      } catch (err: any) {
-        logWriter(`Rust Installation failed: ${err.message}`);
-        throw new Error(`Rust install failed: ${err.message}`);
-      }
-    }
-
-    const rconPassword = server.password || "changeme123";
-    logWriter(`Launching Rust dedicated server on port 28015...`);
-
-    const child = spawn(exePath, [
-      "-batchmode", "+server.port", "28015", "+server.identity", "servertest",
-      "+server.seed", "12345", "+server.worldsize", "3000", "+server.maxplayers", "10",
-      "+server.hostname", server.name, "+rcon.port", "28016", "+rcon.password", rconPassword, "+rcon.web", "1"
-    ], { cwd: rustDir, stdio: ["pipe", "pipe", "pipe"], env: { ...process.env } });
-
-    if (!child.pid) throw new Error("Failed to spawn Rust child process.");
-    localProcesses.set(serverId, child);
-
-    await prisma.server.update({
-      where: { id: serverId },
-      data: { status: "RUNNING", pid: child.pid, ipAddress: currentIp, cpuUsage: 0, memoryUsage: 0 },
-    });
-    startMonitoring(serverId, child.pid);
-
-    const logStream = fs.createWriteStream(logFile, { flags: "a" });
-    child.stdout.pipe(logStream);
-    child.stderr.pipe(logStream);
-    child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
-
-  } else {
-    throw new Error(`Local runner is not supported yet for game: ${game}`);
+  } else if (installPlan.method === "CUSTOM_SCRIPT") {
+    await runShellScript(installPlan.installScript!, installDir, logWriter);
   }
+
+  // 4. Write config files
+  for (const cf of planConfigFiles(spec, ctx)) {
+    const full = path.join(installDir, cf.relPath);
+    fs.mkdirSync(path.dirname(full), { recursive: true });
+    if (cf.strategy === "template") {
+      fs.writeFileSync(full, cf.content ?? "");
+    } else {
+      writeStrategyConfig({
+        strategy: cf.strategy as "enshroudedJson" | "zomboidIniMerge",
+        installDir,
+        serverName: server.name,
+        password: server.password || undefined,
+      });
+    }
+  }
+
+  // 5. Launch the server process
+  const launch = planLaunch(spec, ctx);
+  const cwd = launch.cwdSubDir ? getLocalServerDir(serverId, launch.cwdSubDir) : baseDir;
+
+  let child;
+  if (launch.launchScript) {
+    child = spawn("cmd.exe", ["/c", launch.launchScript], {
+      cwd,
+      stdio: ["pipe", "pipe", "pipe"],
+      env: { ...process.env, ...(launch.env || {}) },
+    });
+  } else {
+    // Bare commands (java, cmd.exe) spawn by name; everything else is a relative path joined to cwd
+    const exe = launch.executable;
+    const isBareCommand = exe === "java" || exe === "cmd.exe";
+    const resolvedExe = isBareCommand ? exe : path.join(cwd, exe);
+    child = spawn(resolvedExe, launch.args, {
+      cwd,
+      stdio: ["pipe", "pipe", "pipe"],
+      env: { ...process.env, ...(launch.env || {}) },
+    });
+  }
+
+  if (!child.pid) throw new Error("Failed to spawn server child process.");
+  localProcesses.set(serverId, child);
+
+  // 6. stdout patterns (e.g. Valheim join code)
+  if (launch.stdoutPatterns?.length) {
+    child.stdout.on("data", (chunk) => {
+      const s = chunk.toString();
+      for (const pat of launch.stdoutPatterns!) {
+        const m = s.match(new RegExp(pat.regex, "i"));
+        if (m && m[1] && pat.updateField === "ipAddress") {
+          const value = pat.transform === "joinCode" ? `Join Code: ${m[1]}` : m[1];
+          logWriter(`[PlayFab] Success! Server registered with join code: ${m[1]}`);
+          prisma.server.update({
+            where: { id: serverId },
+            data: { ipAddress: value },
+          }).catch((err) => console.error("Error updating join code in DB:", err));
+        }
+      }
+    });
+  }
+
+  await prisma.server.update({
+    where: { id: serverId },
+    data: {
+      status: "RUNNING",
+      pid: child.pid,
+      ipAddress: currentIp,
+      cpuUsage: 0,
+      memoryUsage: 0,
+    },
+  });
+
+  startMonitoring(serverId, child.pid);
+
+  // Pipe outputs to file
+  const logStream = fs.createWriteStream(logFile, { flags: "a" });
+  child.stdout.pipe(logStream);
+  child.stderr.pipe(logStream);
+
+  child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
 }
 
 // Clean up database on process exit — with crash detection & auto-restart
@@ -959,7 +594,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
     // Normal (intentional or clean) exit
     await prisma.server.update({
       where: { id: serverId },
-      data: { 
+      data: {
         status: "STOPPED",
         pid: null,
         ipAddress: "127.0.0.1",
@@ -995,34 +630,17 @@ export async function stopLocalServer(serverId: string): Promise<void> {
   if (server && (server.enableUpnp || server.runnerType === "LOCAL")) {
     appendLog(serverDir, "[UPnP] Releasing router port mappings...");
     try {
-      if (server.game.toUpperCase() === "MINECRAFT") {
-        await unmapPort(25565, "TCP");
-        await unmapPort(25565, "UDP");
-      } else if (server.game.toUpperCase() === "VALHEIM") {
-        await unmapPort(2456, "UDP");
-        await unmapPort(2457, "UDP");
-        await unmapPort(2458, "UDP");
-      } else if (server.game.toUpperCase() === "ENSHROUDED") {
-        await unmapPort(15636, "TCP");
-        await unmapPort(15636, "UDP");
-        await unmapPort(15637, "TCP");
-        await unmapPort(15637, "UDP");
-      } else if (server.game.toUpperCase() === "ZOMBOID") {
-        await unmapPort(16261, "UDP");
-        await unmapPort(16262, "UDP");
-        await unmapPort(8766, "UDP");
-      } else if (server.game.toUpperCase() === "ARK") {
-        await unmapPort(7777, "UDP");
-        await unmapPort(7778, "UDP");
-        await unmapPort(27015, "UDP");
-      } else if (server.game.toUpperCase() === "TERRARIA") {
-        await unmapPort(7777, "TCP");
-        await unmapPort(7777, "UDP");
-      } else if (server.game.toUpperCase() === "PALWORLD") {
-        await unmapPort(8211, "UDP");
-      } else if (server.game.toUpperCase() === "RUST") {
-        await unmapPort(28015, "UDP");
-        await unmapPort(28016, "TCP");
+      const { spec } = await resolveDefinition(server);
+      const ctx = buildContext({
+        name: server.name,
+        password: server.password,
+        port: server.port,
+        ram: server.ramAllocation,
+        paramValuesJson: server.paramValues,
+        spec,
+      });
+      for (const pm of planPorts(spec, ctx)) {
+        await unmapPort(pm.port, pm.protocol);
       }
     } catch (e: any) {
       appendLog(serverDir, `[UPnP Error] Failed to release port forwarding: ${e.message}`);
@@ -1032,15 +650,15 @@ export async function stopLocalServer(serverId: string): Promise<void> {
   if (child) {
     appendLog(serverDir, "Termination request received. Terminating process tree...");
 
-    if (server && server.game.toUpperCase() === "MINECRAFT") {
-      // Minecraft graceful console stop
+    // Use the spec's stdinStopCommand for graceful shutdown (e.g. Minecraft sends "stop\n")
+    const { spec } = await resolveDefinition(server!).catch(() => ({ spec: null as any }));
+    if (child && spec?.launch?.stdinStopCommand) {
       try {
-        child.stdin.write("stop\n");
-      } catch (e) {
+        child.stdin.write(spec.launch.stdinStopCommand);
+      } catch {
         child.kill("SIGTERM");
       }
-    } else {
-      // Valheim process tree kill
+    } else if (child) {
       exec(`taskkill /F /T /PID ${child.pid}`, (err) => {
         if (err) child.kill("SIGKILL");
       });
@@ -1064,12 +682,12 @@ export async function stopLocalServer(serverId: string): Promise<void> {
   } else {
     await prisma.server.update({
       where: { id: serverId },
-      data: { 
-        status: "STOPPED", 
-        pid: null, 
-        ipAddress: "127.0.0.1", 
-        cpuUsage: 0, 
-        memoryUsage: 0 
+      data: {
+        status: "STOPPED",
+        pid: null,
+        ipAddress: "127.0.0.1",
+        cpuUsage: 0,
+        memoryUsage: 0
       }
     });
   }
@@ -1092,11 +710,12 @@ export async function updateGameServer(serverId: string): Promise<void> {
   const server = await prisma.server.findUnique({ where: { id: serverId } });
   if (!server) throw new Error("Server not found");
 
-  const steamInfo = getGameSteamInfo(server.game);
-  if (!steamInfo) throw new Error(`No SteamCMD info for game: ${server.game}`);
+  const { spec, installMethod } = await resolveDefinition(server);
+  if (installMethod !== "STEAMCMD") throw new Error(`Updates are only supported for SteamCMD games.`);
 
+  const installPlan = planInstall(spec, "STEAMCMD");
   const baseDir = path.join(process.cwd(), "local-servers", serverId);
-  const installDir = path.join(baseDir, steamInfo.installSubDir);
+  const installDir = path.join(baseDir, installPlan.installSubDir!);
   const logWriter = (msg: string) => appendLog(baseDir, msg);
 
   try {
@@ -1105,7 +724,7 @@ export async function updateGameServer(serverId: string): Promise<void> {
       data: { status: "UPDATING" },
     });
 
-    logWriter(`[Update] Starting SteamCMD update for ${server.game} (App ID: ${steamInfo.appId})...`);
+    logWriter(`[Update] Starting SteamCMD update for ${server.game} (App ID: ${installPlan.appId})...`);
 
     const steamcmdExe = await setupSteamCMD(logWriter);
     await ensureSteamCmdUpdated(steamcmdExe, logWriter);
@@ -1119,7 +738,7 @@ export async function updateGameServer(serverId: string): Promise<void> {
         "+force_install_dir", cleanInstallDir,
         "+login", "anonymous",
         "+app_info_update", "1",
-        "+app_update", steamInfo.appId,
+        "+app_update", installPlan.appId!,
         "validate",
         "+quit"
       ]);
