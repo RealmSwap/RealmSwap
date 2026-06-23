@@ -1,7 +1,15 @@
+import path from "path";
 import type { GameDefinitionSpec, InstallMethod, ParamSpec, ArgSpec } from "./types";
 import { collectVariables } from "./template";
 
 export const KNOWN_FIXED_VARS = ["name", "nameSanitized", "password", "passwordEmpty", "port", "ram"] as const;
+
+/** Returns true if a path segment string is unsafe (absolute or contains ".." segments). */
+function isUnsafePath(p: string): boolean {
+  if (path.isAbsolute(p)) return true;
+  const segments = p.split(/[\\/]/);
+  return segments.some((seg) => seg === "..");
+}
 
 function argStrings(args: ArgSpec[]): string[] {
   return args.flatMap((a) => (typeof a === "string" ? [a] : [...a.value, `{${a.includeWhen}}`]));
@@ -24,10 +32,37 @@ export function validateSpec(spec: GameDefinitionSpec, installMethod: InstallMet
     if (!inst.installScript) errors.push(`Custom script install requires "installScript".`);
   }
 
+  // Finding 1: block launchScript/installScript when installMethod !== CUSTOM_SCRIPT
+  if (installMethod !== "CUSTOM_SCRIPT") {
+    if (spec.launch.launchScript) {
+      errors.push(`launchScript/installScript are only allowed for CUSTOM_SCRIPT definitions.`);
+    }
+    if (inst.installScript) {
+      errors.push(`launchScript/installScript are only allowed for CUSTOM_SCRIPT definitions.`);
+    }
+  }
+
   if (installMethod === "CUSTOM_SCRIPT" && spec.launch.launchScript) {
     // ok — script launch
   } else if (!spec.launch.executable) {
     errors.push(`Launch requires an "executable".`);
+  }
+
+  // Finding 2: block path traversal in config paths and install sub-paths
+  for (const cf of spec.configFiles) {
+    if (isUnsafePath(cf.path)) {
+      errors.push(`Path "${cf.path}" must be a relative path without ".." segments.`);
+    }
+  }
+  if (spec.editableConfigPath && isUnsafePath(spec.editableConfigPath)) {
+    errors.push(`Path "${spec.editableConfigPath}" must be a relative path without ".." segments.`);
+  }
+  // Defense-in-depth: check install sub-paths that are written to disk
+  for (const field of ["installSubDir", "fileName", "checkFile"] as const) {
+    const val = inst[field];
+    if (typeof val === "string" && val && isUnsafePath(val)) {
+      errors.push(`Path "${val}" must be a relative path without ".." segments.`);
+    }
   }
 
   const templated: string[] = [

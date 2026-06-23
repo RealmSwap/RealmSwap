@@ -29,6 +29,60 @@ describe("validateSpec", () => {
   });
 });
 
+describe("security: script execution gate", () => {
+  it("rejects launchScript on a STEAMCMD spec (non-admin bypass)", () => {
+    const spec: any = {
+      ...okSpec,
+      launch: { executable: "x.exe", args: [], launchScript: "calc.exe" },
+    };
+    const errs = validateSpec(spec, "STEAMCMD").join(" ");
+    expect(errs).toMatch(/launchScript/i);
+    expect(errs).toMatch(/CUSTOM_SCRIPT/i);
+  });
+
+  it("allows launchScript on a CUSTOM_SCRIPT spec", () => {
+    const spec: any = {
+      install: { installScript: "install.bat" },
+      launch: { executable: "", args: [], launchScript: "start.bat" },
+      defaultPort: 25565,
+      params: [],
+      configFiles: [],
+      ports: [],
+    };
+    const errs = validateSpec(spec, "CUSTOM_SCRIPT");
+    // No launchScript error; only errors (if any) are unrelated to launchScript/CUSTOM_SCRIPT
+    expect(errs.some((e) => /launchScript.*CUSTOM_SCRIPT|CUSTOM_SCRIPT.*launchScript/i.test(e))).toBe(false);
+  });
+});
+
+describe("security: path traversal gate", () => {
+  it("rejects configFiles path with .. traversal", () => {
+    const spec: any = {
+      ...okSpec,
+      configFiles: [{ path: "../../evil.bat", strategy: "template", template: "x" }],
+    };
+    const errs = validateSpec(spec, "STEAMCMD").join(" ");
+    expect(errs).toMatch(/\.\.\.\.\/evil\.bat|\.\.\/\.\.\/evil\.bat|\.\./);
+  });
+
+  it("rejects editableConfigPath with .. traversal", () => {
+    const spec: any = {
+      ...okSpec,
+      editableConfigPath: "../../../etc/x",
+    };
+    const errs = validateSpec(spec, "STEAMCMD").join(" ");
+    expect(errs).toMatch(/\.\./);
+  });
+
+  it("allows a legal nested config path without .. segments", () => {
+    const spec: any = {
+      ...okSpec,
+      configFiles: [{ path: "zomboid-data/Server/servertest.ini", strategy: "template", template: "x" }],
+    };
+    expect(validateSpec(spec, "STEAMCMD")).toEqual([]);
+  });
+});
+
 describe("validateParamValues", () => {
   const params: any = [
     { key: "slots", label: "Slots", type: "number", min: 1, max: 32, required: true },

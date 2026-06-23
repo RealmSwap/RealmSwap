@@ -474,7 +474,7 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
   }
 
   let child;
-  if (launch.launchScript) {
+  if (launch.launchScript && installMethod === "CUSTOM_SCRIPT") {
     child = spawn("cmd.exe", ["/c", launch.launchScript], {
       cwd,
       stdio: ["pipe", "pipe", "pipe"],
