@@ -48,6 +48,11 @@ export type Backup = $Result.DefaultSelection<Prisma.$BackupPayload>
  * 
  */
 export type Collaborator = $Result.DefaultSelection<Prisma.$CollaboratorPayload>
+/**
+ * Model GameDefinition
+ * 
+ */
+export type GameDefinition = $Result.DefaultSelection<Prisma.$GameDefinitionPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -241,6 +246,16 @@ export class PrismaClient<
     * ```
     */
   get collaborator(): Prisma.CollaboratorDelegate<ExtArgs>;
+
+  /**
+   * `prisma.gameDefinition`: Exposes CRUD operations for the **GameDefinition** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more GameDefinitions
+    * const gameDefinitions = await prisma.gameDefinition.findMany()
+    * ```
+    */
+  get gameDefinition(): Prisma.GameDefinitionDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -688,7 +703,8 @@ export namespace Prisma {
     Archive: 'Archive',
     ActivityLog: 'ActivityLog',
     Backup: 'Backup',
-    Collaborator: 'Collaborator'
+    Collaborator: 'Collaborator',
+    GameDefinition: 'GameDefinition'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -704,7 +720,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "subscription" | "server" | "archive" | "activityLog" | "backup" | "collaborator"
+      modelProps: "user" | "subscription" | "server" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1198,6 +1214,76 @@ export namespace Prisma {
           }
         }
       }
+      GameDefinition: {
+        payload: Prisma.$GameDefinitionPayload<ExtArgs>
+        fields: Prisma.GameDefinitionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.GameDefinitionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameDefinitionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.GameDefinitionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameDefinitionPayload>
+          }
+          findFirst: {
+            args: Prisma.GameDefinitionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameDefinitionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.GameDefinitionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameDefinitionPayload>
+          }
+          findMany: {
+            args: Prisma.GameDefinitionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameDefinitionPayload>[]
+          }
+          create: {
+            args: Prisma.GameDefinitionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameDefinitionPayload>
+          }
+          createMany: {
+            args: Prisma.GameDefinitionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.GameDefinitionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameDefinitionPayload>[]
+          }
+          delete: {
+            args: Prisma.GameDefinitionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameDefinitionPayload>
+          }
+          update: {
+            args: Prisma.GameDefinitionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameDefinitionPayload>
+          }
+          deleteMany: {
+            args: Prisma.GameDefinitionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.GameDefinitionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.GameDefinitionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GameDefinitionPayload>
+          }
+          aggregate: {
+            args: Prisma.GameDefinitionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateGameDefinition>
+          }
+          groupBy: {
+            args: Prisma.GameDefinitionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<GameDefinitionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.GameDefinitionCountArgs<ExtArgs>
+            result: $Utils.Optional<GameDefinitionCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1359,6 +1445,7 @@ export namespace Prisma {
    */
 
   export type UserCountOutputType = {
+    definitions: number
     servers: number
     archives: number
     logs: number
@@ -1366,6 +1453,7 @@ export namespace Prisma {
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    definitions?: boolean | UserCountOutputTypeCountDefinitionsArgs
     servers?: boolean | UserCountOutputTypeCountServersArgs
     archives?: boolean | UserCountOutputTypeCountArchivesArgs
     logs?: boolean | UserCountOutputTypeCountLogsArgs
@@ -1381,6 +1469,13 @@ export namespace Prisma {
      * Select specific fields to fetch from the UserCountOutputType
      */
     select?: UserCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountDefinitionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: GameDefinitionWhereInput
   }
 
   /**
@@ -1453,6 +1548,37 @@ export namespace Prisma {
 
 
   /**
+   * Count Type GameDefinitionCountOutputType
+   */
+
+  export type GameDefinitionCountOutputType = {
+    servers: number
+  }
+
+  export type GameDefinitionCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    servers?: boolean | GameDefinitionCountOutputTypeCountServersArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * GameDefinitionCountOutputType without action
+   */
+  export type GameDefinitionCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinitionCountOutputType
+     */
+    select?: GameDefinitionCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * GameDefinitionCountOutputType without action
+   */
+  export type GameDefinitionCountOutputTypeCountServersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ServerWhereInput
+  }
+
+
+  /**
    * Models
    */
 
@@ -1473,6 +1599,7 @@ export namespace Prisma {
     name: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    role: string | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -1482,6 +1609,7 @@ export namespace Prisma {
     name: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    role: string | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -1491,6 +1619,7 @@ export namespace Prisma {
     name: number
     createdAt: number
     updatedAt: number
+    role: number
     _all: number
   }
 
@@ -1502,6 +1631,7 @@ export namespace Prisma {
     name?: true
     createdAt?: true
     updatedAt?: true
+    role?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -1511,6 +1641,7 @@ export namespace Prisma {
     name?: true
     createdAt?: true
     updatedAt?: true
+    role?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -1520,6 +1651,7 @@ export namespace Prisma {
     name?: true
     createdAt?: true
     updatedAt?: true
+    role?: true
     _all?: true
   }
 
@@ -1602,6 +1734,7 @@ export namespace Prisma {
     name: string
     createdAt: Date
     updatedAt: Date
+    role: string
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -1628,6 +1761,8 @@ export namespace Prisma {
     name?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    role?: boolean
+    definitions?: boolean | User$definitionsArgs<ExtArgs>
     subscription?: boolean | User$subscriptionArgs<ExtArgs>
     servers?: boolean | User$serversArgs<ExtArgs>
     archives?: boolean | User$archivesArgs<ExtArgs>
@@ -1643,6 +1778,7 @@ export namespace Prisma {
     name?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    role?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -1652,9 +1788,11 @@ export namespace Prisma {
     name?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    role?: boolean
   }
 
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    definitions?: boolean | User$definitionsArgs<ExtArgs>
     subscription?: boolean | User$subscriptionArgs<ExtArgs>
     servers?: boolean | User$serversArgs<ExtArgs>
     archives?: boolean | User$archivesArgs<ExtArgs>
@@ -1667,6 +1805,7 @@ export namespace Prisma {
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
     objects: {
+      definitions: Prisma.$GameDefinitionPayload<ExtArgs>[]
       subscription: Prisma.$SubscriptionPayload<ExtArgs> | null
       servers: Prisma.$ServerPayload<ExtArgs>[]
       archives: Prisma.$ArchivePayload<ExtArgs>[]
@@ -1680,6 +1819,7 @@ export namespace Prisma {
       name: string
       createdAt: Date
       updatedAt: Date
+      role: string
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -2044,6 +2184,7 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    definitions<T extends User$definitionsArgs<ExtArgs> = {}>(args?: Subset<T, User$definitionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "findMany"> | Null>
     subscription<T extends User$subscriptionArgs<ExtArgs> = {}>(args?: Subset<T, User$subscriptionArgs<ExtArgs>>): Prisma__SubscriptionClient<$Result.GetResult<Prisma.$SubscriptionPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     servers<T extends User$serversArgs<ExtArgs> = {}>(args?: Subset<T, User$serversArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findMany"> | Null>
     archives<T extends User$archivesArgs<ExtArgs> = {}>(args?: Subset<T, User$archivesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ArchivePayload<ExtArgs>, T, "findMany"> | Null>
@@ -2084,6 +2225,7 @@ export namespace Prisma {
     readonly name: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
+    readonly role: FieldRef<"User", 'String'>
   }
     
 
@@ -2393,6 +2535,26 @@ export namespace Prisma {
      * Filter which Users to delete
      */
     where?: UserWhereInput
+  }
+
+  /**
+   * User.definitions
+   */
+  export type User$definitionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    where?: GameDefinitionWhereInput
+    orderBy?: GameDefinitionOrderByWithRelationInput | GameDefinitionOrderByWithRelationInput[]
+    cursor?: GameDefinitionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: GameDefinitionScalarFieldEnum | GameDefinitionScalarFieldEnum[]
   }
 
   /**
@@ -3539,6 +3701,8 @@ export namespace Prisma {
     enableUpnp: boolean | null
     ipAddress: string | null
     port: number | null
+    definitionId: string | null
+    paramValues: string | null
     cpuUsage: number | null
     memoryUsage: number | null
     createdAt: Date | null
@@ -3562,6 +3726,8 @@ export namespace Prisma {
     enableUpnp: boolean | null
     ipAddress: string | null
     port: number | null
+    definitionId: string | null
+    paramValues: string | null
     cpuUsage: number | null
     memoryUsage: number | null
     createdAt: Date | null
@@ -3585,6 +3751,8 @@ export namespace Prisma {
     enableUpnp: number
     ipAddress: number
     port: number
+    definitionId: number
+    paramValues: number
     cpuUsage: number
     memoryUsage: number
     createdAt: number
@@ -3628,6 +3796,8 @@ export namespace Prisma {
     enableUpnp?: true
     ipAddress?: true
     port?: true
+    definitionId?: true
+    paramValues?: true
     cpuUsage?: true
     memoryUsage?: true
     createdAt?: true
@@ -3651,6 +3821,8 @@ export namespace Prisma {
     enableUpnp?: true
     ipAddress?: true
     port?: true
+    definitionId?: true
+    paramValues?: true
     cpuUsage?: true
     memoryUsage?: true
     createdAt?: true
@@ -3674,6 +3846,8 @@ export namespace Prisma {
     enableUpnp?: true
     ipAddress?: true
     port?: true
+    definitionId?: true
+    paramValues?: true
     cpuUsage?: true
     memoryUsage?: true
     createdAt?: true
@@ -3784,6 +3958,8 @@ export namespace Prisma {
     enableUpnp: boolean
     ipAddress: string
     port: number
+    definitionId: string | null
+    paramValues: string | null
     cpuUsage: number
     memoryUsage: number
     createdAt: Date
@@ -3826,6 +4002,8 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress?: boolean
     port?: boolean
+    definitionId?: boolean
+    paramValues?: boolean
     cpuUsage?: boolean
     memoryUsage?: boolean
     createdAt?: boolean
@@ -3833,6 +4011,7 @@ export namespace Prisma {
     snapshotInterval?: boolean
     lastSnapshotAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
+    definition?: boolean | Server$definitionArgs<ExtArgs>
     backups?: boolean | Server$backupsArgs<ExtArgs>
     collaborators?: boolean | Server$collaboratorsArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
@@ -3853,6 +4032,8 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress?: boolean
     port?: boolean
+    definitionId?: boolean
+    paramValues?: boolean
     cpuUsage?: boolean
     memoryUsage?: boolean
     createdAt?: boolean
@@ -3860,6 +4041,7 @@ export namespace Prisma {
     snapshotInterval?: boolean
     lastSnapshotAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
+    definition?: boolean | Server$definitionArgs<ExtArgs>
   }, ExtArgs["result"]["server"]>
 
   export type ServerSelectScalar = {
@@ -3877,6 +4059,8 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress?: boolean
     port?: boolean
+    definitionId?: boolean
+    paramValues?: boolean
     cpuUsage?: boolean
     memoryUsage?: boolean
     createdAt?: boolean
@@ -3887,18 +4071,21 @@ export namespace Prisma {
 
   export type ServerInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
+    definition?: boolean | Server$definitionArgs<ExtArgs>
     backups?: boolean | Server$backupsArgs<ExtArgs>
     collaborators?: boolean | Server$collaboratorsArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ServerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
+    definition?: boolean | Server$definitionArgs<ExtArgs>
   }
 
   export type $ServerPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Server"
     objects: {
       user: Prisma.$UserPayload<ExtArgs>
+      definition: Prisma.$GameDefinitionPayload<ExtArgs> | null
       backups: Prisma.$BackupPayload<ExtArgs>[]
       collaborators: Prisma.$CollaboratorPayload<ExtArgs>[]
     }
@@ -3917,6 +4104,8 @@ export namespace Prisma {
       enableUpnp: boolean
       ipAddress: string
       port: number
+      definitionId: string | null
+      paramValues: string | null
       cpuUsage: number
       memoryUsage: number
       createdAt: Date
@@ -4288,6 +4477,7 @@ export namespace Prisma {
   export interface Prisma__ServerClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    definition<T extends Server$definitionArgs<ExtArgs> = {}>(args?: Subset<T, Server$definitionArgs<ExtArgs>>): Prisma__GameDefinitionClient<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     backups<T extends Server$backupsArgs<ExtArgs> = {}>(args?: Subset<T, Server$backupsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BackupPayload<ExtArgs>, T, "findMany"> | Null>
     collaborators<T extends Server$collaboratorsArgs<ExtArgs> = {}>(args?: Subset<T, Server$collaboratorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CollaboratorPayload<ExtArgs>, T, "findMany"> | Null>
     /**
@@ -4333,6 +4523,8 @@ export namespace Prisma {
     readonly enableUpnp: FieldRef<"Server", 'Boolean'>
     readonly ipAddress: FieldRef<"Server", 'String'>
     readonly port: FieldRef<"Server", 'Int'>
+    readonly definitionId: FieldRef<"Server", 'String'>
+    readonly paramValues: FieldRef<"Server", 'String'>
     readonly cpuUsage: FieldRef<"Server", 'Float'>
     readonly memoryUsage: FieldRef<"Server", 'Float'>
     readonly createdAt: FieldRef<"Server", 'DateTime'>
@@ -4652,6 +4844,21 @@ export namespace Prisma {
      * Filter which Servers to delete
      */
     where?: ServerWhereInput
+  }
+
+  /**
+   * Server.definition
+   */
+  export type Server$definitionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    where?: GameDefinitionWhereInput
   }
 
   /**
@@ -8580,6 +8787,1124 @@ export namespace Prisma {
 
 
   /**
+   * Model GameDefinition
+   */
+
+  export type AggregateGameDefinition = {
+    _count: GameDefinitionCountAggregateOutputType | null
+    _avg: GameDefinitionAvgAggregateOutputType | null
+    _sum: GameDefinitionSumAggregateOutputType | null
+    _min: GameDefinitionMinAggregateOutputType | null
+    _max: GameDefinitionMaxAggregateOutputType | null
+  }
+
+  export type GameDefinitionAvgAggregateOutputType = {
+    recommendedRamGB: number | null
+    requiredDiskGB: number | null
+  }
+
+  export type GameDefinitionSumAggregateOutputType = {
+    recommendedRamGB: number | null
+    requiredDiskGB: number | null
+  }
+
+  export type GameDefinitionMinAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    displayName: string | null
+    icon: string | null
+    color: string | null
+    description: string | null
+    recommendedRamGB: number | null
+    requiredDiskGB: number | null
+    ownerId: string | null
+    isBuiltIn: boolean | null
+    installMethod: string | null
+    spec: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type GameDefinitionMaxAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    displayName: string | null
+    icon: string | null
+    color: string | null
+    description: string | null
+    recommendedRamGB: number | null
+    requiredDiskGB: number | null
+    ownerId: string | null
+    isBuiltIn: boolean | null
+    installMethod: string | null
+    spec: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type GameDefinitionCountAggregateOutputType = {
+    id: number
+    slug: number
+    displayName: number
+    icon: number
+    color: number
+    description: number
+    recommendedRamGB: number
+    requiredDiskGB: number
+    ownerId: number
+    isBuiltIn: number
+    installMethod: number
+    spec: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type GameDefinitionAvgAggregateInputType = {
+    recommendedRamGB?: true
+    requiredDiskGB?: true
+  }
+
+  export type GameDefinitionSumAggregateInputType = {
+    recommendedRamGB?: true
+    requiredDiskGB?: true
+  }
+
+  export type GameDefinitionMinAggregateInputType = {
+    id?: true
+    slug?: true
+    displayName?: true
+    icon?: true
+    color?: true
+    description?: true
+    recommendedRamGB?: true
+    requiredDiskGB?: true
+    ownerId?: true
+    isBuiltIn?: true
+    installMethod?: true
+    spec?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type GameDefinitionMaxAggregateInputType = {
+    id?: true
+    slug?: true
+    displayName?: true
+    icon?: true
+    color?: true
+    description?: true
+    recommendedRamGB?: true
+    requiredDiskGB?: true
+    ownerId?: true
+    isBuiltIn?: true
+    installMethod?: true
+    spec?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type GameDefinitionCountAggregateInputType = {
+    id?: true
+    slug?: true
+    displayName?: true
+    icon?: true
+    color?: true
+    description?: true
+    recommendedRamGB?: true
+    requiredDiskGB?: true
+    ownerId?: true
+    isBuiltIn?: true
+    installMethod?: true
+    spec?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type GameDefinitionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which GameDefinition to aggregate.
+     */
+    where?: GameDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GameDefinitions to fetch.
+     */
+    orderBy?: GameDefinitionOrderByWithRelationInput | GameDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: GameDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GameDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GameDefinitions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned GameDefinitions
+    **/
+    _count?: true | GameDefinitionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: GameDefinitionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: GameDefinitionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: GameDefinitionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: GameDefinitionMaxAggregateInputType
+  }
+
+  export type GetGameDefinitionAggregateType<T extends GameDefinitionAggregateArgs> = {
+        [P in keyof T & keyof AggregateGameDefinition]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateGameDefinition[P]>
+      : GetScalarType<T[P], AggregateGameDefinition[P]>
+  }
+
+
+
+
+  export type GameDefinitionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: GameDefinitionWhereInput
+    orderBy?: GameDefinitionOrderByWithAggregationInput | GameDefinitionOrderByWithAggregationInput[]
+    by: GameDefinitionScalarFieldEnum[] | GameDefinitionScalarFieldEnum
+    having?: GameDefinitionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: GameDefinitionCountAggregateInputType | true
+    _avg?: GameDefinitionAvgAggregateInputType
+    _sum?: GameDefinitionSumAggregateInputType
+    _min?: GameDefinitionMinAggregateInputType
+    _max?: GameDefinitionMaxAggregateInputType
+  }
+
+  export type GameDefinitionGroupByOutputType = {
+    id: string
+    slug: string
+    displayName: string
+    icon: string
+    color: string
+    description: string
+    recommendedRamGB: number
+    requiredDiskGB: number
+    ownerId: string | null
+    isBuiltIn: boolean
+    installMethod: string
+    spec: string
+    createdAt: Date
+    updatedAt: Date
+    _count: GameDefinitionCountAggregateOutputType | null
+    _avg: GameDefinitionAvgAggregateOutputType | null
+    _sum: GameDefinitionSumAggregateOutputType | null
+    _min: GameDefinitionMinAggregateOutputType | null
+    _max: GameDefinitionMaxAggregateOutputType | null
+  }
+
+  type GetGameDefinitionGroupByPayload<T extends GameDefinitionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<GameDefinitionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof GameDefinitionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], GameDefinitionGroupByOutputType[P]>
+            : GetScalarType<T[P], GameDefinitionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type GameDefinitionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    displayName?: boolean
+    icon?: boolean
+    color?: boolean
+    description?: boolean
+    recommendedRamGB?: boolean
+    requiredDiskGB?: boolean
+    ownerId?: boolean
+    isBuiltIn?: boolean
+    installMethod?: boolean
+    spec?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    owner?: boolean | GameDefinition$ownerArgs<ExtArgs>
+    servers?: boolean | GameDefinition$serversArgs<ExtArgs>
+    _count?: boolean | GameDefinitionCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["gameDefinition"]>
+
+  export type GameDefinitionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    displayName?: boolean
+    icon?: boolean
+    color?: boolean
+    description?: boolean
+    recommendedRamGB?: boolean
+    requiredDiskGB?: boolean
+    ownerId?: boolean
+    isBuiltIn?: boolean
+    installMethod?: boolean
+    spec?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    owner?: boolean | GameDefinition$ownerArgs<ExtArgs>
+  }, ExtArgs["result"]["gameDefinition"]>
+
+  export type GameDefinitionSelectScalar = {
+    id?: boolean
+    slug?: boolean
+    displayName?: boolean
+    icon?: boolean
+    color?: boolean
+    description?: boolean
+    recommendedRamGB?: boolean
+    requiredDiskGB?: boolean
+    ownerId?: boolean
+    isBuiltIn?: boolean
+    installMethod?: boolean
+    spec?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type GameDefinitionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    owner?: boolean | GameDefinition$ownerArgs<ExtArgs>
+    servers?: boolean | GameDefinition$serversArgs<ExtArgs>
+    _count?: boolean | GameDefinitionCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type GameDefinitionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    owner?: boolean | GameDefinition$ownerArgs<ExtArgs>
+  }
+
+  export type $GameDefinitionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "GameDefinition"
+    objects: {
+      owner: Prisma.$UserPayload<ExtArgs> | null
+      servers: Prisma.$ServerPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      slug: string
+      displayName: string
+      icon: string
+      color: string
+      description: string
+      recommendedRamGB: number
+      requiredDiskGB: number
+      ownerId: string | null
+      isBuiltIn: boolean
+      installMethod: string
+      spec: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["gameDefinition"]>
+    composites: {}
+  }
+
+  type GameDefinitionGetPayload<S extends boolean | null | undefined | GameDefinitionDefaultArgs> = $Result.GetResult<Prisma.$GameDefinitionPayload, S>
+
+  type GameDefinitionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<GameDefinitionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: GameDefinitionCountAggregateInputType | true
+    }
+
+  export interface GameDefinitionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['GameDefinition'], meta: { name: 'GameDefinition' } }
+    /**
+     * Find zero or one GameDefinition that matches the filter.
+     * @param {GameDefinitionFindUniqueArgs} args - Arguments to find a GameDefinition
+     * @example
+     * // Get one GameDefinition
+     * const gameDefinition = await prisma.gameDefinition.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends GameDefinitionFindUniqueArgs>(args: SelectSubset<T, GameDefinitionFindUniqueArgs<ExtArgs>>): Prisma__GameDefinitionClient<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one GameDefinition that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {GameDefinitionFindUniqueOrThrowArgs} args - Arguments to find a GameDefinition
+     * @example
+     * // Get one GameDefinition
+     * const gameDefinition = await prisma.gameDefinition.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends GameDefinitionFindUniqueOrThrowArgs>(args: SelectSubset<T, GameDefinitionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__GameDefinitionClient<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first GameDefinition that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GameDefinitionFindFirstArgs} args - Arguments to find a GameDefinition
+     * @example
+     * // Get one GameDefinition
+     * const gameDefinition = await prisma.gameDefinition.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends GameDefinitionFindFirstArgs>(args?: SelectSubset<T, GameDefinitionFindFirstArgs<ExtArgs>>): Prisma__GameDefinitionClient<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first GameDefinition that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GameDefinitionFindFirstOrThrowArgs} args - Arguments to find a GameDefinition
+     * @example
+     * // Get one GameDefinition
+     * const gameDefinition = await prisma.gameDefinition.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends GameDefinitionFindFirstOrThrowArgs>(args?: SelectSubset<T, GameDefinitionFindFirstOrThrowArgs<ExtArgs>>): Prisma__GameDefinitionClient<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more GameDefinitions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GameDefinitionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all GameDefinitions
+     * const gameDefinitions = await prisma.gameDefinition.findMany()
+     * 
+     * // Get first 10 GameDefinitions
+     * const gameDefinitions = await prisma.gameDefinition.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const gameDefinitionWithIdOnly = await prisma.gameDefinition.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends GameDefinitionFindManyArgs>(args?: SelectSubset<T, GameDefinitionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a GameDefinition.
+     * @param {GameDefinitionCreateArgs} args - Arguments to create a GameDefinition.
+     * @example
+     * // Create one GameDefinition
+     * const GameDefinition = await prisma.gameDefinition.create({
+     *   data: {
+     *     // ... data to create a GameDefinition
+     *   }
+     * })
+     * 
+     */
+    create<T extends GameDefinitionCreateArgs>(args: SelectSubset<T, GameDefinitionCreateArgs<ExtArgs>>): Prisma__GameDefinitionClient<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many GameDefinitions.
+     * @param {GameDefinitionCreateManyArgs} args - Arguments to create many GameDefinitions.
+     * @example
+     * // Create many GameDefinitions
+     * const gameDefinition = await prisma.gameDefinition.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends GameDefinitionCreateManyArgs>(args?: SelectSubset<T, GameDefinitionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many GameDefinitions and returns the data saved in the database.
+     * @param {GameDefinitionCreateManyAndReturnArgs} args - Arguments to create many GameDefinitions.
+     * @example
+     * // Create many GameDefinitions
+     * const gameDefinition = await prisma.gameDefinition.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many GameDefinitions and only return the `id`
+     * const gameDefinitionWithIdOnly = await prisma.gameDefinition.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends GameDefinitionCreateManyAndReturnArgs>(args?: SelectSubset<T, GameDefinitionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a GameDefinition.
+     * @param {GameDefinitionDeleteArgs} args - Arguments to delete one GameDefinition.
+     * @example
+     * // Delete one GameDefinition
+     * const GameDefinition = await prisma.gameDefinition.delete({
+     *   where: {
+     *     // ... filter to delete one GameDefinition
+     *   }
+     * })
+     * 
+     */
+    delete<T extends GameDefinitionDeleteArgs>(args: SelectSubset<T, GameDefinitionDeleteArgs<ExtArgs>>): Prisma__GameDefinitionClient<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one GameDefinition.
+     * @param {GameDefinitionUpdateArgs} args - Arguments to update one GameDefinition.
+     * @example
+     * // Update one GameDefinition
+     * const gameDefinition = await prisma.gameDefinition.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends GameDefinitionUpdateArgs>(args: SelectSubset<T, GameDefinitionUpdateArgs<ExtArgs>>): Prisma__GameDefinitionClient<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more GameDefinitions.
+     * @param {GameDefinitionDeleteManyArgs} args - Arguments to filter GameDefinitions to delete.
+     * @example
+     * // Delete a few GameDefinitions
+     * const { count } = await prisma.gameDefinition.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends GameDefinitionDeleteManyArgs>(args?: SelectSubset<T, GameDefinitionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more GameDefinitions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GameDefinitionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many GameDefinitions
+     * const gameDefinition = await prisma.gameDefinition.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends GameDefinitionUpdateManyArgs>(args: SelectSubset<T, GameDefinitionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one GameDefinition.
+     * @param {GameDefinitionUpsertArgs} args - Arguments to update or create a GameDefinition.
+     * @example
+     * // Update or create a GameDefinition
+     * const gameDefinition = await prisma.gameDefinition.upsert({
+     *   create: {
+     *     // ... data to create a GameDefinition
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the GameDefinition we want to update
+     *   }
+     * })
+     */
+    upsert<T extends GameDefinitionUpsertArgs>(args: SelectSubset<T, GameDefinitionUpsertArgs<ExtArgs>>): Prisma__GameDefinitionClient<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of GameDefinitions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GameDefinitionCountArgs} args - Arguments to filter GameDefinitions to count.
+     * @example
+     * // Count the number of GameDefinitions
+     * const count = await prisma.gameDefinition.count({
+     *   where: {
+     *     // ... the filter for the GameDefinitions we want to count
+     *   }
+     * })
+    **/
+    count<T extends GameDefinitionCountArgs>(
+      args?: Subset<T, GameDefinitionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], GameDefinitionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a GameDefinition.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GameDefinitionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends GameDefinitionAggregateArgs>(args: Subset<T, GameDefinitionAggregateArgs>): Prisma.PrismaPromise<GetGameDefinitionAggregateType<T>>
+
+    /**
+     * Group by GameDefinition.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GameDefinitionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends GameDefinitionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: GameDefinitionGroupByArgs['orderBy'] }
+        : { orderBy?: GameDefinitionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, GameDefinitionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetGameDefinitionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the GameDefinition model
+   */
+  readonly fields: GameDefinitionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for GameDefinition.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__GameDefinitionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    owner<T extends GameDefinition$ownerArgs<ExtArgs> = {}>(args?: Subset<T, GameDefinition$ownerArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    servers<T extends GameDefinition$serversArgs<ExtArgs> = {}>(args?: Subset<T, GameDefinition$serversArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the GameDefinition model
+   */ 
+  interface GameDefinitionFieldRefs {
+    readonly id: FieldRef<"GameDefinition", 'String'>
+    readonly slug: FieldRef<"GameDefinition", 'String'>
+    readonly displayName: FieldRef<"GameDefinition", 'String'>
+    readonly icon: FieldRef<"GameDefinition", 'String'>
+    readonly color: FieldRef<"GameDefinition", 'String'>
+    readonly description: FieldRef<"GameDefinition", 'String'>
+    readonly recommendedRamGB: FieldRef<"GameDefinition", 'Float'>
+    readonly requiredDiskGB: FieldRef<"GameDefinition", 'Float'>
+    readonly ownerId: FieldRef<"GameDefinition", 'String'>
+    readonly isBuiltIn: FieldRef<"GameDefinition", 'Boolean'>
+    readonly installMethod: FieldRef<"GameDefinition", 'String'>
+    readonly spec: FieldRef<"GameDefinition", 'String'>
+    readonly createdAt: FieldRef<"GameDefinition", 'DateTime'>
+    readonly updatedAt: FieldRef<"GameDefinition", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * GameDefinition findUnique
+   */
+  export type GameDefinitionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which GameDefinition to fetch.
+     */
+    where: GameDefinitionWhereUniqueInput
+  }
+
+  /**
+   * GameDefinition findUniqueOrThrow
+   */
+  export type GameDefinitionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which GameDefinition to fetch.
+     */
+    where: GameDefinitionWhereUniqueInput
+  }
+
+  /**
+   * GameDefinition findFirst
+   */
+  export type GameDefinitionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which GameDefinition to fetch.
+     */
+    where?: GameDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GameDefinitions to fetch.
+     */
+    orderBy?: GameDefinitionOrderByWithRelationInput | GameDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for GameDefinitions.
+     */
+    cursor?: GameDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GameDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GameDefinitions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of GameDefinitions.
+     */
+    distinct?: GameDefinitionScalarFieldEnum | GameDefinitionScalarFieldEnum[]
+  }
+
+  /**
+   * GameDefinition findFirstOrThrow
+   */
+  export type GameDefinitionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which GameDefinition to fetch.
+     */
+    where?: GameDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GameDefinitions to fetch.
+     */
+    orderBy?: GameDefinitionOrderByWithRelationInput | GameDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for GameDefinitions.
+     */
+    cursor?: GameDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GameDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GameDefinitions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of GameDefinitions.
+     */
+    distinct?: GameDefinitionScalarFieldEnum | GameDefinitionScalarFieldEnum[]
+  }
+
+  /**
+   * GameDefinition findMany
+   */
+  export type GameDefinitionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter, which GameDefinitions to fetch.
+     */
+    where?: GameDefinitionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GameDefinitions to fetch.
+     */
+    orderBy?: GameDefinitionOrderByWithRelationInput | GameDefinitionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing GameDefinitions.
+     */
+    cursor?: GameDefinitionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GameDefinitions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GameDefinitions.
+     */
+    skip?: number
+    distinct?: GameDefinitionScalarFieldEnum | GameDefinitionScalarFieldEnum[]
+  }
+
+  /**
+   * GameDefinition create
+   */
+  export type GameDefinitionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a GameDefinition.
+     */
+    data: XOR<GameDefinitionCreateInput, GameDefinitionUncheckedCreateInput>
+  }
+
+  /**
+   * GameDefinition createMany
+   */
+  export type GameDefinitionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many GameDefinitions.
+     */
+    data: GameDefinitionCreateManyInput | GameDefinitionCreateManyInput[]
+  }
+
+  /**
+   * GameDefinition createManyAndReturn
+   */
+  export type GameDefinitionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many GameDefinitions.
+     */
+    data: GameDefinitionCreateManyInput | GameDefinitionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * GameDefinition update
+   */
+  export type GameDefinitionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a GameDefinition.
+     */
+    data: XOR<GameDefinitionUpdateInput, GameDefinitionUncheckedUpdateInput>
+    /**
+     * Choose, which GameDefinition to update.
+     */
+    where: GameDefinitionWhereUniqueInput
+  }
+
+  /**
+   * GameDefinition updateMany
+   */
+  export type GameDefinitionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update GameDefinitions.
+     */
+    data: XOR<GameDefinitionUpdateManyMutationInput, GameDefinitionUncheckedUpdateManyInput>
+    /**
+     * Filter which GameDefinitions to update
+     */
+    where?: GameDefinitionWhereInput
+  }
+
+  /**
+   * GameDefinition upsert
+   */
+  export type GameDefinitionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the GameDefinition to update in case it exists.
+     */
+    where: GameDefinitionWhereUniqueInput
+    /**
+     * In case the GameDefinition found by the `where` argument doesn't exist, create a new GameDefinition with this data.
+     */
+    create: XOR<GameDefinitionCreateInput, GameDefinitionUncheckedCreateInput>
+    /**
+     * In case the GameDefinition was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<GameDefinitionUpdateInput, GameDefinitionUncheckedUpdateInput>
+  }
+
+  /**
+   * GameDefinition delete
+   */
+  export type GameDefinitionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+    /**
+     * Filter which GameDefinition to delete.
+     */
+    where: GameDefinitionWhereUniqueInput
+  }
+
+  /**
+   * GameDefinition deleteMany
+   */
+  export type GameDefinitionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which GameDefinitions to delete
+     */
+    where?: GameDefinitionWhereInput
+  }
+
+  /**
+   * GameDefinition.owner
+   */
+  export type GameDefinition$ownerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * GameDefinition.servers
+   */
+  export type GameDefinition$serversArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Server
+     */
+    select?: ServerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerInclude<ExtArgs> | null
+    where?: ServerWhereInput
+    orderBy?: ServerOrderByWithRelationInput | ServerOrderByWithRelationInput[]
+    cursor?: ServerWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ServerScalarFieldEnum | ServerScalarFieldEnum[]
+  }
+
+  /**
+   * GameDefinition without action
+   */
+  export type GameDefinitionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GameDefinition
+     */
+    select?: GameDefinitionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: GameDefinitionInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -8596,7 +9921,8 @@ export namespace Prisma {
     passwordHash: 'passwordHash',
     name: 'name',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    role: 'role'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -8630,6 +9956,8 @@ export namespace Prisma {
     enableUpnp: 'enableUpnp',
     ipAddress: 'ipAddress',
     port: 'port',
+    definitionId: 'definitionId',
+    paramValues: 'paramValues',
     cpuUsage: 'cpuUsage',
     memoryUsage: 'memoryUsage',
     createdAt: 'createdAt',
@@ -8689,6 +10017,26 @@ export namespace Prisma {
   };
 
   export type CollaboratorScalarFieldEnum = (typeof CollaboratorScalarFieldEnum)[keyof typeof CollaboratorScalarFieldEnum]
+
+
+  export const GameDefinitionScalarFieldEnum: {
+    id: 'id',
+    slug: 'slug',
+    displayName: 'displayName',
+    icon: 'icon',
+    color: 'color',
+    description: 'description',
+    recommendedRamGB: 'recommendedRamGB',
+    requiredDiskGB: 'requiredDiskGB',
+    ownerId: 'ownerId',
+    isBuiltIn: 'isBuiltIn',
+    installMethod: 'installMethod',
+    spec: 'spec',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type GameDefinitionScalarFieldEnum = (typeof GameDefinitionScalarFieldEnum)[keyof typeof GameDefinitionScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -8760,6 +10108,8 @@ export namespace Prisma {
     name?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    role?: StringFilter<"User"> | string
+    definitions?: GameDefinitionListRelationFilter
     subscription?: XOR<SubscriptionNullableRelationFilter, SubscriptionWhereInput> | null
     servers?: ServerListRelationFilter
     archives?: ArchiveListRelationFilter
@@ -8774,6 +10124,8 @@ export namespace Prisma {
     name?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    role?: SortOrder
+    definitions?: GameDefinitionOrderByRelationAggregateInput
     subscription?: SubscriptionOrderByWithRelationInput
     servers?: ServerOrderByRelationAggregateInput
     archives?: ArchiveOrderByRelationAggregateInput
@@ -8791,6 +10143,8 @@ export namespace Prisma {
     name?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    role?: StringFilter<"User"> | string
+    definitions?: GameDefinitionListRelationFilter
     subscription?: XOR<SubscriptionNullableRelationFilter, SubscriptionWhereInput> | null
     servers?: ServerListRelationFilter
     archives?: ArchiveListRelationFilter
@@ -8805,6 +10159,7 @@ export namespace Prisma {
     name?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    role?: SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -8820,6 +10175,7 @@ export namespace Prisma {
     name?: StringWithAggregatesFilter<"User"> | string
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    role?: StringWithAggregatesFilter<"User"> | string
   }
 
   export type SubscriptionWhereInput = {
@@ -8907,6 +10263,8 @@ export namespace Prisma {
     enableUpnp?: BoolFilter<"Server"> | boolean
     ipAddress?: StringFilter<"Server"> | string
     port?: IntFilter<"Server"> | number
+    definitionId?: StringNullableFilter<"Server"> | string | null
+    paramValues?: StringNullableFilter<"Server"> | string | null
     cpuUsage?: FloatFilter<"Server"> | number
     memoryUsage?: FloatFilter<"Server"> | number
     createdAt?: DateTimeFilter<"Server"> | Date | string
@@ -8914,6 +10272,7 @@ export namespace Prisma {
     snapshotInterval?: IntFilter<"Server"> | number
     lastSnapshotAt?: DateTimeNullableFilter<"Server"> | Date | string | null
     user?: XOR<UserRelationFilter, UserWhereInput>
+    definition?: XOR<GameDefinitionNullableRelationFilter, GameDefinitionWhereInput> | null
     backups?: BackupListRelationFilter
     collaborators?: CollaboratorListRelationFilter
   }
@@ -8933,6 +10292,8 @@ export namespace Prisma {
     enableUpnp?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
+    definitionId?: SortOrderInput | SortOrder
+    paramValues?: SortOrderInput | SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
     createdAt?: SortOrder
@@ -8940,6 +10301,7 @@ export namespace Prisma {
     snapshotInterval?: SortOrder
     lastSnapshotAt?: SortOrderInput | SortOrder
     user?: UserOrderByWithRelationInput
+    definition?: GameDefinitionOrderByWithRelationInput
     backups?: BackupOrderByRelationAggregateInput
     collaborators?: CollaboratorOrderByRelationAggregateInput
   }
@@ -8962,6 +10324,8 @@ export namespace Prisma {
     enableUpnp?: BoolFilter<"Server"> | boolean
     ipAddress?: StringFilter<"Server"> | string
     port?: IntFilter<"Server"> | number
+    definitionId?: StringNullableFilter<"Server"> | string | null
+    paramValues?: StringNullableFilter<"Server"> | string | null
     cpuUsage?: FloatFilter<"Server"> | number
     memoryUsage?: FloatFilter<"Server"> | number
     createdAt?: DateTimeFilter<"Server"> | Date | string
@@ -8969,6 +10333,7 @@ export namespace Prisma {
     snapshotInterval?: IntFilter<"Server"> | number
     lastSnapshotAt?: DateTimeNullableFilter<"Server"> | Date | string | null
     user?: XOR<UserRelationFilter, UserWhereInput>
+    definition?: XOR<GameDefinitionNullableRelationFilter, GameDefinitionWhereInput> | null
     backups?: BackupListRelationFilter
     collaborators?: CollaboratorListRelationFilter
   }, "id">
@@ -8988,6 +10353,8 @@ export namespace Prisma {
     enableUpnp?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
+    definitionId?: SortOrderInput | SortOrder
+    paramValues?: SortOrderInput | SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
     createdAt?: SortOrder
@@ -9019,6 +10386,8 @@ export namespace Prisma {
     enableUpnp?: BoolWithAggregatesFilter<"Server"> | boolean
     ipAddress?: StringWithAggregatesFilter<"Server"> | string
     port?: IntWithAggregatesFilter<"Server"> | number
+    definitionId?: StringNullableWithAggregatesFilter<"Server"> | string | null
+    paramValues?: StringNullableWithAggregatesFilter<"Server"> | string | null
     cpuUsage?: FloatWithAggregatesFilter<"Server"> | number
     memoryUsage?: FloatWithAggregatesFilter<"Server"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Server"> | Date | string
@@ -9285,6 +10654,112 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"Collaborator"> | Date | string
   }
 
+  export type GameDefinitionWhereInput = {
+    AND?: GameDefinitionWhereInput | GameDefinitionWhereInput[]
+    OR?: GameDefinitionWhereInput[]
+    NOT?: GameDefinitionWhereInput | GameDefinitionWhereInput[]
+    id?: StringFilter<"GameDefinition"> | string
+    slug?: StringFilter<"GameDefinition"> | string
+    displayName?: StringFilter<"GameDefinition"> | string
+    icon?: StringFilter<"GameDefinition"> | string
+    color?: StringFilter<"GameDefinition"> | string
+    description?: StringFilter<"GameDefinition"> | string
+    recommendedRamGB?: FloatFilter<"GameDefinition"> | number
+    requiredDiskGB?: FloatFilter<"GameDefinition"> | number
+    ownerId?: StringNullableFilter<"GameDefinition"> | string | null
+    isBuiltIn?: BoolFilter<"GameDefinition"> | boolean
+    installMethod?: StringFilter<"GameDefinition"> | string
+    spec?: StringFilter<"GameDefinition"> | string
+    createdAt?: DateTimeFilter<"GameDefinition"> | Date | string
+    updatedAt?: DateTimeFilter<"GameDefinition"> | Date | string
+    owner?: XOR<UserNullableRelationFilter, UserWhereInput> | null
+    servers?: ServerListRelationFilter
+  }
+
+  export type GameDefinitionOrderByWithRelationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    displayName?: SortOrder
+    icon?: SortOrder
+    color?: SortOrder
+    description?: SortOrder
+    recommendedRamGB?: SortOrder
+    requiredDiskGB?: SortOrder
+    ownerId?: SortOrderInput | SortOrder
+    isBuiltIn?: SortOrder
+    installMethod?: SortOrder
+    spec?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    owner?: UserOrderByWithRelationInput
+    servers?: ServerOrderByRelationAggregateInput
+  }
+
+  export type GameDefinitionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    ownerId_slug?: GameDefinitionOwnerIdSlugCompoundUniqueInput
+    AND?: GameDefinitionWhereInput | GameDefinitionWhereInput[]
+    OR?: GameDefinitionWhereInput[]
+    NOT?: GameDefinitionWhereInput | GameDefinitionWhereInput[]
+    slug?: StringFilter<"GameDefinition"> | string
+    displayName?: StringFilter<"GameDefinition"> | string
+    icon?: StringFilter<"GameDefinition"> | string
+    color?: StringFilter<"GameDefinition"> | string
+    description?: StringFilter<"GameDefinition"> | string
+    recommendedRamGB?: FloatFilter<"GameDefinition"> | number
+    requiredDiskGB?: FloatFilter<"GameDefinition"> | number
+    ownerId?: StringNullableFilter<"GameDefinition"> | string | null
+    isBuiltIn?: BoolFilter<"GameDefinition"> | boolean
+    installMethod?: StringFilter<"GameDefinition"> | string
+    spec?: StringFilter<"GameDefinition"> | string
+    createdAt?: DateTimeFilter<"GameDefinition"> | Date | string
+    updatedAt?: DateTimeFilter<"GameDefinition"> | Date | string
+    owner?: XOR<UserNullableRelationFilter, UserWhereInput> | null
+    servers?: ServerListRelationFilter
+  }, "id" | "ownerId_slug">
+
+  export type GameDefinitionOrderByWithAggregationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    displayName?: SortOrder
+    icon?: SortOrder
+    color?: SortOrder
+    description?: SortOrder
+    recommendedRamGB?: SortOrder
+    requiredDiskGB?: SortOrder
+    ownerId?: SortOrderInput | SortOrder
+    isBuiltIn?: SortOrder
+    installMethod?: SortOrder
+    spec?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: GameDefinitionCountOrderByAggregateInput
+    _avg?: GameDefinitionAvgOrderByAggregateInput
+    _max?: GameDefinitionMaxOrderByAggregateInput
+    _min?: GameDefinitionMinOrderByAggregateInput
+    _sum?: GameDefinitionSumOrderByAggregateInput
+  }
+
+  export type GameDefinitionScalarWhereWithAggregatesInput = {
+    AND?: GameDefinitionScalarWhereWithAggregatesInput | GameDefinitionScalarWhereWithAggregatesInput[]
+    OR?: GameDefinitionScalarWhereWithAggregatesInput[]
+    NOT?: GameDefinitionScalarWhereWithAggregatesInput | GameDefinitionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"GameDefinition"> | string
+    slug?: StringWithAggregatesFilter<"GameDefinition"> | string
+    displayName?: StringWithAggregatesFilter<"GameDefinition"> | string
+    icon?: StringWithAggregatesFilter<"GameDefinition"> | string
+    color?: StringWithAggregatesFilter<"GameDefinition"> | string
+    description?: StringWithAggregatesFilter<"GameDefinition"> | string
+    recommendedRamGB?: FloatWithAggregatesFilter<"GameDefinition"> | number
+    requiredDiskGB?: FloatWithAggregatesFilter<"GameDefinition"> | number
+    ownerId?: StringNullableWithAggregatesFilter<"GameDefinition"> | string | null
+    isBuiltIn?: BoolWithAggregatesFilter<"GameDefinition"> | boolean
+    installMethod?: StringWithAggregatesFilter<"GameDefinition"> | string
+    spec?: StringWithAggregatesFilter<"GameDefinition"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"GameDefinition"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"GameDefinition"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -9292,6 +10767,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionCreateNestedManyWithoutOwnerInput
     subscription?: SubscriptionCreateNestedOneWithoutUserInput
     servers?: ServerCreateNestedManyWithoutUserInput
     archives?: ArchiveCreateNestedManyWithoutUserInput
@@ -9306,6 +10783,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput
     subscription?: SubscriptionUncheckedCreateNestedOneWithoutUserInput
     servers?: ServerUncheckedCreateNestedManyWithoutUserInput
     archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
@@ -9320,6 +10799,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUpdateManyWithoutOwnerNestedInput
     subscription?: SubscriptionUpdateOneWithoutUserNestedInput
     servers?: ServerUpdateManyWithoutUserNestedInput
     archives?: ArchiveUpdateManyWithoutUserNestedInput
@@ -9334,6 +10815,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput
     subscription?: SubscriptionUncheckedUpdateOneWithoutUserNestedInput
     servers?: ServerUncheckedUpdateManyWithoutUserNestedInput
     archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
@@ -9348,6 +10831,7 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
   }
 
   export type UserUpdateManyMutationInput = {
@@ -9357,6 +10841,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -9366,6 +10851,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
   }
 
   export type SubscriptionCreateInput = {
@@ -9451,6 +10937,7 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress: string
     port: number
+    paramValues?: string | null
     cpuUsage?: number
     memoryUsage?: number
     createdAt?: Date | string
@@ -9458,6 +10945,7 @@ export namespace Prisma {
     snapshotInterval?: number
     lastSnapshotAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
   }
@@ -9477,6 +10965,8 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress: string
     port: number
+    definitionId?: string | null
+    paramValues?: string | null
     cpuUsage?: number
     memoryUsage?: number
     createdAt?: Date | string
@@ -9501,6 +10991,7 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9508,6 +10999,7 @@ export namespace Prisma {
     snapshotInterval?: IntFieldUpdateOperationsInput | number
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
   }
@@ -9527,6 +11019,8 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9552,6 +11046,8 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress: string
     port: number
+    definitionId?: string | null
+    paramValues?: string | null
     cpuUsage?: number
     memoryUsage?: number
     createdAt?: Date | string
@@ -9574,6 +11070,7 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9597,6 +11094,8 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9866,6 +11365,128 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type GameDefinitionCreateInput = {
+    id?: string
+    slug: string
+    displayName: string
+    icon?: string
+    color?: string
+    description?: string
+    recommendedRamGB?: number
+    requiredDiskGB?: number
+    isBuiltIn?: boolean
+    installMethod: string
+    spec: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner?: UserCreateNestedOneWithoutDefinitionsInput
+    servers?: ServerCreateNestedManyWithoutDefinitionInput
+  }
+
+  export type GameDefinitionUncheckedCreateInput = {
+    id?: string
+    slug: string
+    displayName: string
+    icon?: string
+    color?: string
+    description?: string
+    recommendedRamGB?: number
+    requiredDiskGB?: number
+    ownerId?: string | null
+    isBuiltIn?: boolean
+    installMethod: string
+    spec: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    servers?: ServerUncheckedCreateNestedManyWithoutDefinitionInput
+  }
+
+  export type GameDefinitionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    recommendedRamGB?: FloatFieldUpdateOperationsInput | number
+    requiredDiskGB?: FloatFieldUpdateOperationsInput | number
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    installMethod?: StringFieldUpdateOperationsInput | string
+    spec?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneWithoutDefinitionsNestedInput
+    servers?: ServerUpdateManyWithoutDefinitionNestedInput
+  }
+
+  export type GameDefinitionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    recommendedRamGB?: FloatFieldUpdateOperationsInput | number
+    requiredDiskGB?: FloatFieldUpdateOperationsInput | number
+    ownerId?: NullableStringFieldUpdateOperationsInput | string | null
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    installMethod?: StringFieldUpdateOperationsInput | string
+    spec?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    servers?: ServerUncheckedUpdateManyWithoutDefinitionNestedInput
+  }
+
+  export type GameDefinitionCreateManyInput = {
+    id?: string
+    slug: string
+    displayName: string
+    icon?: string
+    color?: string
+    description?: string
+    recommendedRamGB?: number
+    requiredDiskGB?: number
+    ownerId?: string | null
+    isBuiltIn?: boolean
+    installMethod: string
+    spec: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type GameDefinitionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    recommendedRamGB?: FloatFieldUpdateOperationsInput | number
+    requiredDiskGB?: FloatFieldUpdateOperationsInput | number
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    installMethod?: StringFieldUpdateOperationsInput | string
+    spec?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type GameDefinitionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    recommendedRamGB?: FloatFieldUpdateOperationsInput | number
+    requiredDiskGB?: FloatFieldUpdateOperationsInput | number
+    ownerId?: NullableStringFieldUpdateOperationsInput | string | null
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    installMethod?: StringFieldUpdateOperationsInput | string
+    spec?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -9889,6 +11510,12 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
+  }
+
+  export type GameDefinitionListRelationFilter = {
+    every?: GameDefinitionWhereInput
+    some?: GameDefinitionWhereInput
+    none?: GameDefinitionWhereInput
   }
 
   export type SubscriptionNullableRelationFilter = {
@@ -9920,6 +11547,10 @@ export namespace Prisma {
     none?: CollaboratorWhereInput
   }
 
+  export type GameDefinitionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type ServerOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -9943,6 +11574,7 @@ export namespace Prisma {
     name?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    role?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -9952,6 +11584,7 @@ export namespace Prisma {
     name?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    role?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -9961,6 +11594,7 @@ export namespace Prisma {
     name?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    role?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -10116,6 +11750,11 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
+  export type GameDefinitionNullableRelationFilter = {
+    is?: GameDefinitionWhereInput | null
+    isNot?: GameDefinitionWhereInput | null
+  }
+
   export type BackupListRelationFilter = {
     every?: BackupWhereInput
     some?: BackupWhereInput
@@ -10146,6 +11785,8 @@ export namespace Prisma {
     enableUpnp?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
+    definitionId?: SortOrder
+    paramValues?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
     createdAt?: SortOrder
@@ -10178,6 +11819,8 @@ export namespace Prisma {
     enableUpnp?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
+    definitionId?: SortOrder
+    paramValues?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
     createdAt?: SortOrder
@@ -10201,6 +11844,8 @@ export namespace Prisma {
     enableUpnp?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
+    definitionId?: SortOrder
+    paramValues?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
     createdAt?: SortOrder
@@ -10429,6 +12074,84 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type UserNullableRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
+  }
+
+  export type GameDefinitionOwnerIdSlugCompoundUniqueInput = {
+    ownerId: string
+    slug: string
+  }
+
+  export type GameDefinitionCountOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    displayName?: SortOrder
+    icon?: SortOrder
+    color?: SortOrder
+    description?: SortOrder
+    recommendedRamGB?: SortOrder
+    requiredDiskGB?: SortOrder
+    ownerId?: SortOrder
+    isBuiltIn?: SortOrder
+    installMethod?: SortOrder
+    spec?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type GameDefinitionAvgOrderByAggregateInput = {
+    recommendedRamGB?: SortOrder
+    requiredDiskGB?: SortOrder
+  }
+
+  export type GameDefinitionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    displayName?: SortOrder
+    icon?: SortOrder
+    color?: SortOrder
+    description?: SortOrder
+    recommendedRamGB?: SortOrder
+    requiredDiskGB?: SortOrder
+    ownerId?: SortOrder
+    isBuiltIn?: SortOrder
+    installMethod?: SortOrder
+    spec?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type GameDefinitionMinOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    displayName?: SortOrder
+    icon?: SortOrder
+    color?: SortOrder
+    description?: SortOrder
+    recommendedRamGB?: SortOrder
+    requiredDiskGB?: SortOrder
+    ownerId?: SortOrder
+    isBuiltIn?: SortOrder
+    installMethod?: SortOrder
+    spec?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type GameDefinitionSumOrderByAggregateInput = {
+    recommendedRamGB?: SortOrder
+    requiredDiskGB?: SortOrder
+  }
+
+  export type GameDefinitionCreateNestedManyWithoutOwnerInput = {
+    create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
+    createMany?: GameDefinitionCreateManyOwnerInputEnvelope
+    connect?: GameDefinitionWhereUniqueInput | GameDefinitionWhereUniqueInput[]
+  }
+
   export type SubscriptionCreateNestedOneWithoutUserInput = {
     create?: XOR<SubscriptionCreateWithoutUserInput, SubscriptionUncheckedCreateWithoutUserInput>
     connectOrCreate?: SubscriptionCreateOrConnectWithoutUserInput
@@ -10461,6 +12184,13 @@ export namespace Prisma {
     connectOrCreate?: CollaboratorCreateOrConnectWithoutUserInput | CollaboratorCreateOrConnectWithoutUserInput[]
     createMany?: CollaboratorCreateManyUserInputEnvelope
     connect?: CollaboratorWhereUniqueInput | CollaboratorWhereUniqueInput[]
+  }
+
+  export type GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput = {
+    create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
+    createMany?: GameDefinitionCreateManyOwnerInputEnvelope
+    connect?: GameDefinitionWhereUniqueInput | GameDefinitionWhereUniqueInput[]
   }
 
   export type SubscriptionUncheckedCreateNestedOneWithoutUserInput = {
@@ -10503,6 +12233,20 @@ export namespace Prisma {
 
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type GameDefinitionUpdateManyWithoutOwnerNestedInput = {
+    create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
+    upsert?: GameDefinitionUpsertWithWhereUniqueWithoutOwnerInput | GameDefinitionUpsertWithWhereUniqueWithoutOwnerInput[]
+    createMany?: GameDefinitionCreateManyOwnerInputEnvelope
+    set?: GameDefinitionWhereUniqueInput | GameDefinitionWhereUniqueInput[]
+    disconnect?: GameDefinitionWhereUniqueInput | GameDefinitionWhereUniqueInput[]
+    delete?: GameDefinitionWhereUniqueInput | GameDefinitionWhereUniqueInput[]
+    connect?: GameDefinitionWhereUniqueInput | GameDefinitionWhereUniqueInput[]
+    update?: GameDefinitionUpdateWithWhereUniqueWithoutOwnerInput | GameDefinitionUpdateWithWhereUniqueWithoutOwnerInput[]
+    updateMany?: GameDefinitionUpdateManyWithWhereWithoutOwnerInput | GameDefinitionUpdateManyWithWhereWithoutOwnerInput[]
+    deleteMany?: GameDefinitionScalarWhereInput | GameDefinitionScalarWhereInput[]
   }
 
   export type SubscriptionUpdateOneWithoutUserNestedInput = {
@@ -10569,6 +12313,20 @@ export namespace Prisma {
     update?: CollaboratorUpdateWithWhereUniqueWithoutUserInput | CollaboratorUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: CollaboratorUpdateManyWithWhereWithoutUserInput | CollaboratorUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: CollaboratorScalarWhereInput | CollaboratorScalarWhereInput[]
+  }
+
+  export type GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput = {
+    create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
+    upsert?: GameDefinitionUpsertWithWhereUniqueWithoutOwnerInput | GameDefinitionUpsertWithWhereUniqueWithoutOwnerInput[]
+    createMany?: GameDefinitionCreateManyOwnerInputEnvelope
+    set?: GameDefinitionWhereUniqueInput | GameDefinitionWhereUniqueInput[]
+    disconnect?: GameDefinitionWhereUniqueInput | GameDefinitionWhereUniqueInput[]
+    delete?: GameDefinitionWhereUniqueInput | GameDefinitionWhereUniqueInput[]
+    connect?: GameDefinitionWhereUniqueInput | GameDefinitionWhereUniqueInput[]
+    update?: GameDefinitionUpdateWithWhereUniqueWithoutOwnerInput | GameDefinitionUpdateWithWhereUniqueWithoutOwnerInput[]
+    updateMany?: GameDefinitionUpdateManyWithWhereWithoutOwnerInput | GameDefinitionUpdateManyWithWhereWithoutOwnerInput[]
+    deleteMany?: GameDefinitionScalarWhereInput | GameDefinitionScalarWhereInput[]
   }
 
   export type SubscriptionUncheckedUpdateOneWithoutUserNestedInput = {
@@ -10665,6 +12423,12 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput
   }
 
+  export type GameDefinitionCreateNestedOneWithoutServersInput = {
+    create?: XOR<GameDefinitionCreateWithoutServersInput, GameDefinitionUncheckedCreateWithoutServersInput>
+    connectOrCreate?: GameDefinitionCreateOrConnectWithoutServersInput
+    connect?: GameDefinitionWhereUniqueInput
+  }
+
   export type BackupCreateNestedManyWithoutServerInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -10727,6 +12491,16 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutServersInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutServersInput, UserUpdateWithoutServersInput>, UserUncheckedUpdateWithoutServersInput>
+  }
+
+  export type GameDefinitionUpdateOneWithoutServersNestedInput = {
+    create?: XOR<GameDefinitionCreateWithoutServersInput, GameDefinitionUncheckedCreateWithoutServersInput>
+    connectOrCreate?: GameDefinitionCreateOrConnectWithoutServersInput
+    upsert?: GameDefinitionUpsertWithoutServersInput
+    disconnect?: GameDefinitionWhereInput | boolean
+    delete?: GameDefinitionWhereInput | boolean
+    connect?: GameDefinitionWhereUniqueInput
+    update?: XOR<XOR<GameDefinitionUpdateToOneWithWhereWithoutServersInput, GameDefinitionUpdateWithoutServersInput>, GameDefinitionUncheckedUpdateWithoutServersInput>
   }
 
   export type BackupUpdateManyWithoutServerNestedInput = {
@@ -10853,6 +12627,64 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutCollaboratorAccessInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCollaboratorAccessInput, UserUpdateWithoutCollaboratorAccessInput>, UserUncheckedUpdateWithoutCollaboratorAccessInput>
+  }
+
+  export type UserCreateNestedOneWithoutDefinitionsInput = {
+    create?: XOR<UserCreateWithoutDefinitionsInput, UserUncheckedCreateWithoutDefinitionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutDefinitionsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type ServerCreateNestedManyWithoutDefinitionInput = {
+    create?: XOR<ServerCreateWithoutDefinitionInput, ServerUncheckedCreateWithoutDefinitionInput> | ServerCreateWithoutDefinitionInput[] | ServerUncheckedCreateWithoutDefinitionInput[]
+    connectOrCreate?: ServerCreateOrConnectWithoutDefinitionInput | ServerCreateOrConnectWithoutDefinitionInput[]
+    createMany?: ServerCreateManyDefinitionInputEnvelope
+    connect?: ServerWhereUniqueInput | ServerWhereUniqueInput[]
+  }
+
+  export type ServerUncheckedCreateNestedManyWithoutDefinitionInput = {
+    create?: XOR<ServerCreateWithoutDefinitionInput, ServerUncheckedCreateWithoutDefinitionInput> | ServerCreateWithoutDefinitionInput[] | ServerUncheckedCreateWithoutDefinitionInput[]
+    connectOrCreate?: ServerCreateOrConnectWithoutDefinitionInput | ServerCreateOrConnectWithoutDefinitionInput[]
+    createMany?: ServerCreateManyDefinitionInputEnvelope
+    connect?: ServerWhereUniqueInput | ServerWhereUniqueInput[]
+  }
+
+  export type UserUpdateOneWithoutDefinitionsNestedInput = {
+    create?: XOR<UserCreateWithoutDefinitionsInput, UserUncheckedCreateWithoutDefinitionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutDefinitionsInput
+    upsert?: UserUpsertWithoutDefinitionsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutDefinitionsInput, UserUpdateWithoutDefinitionsInput>, UserUncheckedUpdateWithoutDefinitionsInput>
+  }
+
+  export type ServerUpdateManyWithoutDefinitionNestedInput = {
+    create?: XOR<ServerCreateWithoutDefinitionInput, ServerUncheckedCreateWithoutDefinitionInput> | ServerCreateWithoutDefinitionInput[] | ServerUncheckedCreateWithoutDefinitionInput[]
+    connectOrCreate?: ServerCreateOrConnectWithoutDefinitionInput | ServerCreateOrConnectWithoutDefinitionInput[]
+    upsert?: ServerUpsertWithWhereUniqueWithoutDefinitionInput | ServerUpsertWithWhereUniqueWithoutDefinitionInput[]
+    createMany?: ServerCreateManyDefinitionInputEnvelope
+    set?: ServerWhereUniqueInput | ServerWhereUniqueInput[]
+    disconnect?: ServerWhereUniqueInput | ServerWhereUniqueInput[]
+    delete?: ServerWhereUniqueInput | ServerWhereUniqueInput[]
+    connect?: ServerWhereUniqueInput | ServerWhereUniqueInput[]
+    update?: ServerUpdateWithWhereUniqueWithoutDefinitionInput | ServerUpdateWithWhereUniqueWithoutDefinitionInput[]
+    updateMany?: ServerUpdateManyWithWhereWithoutDefinitionInput | ServerUpdateManyWithWhereWithoutDefinitionInput[]
+    deleteMany?: ServerScalarWhereInput | ServerScalarWhereInput[]
+  }
+
+  export type ServerUncheckedUpdateManyWithoutDefinitionNestedInput = {
+    create?: XOR<ServerCreateWithoutDefinitionInput, ServerUncheckedCreateWithoutDefinitionInput> | ServerCreateWithoutDefinitionInput[] | ServerUncheckedCreateWithoutDefinitionInput[]
+    connectOrCreate?: ServerCreateOrConnectWithoutDefinitionInput | ServerCreateOrConnectWithoutDefinitionInput[]
+    upsert?: ServerUpsertWithWhereUniqueWithoutDefinitionInput | ServerUpsertWithWhereUniqueWithoutDefinitionInput[]
+    createMany?: ServerCreateManyDefinitionInputEnvelope
+    set?: ServerWhereUniqueInput | ServerWhereUniqueInput[]
+    disconnect?: ServerWhereUniqueInput | ServerWhereUniqueInput[]
+    delete?: ServerWhereUniqueInput | ServerWhereUniqueInput[]
+    connect?: ServerWhereUniqueInput | ServerWhereUniqueInput[]
+    update?: ServerUpdateWithWhereUniqueWithoutDefinitionInput | ServerUpdateWithWhereUniqueWithoutDefinitionInput[]
+    updateMany?: ServerUpdateManyWithWhereWithoutDefinitionInput | ServerUpdateManyWithWhereWithoutDefinitionInput[]
+    deleteMany?: ServerScalarWhereInput | ServerScalarWhereInput[]
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -11072,6 +12904,49 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type GameDefinitionCreateWithoutOwnerInput = {
+    id?: string
+    slug: string
+    displayName: string
+    icon?: string
+    color?: string
+    description?: string
+    recommendedRamGB?: number
+    requiredDiskGB?: number
+    isBuiltIn?: boolean
+    installMethod: string
+    spec: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    servers?: ServerCreateNestedManyWithoutDefinitionInput
+  }
+
+  export type GameDefinitionUncheckedCreateWithoutOwnerInput = {
+    id?: string
+    slug: string
+    displayName: string
+    icon?: string
+    color?: string
+    description?: string
+    recommendedRamGB?: number
+    requiredDiskGB?: number
+    isBuiltIn?: boolean
+    installMethod: string
+    spec: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    servers?: ServerUncheckedCreateNestedManyWithoutDefinitionInput
+  }
+
+  export type GameDefinitionCreateOrConnectWithoutOwnerInput = {
+    where: GameDefinitionWhereUniqueInput
+    create: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput>
+  }
+
+  export type GameDefinitionCreateManyOwnerInputEnvelope = {
+    data: GameDefinitionCreateManyOwnerInput | GameDefinitionCreateManyOwnerInput[]
+  }
+
   export type SubscriptionCreateWithoutUserInput = {
     id?: string
     plan: string
@@ -11109,12 +12984,14 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress: string
     port: number
+    paramValues?: string | null
     cpuUsage?: number
     memoryUsage?: number
     createdAt?: Date | string
     updatedAt?: Date | string
     snapshotInterval?: number
     lastSnapshotAt?: Date | string | null
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
   }
@@ -11133,6 +13010,8 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress: string
     port: number
+    definitionId?: string | null
+    paramValues?: string | null
     cpuUsage?: number
     memoryUsage?: number
     createdAt?: Date | string
@@ -11225,6 +13104,42 @@ export namespace Prisma {
     data: CollaboratorCreateManyUserInput | CollaboratorCreateManyUserInput[]
   }
 
+  export type GameDefinitionUpsertWithWhereUniqueWithoutOwnerInput = {
+    where: GameDefinitionWhereUniqueInput
+    update: XOR<GameDefinitionUpdateWithoutOwnerInput, GameDefinitionUncheckedUpdateWithoutOwnerInput>
+    create: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput>
+  }
+
+  export type GameDefinitionUpdateWithWhereUniqueWithoutOwnerInput = {
+    where: GameDefinitionWhereUniqueInput
+    data: XOR<GameDefinitionUpdateWithoutOwnerInput, GameDefinitionUncheckedUpdateWithoutOwnerInput>
+  }
+
+  export type GameDefinitionUpdateManyWithWhereWithoutOwnerInput = {
+    where: GameDefinitionScalarWhereInput
+    data: XOR<GameDefinitionUpdateManyMutationInput, GameDefinitionUncheckedUpdateManyWithoutOwnerInput>
+  }
+
+  export type GameDefinitionScalarWhereInput = {
+    AND?: GameDefinitionScalarWhereInput | GameDefinitionScalarWhereInput[]
+    OR?: GameDefinitionScalarWhereInput[]
+    NOT?: GameDefinitionScalarWhereInput | GameDefinitionScalarWhereInput[]
+    id?: StringFilter<"GameDefinition"> | string
+    slug?: StringFilter<"GameDefinition"> | string
+    displayName?: StringFilter<"GameDefinition"> | string
+    icon?: StringFilter<"GameDefinition"> | string
+    color?: StringFilter<"GameDefinition"> | string
+    description?: StringFilter<"GameDefinition"> | string
+    recommendedRamGB?: FloatFilter<"GameDefinition"> | number
+    requiredDiskGB?: FloatFilter<"GameDefinition"> | number
+    ownerId?: StringNullableFilter<"GameDefinition"> | string | null
+    isBuiltIn?: BoolFilter<"GameDefinition"> | boolean
+    installMethod?: StringFilter<"GameDefinition"> | string
+    spec?: StringFilter<"GameDefinition"> | string
+    createdAt?: DateTimeFilter<"GameDefinition"> | Date | string
+    updatedAt?: DateTimeFilter<"GameDefinition"> | Date | string
+  }
+
   export type SubscriptionUpsertWithoutUserInput = {
     update: XOR<SubscriptionUpdateWithoutUserInput, SubscriptionUncheckedUpdateWithoutUserInput>
     create: XOR<SubscriptionCreateWithoutUserInput, SubscriptionUncheckedCreateWithoutUserInput>
@@ -11288,6 +13203,8 @@ export namespace Prisma {
     enableUpnp?: BoolFilter<"Server"> | boolean
     ipAddress?: StringFilter<"Server"> | string
     port?: IntFilter<"Server"> | number
+    definitionId?: StringNullableFilter<"Server"> | string | null
+    paramValues?: StringNullableFilter<"Server"> | string | null
     cpuUsage?: FloatFilter<"Server"> | number
     memoryUsage?: FloatFilter<"Server"> | number
     createdAt?: DateTimeFilter<"Server"> | Date | string
@@ -11386,6 +13303,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionCreateNestedManyWithoutOwnerInput
     servers?: ServerCreateNestedManyWithoutUserInput
     archives?: ArchiveCreateNestedManyWithoutUserInput
     logs?: ActivityLogCreateNestedManyWithoutUserInput
@@ -11399,6 +13318,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput
     servers?: ServerUncheckedCreateNestedManyWithoutUserInput
     archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
@@ -11428,6 +13349,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUpdateManyWithoutOwnerNestedInput
     servers?: ServerUpdateManyWithoutUserNestedInput
     archives?: ArchiveUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
@@ -11441,6 +13364,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput
     servers?: ServerUncheckedUpdateManyWithoutUserNestedInput
     archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
@@ -11454,6 +13379,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionCreateNestedManyWithoutOwnerInput
     subscription?: SubscriptionCreateNestedOneWithoutUserInput
     archives?: ArchiveCreateNestedManyWithoutUserInput
     logs?: ActivityLogCreateNestedManyWithoutUserInput
@@ -11467,6 +13394,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput
     subscription?: SubscriptionUncheckedCreateNestedOneWithoutUserInput
     archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
@@ -11476,6 +13405,45 @@ export namespace Prisma {
   export type UserCreateOrConnectWithoutServersInput = {
     where: UserWhereUniqueInput
     create: XOR<UserCreateWithoutServersInput, UserUncheckedCreateWithoutServersInput>
+  }
+
+  export type GameDefinitionCreateWithoutServersInput = {
+    id?: string
+    slug: string
+    displayName: string
+    icon?: string
+    color?: string
+    description?: string
+    recommendedRamGB?: number
+    requiredDiskGB?: number
+    isBuiltIn?: boolean
+    installMethod: string
+    spec: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner?: UserCreateNestedOneWithoutDefinitionsInput
+  }
+
+  export type GameDefinitionUncheckedCreateWithoutServersInput = {
+    id?: string
+    slug: string
+    displayName: string
+    icon?: string
+    color?: string
+    description?: string
+    recommendedRamGB?: number
+    requiredDiskGB?: number
+    ownerId?: string | null
+    isBuiltIn?: boolean
+    installMethod: string
+    spec: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type GameDefinitionCreateOrConnectWithoutServersInput = {
+    where: GameDefinitionWhereUniqueInput
+    create: XOR<GameDefinitionCreateWithoutServersInput, GameDefinitionUncheckedCreateWithoutServersInput>
   }
 
   export type BackupCreateWithoutServerInput = {
@@ -11550,6 +13518,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUpdateManyWithoutOwnerNestedInput
     subscription?: SubscriptionUpdateOneWithoutUserNestedInput
     archives?: ArchiveUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
@@ -11563,10 +13533,57 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput
     subscription?: SubscriptionUncheckedUpdateOneWithoutUserNestedInput
     archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type GameDefinitionUpsertWithoutServersInput = {
+    update: XOR<GameDefinitionUpdateWithoutServersInput, GameDefinitionUncheckedUpdateWithoutServersInput>
+    create: XOR<GameDefinitionCreateWithoutServersInput, GameDefinitionUncheckedCreateWithoutServersInput>
+    where?: GameDefinitionWhereInput
+  }
+
+  export type GameDefinitionUpdateToOneWithWhereWithoutServersInput = {
+    where?: GameDefinitionWhereInput
+    data: XOR<GameDefinitionUpdateWithoutServersInput, GameDefinitionUncheckedUpdateWithoutServersInput>
+  }
+
+  export type GameDefinitionUpdateWithoutServersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    recommendedRamGB?: FloatFieldUpdateOperationsInput | number
+    requiredDiskGB?: FloatFieldUpdateOperationsInput | number
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    installMethod?: StringFieldUpdateOperationsInput | string
+    spec?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneWithoutDefinitionsNestedInput
+  }
+
+  export type GameDefinitionUncheckedUpdateWithoutServersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    recommendedRamGB?: FloatFieldUpdateOperationsInput | number
+    requiredDiskGB?: FloatFieldUpdateOperationsInput | number
+    ownerId?: NullableStringFieldUpdateOperationsInput | string | null
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    installMethod?: StringFieldUpdateOperationsInput | string
+    spec?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type BackupUpsertWithWhereUniqueWithoutServerInput = {
@@ -11623,6 +13640,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionCreateNestedManyWithoutOwnerInput
     subscription?: SubscriptionCreateNestedOneWithoutUserInput
     servers?: ServerCreateNestedManyWithoutUserInput
     logs?: ActivityLogCreateNestedManyWithoutUserInput
@@ -11636,6 +13655,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput
     subscription?: SubscriptionUncheckedCreateNestedOneWithoutUserInput
     servers?: ServerUncheckedCreateNestedManyWithoutUserInput
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
@@ -11665,6 +13686,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUpdateManyWithoutOwnerNestedInput
     subscription?: SubscriptionUpdateOneWithoutUserNestedInput
     servers?: ServerUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
@@ -11678,6 +13701,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput
     subscription?: SubscriptionUncheckedUpdateOneWithoutUserNestedInput
     servers?: ServerUncheckedUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
@@ -11691,6 +13716,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionCreateNestedManyWithoutOwnerInput
     subscription?: SubscriptionCreateNestedOneWithoutUserInput
     servers?: ServerCreateNestedManyWithoutUserInput
     archives?: ArchiveCreateNestedManyWithoutUserInput
@@ -11704,6 +13731,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput
     subscription?: SubscriptionUncheckedCreateNestedOneWithoutUserInput
     servers?: ServerUncheckedCreateNestedManyWithoutUserInput
     archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
@@ -11733,6 +13762,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUpdateManyWithoutOwnerNestedInput
     subscription?: SubscriptionUpdateOneWithoutUserNestedInput
     servers?: ServerUpdateManyWithoutUserNestedInput
     archives?: ArchiveUpdateManyWithoutUserNestedInput
@@ -11746,6 +13777,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput
     subscription?: SubscriptionUncheckedUpdateOneWithoutUserNestedInput
     servers?: ServerUncheckedUpdateManyWithoutUserNestedInput
     archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
@@ -11766,6 +13799,7 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress: string
     port: number
+    paramValues?: string | null
     cpuUsage?: number
     memoryUsage?: number
     createdAt?: Date | string
@@ -11773,6 +13807,7 @@ export namespace Prisma {
     snapshotInterval?: number
     lastSnapshotAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
   }
 
@@ -11791,6 +13826,8 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress: string
     port: number
+    definitionId?: string | null
+    paramValues?: string | null
     cpuUsage?: number
     memoryUsage?: number
     createdAt?: Date | string
@@ -11830,6 +13867,7 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11837,6 +13875,7 @@ export namespace Prisma {
     snapshotInterval?: IntFieldUpdateOperationsInput | number
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
   }
 
@@ -11855,6 +13894,8 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11878,6 +13919,7 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress: string
     port: number
+    paramValues?: string | null
     cpuUsage?: number
     memoryUsage?: number
     createdAt?: Date | string
@@ -11885,6 +13927,7 @@ export namespace Prisma {
     snapshotInterval?: number
     lastSnapshotAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
   }
 
@@ -11903,6 +13946,8 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress: string
     port: number
+    definitionId?: string | null
+    paramValues?: string | null
     cpuUsage?: number
     memoryUsage?: number
     createdAt?: Date | string
@@ -11924,6 +13969,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionCreateNestedManyWithoutOwnerInput
     subscription?: SubscriptionCreateNestedOneWithoutUserInput
     servers?: ServerCreateNestedManyWithoutUserInput
     archives?: ArchiveCreateNestedManyWithoutUserInput
@@ -11937,6 +13984,8 @@ export namespace Prisma {
     name: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput
     subscription?: SubscriptionUncheckedCreateNestedOneWithoutUserInput
     servers?: ServerUncheckedCreateNestedManyWithoutUserInput
     archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
@@ -11973,6 +14022,7 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11980,6 +14030,7 @@ export namespace Prisma {
     snapshotInterval?: IntFieldUpdateOperationsInput | number
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
   }
 
@@ -11998,6 +14049,8 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12025,6 +14078,8 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUpdateManyWithoutOwnerNestedInput
     subscription?: SubscriptionUpdateOneWithoutUserNestedInput
     servers?: ServerUpdateManyWithoutUserNestedInput
     archives?: ArchiveUpdateManyWithoutUserNestedInput
@@ -12038,10 +14093,181 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput
     subscription?: SubscriptionUncheckedUpdateOneWithoutUserNestedInput
     servers?: ServerUncheckedUpdateManyWithoutUserNestedInput
     archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserCreateWithoutDefinitionsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: string
+    subscription?: SubscriptionCreateNestedOneWithoutUserInput
+    servers?: ServerCreateNestedManyWithoutUserInput
+    archives?: ArchiveCreateNestedManyWithoutUserInput
+    logs?: ActivityLogCreateNestedManyWithoutUserInput
+    collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutDefinitionsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: string
+    subscription?: SubscriptionUncheckedCreateNestedOneWithoutUserInput
+    servers?: ServerUncheckedCreateNestedManyWithoutUserInput
+    archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
+    logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
+    collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutDefinitionsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutDefinitionsInput, UserUncheckedCreateWithoutDefinitionsInput>
+  }
+
+  export type ServerCreateWithoutDefinitionInput = {
+    id?: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    paramValues?: string | null
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    user: UserCreateNestedOneWithoutServersInput
+    backups?: BackupCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerUncheckedCreateWithoutDefinitionInput = {
+    id?: string
+    userId: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    paramValues?: string | null
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    backups?: BackupUncheckedCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerCreateOrConnectWithoutDefinitionInput = {
+    where: ServerWhereUniqueInput
+    create: XOR<ServerCreateWithoutDefinitionInput, ServerUncheckedCreateWithoutDefinitionInput>
+  }
+
+  export type ServerCreateManyDefinitionInputEnvelope = {
+    data: ServerCreateManyDefinitionInput | ServerCreateManyDefinitionInput[]
+  }
+
+  export type UserUpsertWithoutDefinitionsInput = {
+    update: XOR<UserUpdateWithoutDefinitionsInput, UserUncheckedUpdateWithoutDefinitionsInput>
+    create: XOR<UserCreateWithoutDefinitionsInput, UserUncheckedCreateWithoutDefinitionsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutDefinitionsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutDefinitionsInput, UserUncheckedUpdateWithoutDefinitionsInput>
+  }
+
+  export type UserUpdateWithoutDefinitionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    subscription?: SubscriptionUpdateOneWithoutUserNestedInput
+    servers?: ServerUpdateManyWithoutUserNestedInput
+    archives?: ArchiveUpdateManyWithoutUserNestedInput
+    logs?: ActivityLogUpdateManyWithoutUserNestedInput
+    collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutDefinitionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    subscription?: SubscriptionUncheckedUpdateOneWithoutUserNestedInput
+    servers?: ServerUncheckedUpdateManyWithoutUserNestedInput
+    archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
+    logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
+    collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type ServerUpsertWithWhereUniqueWithoutDefinitionInput = {
+    where: ServerWhereUniqueInput
+    update: XOR<ServerUpdateWithoutDefinitionInput, ServerUncheckedUpdateWithoutDefinitionInput>
+    create: XOR<ServerCreateWithoutDefinitionInput, ServerUncheckedCreateWithoutDefinitionInput>
+  }
+
+  export type ServerUpdateWithWhereUniqueWithoutDefinitionInput = {
+    where: ServerWhereUniqueInput
+    data: XOR<ServerUpdateWithoutDefinitionInput, ServerUncheckedUpdateWithoutDefinitionInput>
+  }
+
+  export type ServerUpdateManyWithWhereWithoutDefinitionInput = {
+    where: ServerScalarWhereInput
+    data: XOR<ServerUpdateManyMutationInput, ServerUncheckedUpdateManyWithoutDefinitionInput>
+  }
+
+  export type GameDefinitionCreateManyOwnerInput = {
+    id?: string
+    slug: string
+    displayName: string
+    icon?: string
+    color?: string
+    description?: string
+    recommendedRamGB?: number
+    requiredDiskGB?: number
+    isBuiltIn?: boolean
+    installMethod: string
+    spec: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type ServerCreateManyUserInput = {
@@ -12058,6 +14284,8 @@ export namespace Prisma {
     enableUpnp?: boolean
     ipAddress: string
     port: number
+    definitionId?: string | null
+    paramValues?: string | null
     cpuUsage?: number
     memoryUsage?: number
     createdAt?: Date | string
@@ -12089,6 +14317,56 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type GameDefinitionUpdateWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    recommendedRamGB?: FloatFieldUpdateOperationsInput | number
+    requiredDiskGB?: FloatFieldUpdateOperationsInput | number
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    installMethod?: StringFieldUpdateOperationsInput | string
+    spec?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    servers?: ServerUpdateManyWithoutDefinitionNestedInput
+  }
+
+  export type GameDefinitionUncheckedUpdateWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    recommendedRamGB?: FloatFieldUpdateOperationsInput | number
+    requiredDiskGB?: FloatFieldUpdateOperationsInput | number
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    installMethod?: StringFieldUpdateOperationsInput | string
+    spec?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    servers?: ServerUncheckedUpdateManyWithoutDefinitionNestedInput
+  }
+
+  export type GameDefinitionUncheckedUpdateManyWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    icon?: StringFieldUpdateOperationsInput | string
+    color?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    recommendedRamGB?: FloatFieldUpdateOperationsInput | number
+    requiredDiskGB?: FloatFieldUpdateOperationsInput | number
+    isBuiltIn?: BoolFieldUpdateOperationsInput | boolean
+    installMethod?: StringFieldUpdateOperationsInput | string
+    spec?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ServerUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -12103,12 +14381,14 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     snapshotInterval?: IntFieldUpdateOperationsInput | number
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
   }
@@ -12127,6 +14407,8 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12151,6 +14433,8 @@ export namespace Prisma {
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12300,6 +14584,106 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ServerCreateManyDefinitionInput = {
+    id?: string
+    userId: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    paramValues?: string | null
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+  }
+
+  export type ServerUpdateWithoutDefinitionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    user?: UserUpdateOneRequiredWithoutServersNestedInput
+    backups?: BackupUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerUncheckedUpdateWithoutDefinitionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerUncheckedUpdateManyWithoutDefinitionInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
 
 
   /**
@@ -12313,6 +14697,10 @@ export namespace Prisma {
      * @deprecated Use ServerCountOutputTypeDefaultArgs instead
      */
     export type ServerCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ServerCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use GameDefinitionCountOutputTypeDefaultArgs instead
+     */
+    export type GameDefinitionCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = GameDefinitionCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use UserDefaultArgs instead
      */
@@ -12341,6 +14729,10 @@ export namespace Prisma {
      * @deprecated Use CollaboratorDefaultArgs instead
      */
     export type CollaboratorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = CollaboratorDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use GameDefinitionDefaultArgs instead
+     */
+    export type GameDefinitionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = GameDefinitionDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

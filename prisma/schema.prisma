@@ -22,6 +22,8 @@ model User {
   name         String
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  role         String        @default("USER") // "USER" | "ADMIN"
+  definitions  GameDefinition[]
   subscription Subscription?
   servers      Server[]
   archives     Archive[]
@@ -56,6 +58,9 @@ model Server {
   enableUpnp    Boolean  @default(false) // Trigger router port mapping
   ipAddress     String
   port          Int
+  definitionId  String?
+  definition    GameDefinition? @relation(fields: [definitionId], references: [id])
+  paramValues   String?         // JSON object of custom param values
   cpuUsage      Float    @default(0) // Mocked live utilization percentage
   memoryUsage   Float    @default(0) // Mocked live RAM utilization in GB
   createdAt        DateTime  @default(now())
@@ -110,4 +115,25 @@ model Collaborator {
   createdAt DateTime @default(now())
 
   @@unique([serverId, userId])
+}
+
+model GameDefinition {
+  id               String   @id @default(cuid())
+  slug             String
+  displayName      String
+  icon             String   @default("🎮")
+  color            String   @default("from-slate-500 to-slate-700 bg-slate-500/10 border-slate-500/30 text-slate-400")
+  description      String   @default("")
+  recommendedRamGB Float    @default(4)
+  requiredDiskGB   Float    @default(3)
+  ownerId          String?
+  owner            User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  isBuiltIn        Boolean  @default(false)
+  installMethod    String   // "STEAMCMD" | "DOWNLOAD" | "CUSTOM_SCRIPT"
+  spec             String   // JSON GameDefinitionSpec
+  servers          Server[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([ownerId, slug])
 }
