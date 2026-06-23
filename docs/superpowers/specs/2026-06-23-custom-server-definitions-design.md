@@ -95,6 +95,8 @@ Uniqueness: slug is unique **per owner** (built-ins under `ownerId = null`, cust
 ### `User` model change
 
 - `role String @default("USER")` — values `USER` | `ADMIN`. Gates the `CUSTOM_SCRIPT` install method.
+- **First registered user is auto-promoted to `ADMIN`.** In `POST /api/auth/register` (the existing `prisma.$transaction` at `src/app/api/auth/register/route.ts:34`), count users inside the transaction; if this is the first (`count === 0`), create with `role: "ADMIN"`, otherwise `"USER"`. The count + create stay in the same transaction to avoid a race on concurrent first registrations.
+- **Pre-release migration:** since the app is not released yet, the migration that adds `role` backfills **all existing accounts to `ADMIN`** (not the `USER` default). Achieved by setting the column default to `ADMIN` for the backfill, then leaving the schema default as `USER` for future registrations — or an explicit `UPDATE User SET role = 'ADMIN'` data migration step. New non-first registrations get `USER`.
 
 ## Launch Engine
 
@@ -143,6 +145,7 @@ The default-port logic (`servers/route.ts`) and editable-config-path logic (`[id
 ## Migration
 
 - Backfill each existing `Server.definitionId` by matching its `game` string to the seeded built-in `slug`.
+- Backfill all existing `User.role` to `ADMIN` (pre-release; see `User` model change). New registrations follow the first-user rule: first user → `ADMIN`, the rest → `USER`.
 
 ## Security
 
