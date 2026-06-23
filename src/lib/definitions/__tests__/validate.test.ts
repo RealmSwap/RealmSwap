@@ -40,6 +40,15 @@ describe("security: script execution gate", () => {
     expect(errs).toMatch(/CUSTOM_SCRIPT/i);
   });
 
+  it("rejects installScript on a STEAMCMD spec", () => {
+    const spec: any = {
+      ...okSpec,
+      install: { appId: "1", installSubDir: "x", checkFile: "x.exe", requiredDiskGB: 1, installScript: "calc.exe" } as any,
+    };
+    const errs = validateSpec(spec, "STEAMCMD").join();
+    expect(errs).toMatch(/CUSTOM_SCRIPT/i);
+  });
+
   it("allows launchScript on a CUSTOM_SCRIPT spec", () => {
     const spec: any = {
       install: { installScript: "install.bat" },
@@ -65,6 +74,16 @@ describe("security: path traversal gate", () => {
     expect(errs).toMatch(/\.\.\.\.\/evil\.bat|\.\.\/\.\.\/evil\.bat|\.\./);
   });
 
+  it("rejects configFiles path with absolute Windows path", () => {
+    const spec: any = {
+      ...okSpec,
+      configFiles: [{ path: "C:\\Windows\\evil.dll", strategy: "template", template: "x" }],
+    };
+    const errs = validateSpec(spec, "STEAMCMD").join();
+    expect(errs.length).toBeGreaterThan(0);
+    expect(errs).toMatch(/path|C:\\/i);
+  });
+
   it("rejects editableConfigPath with .. traversal", () => {
     const spec: any = {
       ...okSpec,
@@ -72,6 +91,15 @@ describe("security: path traversal gate", () => {
     };
     const errs = validateSpec(spec, "STEAMCMD").join(" ");
     expect(errs).toMatch(/\.\./);
+  });
+
+  it("rejects editableConfigPath with absolute POSIX path", () => {
+    const spec: any = {
+      ...okSpec,
+      editableConfigPath: "/etc/passwd",
+    };
+    const errs = validateSpec(spec, "STEAMCMD").join();
+    expect(errs.length).toBeGreaterThan(0);
   });
 
   it("allows a legal nested config path without .. segments", () => {
