@@ -1,10 +1,33 @@
 const { PrismaClient } = require("../src/generated/client");
 const bcrypt = require("bcryptjs");
 
+// Built-in game definitions are the source of truth in src/lib/definitions/builtins.ts.
+// We keep a JSON mirror so the plain-node seed script can read them without TS tooling.
+const builtins = require("../src/lib/definitions/builtins.generated.json");
+
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("Seeding GameVault database...");
+
+  // Seed built-in game definitions (idempotent: findFirst → update/create)
+  for (const def of builtins) {
+    const install = def.spec.install || {};
+    const data = {
+      slug: def.slug, displayName: def.displayName, icon: def.icon, color: def.color,
+      description: def.description, recommendedRamGB: def.recommendedRamGB,
+      requiredDiskGB: typeof install.requiredDiskGB === "number" ? install.requiredDiskGB : 3,
+      ownerId: null, isBuiltIn: true, installMethod: def.installMethod,
+      spec: JSON.stringify(def.spec),
+    };
+    const existing = await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug: def.slug } });
+    if (existing) {
+      await prisma.gameDefinition.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.gameDefinition.create({ data });
+    }
+  }
+  console.log("Seeded built-in game definitions.");
 
   // Clean existing database
   await prisma.activityLog.deleteMany({});

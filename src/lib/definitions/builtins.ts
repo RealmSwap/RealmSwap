@@ -1,3 +1,5 @@
+// NOTE: After editing BUILTIN_DEFINITIONS, regenerate builtins.generated.json:
+//   npx tsx -e "import {BUILTIN_DEFINITIONS} from './src/lib/definitions/builtins'; import fs from 'fs'; fs.writeFileSync('./src/lib/definitions/builtins.generated.json', JSON.stringify(BUILTIN_DEFINITIONS, null, 2));"
 import type { GameDefinitionSpec, InstallMethod } from "./types";
 
 export interface BuiltinDefinition {
