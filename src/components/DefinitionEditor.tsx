@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -172,12 +172,45 @@ function TextareaBase({ className = "", ...props }: React.TextareaHTMLAttributes
   );
 }
 
+// useLayoutEffect warns during SSR; fall back to useEffect on the server.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+type TooltipPlacement = { vertical: "top" | "bottom"; horizontal: "left" | "right" };
+
 function FieldHelp({ text, label }: { text: string; label?: string }) {
   const [open, setOpen] = useState(false);
+  // Default to above-and-left-aligned; measurement flips it away from viewport edges.
+  const [placement, setPlacement] = useState<TooltipPlacement>({ vertical: "top", horizontal: "left" });
   const id = React.useId();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const tipRef = useRef<HTMLSpanElement>(null);
+
+  // When the tooltip opens, measure available space and flip it to whichever
+  // side keeps it on screen. Runs before paint so there's no visible jump.
+  useIsomorphicLayoutEffect(() => {
+    if (!open || !buttonRef.current || !tipRef.current) return;
+    const btn = buttonRef.current.getBoundingClientRect();
+    const tip = tipRef.current.getBoundingClientRect();
+    const margin = 8;
+    const spaceAbove = btn.top;
+    const spaceBelow = window.innerHeight - btn.bottom;
+    const vertical: TooltipPlacement["vertical"] =
+      spaceAbove < tip.height + margin && spaceBelow > spaceAbove ? "bottom" : "top";
+    const horizontal: TooltipPlacement["horizontal"] =
+      btn.left + tip.width > window.innerWidth - margin ? "right" : "left";
+    setPlacement((prev) =>
+      prev.vertical === vertical && prev.horizontal === horizontal ? prev : { vertical, horizontal },
+    );
+  }, [open]);
+
+  const verticalClass = placement.vertical === "top" ? "bottom-full mb-1" : "top-full mt-1";
+  const horizontalClass = placement.horizontal === "left" ? "left-0" : "right-0";
+
   return (
     <span className="relative inline-flex items-center">
       <button
+        ref={buttonRef}
         type="button"
         aria-label={label ? `Help: ${label}` : "Help"}
         aria-describedby={open ? id : undefined}
@@ -194,9 +227,10 @@ function FieldHelp({ text, label }: { text: string; label?: string }) {
       </button>
       {open && (
         <span
+          ref={tipRef}
           id={id}
           role="tooltip"
-          className="absolute left-5 bottom-full mb-1 z-50 w-64 px-3 py-2 rounded-lg bg-slate-950 border border-white/10 shadow-lg text-xs text-slate-300 font-normal normal-case leading-relaxed pointer-events-none"
+          className={`absolute ${verticalClass} ${horizontalClass} z-50 w-64 px-3 py-2 rounded-lg bg-slate-950 border border-white/10 shadow-lg text-xs text-slate-300 font-normal normal-case leading-relaxed pointer-events-none`}
         >
           {text}
         </span>
