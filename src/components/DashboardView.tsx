@@ -158,22 +158,26 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   };
 
   const toggleConsolePause = () => {
-    setConsolePaused((prev) => {
-      const next = !prev;
-      if (!next) {
-        // Resuming: flush buffered lines and jump to bottom
-        setConsoleLines((cur) => capLines([...cur, ...pendingLinesRef.current]));
-        pendingLinesRef.current = [];
-        setPendingCount(0);
-        autoScrollRef.current = true;
-        requestAnimationFrame(() => {
-          if (logContainerRef.current) {
-            logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
-          }
-        });
+    if (consolePausedRef.current) {
+      // Resuming: capture the buffered lines BEFORE clearing the ref, then
+      // flush. Reading pendingLinesRef inside the deferred setConsoleLines
+      // updater would see the already-emptied ref, so capture it locally.
+      const pending = pendingLinesRef.current;
+      pendingLinesRef.current = [];
+      setPendingCount(0);
+      setConsolePaused(false);
+      if (pending.length > 0) {
+        setConsoleLines((cur) => capLines([...cur, ...pending]));
       }
-      return next;
-    });
+      autoScrollRef.current = true;
+      requestAnimationFrame(() => {
+        if (logContainerRef.current) {
+          logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+        }
+      });
+    } else {
+      setConsolePaused(true);
+    }
   };
 
   // Poll stats for running servers
