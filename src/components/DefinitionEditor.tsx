@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -9,6 +9,7 @@ import {
   Trash2,
   Server as ServerIcon,
   ShieldAlert,
+  HelpCircle,
 } from "lucide-react";
 import type {
   GameDefinitionSpec,
@@ -57,6 +58,81 @@ interface PortRow {
 const DEFAULT_COLOR =
   "from-slate-500 to-slate-700 bg-slate-500/10 border-slate-500/30 text-slate-400";
 
+const FIELD_HELP = {
+  // Basic Info
+  displayName: 'Name shown in your server catalog. Free-form, e.g. "My ARK Server".',
+  icon: "A single emoji used as the catalog icon, e.g. 🦖. Up to 4 characters.",
+  description: "Short blurb shown under the name in the catalog. Optional.",
+  recommendedRam:
+    "Suggested RAM for this server, shown as guidance when creating one. Check the game's server docs; e.g. 4.",
+  defaultPort:
+    "Primary network port the server listens on (1–65535). Use the game's documented default, e.g. 27015 for Source games.",
+
+  // SteamCMD
+  steamAppId:
+    "The numeric Steam ID of the dedicated-server app. Find it on SteamDB or the store URL store.steampowered.com/app/<ID>. Dedicated servers often have a different ID than the game — search SteamDB for the '… Dedicated Server' entry, e.g. 376030.",
+  scInstallSubDir:
+    "Folder (created under the install root) that holds this game's files. Use a short slug, e.g. ark-server, to keep games from colliding on disk.",
+  scCheckFile:
+    "A file that exists only after a successful install, used to verify install completed. Pick the server executable or a known data file, relative to the install dir, e.g. ShooterGame/Binaries/Win64/ShooterGameServer.exe.",
+  requiredDisk:
+    "Approximate disk space the install needs; warns before installing if space is low. Check the game's SteamDB 'Disk' size, e.g. 30.",
+
+  // Download
+  downloadUrl:
+    "Direct URL to the server archive or binary, e.g. https://example.com/server.zip. Must be publicly reachable from this host.",
+  fileName:
+    "Name to save the downloaded file as, e.g. server.zip. Include the correct extension so unzip works.",
+  dlCheckFile:
+    "A file that exists only after a successful install, used to verify install completed, relative to the install dir, e.g. server.exe.",
+  dlInstallSubDir:
+    "Optional folder (under the install root) to place files in, e.g. server-files. Leave blank to use the install root.",
+  unzip:
+    "Tick if the downloaded file is an archive (.zip) that should be extracted after download.",
+
+  // Custom Script
+  installScript:
+    "Shell script that installs the server. Runs with this app's privileges on the host — only use trusted scripts.",
+  launchScript:
+    "Shell script that starts the server. Runs with this app's privileges on the host.",
+  ack:
+    "Required acknowledgement: custom scripts run with full host privileges of this app's account.",
+
+  // Launch Configuration
+  executable:
+    "The program launched to start the server, relative to the working dir, e.g. server.exe. If it's a global command like java, enter the command and tick 'Executable is on PATH'.",
+  cwdSubDir:
+    "Folder (relative to install dir) to run the server from. Set it when the executable expects to launch from its own folder, e.g. ShooterGame/Binaries/Win64.",
+  executableOnPath:
+    "Tick when the executable is a global command (java, python, node) resolved via PATH rather than a file inside the install directory.",
+  launchArgs:
+    "Command-line arguments passed to the executable, one per row, e.g. -batchmode. Reference params with {{paramKey}} if needed.",
+
+  // Params builder
+  paramKey:
+    "Variable name referenced in config templates and args as {{key}}. No spaces, e.g. maxPlayers.",
+  paramLabel:
+    'Human-friendly name shown to users when they create a server, e.g. "Max Players".',
+  paramType:
+    "Field type users get: text, number (enforces Min/Max), boolean (checkbox), or enum (dropdown — fill Options).",
+  paramDefault: "Pre-filled value when a user creates a server. Optional.",
+  paramRequired: "Tick to force users to provide a value for this parameter.",
+  paramOptions: "Comma-separated choices for the dropdown, e.g. easy,normal,hard.",
+  paramMin: "Lowest allowed numeric value users can enter.",
+  paramMax: "Highest allowed numeric value users can enter.",
+
+  // Config Files builder
+  configPath:
+    "Path (relative to install dir) of a config file written before each launch, e.g. config/server.cfg.",
+  configTemplate:
+    "File contents written at launch. {{paramKey}} is replaced with the param's value, so users' settings flow into the config, e.g. MaxPlayers={{maxPlayers}}.",
+
+  // Ports builder
+  portProtocol: "TCP or UDP — match what the game server uses for this port.",
+  portNumber:
+    "An extra port (beyond Default Port) the server uses, e.g. 27016. Check the game's server docs.",
+} as const;
+
 function emptyParam(): ParamRow {
   return { key: "", label: "", type: "text", default: "", options: "", min: "", max: "", required: false };
 }
@@ -96,8 +172,80 @@ function TextareaBase({ className = "", ...props }: React.TextareaHTMLAttributes
   );
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="block text-xs text-slate-400 mb-1 font-semibold">{children}</label>;
+// useLayoutEffect warns during SSR; fall back to useEffect on the server.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+type TooltipPlacement = { vertical: "top" | "bottom"; horizontal: "left" | "right" };
+
+function FieldHelp({ text, label }: { text: string; label?: string }) {
+  const [open, setOpen] = useState(false);
+  // Default to above-and-left-aligned; measurement flips it away from viewport edges.
+  const [placement, setPlacement] = useState<TooltipPlacement>({ vertical: "top", horizontal: "left" });
+  const id = React.useId();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const tipRef = useRef<HTMLSpanElement>(null);
+
+  // When the tooltip opens, measure available space and flip it to whichever
+  // side keeps it on screen. Runs before paint so there's no visible jump.
+  useIsomorphicLayoutEffect(() => {
+    if (!open || !buttonRef.current || !tipRef.current) return;
+    const btn = buttonRef.current.getBoundingClientRect();
+    const tip = tipRef.current.getBoundingClientRect();
+    const margin = 8;
+    const spaceAbove = btn.top;
+    const spaceBelow = window.innerHeight - btn.bottom;
+    const vertical: TooltipPlacement["vertical"] =
+      spaceAbove < tip.height + margin && spaceBelow > spaceAbove ? "bottom" : "top";
+    const horizontal: TooltipPlacement["horizontal"] =
+      btn.left + tip.width > window.innerWidth - margin ? "right" : "left";
+    setPlacement((prev) =>
+      prev.vertical === vertical && prev.horizontal === horizontal ? prev : { vertical, horizontal },
+    );
+  }, [open]);
+
+  const verticalClass = placement.vertical === "top" ? "bottom-full mb-1" : "top-full mt-1";
+  const horizontalClass = placement.horizontal === "left" ? "left-0" : "right-0";
+
+  return (
+    <span className="relative inline-flex items-center">
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-label={label ? `Help: ${label}` : "Help"}
+        aria-describedby={open ? id : undefined}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setOpen(false);
+        }}
+        className="text-slate-500 hover:text-accentPurple focus-visible:text-accentPurple rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accentPurple transition-colors"
+      >
+        <HelpCircle className="w-3.5 h-3.5" />
+      </button>
+      {open && (
+        <span
+          ref={tipRef}
+          id={id}
+          role="tooltip"
+          className={`absolute ${verticalClass} ${horizontalClass} z-50 w-64 px-3 py-2 rounded-lg bg-slate-950 border border-white/10 shadow-lg text-xs text-slate-300 font-normal normal-case leading-relaxed pointer-events-none`}
+        >
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function FieldLabel({ children, help }: { children: React.ReactNode; help?: string }) {
+  return (
+    <label className="flex items-center gap-1 text-xs text-slate-400 mb-1 font-semibold">
+      <span>{children}</span>
+      {help && <FieldHelp text={help} label={typeof children === "string" ? children : undefined} />}
+    </label>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -122,7 +270,7 @@ function ParamsBuilder({
         <div key={i} className="p-3 rounded-xl bg-slate-950/40 border border-white/5 space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <FieldLabel>Key</FieldLabel>
+              <FieldLabel help={FIELD_HELP.paramKey}>Key</FieldLabel>
               <InputBase
                 value={row.key}
                 onChange={(e) => update(i, { key: e.target.value })}
@@ -130,7 +278,7 @@ function ParamsBuilder({
               />
             </div>
             <div>
-              <FieldLabel>Label</FieldLabel>
+              <FieldLabel help={FIELD_HELP.paramLabel}>Label</FieldLabel>
               <InputBase
                 value={row.label}
                 onChange={(e) => update(i, { label: e.target.value })}
@@ -140,7 +288,7 @@ function ParamsBuilder({
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <FieldLabel>Type</FieldLabel>
+              <FieldLabel help={FIELD_HELP.paramType}>Type</FieldLabel>
               <select
                 value={row.type}
                 onChange={(e) => update(i, { type: e.target.value as ParamType })}
@@ -153,7 +301,7 @@ function ParamsBuilder({
               </select>
             </div>
             <div>
-              <FieldLabel>Default</FieldLabel>
+              <FieldLabel help={FIELD_HELP.paramDefault}>Default</FieldLabel>
               <InputBase
                 value={row.default}
                 onChange={(e) => update(i, { default: e.target.value })}
@@ -169,12 +317,13 @@ function ParamsBuilder({
                   className="accent-accentPurple"
                 />
                 Required
+                <FieldHelp text={FIELD_HELP.paramRequired} label="Required" />
               </label>
             </div>
           </div>
           {row.type === "enum" && (
             <div>
-              <FieldLabel>Options (comma-separated)</FieldLabel>
+              <FieldLabel help={FIELD_HELP.paramOptions}>Options (comma-separated)</FieldLabel>
               <InputBase
                 value={row.options}
                 onChange={(e) => update(i, { options: e.target.value })}
@@ -185,7 +334,7 @@ function ParamsBuilder({
           {row.type === "number" && (
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <FieldLabel>Min</FieldLabel>
+                <FieldLabel help={FIELD_HELP.paramMin}>Min</FieldLabel>
                 <InputBase
                   type="number"
                   value={row.min}
@@ -194,7 +343,7 @@ function ParamsBuilder({
                 />
               </div>
               <div>
-                <FieldLabel>Max</FieldLabel>
+                <FieldLabel help={FIELD_HELP.paramMax}>Max</FieldLabel>
                 <InputBase
                   type="number"
                   value={row.max}
@@ -246,7 +395,7 @@ function ConfigFilesBuilder({
       {rows.map((row, i) => (
         <div key={i} className="p-3 rounded-xl bg-slate-950/40 border border-white/5 space-y-2">
           <div>
-            <FieldLabel>File Path (relative to install dir)</FieldLabel>
+            <FieldLabel help={FIELD_HELP.configPath}>File Path (relative to install dir)</FieldLabel>
             <InputBase
               value={row.path}
               onChange={(e) => update(i, { path: e.target.value })}
@@ -254,7 +403,7 @@ function ConfigFilesBuilder({
             />
           </div>
           <div>
-            <FieldLabel>Template (use {"{{param}}"} for variables)</FieldLabel>
+            <FieldLabel help={FIELD_HELP.configTemplate}>Template (use {"{{param}}"} for variables)</FieldLabel>
             <TextareaBase
               rows={4}
               value={row.template}
@@ -301,6 +450,16 @@ function PortsBuilder({
 
   return (
     <div className="space-y-2">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="w-24 inline-flex items-center gap-1 text-xs text-slate-400 font-semibold">
+          Protocol
+          <FieldHelp text={FIELD_HELP.portProtocol} label="Protocol" />
+        </span>
+        <span className="flex-1 inline-flex items-center gap-1 text-xs text-slate-400 font-semibold">
+          Port
+          <FieldHelp text={FIELD_HELP.portNumber} label="Port" />
+        </span>
+      </div>
       {rows.map((row, i) => (
         <div key={i} className="flex items-center gap-2">
           <select
@@ -666,7 +825,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
               <SectionLabel>Basic Info</SectionLabel>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <FieldLabel>Display Name *</FieldLabel>
+                  <FieldLabel help={FIELD_HELP.displayName}>Display Name *</FieldLabel>
                   <InputBase
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
@@ -675,7 +834,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                   />
                 </div>
                 <div>
-                  <FieldLabel>Icon (emoji)</FieldLabel>
+                  <FieldLabel help={FIELD_HELP.icon}>Icon (emoji)</FieldLabel>
                   <InputBase
                     value={icon}
                     onChange={(e) => setIcon(e.target.value)}
@@ -685,7 +844,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                 </div>
               </div>
               <div>
-                <FieldLabel>Description</FieldLabel>
+                <FieldLabel help={FIELD_HELP.description}>Description</FieldLabel>
                 <TextareaBase
                   rows={2}
                   value={description}
@@ -695,7 +854,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <FieldLabel>Recommended RAM (GB)</FieldLabel>
+                  <FieldLabel help={FIELD_HELP.recommendedRam}>Recommended RAM (GB)</FieldLabel>
                   <InputBase
                     type="number"
                     min="1"
@@ -705,7 +864,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                   />
                 </div>
                 <div>
-                  <FieldLabel>Default Port</FieldLabel>
+                  <FieldLabel help={FIELD_HELP.defaultPort}>Default Port</FieldLabel>
                   <InputBase
                     type="number"
                     min="1"
@@ -745,7 +904,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                 <div className="p-4 rounded-xl bg-slate-950/40 border border-white/5 space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <FieldLabel>Steam App ID *</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.steamAppId}>Steam App ID *</FieldLabel>
                       <InputBase
                         value={sc_appId}
                         onChange={(e) => setSc_appId(e.target.value)}
@@ -754,7 +913,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                       />
                     </div>
                     <div>
-                      <FieldLabel>Install Sub-Directory *</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.scInstallSubDir}>Install Sub-Directory *</FieldLabel>
                       <InputBase
                         value={sc_installSubDir}
                         onChange={(e) => setSc_installSubDir(e.target.value)}
@@ -765,7 +924,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <FieldLabel>Check File (path confirming install) *</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.scCheckFile}>Check File (path confirming install) *</FieldLabel>
                       <InputBase
                         value={sc_checkFile}
                         onChange={(e) => setSc_checkFile(e.target.value)}
@@ -774,7 +933,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                       />
                     </div>
                     <div>
-                      <FieldLabel>Required Disk (GB)</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.requiredDisk}>Required Disk (GB)</FieldLabel>
                       <InputBase
                         type="number"
                         min="0"
@@ -791,7 +950,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
               {tab === "DOWNLOAD" && (
                 <div className="p-4 rounded-xl bg-slate-950/40 border border-white/5 space-y-4">
                   <div>
-                    <FieldLabel>Download URL *</FieldLabel>
+                    <FieldLabel help={FIELD_HELP.downloadUrl}>Download URL *</FieldLabel>
                     <InputBase
                       value={dl_url}
                       onChange={(e) => setDl_url(e.target.value)}
@@ -801,7 +960,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <FieldLabel>File Name *</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.fileName}>File Name *</FieldLabel>
                       <InputBase
                         value={dl_fileName}
                         onChange={(e) => setDl_fileName(e.target.value)}
@@ -810,7 +969,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                       />
                     </div>
                     <div>
-                      <FieldLabel>Check File (path confirming install) *</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.dlCheckFile}>Check File (path confirming install) *</FieldLabel>
                       <InputBase
                         value={dl_checkFile}
                         onChange={(e) => setDl_checkFile(e.target.value)}
@@ -821,7 +980,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                   </div>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <FieldLabel>Install Sub-Directory (optional)</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.dlInstallSubDir}>Install Sub-Directory (optional)</FieldLabel>
                       <InputBase
                         value={dl_installSubDir}
                         onChange={(e) => setDl_installSubDir(e.target.value)}
@@ -837,6 +996,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                           className="accent-accentPurple"
                         />
                         Extract / Unzip after download
+                        <FieldHelp text={FIELD_HELP.unzip} label="Extract / Unzip" />
                       </label>
                     </div>
                   </div>
@@ -858,12 +1018,13 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                         className="accent-accentPurple"
                       />
                       I understand and accept the risk.
+                      <FieldHelp text={FIELD_HELP.ack} label="Accept risk" />
                     </label>
                   </div>
 
                   <div className="p-4 rounded-xl bg-slate-950/40 border border-white/5 space-y-4">
                     <div>
-                      <FieldLabel>Install Script *</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.installScript}>Install Script *</FieldLabel>
                       <TextareaBase
                         rows={8}
                         value={cs_installScript}
@@ -873,7 +1034,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                       />
                     </div>
                     <div>
-                      <FieldLabel>Launch Script *</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.launchScript}>Launch Script *</FieldLabel>
                       <TextareaBase
                         rows={8}
                         value={cs_launchScript}
@@ -894,7 +1055,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                 <div className="p-4 rounded-xl bg-slate-950/40 border border-white/5 space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <FieldLabel>Executable *</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.executable}>Executable *</FieldLabel>
                       <InputBase
                         value={executable}
                         onChange={(e) => setExecutable(e.target.value)}
@@ -903,7 +1064,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                       />
                     </div>
                     <div>
-                      <FieldLabel>Working Directory Sub-path (optional)</FieldLabel>
+                      <FieldLabel help={FIELD_HELP.cwdSubDir}>Working Directory Sub-path (optional)</FieldLabel>
                       <InputBase
                         value={cwdSubDir}
                         onChange={(e) => setCwdSubDir(e.target.value)}
@@ -921,11 +1082,12 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                         className="accent-accentPurple"
                       />
                       Executable is on PATH (e.g. <code className="text-xs bg-slate-800 px-1 rounded">java</code>, interpreter commands)
+                      <FieldHelp text={FIELD_HELP.executableOnPath} label="Executable on PATH" />
                     </label>
                   </div>
 
                   <div>
-                    <FieldLabel>Launch Arguments</FieldLabel>
+                    <FieldLabel help={FIELD_HELP.launchArgs}>Launch Arguments</FieldLabel>
                     <ArgsBuilder args={args} onChange={setArgs} />
                   </div>
                 </div>
