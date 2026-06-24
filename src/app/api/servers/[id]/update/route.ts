@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
-import { updateGameServer } from "@/lib/localRunner";
+import { getRunner } from "@/lib/runners";
 
 export async function POST(
   req: NextRequest,
@@ -36,7 +36,8 @@ export async function POST(
     }
 
     // Run update in background (don't await — it streams progress to logs)
-    updateGameServer(params.id).catch((err) => {
+    const runner = getRunner(server.runnerType);
+    runner.update(server, null).catch((err) => {
       console.error(`Background update failed for ${params.id}:`, err);
     });
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { stopLocalServer } from "@/lib/localRunner";
+import { getRunner } from "@/lib/runners";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
@@ -26,13 +26,12 @@ export async function POST(
     }
     const { server } = access;
 
-    // Stop local server if running
-    if (server.runnerType === "LOCAL") {
-      try {
-        await stopLocalServer(server.id);
-      } catch (err) {
-        console.error("Error stopping local server before archiving:", err);
-      }
+    // Stop server if running
+    try {
+      const runner = getRunner(server.runnerType);
+      await runner.stop(server);
+    } catch (err) {
+      console.error("Error stopping server before archiving:", err);
     }
 
     // Generate a realistic save size in GB based on the game

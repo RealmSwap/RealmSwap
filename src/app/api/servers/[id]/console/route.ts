@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { localProcesses } from "@/lib/localRunner";
+import { getRunner } from "@/lib/runners";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 
@@ -27,17 +27,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       return NextResponse.json({ error: "Invalid command" }, { status: 400 });
     }
 
-    const child = localProcesses.get(serverId);
-    if (!child) {
-      return NextResponse.json({ error: "Server is not running locally or process not found." }, { status: 400 });
-    }
-
-    if (!child.stdin) {
-      return NextResponse.json({ error: "Server process does not accept stdin input." }, { status: 400 });
-    }
-
-    // Write command to process stdin with newline
-    child.stdin.write(command + "\n");
+    const runner = getRunner(access.server.runnerType);
+    await runner.sendCommand(access.server, command);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

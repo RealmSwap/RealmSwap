@@ -1,0 +1,139 @@
+// Prisma Schema for GameVault
+//
+// To switch this to PostgreSQL for production:
+// 1. Change the provider below to "postgresql"
+// 2. Change the url to env("DATABASE_URL")
+// 3. Update your local .env file with your PostgreSQL connection string
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider   = "prisma-client-js"
+  output     = "../src/generated/client"
+  engineType = "binary"
+}
+
+model User {
+  id                 String           @id @default(cuid())
+  email              String           @unique
+  passwordHash       String
+  name               String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  role               String           @default("USER") // "USER" | "ADMIN"
+  definitions        GameDefinition[]
+  subscription       Subscription?
+  servers            Server[]
+  archives           Archive[]
+  logs               ActivityLog[]
+  collaboratorAccess Collaborator[]
+}
+
+model Subscription {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        String // "STARTER", "PARTY", "GUILD"
+  status      String // "ACTIVE", "CANCELED"
+  activeSlots Int // 1, 2, or 4 based on plan
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Server {
+  id               String          @id @default(cuid())
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  game             String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
+  ramAllocation    Float // GB allocated
+  region           String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
+  status           String // "RUNNING", "STOPPED", "STARTING"
+  runnerType       String          @default("CLOUD") // "CLOUD" or "LOCAL"
+  localPath        String? // File path for local server storage
+  pid              Int? // Process ID for local runner execution
+  password         String? // Unhashed password for Valheim/game server configs
+  enableUpnp       Boolean         @default(false) // Trigger router port mapping
+  ipAddress        String
+  port             Int
+  definitionId     String?
+  definition       GameDefinition? @relation(fields: [definitionId], references: [id])
+  paramValues      String? // JSON object of custom param values
+  cpuUsage         Float           @default(0) // Mocked live utilization percentage
+  memoryUsage      Float           @default(0) // Mocked live RAM utilization in GB
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  snapshotInterval Int             @default(0) // 0 = disabled, 1, 6, 12, 24 hours
+  lastSnapshotAt   DateTime?
+  backups          Backup[]
+  collaborators    Collaborator[]
+}
+
+model Archive {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serverName String
+  game       String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
+  saveSizeGB Float // Saved world storage size in GB
+  archivedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String // "CREATE_SERVER", "START_SERVER", "STOP_SERVER", "RESTART_SERVER", "ARCHIVE_SERVER", "RESTORE_SERVER", "DELETE_ARCHIVE"
+  details   String
+  createdAt DateTime @default(now())
+}
+
+model Backup {
+  id         String   @id @default(cuid())
+  serverId   String
+  server     Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  userId     String
+  name       String // e.g. "Survival World - Auto Save" or "Manual Snapshot"
+  game       String // "MINECRAFT", etc.
+  filePath   String // path to backup zip/folder on disk
+  fileSizeMB Float
+  backupType String // "MANUAL" or "AUTOMATED"
+  createdAt  DateTime @default(now())
+}
+
+model Collaborator {
+  id        String   @id @default(cuid())
+  serverId  String
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String // "ADMIN" or "CO_HOST"
+  createdAt DateTime @default(now())
+
+  @@unique([serverId, userId])
+}
+
+model GameDefinition {
+  id               String   @id @default(cuid())
+  slug             String
+  displayName      String
+  icon             String   @default("🎮")
+  color            String   @default("from-slate-500 to-slate-700 bg-slate-500/10 border-slate-500/30 text-slate-400")
+  description      String   @default("")
+  recommendedRamGB Float    @default(4)
+  requiredDiskGB   Float    @default(3)
+  ownerId          String?
+  owner            User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  isBuiltIn        Boolean  @default(false)
+  installMethod    String // "STEAMCMD" | "DOWNLOAD" | "CUSTOM_SCRIPT"
+  spec             String // JSON GameDefinitionSpec
+  servers          Server[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([ownerId, slug])
+}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { getLocalServerLogs } from "@/lib/localRunner";
+import { getRunner } from "@/lib/runners";
 import { verifyServerAccess } from "@/lib/serverAuth";
 
 export async function GET(
@@ -23,28 +23,10 @@ export async function GET(
     }
     const { server } = access;
 
-    if (server.runnerType === "LOCAL") {
-      const logs = getLocalServerLogs(server.id);
-      return NextResponse.json({ logs });
-    } else {
-      // Return high-fidelity mock cloud logs
-      const isRunning = server.status === "RUNNING";
-      const timestamp = new Date().toISOString().split("T")[1].slice(0, 8);
-      
-      const mockCloudLogs = isRunning ? [
-        `[${timestamp} INFO]: Starting ${server.game.toLowerCase()} server version 1.20.4`,
-        `[${timestamp} INFO]: Loading properties`,
-        `[${timestamp} INFO]: Default game type: SURVIVAL`,
-        `[${timestamp} INFO]: Generating keypair`,
-        `[${timestamp} INFO]: Starting OpenJDK 64-Bit Server VM on Linux`,
-        `[${timestamp} INFO]: Preparing level "${server.name}"`,
-        `[${timestamp} INFO]: Preparing start region for dimension minecraft:overworld`,
-        `[${timestamp} INFO]: Time elapsed: 1420 ms`,
-        `[${timestamp} INFO]: Done (2.145s)! For help, type "help"`
-      ].join("\n") : "Server is offline. Press Start to boot the server instance.";
+    const runner = getRunner(server.runnerType);
+    const logs = await runner.getLogs(server);
 
-      return NextResponse.json({ logs: mockCloudLogs });
-    }
+    return NextResponse.json({ logs });
   } catch (error) {
     console.error("GET /api/servers/[id]/logs error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
