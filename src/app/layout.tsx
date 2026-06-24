@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ModalProvider } from "@/components/ModalProvider";
 
 export const metadata: Metadata = {
   title: "RealmSwap | Host Locally. Play Globally",
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-background text-white antialiased cyber-grid-bg">
-        {children}
+        <ModalProvider>
+          {children}
+        </ModalProvider>
       </body>
     </html>
   );

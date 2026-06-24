@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useModal } from "@/components/ModalProvider";
 import { 
   Server as ServerIcon, 
   Archive, 
@@ -104,6 +105,7 @@ function ServerPlayerCount({ server }: { server: any }) {
 
 export default function DashboardView({ initialData }: DashboardViewProps) {
   const router = useRouter();
+  const { showModal } = useModal();
   const [data, setData] = useState(initialData);
   const [copiedIp, setCopiedIp] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null); // "server-id" or "archive-id"
@@ -303,30 +305,38 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   };
 
   // Delete Archive
-  const handleDeleteArchive = async (archiveId: string) => {
-    if (!confirm("Are you sure you want to permanently delete this vaulted game world? This cannot be undone.")) return;
-    setActionLoading(`${archiveId}-delete`);
-    setErrorMessage(null);
-    try {
-      const res = await fetch(`/api/archives/${archiveId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to delete archive");
-      }
+  const handleDeleteArchive = (archiveId: string) => {
+    showModal({
+      type: "warning",
+      title: "Delete Vaulted World",
+      message: "Are you sure you want to permanently delete this vaulted game world? This cannot be undone.",
+      confirmText: "Delete Permanently",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setActionLoading(`${archiveId}-delete`);
+        setErrorMessage(null);
+        try {
+          const res = await fetch(`/api/archives/${archiveId}`, {
+            method: "DELETE",
+          });
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.error || "Failed to delete archive");
+          }
 
-      // Refetch whole state
-      const stateRes = await fetch("/api/servers");
-      if (stateRes.ok) {
-        const fresh = await stateRes.json();
-        setData(fresh);
+          // Refetch whole state
+          const stateRes = await fetch("/api/servers");
+          if (stateRes.ok) {
+            const fresh = await stateRes.json();
+            setData(fresh);
+          }
+        } catch (err: any) {
+          setErrorMessage(err.message);
+        } finally {
+          setActionLoading(null);
+        }
       }
-    } catch (err: any) {
-      setErrorMessage(err.message);
-    } finally {
-      setActionLoading(null);
-    }
+    });
   };
 
   // Import World

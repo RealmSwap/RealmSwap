@@ -23,6 +23,7 @@ import {
   ShieldAlert,
   Terminal
 } from "lucide-react";
+import { useModal } from "@/components/ModalProvider";
 
 interface BackupsViewProps {
   servers: any[];
@@ -39,6 +40,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { showModal } = useModal();
 
   // Fetch backups for the selected server
   const loadBackups = async (serverId: string) => {
@@ -129,57 +131,66 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
   };
 
   // Restore backup
-  const handleRestore = async (backup: any) => {
+  const handleRestore = (backup: any) => {
     if (!selectedServer) return;
     
-    // Safety warnings
-    const confirmMessage = 
-      `WARNING: Restoring the snapshot '${backup.name}' will OVERWRITE the current world save of the server '${selectedServer.name}'.\n\n` +
-      `This action cannot be undone. Are you sure you want to restore?`;
+    showModal({
+      type: "warning",
+      title: "Restore Snapshot",
+      message: `WARNING: Restoring the snapshot '${backup.name}' will OVERWRITE the current world save of the server '${selectedServer.name}'.\n\nThis action cannot be undone. Are you sure you want to restore?`,
+      confirmText: "Restore World",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setActionLoading(`${backup.id}-restore`);
+        setError(null);
+        setSuccess(null);
 
-    if (!confirm(confirmMessage)) return;
+        try {
+          const res = await fetch(`/api/backups/${backup.id}/restore`, {
+            method: "POST",
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to restore snapshot");
 
-    setActionLoading(`${backup.id}-restore`);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const res = await fetch(`/api/backups/${backup.id}/restore`, {
-        method: "POST",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to restore snapshot");
-
-      setSuccess(`Successfully restored world to snapshot '${backup.name}'!`);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setActionLoading(null);
-    }
+          setSuccess(`Successfully restored world to snapshot '${backup.name}'!`);
+        } catch (err: any) {
+          setError(err.message);
+        } finally {
+          setActionLoading(null);
+        }
+      }
+    });
   };
 
   // Delete backup
-  const handleDelete = async (backup: any) => {
-    if (!confirm(`Are you sure you want to permanently delete snapshot '${backup.name}'?`)) return;
+  const handleDelete = (backup: any) => {
+    showModal({
+      type: "error",
+      title: "Delete Snapshot",
+      message: `Are you sure you want to permanently delete snapshot '${backup.name}'?`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setActionLoading(`${backup.id}-delete`);
+        setError(null);
+        setSuccess(null);
 
-    setActionLoading(`${backup.id}-delete`);
-    setError(null);
-    setSuccess(null);
+        try {
+          const res = await fetch(`/api/backups/${backup.id}`, {
+            method: "DELETE",
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to delete snapshot");
 
-    try {
-      const res = await fetch(`/api/backups/${backup.id}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete snapshot");
-
-      setSuccess("Snapshot permanently deleted.");
-      loadBackups(selectedServer.id);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setActionLoading(null);
-    }
+          setSuccess("Snapshot permanently deleted.");
+          loadBackups(selectedServer.id);
+        } catch (err: any) {
+          setError(err.message);
+        } finally {
+          setActionLoading(null);
+        }
+      }
+    });
   };
 
   return (
