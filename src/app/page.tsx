@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
-  Server as ServerIcon, 
   Archive, 
   Cpu, 
   Database, 
@@ -95,12 +94,7 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-borderDark px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="p-2 bg-accentPurple/20 border border-accentPurple/30 rounded-lg group-hover:box-glow-purple transition-all duration-300">
-              <ServerIcon className="w-6 h-6 text-accentPurple" />
-            </div>
-            <span className="font-extrabold text-2xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-accentPurple">
-              REALM<span className="text-accentPurple text-glow-purple">SWAP</span>
-            </span>
+            <img src="/logo.png" alt="RealmSwap" className="h-10 w-auto scale-[7] origin-left -translate-x-16" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-mutedText">
@@ -400,12 +394,7 @@ export default function LandingPage() {
       <footer className="mt-auto border-t border-borderDark bg-[#08090c] py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-accentPurple/20 border border-accentPurple/30 rounded-lg">
-              <ServerIcon className="w-5 h-5 text-accentPurple" />
-            </div>
-            <span className="font-extrabold text-lg tracking-wider">
-              REALM<span className="text-accentPurple">SWAP</span>
-            </span>
+            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16" />
           </div>
 
           <p className="text-xs text-mutedText">

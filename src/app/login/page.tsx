@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Server as ServerIcon, Mail, Lock, ShieldAlert, Sparkles } from "lucide-react";
+import { Mail, Lock, ShieldAlert, Sparkles } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,12 +53,7 @@ export default function LoginPage() {
         {/* Logo Header */}
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex items-center gap-2 mb-2 group">
-            <div className="p-2.5 bg-accentPurple/20 border border-accentPurple/30 rounded-xl group-hover:box-glow-purple transition-all duration-300">
-              <ServerIcon className="w-7 h-7 text-accentPurple" />
-            </div>
-            <span className="font-extrabold text-2xl tracking-wider">
-              REALM<span className="text-accentPurple text-glow-purple">SWAP</span>
-            </span>
+            <img src="/logo.png" alt="RealmSwap" className="h-12 w-auto scale-[7] -translate-x-16" />
           </Link>
           <p className="text-sm text-mutedText">Log in to manage your active server slots</p>
         </div>

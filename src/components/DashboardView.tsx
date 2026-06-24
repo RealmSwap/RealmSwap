@@ -371,10 +371,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
         <div>
           {/* Logo */}
           <div className="p-6 border-b border-borderDark flex items-center gap-2">
-            <ServerIcon className="w-6 h-6 text-accentPurple" />
-            <span className="font-extrabold text-xl tracking-wider">
-              REALM<span className="text-accentPurple text-glow-purple">SWAP</span>
-            </span>
+            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16" />
           </div>
 
           {/* Local Status Card */}
