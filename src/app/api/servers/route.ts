@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { initBackupScheduler } from "@/lib/backupScheduler";
+import { parseSpec, stringifyParamValues } from "@/lib/definitions/serialize";
+import { validateParamValues } from "@/lib/definitions/validate";
 
 // GET /api/servers
 // Returns active servers, archived servers, subscription details, and logs
@@ -69,44 +71,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, game, ramAllocation, password, enableUpnp } = await req.json();
-
-    if (!name || !game || !ramAllocation) {
-      return NextResponse.json(
-        { error: "Name, game, and RAM allocation are required" },
-        { status: 400 }
-      );
+    const { name, definitionId, ramAllocation, password, enableUpnp, paramValues } = await req.json();
+    if (!name || !definitionId || !ramAllocation) {
+      return NextResponse.json({ error: "Name, definition, and RAM allocation are required" }, { status: 400 });
     }
 
-    const runnerType = "LOCAL";
-    const region = "LOCALHOST";
+    const def = await prisma.gameDefinition.findFirst({
+      where: { id: definitionId, OR: [{ ownerId: null }, { ownerId: user.id }] },
+    });
+    if (!def) return NextResponse.json({ error: "Game definition not found" }, { status: 404 });
 
-    // Validation for Valheim local servers (needs a password of at least 5 characters)
-    if (game.toUpperCase() === "VALHEIM") {
-      if (!password || password.length < 5) {
-        return NextResponse.json(
-          { error: "Valheim dedicated servers require a password of at least 5 characters" },
-          { status: 400 }
-        );
+    const spec = parseSpec(def.spec);
+
+    // password policy validation (e.g. Valheim min length) using the spec
+    if (spec.passwordPolicy?.minLength && spec.passwordPolicy.fallback === undefined) {
+      if (!password || password.length < spec.passwordPolicy.minLength) {
+        return NextResponse.json({ error: `${def.displayName} requires a password of at least ${spec.passwordPolicy.minLength} characters` }, { status: 400 });
       }
     }
 
-    // Generate IP and port for local server
+    const paramErrors = validateParamValues(spec.params, paramValues ?? {});
+    if (paramErrors.length) return NextResponse.json({ error: paramErrors.join(" ") }, { status: 400 });
+
+    const runnerType = "LOCAL";
+    const region = "LOCALHOST";
     const ipAddress = "127.0.0.1";
-    let port = 25565;
-    if (game === "VALHEIM") port = 2456;
-    if (game === "ZOMBOID") port = 16261;
-    if (game === "ARK") port = 7777;
-    if (game === "ENSHROUDED") port = 15637;
-    if (game === "TERRARIA") port = 7777;
-    if (game === "PALWORLD") port = 8211;
-    if (game === "RUST") port = 28015;
+    const port = spec.defaultPort;
 
     const newServer = await prisma.server.create({
       data: {
         userId: user.id,
         name,
-        game: game.toUpperCase(),
+        game: def.slug,
+        definitionId: def.id,
+        paramValues: stringifyParamValues(paramValues ?? {}),
         ramAllocation: parseFloat(ramAllocation),
         region,
         status: "STOPPED", // Server starts stopped, user can turn it on
@@ -125,7 +123,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user.id,
         action: "CREATE_SERVER",
-        details: `Deployed new local ${game} server '${name}' (${ramAllocation}GB RAM).`,
+        details: `Deployed new local ${def.slug} server '${name}' (${ramAllocation}GB RAM).`,
       },
     });
 

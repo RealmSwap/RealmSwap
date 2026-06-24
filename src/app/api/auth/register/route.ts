@@ -32,11 +32,15 @@ export async function POST(req: NextRequest) {
 
     // Create user and subscription in a transaction
     const result = await prisma.$transaction(async (tx) => {
+      const userCount = await tx.user.count();
+      const role = userCount === 0 ? "ADMIN" : "USER";
+
       const user = await tx.user.create({
         data: {
           name,
           email: email.toLowerCase(),
           passwordHash: hashedPassword,
+          role,
         },
       });
 

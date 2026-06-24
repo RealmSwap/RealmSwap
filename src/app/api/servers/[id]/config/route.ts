@@ -2,61 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
+import { parseSpec } from "@/lib/definitions/serialize";
 import fs from "fs";
 import path from "path";
 
-// Resolve config file info for each game
-function getConfigInfo(game: string, serverId: string): { filePath: string; filename: string; format: string; editable: boolean } | null {
+// Resolve config file info from the server's definition spec
+async function getConfigInfo(
+  server: { definitionId: string | null; game: string },
+  serverId: string
+): Promise<{ filePath: string; filename: string; format: string; editable: boolean } | null> {
   const root = process.cwd();
-
-  switch (game.toUpperCase()) {
-    case "MINECRAFT":
-      return {
-        filePath: path.join(root, "local-servers", serverId, "server.properties"),
-        filename: "server.properties",
-        format: "properties",
-        editable: true,
-      };
-    case "ENSHROUDED":
-      return {
-        filePath: path.join(root, "local-servers", serverId, "enshrouded-server", "enshrouded_server.json"),
-        filename: "enshrouded_server.json",
-        format: "json",
-        editable: true,
-      };
-    case "ZOMBOID":
-      return {
-        filePath: path.join(root, "local-servers", serverId, "zomboid-server", "zomboid-data", "Server", "servertest.ini"),
-        filename: "servertest.ini",
-        format: "ini",
-        editable: true,
-      };
-    case "PALWORLD":
-      return {
-        filePath: path.join(root, "local-servers", serverId, "palworld-server", "Pal", "Saved", "Config", "WindowsServer", "PalWorldSettings.ini"),
-        filename: "PalWorldSettings.ini",
-        format: "ini",
-        editable: true,
-      };
-    case "RUST":
-      return {
-        filePath: path.join(root, "local-servers", serverId, "rust-server", "server", "servertest", "cfg", "server.cfg"),
-        filename: "server.cfg",
-        format: "cfg",
-        editable: true,
-      };
-    case "VALHEIM":
-    case "TERRARIA":
-    case "ARK":
-      return {
-        filePath: "",
-        filename: "",
-        format: "none",
-        editable: false,
-      };
-    default:
-      return null;
+  const def = server.definitionId
+    ? await prisma.gameDefinition.findUnique({ where: { id: server.definitionId } })
+    : await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug: server.game.toUpperCase() } });
+  if (!def) return null;
+  const spec = parseSpec(def.spec);
+  if (!spec.editableConfigPath) {
+    return { filePath: "", filename: "", format: "none", editable: false };
   }
+  const rel = spec.editableConfigPath;
+  const filename = rel.split("/").pop() || rel;
+  const ext = (filename.split(".").pop() || "").toLowerCase();
+  const format =
+    ext === "properties" ? "properties" :
+    ext === "json" ? "json" :
+    ext === "ini" ? "ini" :
+    ext === "cfg" ? "cfg" :
+    "text";
+  return {
+    filePath: path.join(root, "local-servers", serverId, ...rel.split("/")),
+    filename,
+    format,
+    editable: true,
+  };
 }
 
 // GET: Read config file
@@ -76,7 +54,7 @@ export async function GET(
     }
 
     const { server } = access;
-    const configInfo = getConfigInfo(server.game, params.id);
+    const configInfo = await getConfigInfo(server, params.id);
 
     if (!configInfo) {
       return NextResponse.json({ error: "Unsupported game" }, { status: 400 });
@@ -136,7 +114,7 @@ export async function PUT(
       );
     }
 
-    const configInfo = getConfigInfo(server.game, params.id);
+    const configInfo = await getConfigInfo(server, params.id);
     if (!configInfo || !configInfo.editable) {
       return NextResponse.json({ error: "This game does not support config editing." }, { status: 400 });
     }

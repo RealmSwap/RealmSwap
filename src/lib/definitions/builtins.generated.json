@@ -1,0 +1,440 @@
+[
+  {
+    "slug": "MINECRAFT",
+    "displayName": "Minecraft",
+    "icon": "⛏️",
+    "color": "from-green-500 to-emerald-700 bg-green-500/10 border-green-500/30 text-green-400",
+    "description": "Block building & survival",
+    "recommendedRamGB": 4,
+    "installMethod": "DOWNLOAD",
+    "spec": {
+      "install": {
+        "url": "https://piston-data.mojang.com/v1/objects/8dd1a358e2c3885906f21b6dbec6d7cae504c86a/server.jar",
+        "fileName": "server.jar",
+        "checkFile": "server.jar"
+      },
+      "requiresJava": true,
+      "launch": {
+        "executable": "java",
+        "executableOnPath": true,
+        "args": [
+          "-Xms512M",
+          "-Xmx{ram}G",
+          "-jar",
+          "server.jar",
+          "nogui"
+        ],
+        "stdinStopCommand": "stop\n"
+      },
+      "defaultPort": 25565,
+      "params": [],
+      "configFiles": [
+        {
+          "path": "eula.txt",
+          "strategy": "template",
+          "template": "eula=true\n"
+        },
+        {
+          "path": "server.properties",
+          "strategy": "template",
+          "template": "server-port={port}\nquery.port=25565\nonline-mode=false\nmax-players=10\nmotd=GameVault Local Runner Minecraft Server - {name}"
+        }
+      ],
+      "editableConfigPath": "server.properties",
+      "ports": [
+        {
+          "protocol": "TCP",
+          "port": "25565"
+        },
+        {
+          "protocol": "UDP",
+          "port": "25565"
+        }
+      ]
+    }
+  },
+  {
+    "slug": "VALHEIM",
+    "displayName": "Valheim",
+    "icon": "⛵",
+    "color": "from-amber-500 to-amber-700 bg-amber-500/10 border-amber-500/30 text-amber-400",
+    "description": "Co-op Viking exploration",
+    "recommendedRamGB": 6,
+    "installMethod": "STEAMCMD",
+    "spec": {
+      "install": {
+        "appId": "896660",
+        "installSubDir": "valheim-server",
+        "checkFile": "valheim_server.exe",
+        "requiredDiskGB": 2.5
+      },
+      "passwordPolicy": {
+        "minLength": 5,
+        "fallback": "viking123"
+      },
+      "launch": {
+        "executable": "valheim_server.exe",
+        "cwdSubDir": "valheim-server",
+        "args": [
+          "-nographics",
+          "-batchmode",
+          "-name",
+          "{name}",
+          "-port",
+          "2456",
+          "-world",
+          "Dedicated",
+          "-password",
+          "{password}",
+          "-public",
+          "1",
+          "-crossplay"
+        ],
+        "stdoutPatterns": [
+          {
+            "regex": "registered with join code (\\w+)",
+            "updateField": "ipAddress",
+            "transform": "joinCode"
+          }
+        ]
+      },
+      "defaultPort": 2456,
+      "params": [],
+      "configFiles": [],
+      "ports": [
+        {
+          "protocol": "UDP",
+          "port": "2456"
+        },
+        {
+          "protocol": "UDP",
+          "port": "2457"
+        },
+        {
+          "protocol": "UDP",
+          "port": "2458"
+        }
+      ]
+    }
+  },
+  {
+    "slug": "ENSHROUDED",
+    "displayName": "Enshrouded",
+    "icon": "🔥",
+    "color": "from-blue-500 to-indigo-700 bg-blue-500/10 border-blue-500/30 text-blue-400",
+    "description": "Co-op survival action RPG",
+    "recommendedRamGB": 8,
+    "installMethod": "STEAMCMD",
+    "spec": {
+      "install": {
+        "appId": "2278520",
+        "installSubDir": "enshrouded-server",
+        "checkFile": "enshrouded_server.exe",
+        "requiredDiskGB": 4
+      },
+      "launch": {
+        "executable": "enshrouded_server.exe",
+        "cwdSubDir": "enshrouded-server",
+        "args": []
+      },
+      "defaultPort": 15637,
+      "params": [],
+      "configFiles": [
+        {
+          "path": "enshrouded_server.json",
+          "strategy": "enshroudedJson"
+        }
+      ],
+      "editableConfigPath": "enshrouded-server/enshrouded_server.json",
+      "ports": [
+        {
+          "protocol": "TCP",
+          "port": "15636"
+        },
+        {
+          "protocol": "UDP",
+          "port": "15636"
+        },
+        {
+          "protocol": "TCP",
+          "port": "15637"
+        },
+        {
+          "protocol": "UDP",
+          "port": "15637"
+        }
+      ]
+    }
+  },
+  {
+    "slug": "ZOMBOID",
+    "displayName": "Project Zomboid",
+    "icon": "🧟",
+    "color": "from-red-500 to-rose-700 bg-red-500/10 border-red-500/30 text-red-400",
+    "description": "Zombie survival RPG",
+    "recommendedRamGB": 8,
+    "installMethod": "STEAMCMD",
+    "spec": {
+      "install": {
+        "appId": "380870",
+        "installSubDir": "zomboid-server",
+        "checkFile": "StartServer64.bat",
+        "requiredDiskGB": 3
+      },
+      "launch": {
+        "executable": "cmd.exe",
+        "executableOnPath": true,
+        "cwdSubDir": "zomboid-server",
+        "args": [
+          "/c",
+          "StartServer64.bat",
+          "-cachedir=./zomboid-data",
+          "-servername",
+          "servertest"
+        ]
+      },
+      "defaultPort": 16261,
+      "params": [],
+      "configFiles": [
+        {
+          "path": "zomboid-data/Server/servertest.ini",
+          "strategy": "zomboidIniMerge"
+        }
+      ],
+      "editableConfigPath": "zomboid-server/zomboid-data/Server/servertest.ini",
+      "ports": [
+        {
+          "protocol": "UDP",
+          "port": "16261"
+        },
+        {
+          "protocol": "UDP",
+          "port": "16262"
+        },
+        {
+          "protocol": "UDP",
+          "port": "8766"
+        }
+      ]
+    }
+  },
+  {
+    "slug": "ARK",
+    "displayName": "ARK: Survival Evolved",
+    "icon": "🦖",
+    "color": "from-cyan-500 to-blue-700 bg-cyan-500/10 border-cyan-500/30 text-cyan-400",
+    "description": "Dinosaur taming action",
+    "recommendedRamGB": 12,
+    "installMethod": "STEAMCMD",
+    "spec": {
+      "install": {
+        "appId": "376030",
+        "installSubDir": "ark-server",
+        "checkFile": "ShooterGame/Binaries/Win64/ShooterGameServer.exe",
+        "requiredDiskGB": 15
+      },
+      "launch": {
+        "executable": "ShooterGame/Binaries/Win64/ShooterGameServer.exe",
+        "cwdSubDir": "ark-server/ShooterGame/Binaries/Win64",
+        "args": [
+          {
+            "value": [
+              "TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers=20"
+            ],
+            "includeWhen": "password"
+          },
+          {
+            "value": [
+              "TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers=20"
+            ],
+            "includeWhen": "passwordEmpty"
+          },
+          "-server",
+          "-nosound",
+          "-QueryPort=27015"
+        ]
+      },
+      "defaultPort": 7777,
+      "params": [],
+      "configFiles": [],
+      "ports": [
+        {
+          "protocol": "UDP",
+          "port": "7777"
+        },
+        {
+          "protocol": "UDP",
+          "port": "7778"
+        },
+        {
+          "protocol": "UDP",
+          "port": "27015"
+        }
+      ]
+    }
+  },
+  {
+    "slug": "TERRARIA",
+    "displayName": "Terraria",
+    "icon": "🌳",
+    "color": "from-lime-500 to-green-700 bg-lime-500/10 border-lime-500/30 text-lime-400",
+    "description": "2D sandbox adventure",
+    "recommendedRamGB": 2,
+    "installMethod": "STEAMCMD",
+    "spec": {
+      "install": {
+        "appId": "282440",
+        "installSubDir": "terraria-server",
+        "checkFile": "TerrariaServer.exe",
+        "requiredDiskGB": 1
+      },
+      "launch": {
+        "executable": "TerrariaServer.exe",
+        "cwdSubDir": "terraria-server",
+        "preLaunchDirs": [
+          "worlds"
+        ],
+        "args": [
+          "-port",
+          "7777",
+          "-players",
+          "8",
+          {
+            "value": [
+              "-pass",
+              "{password}"
+            ],
+            "includeWhen": "password"
+          },
+          "-autocreate",
+          "1",
+          "-worldname",
+          "{nameSanitized}",
+          "-world",
+          "worlds/{nameSanitized}.wld"
+        ]
+      },
+      "defaultPort": 7777,
+      "params": [],
+      "configFiles": [],
+      "ports": [
+        {
+          "protocol": "TCP",
+          "port": "7777"
+        },
+        {
+          "protocol": "UDP",
+          "port": "7777"
+        }
+      ]
+    }
+  },
+  {
+    "slug": "PALWORLD",
+    "displayName": "Palworld",
+    "icon": "🦊",
+    "color": "from-orange-500 to-rose-700 bg-orange-500/10 border-orange-500/30 text-orange-400",
+    "description": "Creature-collecting survival",
+    "recommendedRamGB": 8,
+    "installMethod": "STEAMCMD",
+    "spec": {
+      "install": {
+        "appId": "2394010",
+        "installSubDir": "palworld-server",
+        "checkFile": "PalServer.exe",
+        "requiredDiskGB": 4
+      },
+      "launch": {
+        "executable": "PalServer.exe",
+        "cwdSubDir": "palworld-server",
+        "args": [
+          {
+            "value": [
+              "?port=8211?players=16?AdminPassword={password}"
+            ],
+            "includeWhen": "password"
+          },
+          {
+            "value": [
+              "?port=8211?players=16"
+            ],
+            "includeWhen": "passwordEmpty"
+          },
+          "-useperfthreads",
+          "-NoAsyncLoadingThread",
+          "-UseMultithreadForDS"
+        ]
+      },
+      "defaultPort": 8211,
+      "params": [],
+      "configFiles": [],
+      "editableConfigPath": "palworld-server/Pal/Saved/Config/WindowsServer/PalWorldSettings.ini",
+      "ports": [
+        {
+          "protocol": "UDP",
+          "port": "8211"
+        }
+      ]
+    }
+  },
+  {
+    "slug": "RUST",
+    "displayName": "Rust",
+    "icon": "⚙️",
+    "color": "from-stone-500 to-red-800 bg-stone-500/10 border-stone-500/30 text-stone-400",
+    "description": "PvP survival crafting",
+    "recommendedRamGB": 10,
+    "installMethod": "STEAMCMD",
+    "spec": {
+      "install": {
+        "appId": "258550",
+        "installSubDir": "rust-server",
+        "checkFile": "RustDedicated.exe",
+        "requiredDiskGB": 10
+      },
+      "passwordPolicy": {
+        "minLength": 1,
+        "fallback": "changeme123"
+      },
+      "launch": {
+        "executable": "RustDedicated.exe",
+        "cwdSubDir": "rust-server",
+        "args": [
+          "-batchmode",
+          "+server.port",
+          "28015",
+          "+server.identity",
+          "servertest",
+          "+server.seed",
+          "12345",
+          "+server.worldsize",
+          "3000",
+          "+server.maxplayers",
+          "10",
+          "+server.hostname",
+          "{name}",
+          "+rcon.port",
+          "28016",
+          "+rcon.password",
+          "{password}",
+          "+rcon.web",
+          "1"
+        ]
+      },
+      "defaultPort": 28015,
+      "params": [],
+      "configFiles": [],
+      "editableConfigPath": "rust-server/server/servertest/cfg/server.cfg",
+      "ports": [
+        {
+          "protocol": "UDP",
+          "port": "28015"
+        },
+        {
+          "protocol": "TCP",
+          "port": "28016"
+        }
+      ]
+    }
+  }
+]
