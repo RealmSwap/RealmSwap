@@ -20,7 +20,8 @@ import {
   Clock,
   Trash2,
   Settings,
-  ShieldAlert
+  ShieldAlert,
+  Terminal
 } from "lucide-react";
 
 interface BackupsViewProps {
@@ -221,6 +222,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
               { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
               { label: "World Backups", icon: FolderSync, href: "/dashboard/backups", active: true },
               { label: "Server Config", icon: Settings, href: "/dashboard/config" },
+              { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
               { label: "Team Members", icon: Users, href: "/dashboard/team" },
               { label: "Audit Logs", icon: History, href: "/dashboard/logs" }
             ].map((link, i) => (

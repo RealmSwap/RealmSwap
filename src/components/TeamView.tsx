@@ -18,7 +18,8 @@ import {
   Info,
   Check,
   UserPlus,
-  Settings
+  Settings,
+  Terminal
 } from "lucide-react";
 
 interface TeamViewProps {
@@ -164,6 +165,7 @@ export default function TeamView({ servers, user }: TeamViewProps) {
               { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
               { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
               { label: "Server Config", icon: Settings, href: "/dashboard/config" },
+              { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
               { label: "Team Members", icon: Users, href: "/dashboard/team", active: true },
               { label: "Audit Logs", icon: History, href: "/dashboard/logs" }
             ].map((link, i) => (

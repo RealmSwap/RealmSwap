@@ -110,7 +110,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Console Modal State
-  const [activeConsoleServer, setActiveConsoleServer] = useState<any | null>(null);
+  const [activeConsoleServer, setActiveConsoleServer] = useState<any | null>(null); // Replaced by new console page
   const [consoleLogs, setConsoleLogs] = useState("");
 
   // Import Map Modal State
@@ -146,30 +146,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchLogsDirect = async () => {
-    if (!activeConsoleServer) return;
-    try {
-      const res = await fetch(`/api/servers/${activeConsoleServer.id}/logs`);
-      if (res.ok) {
-        const logData = await res.json();
-        setConsoleLogs(logData.logs || "Waiting for server output logs...");
-      }
-    } catch (e) {
-      console.error("Error fetching logs:", e);
-    }
-  };
-
-  // Live polling for the active console modal
-  useEffect(() => {
-    if (!activeConsoleServer) {
-      setConsoleLogs("");
-      return;
-    }
-
-    fetchLogsDirect();
-    const interval = setInterval(fetchLogsDirect, 2000); // Poll logs every 2s
-    return () => clearInterval(interval);
-  }, [activeConsoleServer]);
+  // console logs logic removed, replaced by ConsoleView
 
   // Poll stats for running servers
   useEffect(() => {
@@ -473,6 +450,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
               { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
               { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
               { label: "Server Config", icon: Settings, href: "/dashboard/config" },
+              { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
               { label: "Team Members", icon: Users, href: "/dashboard/team" },
               { label: "Audit Logs", icon: History, href: "/dashboard/logs" }
             ].map((link, i) => (
@@ -825,13 +803,13 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                         )}
 
                         {/* Console logs toggle */}
-                        <button
-                          onClick={() => setActiveConsoleServer(server)}
+                        <Link
+                          href={`/dashboard/console?serverId=${server.id}`}
                           className="p-2 rounded-lg bg-slate-900 border border-white/5 hover:border-accentPurple/40 text-slate-400 hover:text-accentPurple transition-colors"
                           title="View Console Output"
                         >
                           <Terminal className="w-4 h-4" />
-                        </button>
+                        </Link>
 
                         {/* Archive / Vault */}
                         <button
@@ -1011,53 +989,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
 
       </main>
 
-      {/* Terminal Console Dialog Overlay */}
-      {activeConsoleServer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-3xl glass-panel-purple border border-accentPurple/30 rounded-2xl p-6 shadow-2xl flex flex-col h-[500px] box-glow-purple">
-            
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className={`w-3 h-3 rounded-full ${activeConsoleServer.status === "RUNNING" ? "bg-emerald-500 animate-pulse" : "bg-amber-500 animate-pulse"}`}></div>
-                <div>
-                  <h3 className="font-extrabold text-white text-base">Server Console Output</h3>
-                  <p className="text-xs text-mutedText">
-                    {activeConsoleServer.name} ({activeConsoleServer.game}) • {activeConsoleServer.runnerType.toLowerCase()} runner
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setActiveConsoleServer(null)}
-                className="p-1.5 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Log Terminal Screen */}
-            <div className="flex-1 bg-black/90 border border-white/5 rounded-xl p-4 font-mono text-[11px] text-emerald-400 overflow-y-auto whitespace-pre-wrap select-text selection:bg-emerald-500/20 scrollbar-thin">
-              {consoleLogs || "Initializing console stream..."}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex justify-between items-center mt-4 pt-4 border-t border-white/5">
-              <span className="text-[10px] text-mutedText flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                Real-time stdout stream active (2s polling)
-              </span>
-              <button
-                onClick={fetchLogsDirect}
-                className="px-4 py-2 rounded-lg bg-slate-900 border border-white/10 hover:border-white/20 text-xs font-bold text-slate-300 transition-colors flex items-center gap-1.5"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Refresh Logs
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
+      {/* Terminal Console Dialog Overlay - REMOVED for standalone page */}
       {/* Import Map Dialog Overlay */}
       {importMapServer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
