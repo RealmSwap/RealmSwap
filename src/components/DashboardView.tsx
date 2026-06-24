@@ -67,6 +67,11 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   // Stats history for sparklines
   const [serverStats, setServerStats] = useState<Record<string, { cpu: number[]; memory: number[] }>>({});
 
+  // Live install/download progress for STARTING/UPDATING servers
+  const [progressMap, setProgressMap] = useState<
+    Record<string, { phase: string; percent: number | null; label: string } | null>
+  >({});
+
   // Poll database for updates (live stats fluctuation)
   useEffect(() => {
     const fetchUpdates = async () => {
@@ -126,6 +131,30 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
     };
     fetchStats();
     const interval = setInterval(fetchStats, 10000);
+    return () => clearInterval(interval);
+  }, [data.servers]);
+
+  // Poll install/download progress for servers that are STARTING or UPDATING
+  useEffect(() => {
+    const inProgress = data.servers.filter(
+      (s: any) => s.status === "STARTING" || s.status === "UPDATING"
+    );
+    if (inProgress.length === 0) {
+      return;
+    }
+    const fetchProgress = async () => {
+      for (const server of inProgress) {
+        try {
+          const res = await fetch(`/api/servers/${server.id}/progress`);
+          if (res.ok) {
+            const body = await res.json();
+            setProgressMap((prev) => ({ ...prev, [server.id]: body.progress }));
+          }
+        } catch (e) {}
+      }
+    };
+    fetchProgress();
+    const interval = setInterval(fetchProgress, 1500);
     return () => clearInterval(interval);
   }, [data.servers]);
 
@@ -630,6 +659,27 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                         )}
                       </div>
                     </div>
+
+                    {/* Live install/download progress */}
+                    {(server.status === "STARTING" || server.status === "UPDATING") &&
+                      progressMap[server.id] && (
+                        <div className="mt-4">
+                          <div className="flex items-center gap-1.5 mb-1.5 text-xs text-accentPurple font-medium">
+                            <Download className="w-3.5 h-3.5" />
+                            <span>{progressMap[server.id]!.label}</span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+                            {progressMap[server.id]!.percent !== null ? (
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-accentPurple to-blue-500 transition-all duration-500"
+                                style={{ width: `${progressMap[server.id]!.percent}%` }}
+                              ></div>
+                            ) : (
+                              <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-accentPurple to-blue-500 animate-pulse"></div>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                     {/* Hardware meters with sparklines */}
                     <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-white/5">

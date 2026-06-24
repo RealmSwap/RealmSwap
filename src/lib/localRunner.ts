@@ -10,6 +10,7 @@ import { buildContext } from "./definitions/context";
 import { planInstall, planConfigFiles, planLaunch, planPorts, resolveCommand } from "./definitions/plan";
 import { writeStrategyConfig } from "./definitions/strategies";
 import type { GameDefinitionSpec } from "./definitions/types";
+import { setProgress, clearProgress, parseSteamProgress, computePercent } from "./downloadProgress";
 
 // Global process map to persist running processes across Next.js dev server hot-reloads
 const globalForRunner = globalThis as unknown as {
@@ -75,8 +76,13 @@ function getLocalServerDir(serverId: string, sub?: string): string {
   return dir;
 }
 
-// Download utility
-function downloadFile(url: string, dest: string): Promise<void> {
+// Download utility. onProgress receives a 0..100 percent, or null when the
+// server does not send a Content-Length header (indeterminate).
+function downloadFile(
+  url: string,
+  dest: string,
+  onProgress?: (percent: number | null) => void
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
     https.get(url, (response) => {
@@ -84,9 +90,23 @@ function downloadFile(url: string, dest: string): Promise<void> {
         reject(new Error(`Failed to download: Status Code ${response.statusCode}`));
         return;
       }
+      const total = parseInt(response.headers["content-length"] || "", 10);
+      let received = 0;
+      let lastEmit = 0;
+      if (onProgress) onProgress(computePercent(received, total));
+      response.on("data", (chunk) => {
+        received += chunk.length;
+        const now = Date.now();
+        // Throttle to ~4x/sec to avoid spamming the store on every chunk.
+        if (onProgress && now - lastEmit >= 250) {
+          lastEmit = now;
+          onProgress(computePercent(received, total));
+        }
+      });
       response.pipe(file);
       file.on("finish", () => {
         file.close();
+        if (onProgress) onProgress(computePercent(received, total));
         resolve();
       });
     }).on("error", (err) => {
@@ -209,7 +229,8 @@ function installSteamCmdApp(
   installDir: string,
   checkFile: string,
   requiredGB: number,
-  onLog: (msg: string) => void
+  onLog: (msg: string) => void,
+  onProgress?: (p: { percent: number | null; label: string }) => void
 ): Promise<void> {
   return new Promise(async (resolve, reject) => {
     try {
@@ -233,7 +254,9 @@ function installSteamCmdApp(
         }
       }
 
+      onProgress?.({ percent: null, label: "Setting up SteamCMD…" });
       const steamcmdExe = await setupSteamCMD(onLog);
+      onProgress?.({ percent: null, label: "Updating SteamCMD…" });
       await ensureSteamCmdUpdated(steamcmdExe, onLog);
 
       onLog(`Starting ${appName} installation via SteamCMD (App ID ${appId})...`);
@@ -260,6 +283,10 @@ function installSteamCmdApp(
         const line = data.toString().trim();
         if (line) {
           const cleanLine = line.replace(/[\r\n]+/g, " ");
+          const pct = parseSteamProgress(cleanLine);
+          if (pct !== null) {
+            onProgress?.({ percent: pct, label: `Downloading ${appName} ${Math.round(pct)}%` });
+          }
           if (/ERROR!|Failed to install|No subscription|Invalid Password|Disk write failure/i.test(cleanLine)) {
             steamErrorDetail = cleanLine;
             onLog(`[SteamCMD Error] ${cleanLine}`);
@@ -402,6 +429,7 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
     if (!fs.existsSync(exePath)) {
       try {
         await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING" } });
+        setProgress(serverId, { phase: "steam", percent: null, label: "Setting up SteamCMD…" });
         await installSteamCmdApp(
           serverId,
           installPlan.appId!,
@@ -409,9 +437,11 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
           installDir,
           installPlan.checkFile!,
           installPlan.requiredDiskGB ?? 3,
-          logWriter
+          logWriter,
+          (p) => setProgress(serverId, { phase: "steam", percent: p.percent, label: p.label })
         );
       } catch (err: any) {
+        clearProgress(serverId);
         logWriter(`Installation failed: ${err.message}`);
         throw new Error(`Server install failed: ${err.message}`);
       }
@@ -422,10 +452,18 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
       try {
         await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING" } });
         logWriter("Server binary not found. Downloading...");
-        await downloadFile(installPlan.url!, target);
+        setProgress(serverId, { phase: "download", percent: null, label: `Downloading ${server.name}…` });
+        await downloadFile(installPlan.url!, target, (pct) =>
+          setProgress(serverId, {
+            phase: "download",
+            percent: pct,
+            label: pct === null ? `Downloading ${server.name}…` : `Downloading ${server.name} ${Math.round(pct)}%`,
+          })
+        );
         logWriter("Download completed successfully.");
         // Unzip if needed (e.g. zip archives)
         if (installPlan.unzip) {
+          setProgress(serverId, { phase: "extract", percent: null, label: "Extracting…" });
           logWriter("Extracting archive using Windows PowerShell...");
           await new Promise<void>((resolve, reject) => {
             const extractCmd = `powershell -Command "Expand-Archive -Path '${target}' -DestinationPath '${installDir}' -Force"`;
@@ -438,12 +476,19 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
           logWriter("Extraction complete.");
         }
       } catch (err: any) {
+        clearProgress(serverId);
         logWriter(`Download failed: ${err.message}`);
         throw new Error(`Failed to download game server binaries: ${err.message}`);
       }
     }
   } else if (installPlan.method === "CUSTOM_SCRIPT") {
-    await runShellScript(installPlan.installScript!, installDir, logWriter);
+    setProgress(serverId, { phase: "script", percent: null, label: "Running install script…" });
+    try {
+      await runShellScript(installPlan.installScript!, installDir, logWriter);
+    } catch (err) {
+      clearProgress(serverId);
+      throw err;
+    }
   }
 
   // 4. Write config files
@@ -492,6 +537,7 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
 
   if (!child.pid) throw new Error("Failed to spawn server child process.");
   localProcesses.set(serverId, child);
+  clearProgress(serverId);
 
   // 6. stdout patterns (e.g. Valheim join code)
   if (launch.stdoutPatterns?.length) {
@@ -536,6 +582,7 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
 async function handleProcessExit(serverId: string, code: number | null, signal: string | null, baseDir: string) {
   localProcesses.delete(serverId);
   stopMonitoring(serverId);
+  clearProgress(serverId);
 
   const wasIntentional = intentionalStops.has(serverId);
   intentionalStops.delete(serverId);
@@ -735,7 +782,9 @@ export async function updateGameServer(serverId: string): Promise<void> {
 
     logWriter(`[Update] Starting SteamCMD update for ${server.game} (App ID: ${installPlan.appId})...`);
 
+    setProgress(serverId, { phase: "steam", percent: null, label: "Setting up SteamCMD…" });
     const steamcmdExe = await setupSteamCMD(logWriter);
+    setProgress(serverId, { phase: "steam", percent: null, label: "Updating SteamCMD…" });
     await ensureSteamCmdUpdated(steamcmdExe, logWriter);
 
     const cleanInstallDir = installDir.replace(/\\/g, "/");
@@ -757,6 +806,14 @@ export async function updateGameServer(serverId: string): Promise<void> {
         const line = data.toString().trim();
         if (line) {
           const cleanLine = line.replace(/[\r\n]+/g, " ");
+          const pct = parseSteamProgress(cleanLine);
+          if (pct !== null) {
+            setProgress(serverId, {
+              phase: "steam",
+              percent: pct,
+              label: `Updating ${server.game} ${Math.round(pct)}%`,
+            });
+          }
           if (/ERROR!|Failed to install|No subscription|Invalid Password|Disk write failure/i.test(cleanLine)) {
             steamErrorDetail = cleanLine;
             logWriter(`[Update Error] ${cleanLine}`);
@@ -785,6 +842,8 @@ export async function updateGameServer(serverId: string): Promise<void> {
       });
     });
 
+    clearProgress(serverId);
+
     await prisma.server.update({
       where: { id: serverId },
       data: { status: "STOPPED" },
@@ -798,6 +857,7 @@ export async function updateGameServer(serverId: string): Promise<void> {
       },
     });
   } catch (err: any) {
+    clearProgress(serverId);
     logWriter(`[Update] Update failed: ${err.message}`);
     await prisma.server.update({
       where: { id: serverId },

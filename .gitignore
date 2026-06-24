@@ -3,6 +3,9 @@ node_modules
 /.pnp
 .pnp.js
 
+# Claude Code worktrees
+/.claude/worktrees/
+
 # Testing
 /coverage
 
