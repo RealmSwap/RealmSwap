@@ -9,6 +9,7 @@ import {
   Trash2,
   Server as ServerIcon,
   ShieldAlert,
+  HelpCircle,
 } from "lucide-react";
 import type {
   GameDefinitionSpec,
@@ -96,8 +97,43 @@ function TextareaBase({ className = "", ...props }: React.TextareaHTMLAttributes
   );
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <label className="block text-xs text-slate-400 mb-1 font-semibold">{children}</label>;
+function FieldHelp({ text, label }: { text: string; label?: string }) {
+  const [open, setOpen] = useState(false);
+  const id = React.useId();
+  return (
+    <span className="relative inline-flex items-center">
+      <button
+        type="button"
+        aria-label={label ? `Help: ${label}` : "Help"}
+        aria-describedby={open ? id : undefined}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        className="text-slate-500 hover:text-accentPurple focus-visible:text-accentPurple outline-none transition-colors"
+      >
+        <HelpCircle className="w-3.5 h-3.5" />
+      </button>
+      {open && (
+        <span
+          id={id}
+          role="tooltip"
+          className="absolute left-5 bottom-full mb-1 z-50 w-64 px-3 py-2 rounded-lg bg-slate-950 border border-white/10 shadow-lg text-xs text-slate-300 font-normal normal-case leading-relaxed pointer-events-none"
+        >
+          {text}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function FieldLabel({ children, help }: { children: React.ReactNode; help?: string }) {
+  return (
+    <label className="flex items-center gap-1 text-xs text-slate-400 mb-1 font-semibold">
+      <span>{children}</span>
+      {help && <FieldHelp text={help} label={typeof children === "string" ? children : undefined} />}
+    </label>
+  );
 }
 
 // ---------------------------------------------------------------------------
