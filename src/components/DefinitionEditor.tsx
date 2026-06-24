@@ -185,7 +185,10 @@ function FieldHelp({ text, label }: { text: string; label?: string }) {
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        className="text-slate-500 hover:text-accentPurple focus-visible:text-accentPurple outline-none transition-colors"
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setOpen(false);
+        }}
+        className="text-slate-500 hover:text-accentPurple focus-visible:text-accentPurple rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accentPurple transition-colors"
       >
         <HelpCircle className="w-3.5 h-3.5" />
       </button>
