@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { 
   Archive, 
   Cpu, 
@@ -20,6 +19,15 @@ import {
   Check,
   HardDrive
 } from "lucide-react";
+
+// Static-site config. The desktop installer is published as a version-less
+// asset on GitHub Releases so this "latest" URL is always valid.
+const DOWNLOAD_URL =
+  "https://github.com/RealmSwap/RealmSwap/releases/latest/download/RealmSwap-Setup.exe";
+const RELEASES_URL = "https://github.com/RealmSwap/RealmSwap/releases";
+// GitHub Pages serves this project at the /RealmSwap subpath. Raw <img> tags are
+// not auto-prefixed by Next's basePath, so prefix root-absolute assets manually.
+const ASSET_PREFIX = "/RealmSwap";
 
 // Mock games data for the interactive widget
 const GAMES_LIST = [
@@ -93,9 +101,9 @@ export default function LandingPage() {
       {/* Header / Navbar */}
       <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-borderDark px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <img src="/logo.png" alt="RealmSwap" className="h-10 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
-          </Link>
+          <div className="flex items-center gap-2 group">
+            <img src={`${ASSET_PREFIX}/logo.png`} alt="RealmSwap" className="h-10 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
+          </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-mutedText">
             <a href="#features" className="hover:text-white transition-colors">Features</a>
@@ -104,15 +112,12 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-semibold hover:text-accentPurple transition-colors px-3 py-2">
-              Sign In
-            </Link>
-            <Link 
-              href="/register" 
+            <a
+              href={DOWNLOAD_URL}
               className="bg-accentPurple hover:bg-accentPurpleHover text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md shadow-accentPurple/20 border border-accentPurple/30"
             >
-              Get Started
-            </Link>
+              Download
+            </a>
           </div>
         </div>
       </header>
@@ -139,21 +144,27 @@ export default function LandingPage() {
           Ditch paying for multiple cloud servers your friends only play half the time. Host your own worlds locally on your PC, archive them to your hard drive when you switch games, and restore them instantly. Zero data loss, zero wasted cash.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-md mb-16">
-          <Link 
-            href="/register" 
+        <div className="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-md mb-4">
+          <a
+            href={DOWNLOAD_URL}
             className="w-full sm:w-auto bg-accentPurple hover:bg-accentPurpleHover text-white px-8 py-4 rounded-xl text-base font-bold transition-all duration-200 shadow-lg shadow-accentPurple/20 border border-accentPurple/40"
           >
             Download Free
-          </Link>
-          <a 
-            href="#demo" 
+          </a>
+          <a
+            href="#demo"
             className="w-full sm:w-auto bg-white/5 hover:bg-white/10 border border-white/10 text-white px-8 py-4 rounded-xl text-base font-bold transition-all duration-200 flex items-center justify-center gap-2"
           >
             <Zap className="w-5 h-5 text-yellow-400" />
             See How it Works
           </a>
         </div>
+        <a
+          href={RELEASES_URL}
+          className="text-xs text-mutedText hover:text-white transition-colors mb-16"
+        >
+          All versions &amp; release notes
+        </a>
 
         {/* Demo Interactive Widget */}
         <div id="demo" className="w-full max-w-4xl mx-auto mt-10">
@@ -382,19 +393,19 @@ export default function LandingPage() {
         <p className="text-mutedText max-w-2xl mx-auto mb-8">
           Join thousands of gamer friend groups hosting smarter. Install RealmSwap on your PC today and run your own local game network for free.
         </p>
-        <Link 
-          href="/register" 
+        <a
+          href={DOWNLOAD_URL}
           className="inline-block bg-accentPurple hover:bg-accentPurpleHover text-white px-8 py-4 rounded-xl text-base font-bold transition-all duration-200 shadow-lg shadow-accentPurple/20 border border-accentPurple/40"
         >
           Download Free Now
-        </Link>
+        </a>
       </section>
 
       {/* Footer */}
       <footer className="mt-auto border-t border-borderDark bg-[#08090c] py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
+            <img src={`${ASSET_PREFIX}/logo.png`} alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
           </div>
 
           <p className="text-xs text-mutedText">

@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-md">
         {/* Logo Header */}
         <div className="flex flex-col items-center mb-8">
-          <Link href="/" className="flex items-center gap-2 mb-2 group">
+          <Link href="/start" className="flex items-center gap-2 mb-2 group">
             <img src="/logo.png" alt="RealmSwap" className="h-12 w-auto scale-[7] -translate-x-16 translate-y-2 pointer-events-none select-none" />
           </Link>
           <p className="text-sm text-mutedText">Recover access to your game worlds</p>

@@ -59,3 +59,8 @@ dist/
 
 # Electron packaging temp resources
 .tmp-res/
+
+# Marketing site (separate Next project)
+/site/.next/
+/site/out/
+/site/next-env.d.ts
