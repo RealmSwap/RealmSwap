@@ -3,6 +3,7 @@ import path from "path";
 import { exec } from "child_process";
 import { prisma } from "./db";
 import { dataRoot } from "./appPaths";
+import { getSavePath as resolveSavePath } from "./backupPaths";
 
 // Helper to execute PowerShell commands
 function runPowerShell(cmd: string): Promise<string> {
@@ -17,56 +18,13 @@ function runPowerShell(cmd: string): Promise<string> {
   });
 }
 
-// Get the local save path for each game type
+// Get the local save path for each game type. Delegates to the pure resolver,
+// injecting the live filesystem roots.
 function getSavePath(game: string, serverId: string): { srcDir: string; zipPattern: string; destExtractDir: string } {
-  const root = dataRoot();
-  
-  switch (game.toUpperCase()) {
-    case "MINECRAFT": {
-      const dir = path.join(root, "local-servers", serverId, "world");
-      return {
-        srcDir: dir,
-        zipPattern: `${dir}/*`,
-        destExtractDir: dir
-      };
-    }
-    case "VALHEIM": {
-      const userProfile = process.env.USERPROFILE || "";
-      const dir = path.join(userProfile, "AppData", "LocalLow", "IronGate", "Valheim", "worlds_local");
-      // Valheim runner boots with -world Dedicated, so files are Dedicated.db and Dedicated.fwl
-      return {
-        srcDir: dir,
-        zipPattern: `${dir}/Dedicated.*`,
-        destExtractDir: dir
-      };
-    }
-    case "ENSHROUDED": {
-      const dir = path.join(root, "local-servers", serverId, "enshrouded-server", "savegame");
-      return {
-        srcDir: dir,
-        zipPattern: `${dir}/*`,
-        destExtractDir: dir
-      };
-    }
-    case "ZOMBOID": {
-      const dir = path.join(root, "local-servers", serverId, "zomboid-server", "zomboid-data", "Saves", "Multiplayer", "servertest");
-      return {
-        srcDir: dir,
-        zipPattern: `${dir}/*`,
-        destExtractDir: dir
-      };
-    }
-    case "ARK": {
-      const dir = path.join(root, "local-servers", serverId, "ark-server", "ShooterGame", "Saved", "SavedArksLocal");
-      return {
-        srcDir: dir,
-        zipPattern: `${dir}/*`,
-        destExtractDir: dir
-      };
-    }
-    default:
-      throw new Error(`Unsupported game type: ${game}`);
-  }
+  return resolveSavePath(game, serverId, {
+    dataRoot: dataRoot(),
+    userProfile: process.env.USERPROFILE || "",
+  });
 }
 
 // Create a snapshot backup of a local server
