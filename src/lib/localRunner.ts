@@ -404,7 +404,7 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
     logWriter("[UPnP] Requesting router port forwarding rules...");
     try {
       for (const pm of planPorts(spec, ctx)) {
-        await mapPort(pm.port, pm.protocol, `GameVault - ${server.name}`);
+        await mapPort(pm.port, pm.protocol, `RealmSwap - ${server.name}`);
       }
       logWriter("[UPnP] Success! Router port forward mapping completed successfully.");
     } catch (e: any) {

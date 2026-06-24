@@ -9,6 +9,10 @@ const { stopAllServers } = require("./shutdown");
 const isDev = process.env.GAMEVAULT_DEV === "1";
 const internalToken = crypto.randomBytes(16).toString("hex");
 
+// Brand the app as RealmSwap. Must run before any app.getPath("userData") so
+// the data directory resolves to %APPDATA%/RealmSwap.
+app.setName("RealmSwap");
+
 let mainWindow = null;
 let tray = null;
 let isQuitting = false;
@@ -30,7 +34,7 @@ function ensureDataDir() {
   const dir = app.getPath("userData");
   fs.mkdirSync(dir, { recursive: true });
   // First-run DB: copy the shipped template if the live DB is absent.
-  const liveDb = path.join(dir, "gamevault.db");
+  const liveDb = path.join(dir, "realmswap.db");
   if (!fs.existsSync(liveDb)) {
     const template = path.join(process.resourcesPath, "template.db");
     if (fs.existsSync(template)) fs.copyFileSync(template, liveDb);
@@ -44,7 +48,7 @@ function startNextServer(port, dataDir) {
   process.env.NODE_ENV = "production";
   process.env.GAMEVAULT_DATA_DIR = dataDir;
   process.env.DATABASE_URL =
-    "file:" + path.join(dataDir, "gamevault.db").replace(/\\/g, "/");
+    "file:" + path.join(dataDir, "realmswap.db").replace(/\\/g, "/");
   process.env.GAMEVAULT_INTERNAL_TOKEN = internalToken;
   // Prisma's generated client embeds the generation-time absolute path to the
   // query engine, which won't exist on the user's machine. Point it at the
@@ -89,9 +93,9 @@ function buildTray() {
           : path.join(process.resourcesPath, "tray.png")
   );
   tray = new Tray(icon);
-  tray.setToolTip("GameVault");
+  tray.setToolTip("RealmSwap");
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: "Open GameVault", click: () => { mainWindow.show(); mainWindow.focus(); } },
+    { label: "Open RealmSwap", click: () => { mainWindow.show(); mainWindow.focus(); } },
     { type: "separator" },
     { label: "Quit", click: () => { isQuitting = true; app.quit(); } },
   ]));
@@ -161,7 +165,7 @@ app.whenReady().then(async () => {
     }
   } catch (err) {
     const { dialog } = require("electron");
-    dialog.showErrorBox("GameVault failed to start", String(err && err.stack || err));
+    dialog.showErrorBox("RealmSwap failed to start", String(err && err.stack || err));
     app.quit();
   }
 });

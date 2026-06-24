@@ -31,7 +31,7 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       configFiles: [
         { path: "eula.txt", strategy: "template", template: "eula=true\n" },
         { path: "server.properties", strategy: "template",
-          template: "server-port={port}\nquery.port=25565\nonline-mode=false\nmax-players=10\nmotd=GameVault Local Runner Minecraft Server - {name}" },
+          template: "server-port={port}\nquery.port=25565\nonline-mode=false\nmax-players=10\nmotd=RealmSwap Local Runner Minecraft Server - {name}" },
       ],
       editableConfigPath: "server.properties",
       ports: [{ protocol: "TCP", port: "25565" }, { protocol: "UDP", port: "25565" }],

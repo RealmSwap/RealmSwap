@@ -1,5 +1,5 @@
-appId: com.gamevault.desktop
-productName: GameVault
+appId: com.realmswap.desktop
+productName: RealmSwap
 directories:
   output: dist
   buildResources: build
