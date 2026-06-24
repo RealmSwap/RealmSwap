@@ -19,8 +19,10 @@ import {
   Check,
   UserPlus,
   Settings,
-  Terminal
+  Terminal,
+  Server
 } from "lucide-react";
+import { useModal } from "@/components/ModalProvider";
 
 interface TeamViewProps {
   servers: any[];
@@ -37,6 +39,7 @@ export default function TeamView({ servers, user }: TeamViewProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const { showModal } = useModal();
 
   // Load collaborators for selected server
   const loadCollaborators = async (serverId: string) => {
@@ -99,30 +102,38 @@ export default function TeamView({ servers, user }: TeamViewProps) {
   };
 
   // Revoke collaborator access
-  const handleRevoke = async (collaborator: any) => {
+  const handleRevoke = (collaborator: any) => {
     if (!selectedServer) return;
-    if (!confirm(`Are you sure you want to revoke server control access for '${collaborator.user.name}' (${collaborator.user.email})?`)) return;
+    
+    showModal({
+      type: "error",
+      title: "Revoke Access",
+      message: `Are you sure you want to revoke server control access for '${collaborator.user.name}' (${collaborator.user.email})?`,
+      confirmText: "Revoke Access",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setActionLoading(collaborator.userId);
+        setError(null);
+        setSuccess(null);
 
-    setActionLoading(collaborator.userId);
-    setError(null);
-    setSuccess(null);
+        try {
+          const res = await fetch(`/api/servers/${selectedServer.id}/collaborators`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId: collaborator.userId }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to revoke access");
 
-    try {
-      const res = await fetch(`/api/servers/${selectedServer.id}/collaborators`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: collaborator.userId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to revoke access");
-
-      setSuccess(`Revoked co-management access for '${collaborator.user.name}'.`);
-      loadCollaborators(selectedServer.id);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setActionLoading(null);
-    }
+          setSuccess(`Revoked co-management access for '${collaborator.user.name}'.`);
+          loadCollaborators(selectedServer.id);
+        } catch (err: any) {
+          setError(err.message);
+        } finally {
+          setActionLoading(null);
+        }
+      }
+    });
   };
 
   return (
