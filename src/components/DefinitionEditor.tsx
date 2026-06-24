@@ -130,6 +130,8 @@ const FIELD_HELP = {
   portProtocol: "TCP or UDP — match what the game server uses for this port.",
   portNumber:
     "An extra port (beyond Default Port) the server uses, e.g. 27016. Check the game's server docs.",
+
+  requiresPassword: "Tick if this game server supports or requires a password to join. Users will be prompted to enter a password when creating a server.",
 } as const;
 
 function emptyParam(): ParamRow {
@@ -556,6 +558,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
   const [description, setDescription] = useState("");
   const [recommendedRamGB, setRecommendedRamGB] = useState("4");
   const [defaultPort, setDefaultPort] = useState("27015");
+  const [requiresPassword, setRequiresPassword] = useState(false);
 
   // STEAMCMD install fields
   const [sc_appId, setSc_appId] = useState("");
@@ -685,6 +688,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
       params: builtParams,
       configFiles: builtConfigFiles,
       ports: builtPorts,
+      ...(requiresPassword ? { passwordPolicy: {} } : {}),
     };
   };
 
@@ -870,6 +874,18 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                     placeholder="27015"
                   />
                 </div>
+              </div>
+              <div className="pt-2">
+                <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={requiresPassword}
+                    onChange={(e) => setRequiresPassword(e.target.checked)}
+                    className="accent-accentPurple"
+                  />
+                  Requires Server Password
+                  <FieldHelp text={FIELD_HELP.requiresPassword} label="Requires Password" />
+                </label>
               </div>
             </section>
 
