@@ -33,7 +33,7 @@ win:
     - nsis
   defaultArch: x64
   icon: build/icon.ico
-  artifactName: ${productName}-Setup-${version}.${ext}
+  artifactName: ${productName}-Setup.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
