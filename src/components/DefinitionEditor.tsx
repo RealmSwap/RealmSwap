@@ -108,6 +108,10 @@ const FIELD_HELP = {
     "Command-line arguments passed to the executable, one per row, e.g. -batchmode. Reference params with {{paramKey}} if needed.",
   readyPattern:
     "Optional regex pattern to match against server logs to determine when the server is fully started and ready for players. E.g. 'Server started'.",
+  queryType:
+    "The GameDig query protocol identifier (e.g. 'minecraft', 'valheim', 'ase', 'rust'). If left blank, live player counting is disabled.",
+  queryPort:
+    "Optional port number to use for queries. Can use template variables like '{{port}}'. If omitted, it will default to the primary Server Port.",
 
   // Params builder
   paramKey:
@@ -586,6 +590,8 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
   const [cwdSubDir, setCwdSubDir] = useState("");
   const [executableOnPath, setExecutableOnPath] = useState(false);
   const [readyPattern, setReadyPattern] = useState("");
+  const [queryType, setQueryType] = useState("");
+  const [queryPort, setQueryPort] = useState("");
 
   // Params, config files, ports
   const [params, setParams] = useState<ParamRow[]>([]);
@@ -692,6 +698,8 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
       params: builtParams,
       configFiles: builtConfigFiles,
       ports: builtPorts,
+      ...(queryType.trim() ? { queryType: queryType.trim() } : {}),
+      ...(queryPort.trim() ? { queryPort: queryPort.trim() } : {}),
       ...(requiresPassword ? { passwordPolicy: {} } : {}),
     };
   };
@@ -1109,6 +1117,25 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                       onChange={(e) => setReadyPattern(e.target.value)}
                       placeholder="e.g. Server started"
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <FieldLabel help={FIELD_HELP.queryType}>Query Protocol (GameDig)</FieldLabel>
+                      <InputBase
+                        value={queryType}
+                        onChange={(e) => setQueryType(e.target.value)}
+                        placeholder="e.g. minecraft, valheim, ase"
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel help={FIELD_HELP.queryPort}>Query Port Override</FieldLabel>
+                      <InputBase
+                        value={queryPort}
+                        onChange={(e) => setQueryPort(e.target.value)}
+                        placeholder="e.g. 27015 or {{port}}"
+                      />
+                    </div>
                   </div>
 
                   <div>

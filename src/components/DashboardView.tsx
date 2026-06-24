@@ -46,6 +46,62 @@ interface DashboardViewProps {
   };
 }
 
+function ServerPlayerCount({ server }: { server: any }) {
+  const [queryData, setQueryData] = useState<{ status: string; players?: number; maxplayers?: number; playerList?: any[]; error?: string } | null>(null);
+
+  useEffect(() => {
+    if (server.status !== "RUNNING") {
+      setQueryData(null);
+      return;
+    }
+
+    let isMounted = true;
+    const fetchQuery = async () => {
+      try {
+        const res = await fetch(`/api/servers/${server.id}/query`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) setQueryData(data);
+        }
+      } catch (e) {
+        // silently fail
+      }
+    };
+
+    fetchQuery();
+    const interval = setInterval(fetchQuery, 30000); // 30s poll
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [server.id, server.status]);
+
+  if (!queryData) return null;
+  
+  if (queryData.status === "online" && typeof queryData.players === "number") {
+    return (
+      <div className="relative group inline-block">
+        <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 cursor-help">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          {queryData.players} / {queryData.maxplayers} Players
+        </span>
+        {queryData.playerList && queryData.playerList.length > 0 && (
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-slate-800 border border-slate-700 rounded shadow-xl p-2 z-50 hidden group-hover:block pointer-events-none">
+            <div className="text-[10px] uppercase text-slate-400 font-bold mb-1 border-b border-slate-700 pb-1">Online Players</div>
+            <ul className="text-xs text-slate-200 max-h-32 overflow-y-auto space-y-0.5">
+              {queryData.playerList.map((p: any, i: number) => (
+                <li key={i} className="truncate">{p.name || "Unknown"}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  }
+  
+  return null;
+}
+
 export default function DashboardView({ initialData }: DashboardViewProps) {
   const router = useRouter();
   const [data, setData] = useState(initialData);
@@ -576,6 +632,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                                 LOCAL
                               </span>
                             )}
+                            {isRunning && <ServerPlayerCount server={server} />}
                           </div>
                           <span className="text-xs text-mutedText block mt-0.5">{server.game} Server</span>
                         </div>

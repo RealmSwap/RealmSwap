@@ -55,6 +55,8 @@ export interface GameDefinitionSpec {
   ports: PortSpec[];
   requiresJava?: boolean;
   passwordPolicy?: PasswordPolicy;
+  queryType?: string;
+  queryPort?: string;
 }
 
 export interface DefinitionContext {

@@ -9,11 +9,12 @@
     "installMethod": "DOWNLOAD",
     "spec": {
       "install": {
-        "url": "https://piston-data.mojang.com/v1/objects/8dd1a358e2c3885906f21b6dbec6d7cae504c86a/server.jar",
+        "url": "https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar",
         "fileName": "server.jar",
         "checkFile": "server.jar"
       },
       "requiresJava": true,
+      "queryType": "minecraft",
       "launch": {
         "executable": "java",
         "executableOnPath": true,
