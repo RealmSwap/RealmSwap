@@ -74,7 +74,7 @@ function waitForServer(port, timeoutMs) {
   });
 }
 
-async function createWindow() {
+async function createWindow(port) {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -88,7 +88,7 @@ async function createWindow() {
 
   const url = isDev
     ? "http://localhost:3000"
-    : `http://127.0.0.1:${serverPort}`;
+    : `http://127.0.0.1:${port}`;
   await mainWindow.loadURL(url);
   mainWindow.show();
 }
@@ -103,7 +103,7 @@ app.whenReady().then(async () => {
       serverPort = await getFreePort();
       startNextServer(serverPort, dataDir);
       await waitForServer(serverPort, 30000);
-      await createWindow();
+      await createWindow(serverPort);
     }
   } catch (err) {
     const { dialog } = require("electron");
