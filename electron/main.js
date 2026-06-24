@@ -65,7 +65,7 @@ function waitForServer(port, timeoutMs) {
   return new Promise((resolve, reject) => {
     const tryOnce = () => {
       const req = require("http").get(
-        { host: "127.0.0.1", port, path: "/", timeout: 1000 },
+        { host: "127.0.0.1", port, path: "/start", timeout: 1000 },
         (res) => {
           if (res.statusCode >= 500) {
             res.destroy();

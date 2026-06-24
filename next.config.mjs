@@ -2,6 +2,15 @@
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/start',
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
