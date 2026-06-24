@@ -106,6 +106,8 @@ const FIELD_HELP = {
     "Tick when the executable is a global command (java, python, node) resolved via PATH rather than a file inside the install directory.",
   launchArgs:
     "Command-line arguments passed to the executable, one per row, e.g. -batchmode. Reference params with {{paramKey}} if needed.",
+  readyPattern:
+    "Optional regex pattern to match against server logs to determine when the server is fully started and ready for players. E.g. 'Server started'.",
 
   // Params builder
   paramKey:
@@ -583,6 +585,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
   const [args, setArgs] = useState<string[]>([]);
   const [cwdSubDir, setCwdSubDir] = useState("");
   const [executableOnPath, setExecutableOnPath] = useState(false);
+  const [readyPattern, setReadyPattern] = useState("");
 
   // Params, config files, ports
   const [params, setParams] = useState<ParamRow[]>([]);
@@ -636,6 +639,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
         args: argSpecs,
         ...(cwdSubDir.trim() ? { cwdSubDir: cwdSubDir.trim() } : {}),
         ...(executableOnPath ? { executableOnPath: true } : {}),
+        ...(readyPattern.trim() ? { readyPattern: readyPattern.trim() } : {}),
       };
     }
 
@@ -1096,6 +1100,15 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
                       Executable is on PATH (e.g. <code className="text-xs bg-slate-800 px-1 rounded">java</code>, interpreter commands)
                       <FieldHelp text={FIELD_HELP.executableOnPath} label="Executable on PATH" />
                     </label>
+                  </div>
+
+                  <div>
+                    <FieldLabel help={FIELD_HELP.readyPattern}>Ready Log Pattern (Regex)</FieldLabel>
+                    <InputBase
+                      value={readyPattern}
+                      onChange={(e) => setReadyPattern(e.target.value)}
+                      placeholder="e.g. Server started"
+                    />
                   </div>
 
                   <div>

@@ -18,6 +18,7 @@ export interface LaunchPlan {
   stdinStopCommand?: string; launchScript?: string;
   executableOnPath?: boolean;
   preLaunchDirs?: string[];
+  readyPattern?: string;
 }
 
 /** Resolve the command to spawn. If executableOnPath is true the executable is
@@ -61,6 +62,7 @@ export function planLaunch(spec: GameDefinitionSpec, ctx: DefinitionContext): La
     launchScript: l.launchScript,
     executableOnPath: l.executableOnPath,
     preLaunchDirs: l.preLaunchDirs,
+    readyPattern: l.readyPattern,
   };
 }
 

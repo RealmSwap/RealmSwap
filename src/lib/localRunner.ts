@@ -2,6 +2,7 @@ import { spawn, exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import https from "https";
+import net from "net";
 import { prisma } from "./db";
 import { mapPort, unmapPort, getPublicIP } from "./upnp";
 import { startMonitoring, stopMonitoring, clearStatsHistory } from "./processMonitor";
@@ -370,6 +371,69 @@ async function resolveDefinition(server: { definitionId: string | null; game: st
   return { spec, installMethod: record.installMethod, requiresJava: !!spec.requiresJava };
 }
 
+// Readiness check logic
+function waitForReadiness(
+  serverId: string,
+  child: import("child_process").ChildProcessWithoutNullStreams,
+  launch: import("./definitions/plan").LaunchPlan,
+  tcpPorts: number[],
+  logWriter: (msg: string) => void
+) {
+  let isReady = false;
+  let timeoutId: NodeJS.Timeout;
+  let intervalId: NodeJS.Timeout;
+
+  const markReady = (reason: string) => {
+    if (isReady) return;
+    isReady = true;
+    clearTimeout(timeoutId);
+    clearInterval(intervalId);
+    logWriter(`[Readiness Check] Server is ready (${reason})`);
+    
+    prisma.server.update({
+      where: { id: serverId },
+      data: { status: "RUNNING" },
+    }).catch(e => console.error("Error updating status to RUNNING:", e));
+  };
+
+  // 1. Stdout listener
+  const readyPattern = launch.readyPattern ? new RegExp(launch.readyPattern, "i") : null;
+  if (readyPattern) {
+    const onData = (chunk: Buffer) => {
+      if (isReady) return;
+      if (readyPattern.test(chunk.toString())) {
+        markReady(`Matched log pattern: ${launch.readyPattern}`);
+      }
+    };
+    child.stdout.on("data", onData);
+  }
+
+  // 2. Port polling
+  if (tcpPorts.length > 0) {
+    intervalId = setInterval(() => {
+      if (isReady) return;
+      const portToCheck = tcpPorts[0]; // Check first TCP port
+      const socket = new net.Socket();
+      socket.setTimeout(2000);
+      socket.on("connect", () => {
+        socket.destroy();
+        markReady(`TCP Port ${portToCheck} is accepting connections`);
+      }).on("error", () => {
+        socket.destroy();
+      }).on("timeout", () => {
+        socket.destroy();
+      });
+      socket.connect(portToCheck, "127.0.0.1");
+    }, 5000);
+  }
+
+  // 3. Fallback timeout (5 minutes)
+  timeoutId = setTimeout(() => {
+    if (isReady) return;
+    markReady("5-minute fallback timeout reached");
+  }, 5 * 60 * 1000);
+}
+
 // Main: Start a local game server
 export async function startLocalServer(serverId: string, game: string, ramAllocation: number): Promise<any> {
   const baseDir = getLocalServerDir(serverId);
@@ -583,7 +647,7 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
   await prisma.server.update({
     where: { id: serverId },
     data: {
-      status: "RUNNING",
+      status: "STARTING",
       pid: child.pid,
       ipAddress: currentIp,
       cpuUsage: 0,
@@ -597,6 +661,10 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
   const logStream = fs.createWriteStream(logFile, { flags: "a" });
   child.stdout.pipe(logStream);
   child.stderr.pipe(logStream);
+
+  // Wait for readiness
+  const tcpPorts = planPorts(spec, ctx).filter(p => p.protocol === "TCP").map(p => p.port);
+  waitForReadiness(serverId, child as any, launch, tcpPorts, logWriter);
 
   child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
 }

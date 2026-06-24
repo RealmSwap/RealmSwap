@@ -24,7 +24,8 @@
           "server.jar",
           "nogui"
         ],
-        "stdinStopCommand": "stop\n"
+        "stdinStopCommand": "stop\n",
+        "readyPattern": "Done \\([\\d.]+s\\)!"
       },
       "defaultPort": 25565,
       "params": [],
@@ -96,7 +97,8 @@
             "updateField": "ipAddress",
             "transform": "joinCode"
           }
-        ]
+        ],
+        "readyPattern": "Game server connected"
       },
       "defaultPort": 2456,
       "params": [],
@@ -191,7 +193,8 @@
           "-cachedir=./zomboid-data",
           "-servername",
           "servertest"
-        ]
+        ],
+        "readyPattern": "LOG\\s*:\\s*General\\s*,\\s*Server started"
       },
       "defaultPort": 16261,
       "params": [],
@@ -252,7 +255,8 @@
           "-server",
           "-nosound",
           "-QueryPort=27015"
-        ]
+        ],
+        "readyPattern": "Full Startup:"
       },
       "defaultPort": 7777,
       "params": [],
@@ -312,7 +316,8 @@
           "{nameSanitized}",
           "-world",
           "worlds/{nameSanitized}.wld"
-        ]
+        ],
+        "readyPattern": "Server started"
       },
       "defaultPort": 7777,
       "params": [],
@@ -419,7 +424,8 @@
           "{password}",
           "+rcon.web",
           "1"
-        ]
+        ],
+        "readyPattern": "Server startup complete"
       },
       "defaultPort": 28015,
       "params": [],

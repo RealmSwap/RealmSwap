@@ -42,6 +42,7 @@ export interface LaunchSpec {
   launchScript?: string;
   executableOnPath?: boolean;   // true: spawn executable by name (found on PATH, e.g. "java", "cmd.exe"); false/omitted: resolve against the install dir
   preLaunchDirs?: string[];     // directories (relative to install dir) to create before launch
+  readyPattern?: string;        // regex pattern to detect when the server has finished starting
 }
 
 export interface GameDefinitionSpec {

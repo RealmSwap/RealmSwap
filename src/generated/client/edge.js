@@ -219,7 +219,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\jimmy\\Documents\\GitHub\\GameVault\\.claude\\worktrees\\desktop-app\\src\\generated\\client",
+      "value": "C:\\Users\\Cody\\GameVault\\src\\generated\\client",
       "fromEnvVar": null
     },
     "config": {
@@ -233,7 +233,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\jimmy\\Documents\\GitHub\\GameVault\\.claude\\worktrees\\desktop-app\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\Cody\\GameVault\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
@@ -247,6 +247,7 @@ const config = {
     "db"
   ],
   "activeProvider": "sqlite",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
