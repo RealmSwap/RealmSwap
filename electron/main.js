@@ -1,14 +1,17 @@
 "use strict";
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, Tray, Menu, nativeImage } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const net = require("net");
 const crypto = require("crypto");
+const { stopAllServers } = require("./shutdown");
 
 const isDev = process.env.GAMEVAULT_DEV === "1";
 const internalToken = crypto.randomBytes(16).toString("hex");
 
 let mainWindow = null;
+let tray = null;
+let isQuitting = false;
 let serverPort = 0;
 
 function getFreePort() {
@@ -74,6 +77,27 @@ function waitForServer(port, timeoutMs) {
   });
 }
 
+function buildTray() {
+  const icon = nativeImage.createFromPath(
+    isDev ? path.join(__dirname, "..", "build", "tray.png")
+          : path.join(process.resourcesPath, "tray.png")
+  );
+  tray = new Tray(icon);
+  tray.setToolTip("GameVault");
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: "Open GameVault", click: () => { mainWindow.show(); mainWindow.focus(); } },
+    { type: "separator" },
+    { label: "Quit", click: () => { isQuitting = true; app.quit(); } },
+  ]));
+  tray.on("double-click", () => { mainWindow.show(); mainWindow.focus(); });
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    { label: "File", submenu: [{ label: "Quit", click: () => { isQuitting = true; app.quit(); } }] },
+    { label: "View", submenu: [{ role: "reload" }, { role: "toggleDevTools" }] },
+    { label: "Help", submenu: [{ role: "about" }] },
+  ]));
+}
+
 async function createWindow(port) {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -86,11 +110,32 @@ async function createWindow(port) {
     },
   });
 
+  mainWindow.on("close", (e) => {
+    if (!isQuitting) {
+      e.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
   const url = isDev
     ? "http://localhost:3000"
     : `http://127.0.0.1:${port}`;
   await mainWindow.loadURL(url);
   mainWindow.show();
+  buildTray();
+}
+
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
 }
 
 app.whenReady().then(async () => {
@@ -113,7 +158,17 @@ app.whenReady().then(async () => {
 });
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
+  // Intentionally do nothing: closing the window hides to tray. Quit is
+  // explicit via tray/menu.
+});
+
+app.on("before-quit", async (e) => {
+  if (isQuitting === true && !isDev && serverPort) {
+    e.preventDefault();
+    isQuitting = "done";
+    await stopAllServers(serverPort, internalToken);
+    app.quit();
+  }
 });
 
 module.exports = { getInternalToken: () => internalToken };
