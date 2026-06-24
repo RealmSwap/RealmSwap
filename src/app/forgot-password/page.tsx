@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Server as ServerIcon, Mail, ShieldCheck, ShieldAlert, Key } from "lucide-react";
+import { Mail, ShieldCheck, ShieldAlert, Key } from "lucide-react";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -52,12 +52,7 @@ export default function ForgotPasswordPage() {
         {/* Logo Header */}
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex items-center gap-2 mb-2 group">
-            <div className="p-2.5 bg-accentPurple/20 border border-accentPurple/30 rounded-xl group-hover:box-glow-purple transition-all duration-300">
-              <ServerIcon className="w-7 h-7 text-accentPurple" />
-            </div>
-            <span className="font-extrabold text-2xl tracking-wider">
-              REALM<span className="text-accentPurple text-glow-purple">SWAP</span>
-            </span>
+            <img src="/logo.png" alt="RealmSwap" className="h-12 w-auto scale-[7] -translate-x-16 translate-y-2 pointer-events-none select-none" />
           </Link>
           <p className="text-sm text-mutedText">Recover access to your game worlds</p>
         </div>

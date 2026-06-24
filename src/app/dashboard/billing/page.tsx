@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAuthenticatedUser } from "@/lib/auth";
 import Link from "next/link";
-import { Server as ServerIcon, ArrowLeft, BadgeCent, Sparkles, LayoutDashboard } from "lucide-react";
+import { ArrowLeft, BadgeCent, Sparkles, LayoutDashboard } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +22,7 @@ export default async function BillingPage() {
       <aside className="w-64 border-r border-borderDark bg-[#0a0c12] flex flex-col justify-between hidden md:flex">
         <div>
           <div className="p-6 border-b border-borderDark flex items-center gap-2">
-            <ServerIcon className="w-6 h-6 text-accentPurple" />
-            <span className="font-extrabold text-xl tracking-wider">
-              REALM<span className="text-accentPurple">SWAP</span>
-            </span>
+            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
           </div>
           <nav className="p-4 space-y-1">
             <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-300 transition-all">
