@@ -219,11 +219,11 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\Cody\\RealmSwap\\src\\generated\\client",
+      "value": "C:\\Users\\jimmy\\Documents\\GitHub\\GameVault\\.claude\\worktrees\\desktop-app\\src\\generated\\client",
       "fromEnvVar": null
     },
     "config": {
-      "engineType": "library"
+      "engineType": "binary"
     },
     "binaryTargets": [
       {
@@ -233,11 +233,12 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\Cody\\RealmSwap\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\jimmy\\Documents\\GitHub\\GameVault\\.claude\\worktrees\\desktop-app\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
   "clientVersion": "5.22.0",
@@ -246,17 +247,16 @@ const config = {
     "db"
   ],
   "activeProvider": "sqlite",
-  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
-        "fromEnvVar": null,
-        "value": "file:./dev.db"
+        "fromEnvVar": "DATABASE_URL",
+        "value": null
       }
     }
   },
-  "inlineSchema": "// Prisma Schema for RealmSwap\n//\n// To switch this to PostgreSQL for production:\n// 1. Change the provider below to \"postgresql\"\n// 2. Change the url to env(\"DATABASE_URL\")\n// 3. Update your local .env file with your PostgreSQL connection string\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = \"file:./dev.db\"\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/client\"\n}\n\nmodel User {\n  id                 String         @id @default(cuid())\n  email              String         @unique\n  passwordHash       String\n  name               String\n  createdAt          DateTime       @default(now())\n  updatedAt          DateTime       @updatedAt\n  subscription       Subscription?\n  servers            Server[]\n  archives           Archive[]\n  logs               ActivityLog[]\n  collaboratorAccess Collaborator[]\n}\n\nmodel Subscription {\n  id          String   @id @default(cuid())\n  userId      String   @unique\n  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  plan        String // \"STARTER\", \"PARTY\", \"GUILD\"\n  status      String // \"ACTIVE\", \"CANCELED\"\n  activeSlots Int // 1, 2, or 4 based on plan\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n\nmodel Server {\n  id               String         @id @default(cuid())\n  userId           String\n  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)\n  name             String\n  game             String // \"MINECRAFT\", \"VALHEIM\", \"ZOMBOID\", \"ARK\"\n  ramAllocation    Float // GB allocated\n  region           String // \"US_EAST\", \"US_WEST\", \"EU_CENTRAL\", \"ASIA\"\n  status           String // \"RUNNING\", \"STOPPED\", \"STARTING\"\n  runnerType       String         @default(\"CLOUD\") // \"CLOUD\" or \"LOCAL\"\n  localPath        String? // File path for local server storage\n  pid              Int? // Process ID for local runner execution\n  password         String? // Unhashed password for Valheim/game server configs\n  enableUpnp       Boolean        @default(false) // Trigger router port mapping\n  ipAddress        String\n  port             Int\n  cpuUsage         Float          @default(0) // Mocked live utilization percentage\n  memoryUsage      Float          @default(0) // Mocked live RAM utilization in GB\n  createdAt        DateTime       @default(now())\n  updatedAt        DateTime       @updatedAt\n  snapshotInterval Int            @default(0) // 0 = disabled, 1, 6, 12, 24 hours\n  lastSnapshotAt   DateTime?\n  backups          Backup[]\n  collaborators    Collaborator[]\n}\n\nmodel Archive {\n  id         String   @id @default(cuid())\n  userId     String\n  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  serverName String\n  game       String // \"MINECRAFT\", \"VALHEIM\", \"ZOMBOID\", \"ARK\"\n  saveSizeGB Float // Saved world storage size in GB\n  archivedAt DateTime @default(now())\n  createdAt  DateTime @default(now())\n}\n\nmodel ActivityLog {\n  id        String   @id @default(cuid())\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  action    String // \"CREATE_SERVER\", \"START_SERVER\", \"STOP_SERVER\", \"RESTART_SERVER\", \"ARCHIVE_SERVER\", \"RESTORE_SERVER\", \"DELETE_ARCHIVE\"\n  details   String\n  createdAt DateTime @default(now())\n}\n\nmodel Backup {\n  id         String   @id @default(cuid())\n  serverId   String\n  server     Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)\n  userId     String\n  name       String // e.g. \"Survival World - Auto Save\" or \"Manual Snapshot\"\n  game       String // \"MINECRAFT\", etc.\n  filePath   String // path to backup zip/folder on disk\n  fileSizeMB Float\n  backupType String // \"MANUAL\" or \"AUTOMATED\"\n  createdAt  DateTime @default(now())\n}\n\nmodel Collaborator {\n  id        String   @id @default(cuid())\n  serverId  String\n  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  role      String // \"ADMIN\" or \"CO_HOST\"\n  createdAt DateTime @default(now())\n\n  @@unique([serverId, userId])\n}\n",
-  "inlineSchemaHash": "e766fae9cfc3862cbc7cff477dd7d9631d2c34570a3f317cd703c2c955da3577",
+  "inlineSchema": "// Prisma Schema for GameVault\n//\n// To switch this to PostgreSQL for production:\n// 1. Change the provider below to \"postgresql\"\n// 2. Change the url to env(\"DATABASE_URL\")\n// 3. Update your local .env file with your PostgreSQL connection string\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider   = \"prisma-client-js\"\n  output     = \"../src/generated/client\"\n  engineType = \"binary\"\n}\n\nmodel User {\n  id                 String           @id @default(cuid())\n  email              String           @unique\n  passwordHash       String\n  name               String\n  createdAt          DateTime         @default(now())\n  updatedAt          DateTime         @updatedAt\n  role               String           @default(\"USER\") // \"USER\" | \"ADMIN\"\n  definitions        GameDefinition[]\n  subscription       Subscription?\n  servers            Server[]\n  archives           Archive[]\n  logs               ActivityLog[]\n  collaboratorAccess Collaborator[]\n}\n\nmodel Subscription {\n  id          String   @id @default(cuid())\n  userId      String   @unique\n  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  plan        String // \"STARTER\", \"PARTY\", \"GUILD\"\n  status      String // \"ACTIVE\", \"CANCELED\"\n  activeSlots Int // 1, 2, or 4 based on plan\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n\nmodel Server {\n  id               String          @id @default(cuid())\n  userId           String\n  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)\n  name             String\n  game             String // \"MINECRAFT\", \"VALHEIM\", \"ZOMBOID\", \"ARK\"\n  ramAllocation    Float // GB allocated\n  region           String // \"US_EAST\", \"US_WEST\", \"EU_CENTRAL\", \"ASIA\"\n  status           String // \"RUNNING\", \"STOPPED\", \"STARTING\"\n  runnerType       String          @default(\"CLOUD\") // \"CLOUD\" or \"LOCAL\"\n  localPath        String? // File path for local server storage\n  pid              Int? // Process ID for local runner execution\n  password         String? // Unhashed password for Valheim/game server configs\n  enableUpnp       Boolean         @default(false) // Trigger router port mapping\n  ipAddress        String\n  port             Int\n  definitionId     String?\n  definition       GameDefinition? @relation(fields: [definitionId], references: [id])\n  paramValues      String? // JSON object of custom param values\n  cpuUsage         Float           @default(0) // Mocked live utilization percentage\n  memoryUsage      Float           @default(0) // Mocked live RAM utilization in GB\n  createdAt        DateTime        @default(now())\n  updatedAt        DateTime        @updatedAt\n  snapshotInterval Int             @default(0) // 0 = disabled, 1, 6, 12, 24 hours\n  lastSnapshotAt   DateTime?\n  backups          Backup[]\n  collaborators    Collaborator[]\n}\n\nmodel Archive {\n  id         String   @id @default(cuid())\n  userId     String\n  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  serverName String\n  game       String // \"MINECRAFT\", \"VALHEIM\", \"ZOMBOID\", \"ARK\"\n  saveSizeGB Float // Saved world storage size in GB\n  archivedAt DateTime @default(now())\n  createdAt  DateTime @default(now())\n}\n\nmodel ActivityLog {\n  id        String   @id @default(cuid())\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  action    String // \"CREATE_SERVER\", \"START_SERVER\", \"STOP_SERVER\", \"RESTART_SERVER\", \"ARCHIVE_SERVER\", \"RESTORE_SERVER\", \"DELETE_ARCHIVE\"\n  details   String\n  createdAt DateTime @default(now())\n}\n\nmodel Backup {\n  id         String   @id @default(cuid())\n  serverId   String\n  server     Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)\n  userId     String\n  name       String // e.g. \"Survival World - Auto Save\" or \"Manual Snapshot\"\n  game       String // \"MINECRAFT\", etc.\n  filePath   String // path to backup zip/folder on disk\n  fileSizeMB Float\n  backupType String // \"MANUAL\" or \"AUTOMATED\"\n  createdAt  DateTime @default(now())\n}\n\nmodel Collaborator {\n  id        String   @id @default(cuid())\n  serverId  String\n  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  role      String // \"ADMIN\" or \"CO_HOST\"\n  createdAt DateTime @default(now())\n\n  @@unique([serverId, userId])\n}\n\nmodel GameDefinition {\n  id               String   @id @default(cuid())\n  slug             String\n  displayName      String\n  icon             String   @default(\"🎮\")\n  color            String   @default(\"from-slate-500 to-slate-700 bg-slate-500/10 border-slate-500/30 text-slate-400\")\n  description      String   @default(\"\")\n  recommendedRamGB Float    @default(4)\n  requiredDiskGB   Float    @default(3)\n  ownerId          String?\n  owner            User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)\n  isBuiltIn        Boolean  @default(false)\n  installMethod    String // \"STEAMCMD\" | \"DOWNLOAD\" | \"CUSTOM_SCRIPT\"\n  spec             String // JSON GameDefinitionSpec\n  servers          Server[]\n  createdAt        DateTime @default(now())\n  updatedAt        DateTime @updatedAt\n\n  @@unique([ownerId, slug])\n}\n",
+  "inlineSchemaHash": "f67b3660a5fc8f3a8951767911cdcfc841c5fc83cf1be065a2a1fe15946eb9f7",
   "copyEngine": true
 }
 config.dirname = '/'
@@ -266,7 +266,9 @@ defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = undefined
 
 config.injectableEdgeEnv = () => ({
-  parsed: {}
+  parsed: {
+    DATABASE_URL: typeof globalThis !== 'undefined' && globalThis['DATABASE_URL'] || typeof process !== 'undefined' && process.env && process.env.DATABASE_URL || undefined
+  }
 })
 
 if (typeof globalThis !== 'undefined' && globalThis['DEBUG'] || typeof process !== 'undefined' && process.env && process.env.DEBUG || undefined) {
