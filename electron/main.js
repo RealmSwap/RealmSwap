@@ -123,9 +123,12 @@ async function createWindow(port) {
     }
   });
 
+  // Open to the desktop entry route, which redirects to dashboard (valid
+  // session), login (users exist), or register (fresh install) — not the
+  // marketing landing page at /.
   const url = isDev
-    ? "http://localhost:3000"
-    : `http://127.0.0.1:${port}`;
+    ? "http://localhost:3000/start"
+    : `http://127.0.0.1:${port}/start`;
   await mainWindow.loadURL(url);
   mainWindow.show();
   buildTray();
