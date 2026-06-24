@@ -24,7 +24,7 @@ export default async function BillingPage() {
           <div className="p-6 border-b border-borderDark flex items-center gap-2">
             <ServerIcon className="w-6 h-6 text-accentPurple" />
             <span className="font-extrabold text-xl tracking-wider">
-              GAME<span className="text-accentPurple">VAULT</span>
+              REALM<span className="text-accentPurple">SWAP</span>
             </span>
           </div>
           <nav className="p-4 space-y-1">

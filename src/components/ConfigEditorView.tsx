@@ -159,7 +159,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
           <div className="p-6 border-b border-borderDark flex items-center gap-2">
             <ServerIcon className="w-6 h-6 text-accentPurple" />
             <span className="font-extrabold text-xl tracking-wider">
-              GAME<span className="text-accentPurple text-glow-purple">VAULT</span>
+              REALM<span className="text-accentPurple text-glow-purple">SWAP</span>
             </span>
           </div>
 

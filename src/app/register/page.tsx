@@ -54,7 +54,7 @@ function RegisterForm() {
             <ServerIcon className="w-7 h-7 text-accentPurple" />
           </div>
           <span className="font-extrabold text-2xl tracking-wider">
-            GAME<span className="text-accentPurple text-glow-purple">VAULT</span>
+            REALM<span className="text-accentPurple text-glow-purple">SWAP</span>
           </span>
         </Link>
         <p className="text-sm text-mutedText font-medium">Create your account to unlock your game server slots</p>

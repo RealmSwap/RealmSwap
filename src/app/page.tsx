@@ -99,7 +99,7 @@ export default function LandingPage() {
               <ServerIcon className="w-6 h-6 text-accentPurple" />
             </div>
             <span className="font-extrabold text-2xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-accentPurple">
-              GAME<span className="text-accentPurple text-glow-purple">VAULT</span>
+              REALM<span className="text-accentPurple text-glow-purple">SWAP</span>
             </span>
           </Link>
 
@@ -404,7 +404,7 @@ export default function LandingPage() {
               <ServerIcon className="w-5 h-5 text-accentPurple" />
             </div>
             <span className="font-extrabold text-lg tracking-wider">
-              GAME<span className="text-accentPurple">VAULT</span>
+              REALM<span className="text-accentPurple">SWAP</span>
             </span>
           </div>
 
