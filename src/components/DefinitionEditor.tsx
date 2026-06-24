@@ -757,7 +757,7 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
       <aside className="w-64 border-r border-borderDark bg-[#0a0c12] hidden md:flex flex-col justify-between">
         <div>
           <div className="p-6 border-b border-borderDark flex items-center gap-2">
-            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 pointer-events-none select-none" />
+            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
           </div>
           <nav className="p-4 space-y-1">
             <Link

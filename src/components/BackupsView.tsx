@@ -189,7 +189,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
         <div>
           {/* Logo */}
           <div className="p-6 border-b border-borderDark flex items-center gap-2">
-            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 pointer-events-none select-none" />
+            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
           </div>
 
           {/* Navigation Links */}
