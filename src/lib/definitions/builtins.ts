@@ -183,4 +183,42 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       ports: [{ protocol: "UDP", port: "28015" }, { protocol: "TCP", port: "28016" }],
     },
   },
+  {
+    slug: "SATISFACTORY", displayName: "Satisfactory", icon: "🏭",
+    color: "from-orange-500 to-amber-700 bg-orange-500/10 border-orange-500/30 text-orange-400",
+    description: "Co-op factory automation", recommendedRamGB: 8.0,
+    installMethod: "STEAMCMD",
+    spec: {
+      install: { appId: "1690800", installSubDir: "satisfactory-server", checkFile: "FactoryServer.exe", requiredDiskGB: 15.0 },
+      // Server is administered in-game via the Server Manager (claim + set admin password
+      // after first connecting from the game client); there is no CLI password or config file.
+      // readyPattern omitted until a real first-launch log line is confirmed.
+      launch: {
+        executable: "FactoryServer.exe", cwdSubDir: "satisfactory-server",
+        args: ["-log", "-unattended"],
+      },
+      defaultPort: 7777, params: [], configFiles: [],
+      ports: [{ protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" }],
+    },
+  },
+  {
+    slug: "VRISING", displayName: "V Rising", icon: "🧛",
+    color: "from-purple-500 to-red-800 bg-purple-500/10 border-purple-500/30 text-purple-400",
+    description: "Vampire survival RPG", recommendedRamGB: 6.0,
+    installMethod: "STEAMCMD",
+    spec: {
+      install: { appId: "1829350", installSubDir: "vrising-server", checkFile: "VRisingServer.exe", requiredDiskGB: 5.0 },
+      // Password/max-players live in save-data/Settings/ServerHostSettings.json (generated on
+      // first launch); name + save are passed on the command line, which takes priority.
+      // readyPattern omitted until a real first-launch log line is confirmed.
+      launch: {
+        executable: "VRisingServer.exe", cwdSubDir: "vrising-server",
+        preLaunchDirs: ["save-data"],
+        args: ["-persistentDataPath", "./save-data", "-serverName", "{name}", "-saveName", "world1"],
+      },
+      defaultPort: 9876, params: [], configFiles: [],
+      editableConfigPath: "vrising-server/save-data/Settings/ServerHostSettings.json",
+      ports: [{ protocol: "UDP", port: "9876" }, { protocol: "UDP", port: "9877" }],
+    },
+  },
 ];

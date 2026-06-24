@@ -6,7 +6,10 @@ export const KNOWN_FIXED_VARS = ["name", "nameSanitized", "password", "passwordE
 
 /** Returns true if a path segment string is unsafe (absolute or contains ".." segments). */
 function isUnsafePath(p: string): boolean {
-  if (path.isAbsolute(p)) return true;
+  // Check both POSIX and Windows absolute forms so this gate is host-OS-independent.
+  // path.isAbsolute alone is platform-specific: a "C:\..." path is not absolute on a
+  // POSIX host, so it would slip through when the validator runs on Linux (e.g. CI).
+  if (path.win32.isAbsolute(p) || path.posix.isAbsolute(p)) return true;
   const segments = p.split(/[\\/]/);
   return segments.some((seg) => seg === "..");
 }

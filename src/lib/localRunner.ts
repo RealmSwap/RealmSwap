@@ -13,13 +13,13 @@ import { writeStrategyConfig } from "./definitions/strategies";
 import type { GameDefinitionSpec } from "./definitions/types";
 import { setProgress, clearProgress, parseSteamProgress, computePercent, isMissingConfigError } from "./downloadProgress";
 import { dataRoot } from "./appPaths";
-import { appendLog, clearLogs } from "./logStreamer";
+import { isCrashExit, evaluateCrash, CRASH_MAX_RETRIES, type CrashCounter } from "./crashPolicy";
 
 // Global process map to persist running processes across Next.js dev server hot-reloads
 const globalForRunner = globalThis as unknown as {
   localProcesses: Map<string, any> | undefined;
   intentionalStops: Set<string> | undefined;
-  crashCounters: Map<string, { count: number; windowStart: number }> | undefined;
+  crashCounters: Map<string, CrashCounter> | undefined;
 };
 
 if (!globalForRunner.localProcesses) {
@@ -35,9 +35,6 @@ if (!globalForRunner.crashCounters) {
 export const localProcesses = globalForRunner.localProcesses;
 const intentionalStops = globalForRunner.intentionalStops;
 const crashCounters = globalForRunner.crashCounters;
-
-const CRASH_MAX_RETRIES = 3;
-const CRASH_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
 // SteamCMD info mapping for each game (kept for backwards compat; no longer used by the runner)
 export function getGameSteamInfo(game: string): { appId: string; installSubDir: string; checkFile: string } | null {
@@ -668,20 +665,15 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
   const wasIntentional = intentionalStops.has(serverId);
   intentionalStops.delete(serverId);
 
-  const isCrash = !wasIntentional && code !== null && code !== 0;
+  const isCrash = isCrashExit(wasIntentional, code);
 
   try {
     const serverRec = await prisma.server.findUnique({ where: { id: serverId } });
     if (!serverRec) return;
 
     if (isCrash) {
-      // Check crash counter
-      const now = Date.now();
-      let counter = crashCounters.get(serverId);
-      if (!counter || (now - counter.windowStart) > CRASH_WINDOW_MS) {
-        counter = { count: 0, windowStart: now };
-      }
-      counter.count++;
+      // Apply the crash to the rolling retry counter and decide whether to restart.
+      const { counter, shouldRestart } = evaluateCrash(crashCounters.get(serverId), Date.now());
       crashCounters.set(serverId, counter);
 
       appendLog(serverId, `[Crash Detection] Server crashed with exit code ${code} (Attempt ${counter.count}/${CRASH_MAX_RETRIES})`);
@@ -694,8 +686,8 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
         }
       });
 
-      if (counter.count < CRASH_MAX_RETRIES) {
-        appendLog(serverId, `[Crash Detection] Auto-restarting in 5 seconds...`);
+      if (shouldRestart) {
+        appendLog(baseDir, `[Crash Detection] Auto-restarting in 5 seconds...`);
         await prisma.server.update({
           where: { id: serverId },
           data: { status: "STARTING", pid: null, cpuUsage: 0, memoryUsage: 0 },

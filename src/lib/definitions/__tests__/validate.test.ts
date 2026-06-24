@@ -84,6 +84,16 @@ describe("security: path traversal gate", () => {
     expect(errs).toMatch(/path|C:\\/i);
   });
 
+  it("rejects configFiles path with absolute POSIX path (host-OS-independent)", () => {
+    const spec: any = {
+      ...okSpec,
+      configFiles: [{ path: "/etc/cron.d/evil", strategy: "template", template: "x" }],
+    };
+    const errs = validateSpec(spec, "STEAMCMD").join();
+    expect(errs.length).toBeGreaterThan(0);
+    expect(errs).toMatch(/path/i);
+  });
+
   it("rejects editableConfigPath with .. traversal", () => {
     const spec: any = {
       ...okSpec,
