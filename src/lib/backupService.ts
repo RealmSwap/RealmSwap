@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
 import { prisma } from "./db";
+import { dataRoot } from "./appPaths";
 
 // Helper to execute PowerShell commands
 function runPowerShell(cmd: string): Promise<string> {
@@ -18,7 +19,7 @@ function runPowerShell(cmd: string): Promise<string> {
 
 // Get the local save path for each game type
 function getSavePath(game: string, serverId: string): { srcDir: string; zipPattern: string; destExtractDir: string } {
-  const root = process.cwd();
+  const root = dataRoot();
   
   switch (game.toUpperCase()) {
     case "MINECRAFT": {
@@ -100,7 +101,7 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
   }
 
   // Create local-backups target directory
-  const backupDir = path.join(process.cwd(), "local-backups", serverId);
+  const backupDir = path.join(dataRoot(), "local-backups", serverId);
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
   }

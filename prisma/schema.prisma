@@ -7,12 +7,13 @@
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/client"
+  provider   = "prisma-client-js"
+  output     = "../src/generated/client"
+  engineType = "binary"
 }
 
 model User {

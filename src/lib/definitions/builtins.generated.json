@@ -37,7 +37,7 @@
         {
           "path": "server.properties",
           "strategy": "template",
-          "template": "server-port={port}\nquery.port=25565\nonline-mode=false\nmax-players=10\nmotd=GameVault Local Runner Minecraft Server - {name}"
+          "template": "server-port={port}\nquery.port=25565\nonline-mode=false\nmax-players=10\nmotd=RealmSwap Local Runner Minecraft Server - {name}"
         }
       ],
       "editableConfigPath": "server.properties",

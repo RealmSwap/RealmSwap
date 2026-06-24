@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
+import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
 import path from "path";
 import https from "https";
@@ -74,7 +75,7 @@ export async function POST(
         return NextResponse.json({ error: "Download URL is required for Minecraft mods." }, { status: 400 });
       }
       
-      const modsDir = path.join(process.cwd(), "local-servers", serverId, "mods");
+      const modsDir = path.join(dataRoot(), "local-servers", serverId, "mods");
       if (!fs.existsSync(modsDir)) {
         fs.mkdirSync(modsDir, { recursive: true });
       }
@@ -86,8 +87,8 @@ export async function POST(
 
     } else if (game === "VALHEIM") {
       if (modType === "BEPINEX") {
-        const valheimDir = path.join(process.cwd(), "local-servers", serverId, "valheim-server");
-        const zipPath = path.join(process.cwd(), "local-servers", serverId, "bepinex.zip");
+        const valheimDir = path.join(dataRoot(), "local-servers", serverId, "valheim-server");
+        const zipPath = path.join(dataRoot(), "local-servers", serverId, "bepinex.zip");
         const defaultBepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
 
         if (!fs.existsSync(valheimDir)) {
@@ -114,7 +115,7 @@ export async function POST(
         if (!downloadUrl) {
           return NextResponse.json({ error: "Download URL is required for Valheim plugins." }, { status: 400 });
         }
-        const pluginsDir = path.join(process.cwd(), "local-servers", serverId, "valheim-server", "BepInEx", "plugins");
+        const pluginsDir = path.join(dataRoot(), "local-servers", serverId, "valheim-server", "BepInEx", "plugins");
         if (!fs.existsSync(pluginsDir)) {
           fs.mkdirSync(pluginsDir, { recursive: true });
         }
@@ -127,7 +128,7 @@ export async function POST(
         return NextResponse.json({ error: "Both Workshop ID and Mod ID are required for Project Zomboid mods." }, { status: 400 });
       }
 
-      const zomboidDir = path.join(process.cwd(), "local-servers", serverId, "zomboid-server");
+      const zomboidDir = path.join(dataRoot(), "local-servers", serverId, "zomboid-server");
       const serverConfigDir = path.join(zomboidDir, "zomboid-data", "Server");
       if (!fs.existsSync(serverConfigDir)) {
         fs.mkdirSync(serverConfigDir, { recursive: true });

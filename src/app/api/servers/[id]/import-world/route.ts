@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
+import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
 import path from "path";
 
@@ -82,7 +83,7 @@ export async function POST(
         );
       }
 
-      const targetDir = path.join(process.cwd(), "local-servers", serverId, "world");
+      const targetDir = path.join(dataRoot(), "local-servers", serverId, "world");
       
       // Clear old world folder
       if (fs.existsSync(targetDir)) {
@@ -130,7 +131,7 @@ export async function POST(
       }
 
     } else if (game === "ENSHROUDED") {
-      const targetDir = path.join(process.cwd(), "local-servers", serverId, "enshrouded-server", "savegame");
+      const targetDir = path.join(dataRoot(), "local-servers", serverId, "enshrouded-server", "savegame");
       
       if (fs.existsSync(targetDir)) {
         fs.rmSync(targetDir, { recursive: true, force: true });
@@ -144,7 +145,7 @@ export async function POST(
       }
 
     } else if (game === "ZOMBOID") {
-      const targetDir = path.join(process.cwd(), "local-servers", serverId, "zomboid-server", "zomboid-data", "Saves", "Multiplayer", "servertest");
+      const targetDir = path.join(dataRoot(), "local-servers", serverId, "zomboid-server", "zomboid-data", "Saves", "Multiplayer", "servertest");
 
       if (fs.existsSync(targetDir)) {
         fs.rmSync(targetDir, { recursive: true, force: true });
@@ -158,7 +159,7 @@ export async function POST(
       }
 
     } else if (game === "ARK") {
-      const targetDir = path.join(process.cwd(), "local-servers", serverId, "ark-server", "ShooterGame", "Saved", "SavedArksLocal");
+      const targetDir = path.join(dataRoot(), "local-servers", serverId, "ark-server", "ShooterGame", "Saved", "SavedArksLocal");
 
       if (fs.existsSync(targetDir)) {
         fs.rmSync(targetDir, { recursive: true, force: true });

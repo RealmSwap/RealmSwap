@@ -1,0 +1,39 @@
+appId: com.realmswap.desktop
+productName: RealmSwap
+directories:
+  output: dist
+  buildResources: build
+files:
+  - electron/**/*
+  - package.json
+extraResources:
+  - from: .next/standalone
+    to: standalone
+  # The Next standalone server require()s 'next' (and react, etc.) from its own
+  # bundled node_modules. electron-builder strips node_modules out of an
+  # extraResources source dir by default, so map it explicitly with a filter
+  # that forces every file to be copied. Without this the packaged app fails
+  # to start with "Cannot find module 'next'".
+  - from: .next/standalone/node_modules
+    to: standalone/node_modules
+    filter:
+      - "**/*"
+  - from: .next/static
+    to: standalone/.next/static
+  - from: public
+    to: standalone/public
+  - from: build/template.db
+    to: template.db
+  - from: build/tray.png
+    to: tray.png
+  - from: src/generated/client/query-engine-windows.exe
+    to: standalone/src/generated/client/query-engine-windows.exe
+win:
+  target:
+    - nsis
+  defaultArch: x64
+  artifactName: ${productName}-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+asar: true

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
 import path from "path";
 
@@ -26,7 +27,7 @@ export async function POST(
     }
 
     // Check if it is a local archive on disk
-    const archiveDir = path.join(process.cwd(), "local-archives", archiveId);
+    const archiveDir = path.join(dataRoot(), "local-archives", archiveId);
     const isLocal = fs.existsSync(archiveDir);
 
     // Assign game-appropriate RAM defaults for restoration
@@ -77,8 +78,8 @@ export async function POST(
 
     // Move filesystem folder for local archives
     if (isLocal) {
-      const serverDir = path.join(process.cwd(), "local-servers", restoredServer.id);
-      const parentServerDir = path.join(process.cwd(), "local-servers");
+      const serverDir = path.join(dataRoot(), "local-servers", restoredServer.id);
+      const parentServerDir = path.join(dataRoot(), "local-servers");
       if (!fs.existsSync(parentServerDir)) {
         fs.mkdirSync(parentServerDir, { recursive: true });
       }

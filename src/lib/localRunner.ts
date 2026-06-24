@@ -10,7 +10,8 @@ import { buildContext } from "./definitions/context";
 import { planInstall, planConfigFiles, planLaunch, planPorts, resolveCommand } from "./definitions/plan";
 import { writeStrategyConfig } from "./definitions/strategies";
 import type { GameDefinitionSpec } from "./definitions/types";
-import { setProgress, clearProgress, parseSteamProgress, computePercent } from "./downloadProgress";
+import { setProgress, clearProgress, parseSteamProgress, computePercent, isMissingConfigError } from "./downloadProgress";
+import { dataRoot } from "./appPaths";
 
 // Global process map to persist running processes across Next.js dev server hot-reloads
 const globalForRunner = globalThis as unknown as {
@@ -68,8 +69,8 @@ export function checkJavaInstalled(): Promise<boolean> {
 // Ensure local directories exist
 function getLocalServerDir(serverId: string, sub?: string): string {
   const dir = sub
-    ? path.join(process.cwd(), "local-servers", serverId, sub)
-    : path.join(process.cwd(), "local-servers", serverId);
+    ? path.join(dataRoot(), "local-servers", serverId, sub)
+    : path.join(dataRoot(), "local-servers", serverId);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -118,9 +119,9 @@ function downloadFile(
 
 // Setup SteamCMD on demand
 export function setupSteamCMD(onLog: (msg: string) => void): Promise<string> {
-  const steamcmdDir = path.join(process.cwd(), "steamcmd");
+  const steamcmdDir = path.join(dataRoot(), "steamcmd");
   const exePath = path.join(steamcmdDir, "steamcmd.exe");
-  const zipPath = path.join(process.cwd(), "steamcmd.zip");
+  const zipPath = path.join(dataRoot(), "steamcmd.zip");
 
   if (fs.existsSync(exePath)) {
     return Promise.resolve(exePath);
@@ -263,56 +264,78 @@ function installSteamCmdApp(
       onLog("This is a background download and may take several minutes depending on connection speeds. Please wait...");
 
       const cleanInstallDir = installDir.replace(/\\/g, "/");
+      const MAX_ATTEMPTS = 3;
 
-      // +app_info_update 1 forces SteamCMD to refresh its app-metadata cache before the
-      // install. On a freshly bootstrapped SteamCMD the cache is empty, and running
-      // app_update immediately fails with "Missing configuration" (exit code 8) because
-      // the depot config for the app hasn't synced yet.
-      const child = spawn(steamcmdExe, [
-        "+force_install_dir", cleanInstallDir,
-        "+login", "anonymous",
-        "+app_info_update", "1",
-        "+app_update", appId,
-        "validate",
-        "+quit"
-      ]);
+      // Runs one SteamCMD app_update and resolves with the exit code plus the
+      // last captured error line. Never rejects — the caller decides on retry.
+      //
+      // +app_info_update 1 refreshes the app-metadata cache before the install.
+      // On a freshly bootstrapped SteamCMD the cache is still empty, so the first
+      // app_update can fail with "Missing configuration" (exit code 8); the next
+      // attempt warms the cache and succeeds, so we retry that specific failure.
+      const runAppUpdate = (): Promise<{ code: number | null; detail: string }> =>
+        new Promise((res) => {
+          const child = spawn(steamcmdExe, [
+            "+force_install_dir", cleanInstallDir,
+            "+login", "anonymous",
+            "+app_info_update", "1",
+            "+app_update", appId,
+            "validate",
+            "+quit"
+          ]);
 
-      // Capture SteamCMD's real error so failures report the cause, not just an exit code.
-      let steamErrorDetail = "";
-      child.stdout.on("data", (data) => {
-        const line = data.toString().trim();
-        if (line) {
-          const cleanLine = line.replace(/[\r\n]+/g, " ");
-          const pct = parseSteamProgress(cleanLine);
-          if (pct !== null) {
-            onProgress?.({ percent: pct, label: `Downloading ${appName} ${Math.round(pct)}%` });
-          }
-          if (/ERROR!|Failed to install|No subscription|Invalid Password|Disk write failure/i.test(cleanLine)) {
-            steamErrorDetail = cleanLine;
-            onLog(`[SteamCMD Error] ${cleanLine}`);
-          } else if (cleanLine.includes("progress") || cleanLine.includes("Downloading") || cleanLine.includes("Update state")) {
-            onLog(`[SteamCMD Status] ${cleanLine}`);
-          }
-        }
-      });
+          // Capture SteamCMD's real error so failures report the cause, not just an exit code.
+          let steamErrorDetail = "";
+          child.stdout.on("data", (data) => {
+            const line = data.toString().trim();
+            if (line) {
+              const cleanLine = line.replace(/[\r\n]+/g, " ");
+              const pct = parseSteamProgress(cleanLine);
+              if (pct !== null) {
+                onProgress?.({ percent: pct, label: `Downloading ${appName} ${Math.round(pct)}%` });
+              }
+              if (/ERROR!|Failed to install|No subscription|Invalid Password|Disk write failure/i.test(cleanLine)) {
+                steamErrorDetail = cleanLine;
+                onLog(`[SteamCMD Error] ${cleanLine}`);
+              } else if (cleanLine.includes("progress") || cleanLine.includes("Downloading") || cleanLine.includes("Update state")) {
+                onLog(`[SteamCMD Status] ${cleanLine}`);
+              }
+            }
+          });
 
-      child.stderr.on("data", (data) => {
-        const line = data.toString().trim();
-        if (line) {
-          steamErrorDetail = line.replace(/[\r\n]+/g, " ");
-          onLog(`[SteamCMD warning] ${line}`);
-        }
-      });
+          child.stderr.on("data", (data) => {
+            const line = data.toString().trim();
+            if (line) {
+              steamErrorDetail = line.replace(/[\r\n]+/g, " ");
+              onLog(`[SteamCMD warning] ${line}`);
+            }
+          });
 
-      child.on("close", (code) => {
+          child.on("close", (code) => res({ code, detail: steamErrorDetail }));
+        });
+
+      let lastCode: number | null = null;
+      let lastDetail = "";
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        const { code, detail } = await runAppUpdate();
         if (code === 0 || fs.existsSync(exePath)) {
           onLog(`${appName} download completed!`);
           resolve();
-        } else {
-          const detail = steamErrorDetail ? ` - ${steamErrorDetail}` : " (see steamcmd/logs/console_log.txt for details)";
-          reject(new Error(`SteamCMD App ${appId} download process exited with code ${code}${detail}`));
+          return;
         }
-      });
+        lastCode = code;
+        lastDetail = detail;
+        if (isMissingConfigError(code, detail) && attempt < MAX_ATTEMPTS) {
+          onProgress?.({ percent: null, label: "Preparing SteamCMD…" });
+          onLog(`[SteamCMD] App metadata cache was cold ("Missing configuration", exit ${code}). Retrying (attempt ${attempt + 1}/${MAX_ATTEMPTS})...`);
+          await new Promise((r) => setTimeout(r, 3000));
+          continue;
+        }
+        break;
+      }
+
+      const detail = lastDetail ? ` - ${lastDetail}` : " (see steamcmd/logs/console_log.txt for details)";
+      reject(new Error(`SteamCMD App ${appId} download process exited with code ${lastCode}${detail}`));
     } catch (err: any) {
       reject(err);
     }
@@ -403,7 +426,7 @@ export async function startLocalServer(serverId: string, game: string, ramAlloca
     logWriter("[UPnP] Requesting router port forwarding rules...");
     try {
       for (const pm of planPorts(spec, ctx)) {
-        await mapPort(pm.port, pm.protocol, `GameVault - ${server.name}`);
+        await mapPort(pm.port, pm.protocol, `RealmSwap - ${server.name}`);
       }
       logWriter("[UPnP] Success! Router port forward mapping completed successfully.");
     } catch (e: any) {
@@ -671,7 +694,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
 // Main: Stop local game server gracefully
 export async function stopLocalServer(serverId: string): Promise<void> {
   const child = localProcesses.get(serverId);
-  const serverDir = path.join(process.cwd(), "local-servers", serverId);
+  const serverDir = path.join(dataRoot(), "local-servers", serverId);
   const server = await prisma.server.findUnique({ where: { id: serverId } });
 
   // Mark as intentional stop so crash detection doesn't trigger
@@ -751,7 +774,7 @@ export async function stopLocalServer(serverId: string): Promise<void> {
 
 // Reads tail logs of local server
 export function getLocalServerLogs(serverId: string): string {
-  const logFile = path.join(process.cwd(), "local-servers", serverId, "server.log");
+  const logFile = path.join(dataRoot(), "local-servers", serverId, "server.log");
   if (!fs.existsSync(logFile)) {
     return "No logs available. Start the server to generate logs.";
   }
@@ -770,7 +793,7 @@ export async function updateGameServer(serverId: string): Promise<void> {
   if (installMethod !== "STEAMCMD") throw new Error(`Updates are only supported for SteamCMD games.`);
 
   const installPlan = planInstall(spec, "STEAMCMD");
-  const baseDir = path.join(process.cwd(), "local-servers", serverId);
+  const baseDir = path.join(dataRoot(), "local-servers", serverId);
   const installDir = path.join(baseDir, installPlan.installSubDir!);
   const logWriter = (msg: string) => appendLog(baseDir, msg);
 

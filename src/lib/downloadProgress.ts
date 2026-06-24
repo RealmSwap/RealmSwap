@@ -58,6 +58,16 @@ export function parseSteamProgress(line: string): number | null {
   return last;
 }
 
+// A freshly bootstrapped SteamCMD has an empty app-metadata cache, so the very
+// first `app_update` for an app can fail with "Missing configuration" (exit code
+// 8) even with `+app_info_update 1`. The identical command succeeds once the
+// cache is warm, so this specific failure is safe to retry. Returns true when a
+// SteamCMD result looks like that cold-cache failure.
+export function isMissingConfigError(code: number | null, detail: string): boolean {
+  if (code === 8) return true;
+  return /Missing configuration/i.test(detail || "");
+}
+
 // Returns received/total as a 0..100 percent, or null when total is unknown/invalid.
 export function computePercent(received: number, total: number): number | null {
   if (!Number.isFinite(total) || total <= 0) return null;

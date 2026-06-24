@@ -7,21 +7,24 @@
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/client"
+  provider   = "prisma-client-js"
+  output     = "../src/generated/client"
+  engineType = "binary"
 }
 
 model User {
-  id                 String         @id @default(cuid())
-  email              String         @unique
+  id                 String           @id @default(cuid())
+  email              String           @unique
   passwordHash       String
   name               String
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  role               String           @default("USER") // "USER" | "ADMIN"
+  definitions        GameDefinition[]
   subscription       Subscription?
   servers            Server[]
   archives           Archive[]
@@ -41,26 +44,29 @@ model Subscription {
 }
 
 model Server {
-  id               String         @id @default(cuid())
+  id               String          @id @default(cuid())
   userId           String
-  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   name             String
   game             String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
   ramAllocation    Float // GB allocated
   region           String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
   status           String // "RUNNING", "STOPPED", "STARTING"
-  runnerType       String         @default("CLOUD") // "CLOUD" or "LOCAL"
+  runnerType       String          @default("CLOUD") // "CLOUD" or "LOCAL"
   localPath        String? // File path for local server storage
   pid              Int? // Process ID for local runner execution
   password         String? // Unhashed password for Valheim/game server configs
-  enableUpnp       Boolean        @default(false) // Trigger router port mapping
+  enableUpnp       Boolean         @default(false) // Trigger router port mapping
   ipAddress        String
   port             Int
-  cpuUsage         Float          @default(0) // Mocked live utilization percentage
-  memoryUsage      Float          @default(0) // Mocked live RAM utilization in GB
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  snapshotInterval Int            @default(0) // 0 = disabled, 1, 6, 12, 24 hours
+  definitionId     String?
+  definition       GameDefinition? @relation(fields: [definitionId], references: [id])
+  paramValues      String? // JSON object of custom param values
+  cpuUsage         Float           @default(0) // Mocked live utilization percentage
+  memoryUsage      Float           @default(0) // Mocked live RAM utilization in GB
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  snapshotInterval Int             @default(0) // 0 = disabled, 1, 6, 12, 24 hours
   lastSnapshotAt   DateTime?
   backups          Backup[]
   collaborators    Collaborator[]
@@ -109,4 +115,25 @@ model Collaborator {
   createdAt DateTime @default(now())
 
   @@unique([serverId, userId])
+}
+
+model GameDefinition {
+  id               String   @id @default(cuid())
+  slug             String
+  displayName      String
+  icon             String   @default("🎮")
+  color            String   @default("from-slate-500 to-slate-700 bg-slate-500/10 border-slate-500/30 text-slate-400")
+  description      String   @default("")
+  recommendedRamGB Float    @default(4)
+  requiredDiskGB   Float    @default(3)
+  ownerId          String?
+  owner            User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  isBuiltIn        Boolean  @default(false)
+  installMethod    String // "STEAMCMD" | "DOWNLOAD" | "CUSTOM_SCRIPT"
+  spec             String // JSON GameDefinitionSpec
+  servers          Server[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([ownerId, slug])
 }

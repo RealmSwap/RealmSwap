@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { stopLocalServer } from "@/lib/localRunner";
 import { verifyServerAccess } from "@/lib/serverAuth";
+import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
 import path from "path";
 
@@ -42,7 +43,7 @@ export async function POST(
     if (server.game === "ARK") saveSizeGB = parseFloat((Math.random() * 15 + 10).toFixed(2));
 
     // For local runner, let's measure actual size if directory exists
-    const serverDir = path.join(process.cwd(), "local-servers", serverId);
+    const serverDir = path.join(dataRoot(), "local-servers", serverId);
     if (server.runnerType === "LOCAL" && fs.existsSync(serverDir)) {
       try {
         // Measure size of server.jar and logs to show physical size
@@ -85,8 +86,8 @@ export async function POST(
 
     // Move filesystem folder for local servers
     if (server.runnerType === "LOCAL" && fs.existsSync(serverDir)) {
-      const archiveDir = path.join(process.cwd(), "local-archives", archive.id);
-      const parentArchiveDir = path.join(process.cwd(), "local-archives");
+      const archiveDir = path.join(dataRoot(), "local-archives", archive.id);
+      const parentArchiveDir = path.join(dataRoot(), "local-archives");
       if (!fs.existsSync(parentArchiveDir)) {
         fs.mkdirSync(parentArchiveDir, { recursive: true });
       }

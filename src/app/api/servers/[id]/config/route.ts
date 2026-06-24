@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { parseSpec } from "@/lib/definitions/serialize";
+import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
 import path from "path";
 
@@ -11,7 +12,7 @@ async function getConfigInfo(
   server: { definitionId: string | null; game: string },
   serverId: string
 ): Promise<{ filePath: string; filename: string; format: string; editable: boolean } | null> {
-  const root = process.cwd();
+  const root = dataRoot();
   const def = server.definitionId
     ? await prisma.gameDefinition.findUnique({ where: { id: server.definitionId } })
     : await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug: server.game.toUpperCase() } });

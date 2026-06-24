@@ -5,7 +5,28 @@ import {
   setProgress,
   getProgress,
   clearProgress,
+  isMissingConfigError,
 } from "../downloadProgress";
+
+describe("isMissingConfigError", () => {
+  it("treats exit code 8 as a retryable cold-cache failure", () => {
+    expect(isMissingConfigError(8, "")).toBe(true);
+  });
+  it("matches the 'Missing configuration' message regardless of exit code", () => {
+    expect(
+      isMissingConfigError(1, "ERROR! Failed to install app '896660' (Missing configuration)")
+    ).toBe(true);
+  });
+  it("is false for a successful exit", () => {
+    expect(isMissingConfigError(0, "")).toBe(false);
+  });
+  it("is false for an unrelated failure", () => {
+    expect(isMissingConfigError(1, "No subscription")).toBe(false);
+  });
+  it("tolerates a null/empty detail", () => {
+    expect(isMissingConfigError(null, "")).toBe(false);
+  });
+});
 
 describe("parseSteamProgress", () => {
   it("extracts the percent from a steam download line", () => {
