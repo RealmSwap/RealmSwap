@@ -13,7 +13,7 @@
     "postinstall": "prisma generate",
     "electron:dev": "cross-env GAMEVAULT_DEV=1 concurrently -k \"next dev\" \"wait-on http://localhost:3000 && electron .\"",
     "prepackage": "node scripts/make-template-db.js && next build",
-    "electron:build": "npm run prepackage && electron-builder"
+    "electron:build": "npm run prepackage && electron-builder --publish never"
   },
   "dependencies": {
     "@prisma/client": "^5.15.0",

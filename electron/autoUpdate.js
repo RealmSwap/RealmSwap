@@ -30,6 +30,8 @@ function createUpdater(deps) {
 
   async function applyUpdate() {
     try {
+      // Set isQuitting before quitAndInstall so the before-quit handler runs
+      // stopAllServers() to shut the Next server down cleanly before relaunch.
       beginQuit();
       autoUpdater.quitAndInstall();
     } catch (err) {

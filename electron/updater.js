@@ -10,9 +10,6 @@ function initAutoUpdate({ getMainWindow, beginQuit, refreshTrayMenu }) {
   const { autoUpdater } = require("electron-updater");
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
-  autoUpdater.on("error", (err) =>
-    console.error("[updater] electron-updater error:", err)
-  );
 
   controller = createUpdater({
     autoUpdater,
