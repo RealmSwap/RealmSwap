@@ -8,6 +8,7 @@ import net from "net";
 import { prisma } from "../db";
 import { mapPort, unmapPort, getPublicIP } from "../upnp";
 import { startMonitoring, stopMonitoring, clearStatsHistory } from "../processMonitor";
+import { serverEventBus } from "../eventBus";
 import { parseSpec } from "../definitions/serialize";
 import { buildContext } from "../definitions/context";
 import { planInstall, planConfigFiles, planLaunch, planPorts, resolveCommand } from "../definitions/plan";
@@ -409,7 +410,7 @@ function waitForReadiness(
     prisma.server.update({
       where: { id: serverId },
       data: { status: "RUNNING" },
-    }).catch(e => console.error("Error updating status to RUNNING:", e));
+    }).then(() => serverEventBus.emit("status_update", { serverId, status: "RUNNING" })).catch(e => console.error("Error updating status to RUNNING:", e));
   };
 
   // 1. Stdout listener
@@ -527,6 +528,7 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     if (!fs.existsSync(exePath)) {
       try {
         await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING" } });
+        serverEventBus.emit("status_update", { serverId, status: "STARTING" });
         setProgress(serverId, { phase: "steam", percent: null, label: "Setting up SteamCMD…" });
         await installSteamCmdApp(
           serverId,
@@ -549,6 +551,7 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     if (!fs.existsSync(path.join(installDir, installPlan.checkFile!))) {
       try {
         await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING" } });
+        serverEventBus.emit("status_update", { serverId, status: "STARTING" });
         logWriter("Server binary not found. Downloading...");
         setProgress(serverId, { phase: "download", percent: null, label: `Downloading ${server.name}…` });
         await downloadFile(installPlan.url!, target, (pct) =>
@@ -671,6 +674,7 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
       memoryUsage: 0,
     },
   });
+  serverEventBus.emit("status_update", { serverId, status: "STARTING" });
 
   startMonitoring(server);
 
@@ -717,6 +721,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
           where: { id: serverId },
           data: { status: "STARTING", pid: null, cpuUsage: 0, memoryUsage: 0 },
         });
+        serverEventBus.emit("status_update", { serverId, status: "STARTING" });
 
         setTimeout(async () => {
           try {
@@ -728,6 +733,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
               where: { id: serverId },
               data: { status: "CRASHED", pid: null, cpuUsage: 0, memoryUsage: 0 },
             }).catch(() => {});
+            serverEventBus.emit("status_update", { serverId, status: "CRASHED" });
           }
         }, 5000);
         return;
@@ -737,6 +743,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
           where: { id: serverId },
           data: { status: "CRASHED", pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 },
         });
+        serverEventBus.emit("status_update", { serverId, status: "CRASHED" });
         return;
       }
     }
@@ -752,6 +759,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
         memoryUsage: 0
       },
     });
+    serverEventBus.emit("status_update", { serverId, status: "STOPPED" });
 
     await prisma.activityLog.create({
       data: {
@@ -843,6 +851,7 @@ async function stopLocalServer(serverId: string): Promise<void> {
         memoryUsage: 0
       }
     });
+    serverEventBus.emit("status_update", { serverId, status: "STOPPED" });
   }
 }
 
@@ -873,6 +882,7 @@ async function updateGameServer(serverId: string): Promise<void> {
       where: { id: serverId },
       data: { status: "UPDATING" },
     });
+    serverEventBus.emit("status_update", { serverId, status: "UPDATING" });
 
     logWriter(`[Update] Starting SteamCMD update for ${server.game} (App ID: ${installPlan.appId})...`);
 
@@ -942,6 +952,7 @@ async function updateGameServer(serverId: string): Promise<void> {
       where: { id: serverId },
       data: { status: "STOPPED" },
     });
+    serverEventBus.emit("status_update", { serverId, status: "STOPPED" });
 
     await prisma.activityLog.create({
       data: {
@@ -957,6 +968,7 @@ async function updateGameServer(serverId: string): Promise<void> {
       where: { id: serverId },
       data: { status: "STOPPED" },
     }).catch(() => {});
+    serverEventBus.emit("status_update", { serverId, status: "STOPPED" });
     throw err;
   }
 }

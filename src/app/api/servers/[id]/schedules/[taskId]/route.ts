@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
-import cronParser from "cron-parser";
+import { CronExpressionParser } from "cron-parser";
 
 export async function PUT(
   req: NextRequest,
@@ -19,7 +19,7 @@ export async function PUT(
     
     if (body.cronExpression) {
       try {
-        cronParser.parseExpression(body.cronExpression);
+        CronExpressionParser.parse(body.cronExpression);
       } catch (e) {
         return NextResponse.json({ error: "Invalid cron expression" }, { status: 400 });
       }
