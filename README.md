@@ -44,10 +44,14 @@ You must have [Node.js](https://nodejs.org/) (which includes `npm`) and [Git](ht
    ```bash
    npm run db:push
    ```
-4. Run the development server:
+4. Run the development server (web-only):
    ```bash
    npm run dev
    ```
-5. Open `http://localhost:3000` in your browser and register your first admin account.
+   *OR* run the desktop application directly:
+   ```bash
+   npm run electron:dev
+   ```
+5. If using the web version, open `http://localhost:3000` in your browser.
 
 *Note: RealmSwap is currently designed to run on Windows environments due to its heavy reliance on Windows-specific `child_process` commands and directory structures for SteamCMD.*
