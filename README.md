@@ -73,3 +73,5 @@ We are currently focusing on:
 - Docker container abstractions for true cross-platform hosting
 - Replacing native browser dialogs with custom UI modals
 - More extensive game server definitions!
+- Community Marketplace for sharing custom game configurations and mods
+- Discord Bot Integration for managing servers directly from your Discord server
