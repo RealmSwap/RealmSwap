@@ -44,33 +44,36 @@ model Subscription {
 }
 
 model Server {
-  id               String          @id @default(cuid())
+  id               String            @id @default(cuid())
   userId           String
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   name             String
   game             String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
   ramAllocation    Float // GB allocated
   region           String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
   status           String // "RUNNING", "STOPPED", "STARTING"
-  runnerType       String          @default("CLOUD") // "CLOUD" or "LOCAL"
+  runnerType       String            @default("CLOUD") // "CLOUD" or "LOCAL"
   localPath        String? // File path for local server storage
   pid              Int? // Process ID for local runner execution
   password         String? // Unhashed password for Valheim/game server configs
-  enableUpnp       Boolean         @default(false) // Trigger router port mapping
+  enableUpnp       Boolean           @default(false) // Trigger router port mapping
   ipAddress        String
   port             Int
   definitionId     String?
-  definition       GameDefinition? @relation(fields: [definitionId], references: [id])
+  definition       GameDefinition?   @relation(fields: [definitionId], references: [id])
   paramValues      String? // JSON object of custom param values
-  healthStatus     String          @default("OK") // "OK", "DEGRADED", "FAILING"
-  cpuUsage         Float           @default(0) // Mocked live utilization percentage
-  memoryUsage      Float           @default(0) // Mocked live RAM utilization in GB
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  snapshotInterval Int             @default(0) // 0 = disabled, 1, 6, 12, 24 hours
+  healthStatus     String            @default("OK") // "OK", "DEGRADED", "FAILING"
+  cpuUsage         Float             @default(0) // Mocked live utilization percentage
+  memoryUsage      Float             @default(0) // Mocked live RAM utilization in GB
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  snapshotInterval Int               @default(0) // 0 = disabled, 1, 6, 12, 24 hours
   lastSnapshotAt   DateTime?
   backups          Backup[]
   collaborators    Collaborator[]
+  mods             ModInstallation[]
+  snapshots        ServerSnapshot[]
+  scheduledTasks   ScheduledTask[]
 }
 
 model Archive {
@@ -137,4 +140,46 @@ model GameDefinition {
   updatedAt        DateTime @updatedAt
 
   @@unique([ownerId, slug])
+}
+
+model ModInstallation {
+  id           String   @id @default(cuid())
+  serverId     String
+  server       Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  provider     String // "thunderstore", "workshop", "manual"
+  packageId    String // "denikson-BepInExPack_Valheim"
+  version      String
+  name         String
+  dependencies String? // JSON array of required packageIds
+  installedAt  DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([serverId, provider, packageId])
+}
+
+model ServerSnapshot {
+  id          String   @id @default(cuid())
+  serverId    String
+  server      Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  userId      String
+  name        String // "Pre-EpicLoot Update"
+  path        String // Path to the cloned server state directory
+  gameVersion String?
+  modCount    Int
+  createdAt   DateTime @default(now())
+}
+
+model ScheduledTask {
+  id              String    @id @default(cuid())
+  serverId        String
+  server          Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  action          String // "START", "STOP", "RESTART"
+  cronExpression  String // e.g., "0 4 * * *"
+  enabled         Boolean   @default(true)
+  broadcastMsg    String? // Optional pre-action warning
+  broadcastMin    Int? // Minutes before action to warn
+  lastRunAt       DateTime?
+  lastBroadcastAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }

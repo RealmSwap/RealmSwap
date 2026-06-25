@@ -63,6 +63,11 @@ export type ModInstallation = $Result.DefaultSelection<Prisma.$ModInstallationPa
  * 
  */
 export type ServerSnapshot = $Result.DefaultSelection<Prisma.$ServerSnapshotPayload>
+/**
+ * Model ScheduledTask
+ * 
+ */
+export type ScheduledTask = $Result.DefaultSelection<Prisma.$ScheduledTaskPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -286,6 +291,16 @@ export class PrismaClient<
     * ```
     */
   get serverSnapshot(): Prisma.ServerSnapshotDelegate<ExtArgs>;
+
+  /**
+   * `prisma.scheduledTask`: Exposes CRUD operations for the **ScheduledTask** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ScheduledTasks
+    * const scheduledTasks = await prisma.scheduledTask.findMany()
+    * ```
+    */
+  get scheduledTask(): Prisma.ScheduledTaskDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -736,7 +751,8 @@ export namespace Prisma {
     Collaborator: 'Collaborator',
     GameDefinition: 'GameDefinition',
     ModInstallation: 'ModInstallation',
-    ServerSnapshot: 'ServerSnapshot'
+    ServerSnapshot: 'ServerSnapshot',
+    ScheduledTask: 'ScheduledTask'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -752,7 +768,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "subscription" | "server" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot"
+      modelProps: "user" | "subscription" | "server" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "scheduledTask"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1456,6 +1472,76 @@ export namespace Prisma {
           }
         }
       }
+      ScheduledTask: {
+        payload: Prisma.$ScheduledTaskPayload<ExtArgs>
+        fields: Prisma.ScheduledTaskFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ScheduledTaskFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ScheduledTaskFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+          }
+          findFirst: {
+            args: Prisma.ScheduledTaskFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ScheduledTaskFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+          }
+          findMany: {
+            args: Prisma.ScheduledTaskFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>[]
+          }
+          create: {
+            args: Prisma.ScheduledTaskCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+          }
+          createMany: {
+            args: Prisma.ScheduledTaskCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ScheduledTaskCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>[]
+          }
+          delete: {
+            args: Prisma.ScheduledTaskDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+          }
+          update: {
+            args: Prisma.ScheduledTaskUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+          }
+          deleteMany: {
+            args: Prisma.ScheduledTaskDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ScheduledTaskUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ScheduledTaskUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+          }
+          aggregate: {
+            args: Prisma.ScheduledTaskAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateScheduledTask>
+          }
+          groupBy: {
+            args: Prisma.ScheduledTaskGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ScheduledTaskGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ScheduledTaskCountArgs<ExtArgs>
+            result: $Utils.Optional<ScheduledTaskCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1688,6 +1774,7 @@ export namespace Prisma {
     collaborators: number
     mods: number
     snapshots: number
+    scheduledTasks: number
   }
 
   export type ServerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1695,6 +1782,7 @@ export namespace Prisma {
     collaborators?: boolean | ServerCountOutputTypeCountCollaboratorsArgs
     mods?: boolean | ServerCountOutputTypeCountModsArgs
     snapshots?: boolean | ServerCountOutputTypeCountSnapshotsArgs
+    scheduledTasks?: boolean | ServerCountOutputTypeCountScheduledTasksArgs
   }
 
   // Custom InputTypes
@@ -1734,6 +1822,13 @@ export namespace Prisma {
    */
   export type ServerCountOutputTypeCountSnapshotsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ServerSnapshotWhereInput
+  }
+
+  /**
+   * ServerCountOutputType without action
+   */
+  export type ServerCountOutputTypeCountScheduledTasksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ScheduledTaskWhereInput
   }
 
 
@@ -4214,6 +4309,7 @@ export namespace Prisma {
     collaborators?: boolean | Server$collaboratorsArgs<ExtArgs>
     mods?: boolean | Server$modsArgs<ExtArgs>
     snapshots?: boolean | Server$snapshotsArgs<ExtArgs>
+    scheduledTasks?: boolean | Server$scheduledTasksArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["server"]>
 
@@ -4278,6 +4374,7 @@ export namespace Prisma {
     collaborators?: boolean | Server$collaboratorsArgs<ExtArgs>
     mods?: boolean | Server$modsArgs<ExtArgs>
     snapshots?: boolean | Server$snapshotsArgs<ExtArgs>
+    scheduledTasks?: boolean | Server$scheduledTasksArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ServerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4294,6 +4391,7 @@ export namespace Prisma {
       collaborators: Prisma.$CollaboratorPayload<ExtArgs>[]
       mods: Prisma.$ModInstallationPayload<ExtArgs>[]
       snapshots: Prisma.$ServerSnapshotPayload<ExtArgs>[]
+      scheduledTasks: Prisma.$ScheduledTaskPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4689,6 +4787,7 @@ export namespace Prisma {
     collaborators<T extends Server$collaboratorsArgs<ExtArgs> = {}>(args?: Subset<T, Server$collaboratorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CollaboratorPayload<ExtArgs>, T, "findMany"> | Null>
     mods<T extends Server$modsArgs<ExtArgs> = {}>(args?: Subset<T, Server$modsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "findMany"> | Null>
     snapshots<T extends Server$snapshotsArgs<ExtArgs> = {}>(args?: Subset<T, Server$snapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "findMany"> | Null>
+    scheduledTasks<T extends Server$scheduledTasksArgs<ExtArgs> = {}>(args?: Subset<T, Server$scheduledTasksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5149,6 +5248,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ServerSnapshotScalarFieldEnum | ServerSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * Server.scheduledTasks
+   */
+  export type Server$scheduledTasksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+    where?: ScheduledTaskWhereInput
+    orderBy?: ScheduledTaskOrderByWithRelationInput | ScheduledTaskOrderByWithRelationInput[]
+    cursor?: ScheduledTaskWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ScheduledTaskScalarFieldEnum | ScheduledTaskScalarFieldEnum[]
   }
 
   /**
@@ -12135,6 +12254,1043 @@ export namespace Prisma {
 
 
   /**
+   * Model ScheduledTask
+   */
+
+  export type AggregateScheduledTask = {
+    _count: ScheduledTaskCountAggregateOutputType | null
+    _avg: ScheduledTaskAvgAggregateOutputType | null
+    _sum: ScheduledTaskSumAggregateOutputType | null
+    _min: ScheduledTaskMinAggregateOutputType | null
+    _max: ScheduledTaskMaxAggregateOutputType | null
+  }
+
+  export type ScheduledTaskAvgAggregateOutputType = {
+    broadcastMin: number | null
+  }
+
+  export type ScheduledTaskSumAggregateOutputType = {
+    broadcastMin: number | null
+  }
+
+  export type ScheduledTaskMinAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    action: string | null
+    cronExpression: string | null
+    enabled: boolean | null
+    broadcastMsg: string | null
+    broadcastMin: number | null
+    lastRunAt: Date | null
+    lastBroadcastAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ScheduledTaskMaxAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    action: string | null
+    cronExpression: string | null
+    enabled: boolean | null
+    broadcastMsg: string | null
+    broadcastMin: number | null
+    lastRunAt: Date | null
+    lastBroadcastAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ScheduledTaskCountAggregateOutputType = {
+    id: number
+    serverId: number
+    action: number
+    cronExpression: number
+    enabled: number
+    broadcastMsg: number
+    broadcastMin: number
+    lastRunAt: number
+    lastBroadcastAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ScheduledTaskAvgAggregateInputType = {
+    broadcastMin?: true
+  }
+
+  export type ScheduledTaskSumAggregateInputType = {
+    broadcastMin?: true
+  }
+
+  export type ScheduledTaskMinAggregateInputType = {
+    id?: true
+    serverId?: true
+    action?: true
+    cronExpression?: true
+    enabled?: true
+    broadcastMsg?: true
+    broadcastMin?: true
+    lastRunAt?: true
+    lastBroadcastAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ScheduledTaskMaxAggregateInputType = {
+    id?: true
+    serverId?: true
+    action?: true
+    cronExpression?: true
+    enabled?: true
+    broadcastMsg?: true
+    broadcastMin?: true
+    lastRunAt?: true
+    lastBroadcastAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ScheduledTaskCountAggregateInputType = {
+    id?: true
+    serverId?: true
+    action?: true
+    cronExpression?: true
+    enabled?: true
+    broadcastMsg?: true
+    broadcastMin?: true
+    lastRunAt?: true
+    lastBroadcastAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ScheduledTaskAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ScheduledTask to aggregate.
+     */
+    where?: ScheduledTaskWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ScheduledTasks to fetch.
+     */
+    orderBy?: ScheduledTaskOrderByWithRelationInput | ScheduledTaskOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ScheduledTaskWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ScheduledTasks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ScheduledTasks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ScheduledTasks
+    **/
+    _count?: true | ScheduledTaskCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ScheduledTaskAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ScheduledTaskSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ScheduledTaskMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ScheduledTaskMaxAggregateInputType
+  }
+
+  export type GetScheduledTaskAggregateType<T extends ScheduledTaskAggregateArgs> = {
+        [P in keyof T & keyof AggregateScheduledTask]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateScheduledTask[P]>
+      : GetScalarType<T[P], AggregateScheduledTask[P]>
+  }
+
+
+
+
+  export type ScheduledTaskGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ScheduledTaskWhereInput
+    orderBy?: ScheduledTaskOrderByWithAggregationInput | ScheduledTaskOrderByWithAggregationInput[]
+    by: ScheduledTaskScalarFieldEnum[] | ScheduledTaskScalarFieldEnum
+    having?: ScheduledTaskScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ScheduledTaskCountAggregateInputType | true
+    _avg?: ScheduledTaskAvgAggregateInputType
+    _sum?: ScheduledTaskSumAggregateInputType
+    _min?: ScheduledTaskMinAggregateInputType
+    _max?: ScheduledTaskMaxAggregateInputType
+  }
+
+  export type ScheduledTaskGroupByOutputType = {
+    id: string
+    serverId: string
+    action: string
+    cronExpression: string
+    enabled: boolean
+    broadcastMsg: string | null
+    broadcastMin: number | null
+    lastRunAt: Date | null
+    lastBroadcastAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ScheduledTaskCountAggregateOutputType | null
+    _avg: ScheduledTaskAvgAggregateOutputType | null
+    _sum: ScheduledTaskSumAggregateOutputType | null
+    _min: ScheduledTaskMinAggregateOutputType | null
+    _max: ScheduledTaskMaxAggregateOutputType | null
+  }
+
+  type GetScheduledTaskGroupByPayload<T extends ScheduledTaskGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ScheduledTaskGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ScheduledTaskGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ScheduledTaskGroupByOutputType[P]>
+            : GetScalarType<T[P], ScheduledTaskGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ScheduledTaskSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    action?: boolean
+    cronExpression?: boolean
+    enabled?: boolean
+    broadcastMsg?: boolean
+    broadcastMin?: boolean
+    lastRunAt?: boolean
+    lastBroadcastAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["scheduledTask"]>
+
+  export type ScheduledTaskSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    action?: boolean
+    cronExpression?: boolean
+    enabled?: boolean
+    broadcastMsg?: boolean
+    broadcastMin?: boolean
+    lastRunAt?: boolean
+    lastBroadcastAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["scheduledTask"]>
+
+  export type ScheduledTaskSelectScalar = {
+    id?: boolean
+    serverId?: boolean
+    action?: boolean
+    cronExpression?: boolean
+    enabled?: boolean
+    broadcastMsg?: boolean
+    broadcastMin?: boolean
+    lastRunAt?: boolean
+    lastBroadcastAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ScheduledTaskInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+  export type ScheduledTaskIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+
+  export type $ScheduledTaskPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ScheduledTask"
+    objects: {
+      server: Prisma.$ServerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      serverId: string
+      action: string
+      cronExpression: string
+      enabled: boolean
+      broadcastMsg: string | null
+      broadcastMin: number | null
+      lastRunAt: Date | null
+      lastBroadcastAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["scheduledTask"]>
+    composites: {}
+  }
+
+  type ScheduledTaskGetPayload<S extends boolean | null | undefined | ScheduledTaskDefaultArgs> = $Result.GetResult<Prisma.$ScheduledTaskPayload, S>
+
+  type ScheduledTaskCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ScheduledTaskFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ScheduledTaskCountAggregateInputType | true
+    }
+
+  export interface ScheduledTaskDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ScheduledTask'], meta: { name: 'ScheduledTask' } }
+    /**
+     * Find zero or one ScheduledTask that matches the filter.
+     * @param {ScheduledTaskFindUniqueArgs} args - Arguments to find a ScheduledTask
+     * @example
+     * // Get one ScheduledTask
+     * const scheduledTask = await prisma.scheduledTask.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ScheduledTaskFindUniqueArgs>(args: SelectSubset<T, ScheduledTaskFindUniqueArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ScheduledTask that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ScheduledTaskFindUniqueOrThrowArgs} args - Arguments to find a ScheduledTask
+     * @example
+     * // Get one ScheduledTask
+     * const scheduledTask = await prisma.scheduledTask.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ScheduledTaskFindUniqueOrThrowArgs>(args: SelectSubset<T, ScheduledTaskFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ScheduledTask that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledTaskFindFirstArgs} args - Arguments to find a ScheduledTask
+     * @example
+     * // Get one ScheduledTask
+     * const scheduledTask = await prisma.scheduledTask.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ScheduledTaskFindFirstArgs>(args?: SelectSubset<T, ScheduledTaskFindFirstArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ScheduledTask that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledTaskFindFirstOrThrowArgs} args - Arguments to find a ScheduledTask
+     * @example
+     * // Get one ScheduledTask
+     * const scheduledTask = await prisma.scheduledTask.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ScheduledTaskFindFirstOrThrowArgs>(args?: SelectSubset<T, ScheduledTaskFindFirstOrThrowArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ScheduledTasks that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledTaskFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ScheduledTasks
+     * const scheduledTasks = await prisma.scheduledTask.findMany()
+     * 
+     * // Get first 10 ScheduledTasks
+     * const scheduledTasks = await prisma.scheduledTask.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const scheduledTaskWithIdOnly = await prisma.scheduledTask.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ScheduledTaskFindManyArgs>(args?: SelectSubset<T, ScheduledTaskFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ScheduledTask.
+     * @param {ScheduledTaskCreateArgs} args - Arguments to create a ScheduledTask.
+     * @example
+     * // Create one ScheduledTask
+     * const ScheduledTask = await prisma.scheduledTask.create({
+     *   data: {
+     *     // ... data to create a ScheduledTask
+     *   }
+     * })
+     * 
+     */
+    create<T extends ScheduledTaskCreateArgs>(args: SelectSubset<T, ScheduledTaskCreateArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ScheduledTasks.
+     * @param {ScheduledTaskCreateManyArgs} args - Arguments to create many ScheduledTasks.
+     * @example
+     * // Create many ScheduledTasks
+     * const scheduledTask = await prisma.scheduledTask.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ScheduledTaskCreateManyArgs>(args?: SelectSubset<T, ScheduledTaskCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ScheduledTasks and returns the data saved in the database.
+     * @param {ScheduledTaskCreateManyAndReturnArgs} args - Arguments to create many ScheduledTasks.
+     * @example
+     * // Create many ScheduledTasks
+     * const scheduledTask = await prisma.scheduledTask.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ScheduledTasks and only return the `id`
+     * const scheduledTaskWithIdOnly = await prisma.scheduledTask.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ScheduledTaskCreateManyAndReturnArgs>(args?: SelectSubset<T, ScheduledTaskCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ScheduledTask.
+     * @param {ScheduledTaskDeleteArgs} args - Arguments to delete one ScheduledTask.
+     * @example
+     * // Delete one ScheduledTask
+     * const ScheduledTask = await prisma.scheduledTask.delete({
+     *   where: {
+     *     // ... filter to delete one ScheduledTask
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ScheduledTaskDeleteArgs>(args: SelectSubset<T, ScheduledTaskDeleteArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ScheduledTask.
+     * @param {ScheduledTaskUpdateArgs} args - Arguments to update one ScheduledTask.
+     * @example
+     * // Update one ScheduledTask
+     * const scheduledTask = await prisma.scheduledTask.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ScheduledTaskUpdateArgs>(args: SelectSubset<T, ScheduledTaskUpdateArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ScheduledTasks.
+     * @param {ScheduledTaskDeleteManyArgs} args - Arguments to filter ScheduledTasks to delete.
+     * @example
+     * // Delete a few ScheduledTasks
+     * const { count } = await prisma.scheduledTask.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ScheduledTaskDeleteManyArgs>(args?: SelectSubset<T, ScheduledTaskDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ScheduledTasks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledTaskUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ScheduledTasks
+     * const scheduledTask = await prisma.scheduledTask.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ScheduledTaskUpdateManyArgs>(args: SelectSubset<T, ScheduledTaskUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ScheduledTask.
+     * @param {ScheduledTaskUpsertArgs} args - Arguments to update or create a ScheduledTask.
+     * @example
+     * // Update or create a ScheduledTask
+     * const scheduledTask = await prisma.scheduledTask.upsert({
+     *   create: {
+     *     // ... data to create a ScheduledTask
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ScheduledTask we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ScheduledTaskUpsertArgs>(args: SelectSubset<T, ScheduledTaskUpsertArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ScheduledTasks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledTaskCountArgs} args - Arguments to filter ScheduledTasks to count.
+     * @example
+     * // Count the number of ScheduledTasks
+     * const count = await prisma.scheduledTask.count({
+     *   where: {
+     *     // ... the filter for the ScheduledTasks we want to count
+     *   }
+     * })
+    **/
+    count<T extends ScheduledTaskCountArgs>(
+      args?: Subset<T, ScheduledTaskCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ScheduledTaskCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ScheduledTask.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledTaskAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ScheduledTaskAggregateArgs>(args: Subset<T, ScheduledTaskAggregateArgs>): Prisma.PrismaPromise<GetScheduledTaskAggregateType<T>>
+
+    /**
+     * Group by ScheduledTask.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ScheduledTaskGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ScheduledTaskGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ScheduledTaskGroupByArgs['orderBy'] }
+        : { orderBy?: ScheduledTaskGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ScheduledTaskGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetScheduledTaskGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ScheduledTask model
+   */
+  readonly fields: ScheduledTaskFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ScheduledTask.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ScheduledTaskClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    server<T extends ServerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServerDefaultArgs<ExtArgs>>): Prisma__ServerClient<$Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ScheduledTask model
+   */ 
+  interface ScheduledTaskFieldRefs {
+    readonly id: FieldRef<"ScheduledTask", 'String'>
+    readonly serverId: FieldRef<"ScheduledTask", 'String'>
+    readonly action: FieldRef<"ScheduledTask", 'String'>
+    readonly cronExpression: FieldRef<"ScheduledTask", 'String'>
+    readonly enabled: FieldRef<"ScheduledTask", 'Boolean'>
+    readonly broadcastMsg: FieldRef<"ScheduledTask", 'String'>
+    readonly broadcastMin: FieldRef<"ScheduledTask", 'Int'>
+    readonly lastRunAt: FieldRef<"ScheduledTask", 'DateTime'>
+    readonly lastBroadcastAt: FieldRef<"ScheduledTask", 'DateTime'>
+    readonly createdAt: FieldRef<"ScheduledTask", 'DateTime'>
+    readonly updatedAt: FieldRef<"ScheduledTask", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ScheduledTask findUnique
+   */
+  export type ScheduledTaskFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+    /**
+     * Filter, which ScheduledTask to fetch.
+     */
+    where: ScheduledTaskWhereUniqueInput
+  }
+
+  /**
+   * ScheduledTask findUniqueOrThrow
+   */
+  export type ScheduledTaskFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+    /**
+     * Filter, which ScheduledTask to fetch.
+     */
+    where: ScheduledTaskWhereUniqueInput
+  }
+
+  /**
+   * ScheduledTask findFirst
+   */
+  export type ScheduledTaskFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+    /**
+     * Filter, which ScheduledTask to fetch.
+     */
+    where?: ScheduledTaskWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ScheduledTasks to fetch.
+     */
+    orderBy?: ScheduledTaskOrderByWithRelationInput | ScheduledTaskOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ScheduledTasks.
+     */
+    cursor?: ScheduledTaskWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ScheduledTasks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ScheduledTasks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ScheduledTasks.
+     */
+    distinct?: ScheduledTaskScalarFieldEnum | ScheduledTaskScalarFieldEnum[]
+  }
+
+  /**
+   * ScheduledTask findFirstOrThrow
+   */
+  export type ScheduledTaskFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+    /**
+     * Filter, which ScheduledTask to fetch.
+     */
+    where?: ScheduledTaskWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ScheduledTasks to fetch.
+     */
+    orderBy?: ScheduledTaskOrderByWithRelationInput | ScheduledTaskOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ScheduledTasks.
+     */
+    cursor?: ScheduledTaskWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ScheduledTasks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ScheduledTasks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ScheduledTasks.
+     */
+    distinct?: ScheduledTaskScalarFieldEnum | ScheduledTaskScalarFieldEnum[]
+  }
+
+  /**
+   * ScheduledTask findMany
+   */
+  export type ScheduledTaskFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+    /**
+     * Filter, which ScheduledTasks to fetch.
+     */
+    where?: ScheduledTaskWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ScheduledTasks to fetch.
+     */
+    orderBy?: ScheduledTaskOrderByWithRelationInput | ScheduledTaskOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ScheduledTasks.
+     */
+    cursor?: ScheduledTaskWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ScheduledTasks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ScheduledTasks.
+     */
+    skip?: number
+    distinct?: ScheduledTaskScalarFieldEnum | ScheduledTaskScalarFieldEnum[]
+  }
+
+  /**
+   * ScheduledTask create
+   */
+  export type ScheduledTaskCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ScheduledTask.
+     */
+    data: XOR<ScheduledTaskCreateInput, ScheduledTaskUncheckedCreateInput>
+  }
+
+  /**
+   * ScheduledTask createMany
+   */
+  export type ScheduledTaskCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ScheduledTasks.
+     */
+    data: ScheduledTaskCreateManyInput | ScheduledTaskCreateManyInput[]
+  }
+
+  /**
+   * ScheduledTask createManyAndReturn
+   */
+  export type ScheduledTaskCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ScheduledTasks.
+     */
+    data: ScheduledTaskCreateManyInput | ScheduledTaskCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ScheduledTask update
+   */
+  export type ScheduledTaskUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ScheduledTask.
+     */
+    data: XOR<ScheduledTaskUpdateInput, ScheduledTaskUncheckedUpdateInput>
+    /**
+     * Choose, which ScheduledTask to update.
+     */
+    where: ScheduledTaskWhereUniqueInput
+  }
+
+  /**
+   * ScheduledTask updateMany
+   */
+  export type ScheduledTaskUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ScheduledTasks.
+     */
+    data: XOR<ScheduledTaskUpdateManyMutationInput, ScheduledTaskUncheckedUpdateManyInput>
+    /**
+     * Filter which ScheduledTasks to update
+     */
+    where?: ScheduledTaskWhereInput
+  }
+
+  /**
+   * ScheduledTask upsert
+   */
+  export type ScheduledTaskUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ScheduledTask to update in case it exists.
+     */
+    where: ScheduledTaskWhereUniqueInput
+    /**
+     * In case the ScheduledTask found by the `where` argument doesn't exist, create a new ScheduledTask with this data.
+     */
+    create: XOR<ScheduledTaskCreateInput, ScheduledTaskUncheckedCreateInput>
+    /**
+     * In case the ScheduledTask was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ScheduledTaskUpdateInput, ScheduledTaskUncheckedUpdateInput>
+  }
+
+  /**
+   * ScheduledTask delete
+   */
+  export type ScheduledTaskDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+    /**
+     * Filter which ScheduledTask to delete.
+     */
+    where: ScheduledTaskWhereUniqueInput
+  }
+
+  /**
+   * ScheduledTask deleteMany
+   */
+  export type ScheduledTaskDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ScheduledTasks to delete
+     */
+    where?: ScheduledTaskWhereInput
+  }
+
+  /**
+   * ScheduledTask without action
+   */
+  export type ScheduledTaskDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduledTask
+     */
+    select?: ScheduledTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduledTaskInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -12297,6 +13453,23 @@ export namespace Prisma {
   };
 
   export type ServerSnapshotScalarFieldEnum = (typeof ServerSnapshotScalarFieldEnum)[keyof typeof ServerSnapshotScalarFieldEnum]
+
+
+  export const ScheduledTaskScalarFieldEnum: {
+    id: 'id',
+    serverId: 'serverId',
+    action: 'action',
+    cronExpression: 'cronExpression',
+    enabled: 'enabled',
+    broadcastMsg: 'broadcastMsg',
+    broadcastMin: 'broadcastMin',
+    lastRunAt: 'lastRunAt',
+    lastBroadcastAt: 'lastBroadcastAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ScheduledTaskScalarFieldEnum = (typeof ScheduledTaskScalarFieldEnum)[keyof typeof ScheduledTaskScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -12538,6 +13711,7 @@ export namespace Prisma {
     collaborators?: CollaboratorListRelationFilter
     mods?: ModInstallationListRelationFilter
     snapshots?: ServerSnapshotListRelationFilter
+    scheduledTasks?: ScheduledTaskListRelationFilter
   }
 
   export type ServerOrderByWithRelationInput = {
@@ -12570,6 +13744,7 @@ export namespace Prisma {
     collaborators?: CollaboratorOrderByRelationAggregateInput
     mods?: ModInstallationOrderByRelationAggregateInput
     snapshots?: ServerSnapshotOrderByRelationAggregateInput
+    scheduledTasks?: ScheduledTaskOrderByRelationAggregateInput
   }
 
   export type ServerWhereUniqueInput = Prisma.AtLeast<{
@@ -12605,6 +13780,7 @@ export namespace Prisma {
     collaborators?: CollaboratorListRelationFilter
     mods?: ModInstallationListRelationFilter
     snapshots?: ServerSnapshotListRelationFilter
+    scheduledTasks?: ScheduledTaskListRelationFilter
   }, "id">
 
   export type ServerOrderByWithAggregationInput = {
@@ -13179,6 +14355,93 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"ServerSnapshot"> | Date | string
   }
 
+  export type ScheduledTaskWhereInput = {
+    AND?: ScheduledTaskWhereInput | ScheduledTaskWhereInput[]
+    OR?: ScheduledTaskWhereInput[]
+    NOT?: ScheduledTaskWhereInput | ScheduledTaskWhereInput[]
+    id?: StringFilter<"ScheduledTask"> | string
+    serverId?: StringFilter<"ScheduledTask"> | string
+    action?: StringFilter<"ScheduledTask"> | string
+    cronExpression?: StringFilter<"ScheduledTask"> | string
+    enabled?: BoolFilter<"ScheduledTask"> | boolean
+    broadcastMsg?: StringNullableFilter<"ScheduledTask"> | string | null
+    broadcastMin?: IntNullableFilter<"ScheduledTask"> | number | null
+    lastRunAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
+    lastBroadcastAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
+    createdAt?: DateTimeFilter<"ScheduledTask"> | Date | string
+    updatedAt?: DateTimeFilter<"ScheduledTask"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }
+
+  export type ScheduledTaskOrderByWithRelationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    action?: SortOrder
+    cronExpression?: SortOrder
+    enabled?: SortOrder
+    broadcastMsg?: SortOrderInput | SortOrder
+    broadcastMin?: SortOrderInput | SortOrder
+    lastRunAt?: SortOrderInput | SortOrder
+    lastBroadcastAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    server?: ServerOrderByWithRelationInput
+  }
+
+  export type ScheduledTaskWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ScheduledTaskWhereInput | ScheduledTaskWhereInput[]
+    OR?: ScheduledTaskWhereInput[]
+    NOT?: ScheduledTaskWhereInput | ScheduledTaskWhereInput[]
+    serverId?: StringFilter<"ScheduledTask"> | string
+    action?: StringFilter<"ScheduledTask"> | string
+    cronExpression?: StringFilter<"ScheduledTask"> | string
+    enabled?: BoolFilter<"ScheduledTask"> | boolean
+    broadcastMsg?: StringNullableFilter<"ScheduledTask"> | string | null
+    broadcastMin?: IntNullableFilter<"ScheduledTask"> | number | null
+    lastRunAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
+    lastBroadcastAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
+    createdAt?: DateTimeFilter<"ScheduledTask"> | Date | string
+    updatedAt?: DateTimeFilter<"ScheduledTask"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }, "id">
+
+  export type ScheduledTaskOrderByWithAggregationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    action?: SortOrder
+    cronExpression?: SortOrder
+    enabled?: SortOrder
+    broadcastMsg?: SortOrderInput | SortOrder
+    broadcastMin?: SortOrderInput | SortOrder
+    lastRunAt?: SortOrderInput | SortOrder
+    lastBroadcastAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ScheduledTaskCountOrderByAggregateInput
+    _avg?: ScheduledTaskAvgOrderByAggregateInput
+    _max?: ScheduledTaskMaxOrderByAggregateInput
+    _min?: ScheduledTaskMinOrderByAggregateInput
+    _sum?: ScheduledTaskSumOrderByAggregateInput
+  }
+
+  export type ScheduledTaskScalarWhereWithAggregatesInput = {
+    AND?: ScheduledTaskScalarWhereWithAggregatesInput | ScheduledTaskScalarWhereWithAggregatesInput[]
+    OR?: ScheduledTaskScalarWhereWithAggregatesInput[]
+    NOT?: ScheduledTaskScalarWhereWithAggregatesInput | ScheduledTaskScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ScheduledTask"> | string
+    serverId?: StringWithAggregatesFilter<"ScheduledTask"> | string
+    action?: StringWithAggregatesFilter<"ScheduledTask"> | string
+    cronExpression?: StringWithAggregatesFilter<"ScheduledTask"> | string
+    enabled?: BoolWithAggregatesFilter<"ScheduledTask"> | boolean
+    broadcastMsg?: StringNullableWithAggregatesFilter<"ScheduledTask"> | string | null
+    broadcastMin?: IntNullableWithAggregatesFilter<"ScheduledTask"> | number | null
+    lastRunAt?: DateTimeNullableWithAggregatesFilter<"ScheduledTask"> | Date | string | null
+    lastBroadcastAt?: DateTimeNullableWithAggregatesFilter<"ScheduledTask"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ScheduledTask"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ScheduledTask"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -13370,6 +14633,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateInput = {
@@ -13400,6 +14664,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerUpdateInput = {
@@ -13430,6 +14695,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateInput = {
@@ -13460,6 +14726,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateManyInput = {
@@ -14080,6 +15347,103 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ScheduledTaskCreateInput = {
+    id?: string
+    action: string
+    cronExpression: string
+    enabled?: boolean
+    broadcastMsg?: string | null
+    broadcastMin?: number | null
+    lastRunAt?: Date | string | null
+    lastBroadcastAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    server: ServerCreateNestedOneWithoutScheduledTasksInput
+  }
+
+  export type ScheduledTaskUncheckedCreateInput = {
+    id?: string
+    serverId: string
+    action: string
+    cronExpression: string
+    enabled?: boolean
+    broadcastMsg?: string | null
+    broadcastMin?: number | null
+    lastRunAt?: Date | string | null
+    lastBroadcastAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ScheduledTaskUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    cronExpression?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
+    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    server?: ServerUpdateOneRequiredWithoutScheduledTasksNestedInput
+  }
+
+  export type ScheduledTaskUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    cronExpression?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
+    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScheduledTaskCreateManyInput = {
+    id?: string
+    serverId: string
+    action: string
+    cronExpression: string
+    enabled?: boolean
+    broadcastMsg?: string | null
+    broadcastMin?: number | null
+    lastRunAt?: Date | string | null
+    lastBroadcastAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ScheduledTaskUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    cronExpression?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
+    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScheduledTaskUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    cronExpression?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
+    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -14366,6 +15730,12 @@ export namespace Prisma {
     none?: ServerSnapshotWhereInput
   }
 
+  export type ScheduledTaskListRelationFilter = {
+    every?: ScheduledTaskWhereInput
+    some?: ScheduledTaskWhereInput
+    none?: ScheduledTaskWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -14380,6 +15750,10 @@ export namespace Prisma {
   }
 
   export type ServerSnapshotOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ScheduledTaskOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -14844,6 +16218,56 @@ export namespace Prisma {
     modCount?: SortOrder
   }
 
+  export type ScheduledTaskCountOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    action?: SortOrder
+    cronExpression?: SortOrder
+    enabled?: SortOrder
+    broadcastMsg?: SortOrder
+    broadcastMin?: SortOrder
+    lastRunAt?: SortOrder
+    lastBroadcastAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ScheduledTaskAvgOrderByAggregateInput = {
+    broadcastMin?: SortOrder
+  }
+
+  export type ScheduledTaskMaxOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    action?: SortOrder
+    cronExpression?: SortOrder
+    enabled?: SortOrder
+    broadcastMsg?: SortOrder
+    broadcastMin?: SortOrder
+    lastRunAt?: SortOrder
+    lastBroadcastAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ScheduledTaskMinOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    action?: SortOrder
+    cronExpression?: SortOrder
+    enabled?: SortOrder
+    broadcastMsg?: SortOrder
+    broadcastMin?: SortOrder
+    lastRunAt?: SortOrder
+    lastBroadcastAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ScheduledTaskSumOrderByAggregateInput = {
+    broadcastMin?: SortOrder
+  }
+
   export type GameDefinitionCreateNestedManyWithoutOwnerInput = {
     create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
@@ -15156,6 +16580,13 @@ export namespace Prisma {
     connect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
   }
 
+  export type ScheduledTaskCreateNestedManyWithoutServerInput = {
+    create?: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput> | ScheduledTaskCreateWithoutServerInput[] | ScheduledTaskUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ScheduledTaskCreateOrConnectWithoutServerInput | ScheduledTaskCreateOrConnectWithoutServerInput[]
+    createMany?: ScheduledTaskCreateManyServerInputEnvelope
+    connect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+  }
+
   export type BackupUncheckedCreateNestedManyWithoutServerInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -15182,6 +16613,13 @@ export namespace Prisma {
     connectOrCreate?: ServerSnapshotCreateOrConnectWithoutServerInput | ServerSnapshotCreateOrConnectWithoutServerInput[]
     createMany?: ServerSnapshotCreateManyServerInputEnvelope
     connect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+  }
+
+  export type ScheduledTaskUncheckedCreateNestedManyWithoutServerInput = {
+    create?: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput> | ScheduledTaskCreateWithoutServerInput[] | ScheduledTaskUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ScheduledTaskCreateOrConnectWithoutServerInput | ScheduledTaskCreateOrConnectWithoutServerInput[]
+    createMany?: ScheduledTaskCreateManyServerInputEnvelope
+    connect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -15286,6 +16724,20 @@ export namespace Prisma {
     deleteMany?: ServerSnapshotScalarWhereInput | ServerSnapshotScalarWhereInput[]
   }
 
+  export type ScheduledTaskUpdateManyWithoutServerNestedInput = {
+    create?: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput> | ScheduledTaskCreateWithoutServerInput[] | ScheduledTaskUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ScheduledTaskCreateOrConnectWithoutServerInput | ScheduledTaskCreateOrConnectWithoutServerInput[]
+    upsert?: ScheduledTaskUpsertWithWhereUniqueWithoutServerInput | ScheduledTaskUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: ScheduledTaskCreateManyServerInputEnvelope
+    set?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+    disconnect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+    delete?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+    connect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+    update?: ScheduledTaskUpdateWithWhereUniqueWithoutServerInput | ScheduledTaskUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: ScheduledTaskUpdateManyWithWhereWithoutServerInput | ScheduledTaskUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: ScheduledTaskScalarWhereInput | ScheduledTaskScalarWhereInput[]
+  }
+
   export type BackupUncheckedUpdateManyWithoutServerNestedInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -15340,6 +16792,20 @@ export namespace Prisma {
     update?: ServerSnapshotUpdateWithWhereUniqueWithoutServerInput | ServerSnapshotUpdateWithWhereUniqueWithoutServerInput[]
     updateMany?: ServerSnapshotUpdateManyWithWhereWithoutServerInput | ServerSnapshotUpdateManyWithWhereWithoutServerInput[]
     deleteMany?: ServerSnapshotScalarWhereInput | ServerSnapshotScalarWhereInput[]
+  }
+
+  export type ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput = {
+    create?: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput> | ScheduledTaskCreateWithoutServerInput[] | ScheduledTaskUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ScheduledTaskCreateOrConnectWithoutServerInput | ScheduledTaskCreateOrConnectWithoutServerInput[]
+    upsert?: ScheduledTaskUpsertWithWhereUniqueWithoutServerInput | ScheduledTaskUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: ScheduledTaskCreateManyServerInputEnvelope
+    set?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+    disconnect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+    delete?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+    connect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+    update?: ScheduledTaskUpdateWithWhereUniqueWithoutServerInput | ScheduledTaskUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: ScheduledTaskUpdateManyWithWhereWithoutServerInput | ScheduledTaskUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: ScheduledTaskScalarWhereInput | ScheduledTaskScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutArchivesInput = {
@@ -15496,6 +16962,20 @@ export namespace Prisma {
     upsert?: ServerUpsertWithoutSnapshotsInput
     connect?: ServerWhereUniqueInput
     update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutSnapshotsInput, ServerUpdateWithoutSnapshotsInput>, ServerUncheckedUpdateWithoutSnapshotsInput>
+  }
+
+  export type ServerCreateNestedOneWithoutScheduledTasksInput = {
+    create?: XOR<ServerCreateWithoutScheduledTasksInput, ServerUncheckedCreateWithoutScheduledTasksInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutScheduledTasksInput
+    connect?: ServerWhereUniqueInput
+  }
+
+  export type ServerUpdateOneRequiredWithoutScheduledTasksNestedInput = {
+    create?: XOR<ServerCreateWithoutScheduledTasksInput, ServerUncheckedCreateWithoutScheduledTasksInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutScheduledTasksInput
+    upsert?: ServerUpsertWithoutScheduledTasksInput
+    connect?: ServerWhereUniqueInput
+    update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutScheduledTasksInput, ServerUpdateWithoutScheduledTasksInput>, ServerUncheckedUpdateWithoutScheduledTasksInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -15808,6 +17288,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutUserInput = {
@@ -15837,6 +17318,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutUserInput = {
@@ -16378,6 +17860,41 @@ export namespace Prisma {
     data: ServerSnapshotCreateManyServerInput | ServerSnapshotCreateManyServerInput[]
   }
 
+  export type ScheduledTaskCreateWithoutServerInput = {
+    id?: string
+    action: string
+    cronExpression: string
+    enabled?: boolean
+    broadcastMsg?: string | null
+    broadcastMin?: number | null
+    lastRunAt?: Date | string | null
+    lastBroadcastAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ScheduledTaskUncheckedCreateWithoutServerInput = {
+    id?: string
+    action: string
+    cronExpression: string
+    enabled?: boolean
+    broadcastMsg?: string | null
+    broadcastMin?: number | null
+    lastRunAt?: Date | string | null
+    lastBroadcastAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ScheduledTaskCreateOrConnectWithoutServerInput = {
+    where: ScheduledTaskWhereUniqueInput
+    create: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput>
+  }
+
+  export type ScheduledTaskCreateManyServerInputEnvelope = {
+    data: ScheduledTaskCreateManyServerInput | ScheduledTaskCreateManyServerInput[]
+  }
+
   export type UserUpsertWithoutServersInput = {
     update: XOR<UserUpdateWithoutServersInput, UserUncheckedUpdateWithoutServersInput>
     create: XOR<UserCreateWithoutServersInput, UserUncheckedCreateWithoutServersInput>
@@ -16572,6 +18089,39 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ServerSnapshot"> | Date | string
   }
 
+  export type ScheduledTaskUpsertWithWhereUniqueWithoutServerInput = {
+    where: ScheduledTaskWhereUniqueInput
+    update: XOR<ScheduledTaskUpdateWithoutServerInput, ScheduledTaskUncheckedUpdateWithoutServerInput>
+    create: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput>
+  }
+
+  export type ScheduledTaskUpdateWithWhereUniqueWithoutServerInput = {
+    where: ScheduledTaskWhereUniqueInput
+    data: XOR<ScheduledTaskUpdateWithoutServerInput, ScheduledTaskUncheckedUpdateWithoutServerInput>
+  }
+
+  export type ScheduledTaskUpdateManyWithWhereWithoutServerInput = {
+    where: ScheduledTaskScalarWhereInput
+    data: XOR<ScheduledTaskUpdateManyMutationInput, ScheduledTaskUncheckedUpdateManyWithoutServerInput>
+  }
+
+  export type ScheduledTaskScalarWhereInput = {
+    AND?: ScheduledTaskScalarWhereInput | ScheduledTaskScalarWhereInput[]
+    OR?: ScheduledTaskScalarWhereInput[]
+    NOT?: ScheduledTaskScalarWhereInput | ScheduledTaskScalarWhereInput[]
+    id?: StringFilter<"ScheduledTask"> | string
+    serverId?: StringFilter<"ScheduledTask"> | string
+    action?: StringFilter<"ScheduledTask"> | string
+    cronExpression?: StringFilter<"ScheduledTask"> | string
+    enabled?: BoolFilter<"ScheduledTask"> | boolean
+    broadcastMsg?: StringNullableFilter<"ScheduledTask"> | string | null
+    broadcastMin?: IntNullableFilter<"ScheduledTask"> | number | null
+    lastRunAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
+    lastBroadcastAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
+    createdAt?: DateTimeFilter<"ScheduledTask"> | Date | string
+    updatedAt?: DateTimeFilter<"ScheduledTask"> | Date | string
+  }
+
   export type UserCreateWithoutArchivesInput = {
     id?: string
     email: string
@@ -16751,6 +18301,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutBackupsInput = {
@@ -16780,6 +18331,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutBackupsInput = {
@@ -16825,6 +18377,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutBackupsInput = {
@@ -16854,6 +18407,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutCollaboratorsInput = {
@@ -16883,6 +18437,7 @@ export namespace Prisma {
     backups?: BackupCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutCollaboratorsInput = {
@@ -16912,6 +18467,7 @@ export namespace Prisma {
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutCollaboratorsInput = {
@@ -16992,6 +18548,7 @@ export namespace Prisma {
     backups?: BackupUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutCollaboratorsInput = {
@@ -17021,6 +18578,7 @@ export namespace Prisma {
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type UserUpsertWithoutCollaboratorAccessInput = {
@@ -17126,6 +18684,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutDefinitionInput = {
@@ -17155,6 +18714,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutDefinitionInput = {
@@ -17250,6 +18810,7 @@ export namespace Prisma {
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutModsInput = {
@@ -17279,6 +18840,7 @@ export namespace Prisma {
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutModsInput = {
@@ -17324,6 +18886,7 @@ export namespace Prisma {
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutModsInput = {
@@ -17353,6 +18916,7 @@ export namespace Prisma {
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutSnapshotsInput = {
@@ -17382,6 +18946,7 @@ export namespace Prisma {
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutSnapshotsInput = {
@@ -17411,6 +18976,7 @@ export namespace Prisma {
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutSnapshotsInput = {
@@ -17456,6 +19022,7 @@ export namespace Prisma {
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutSnapshotsInput = {
@@ -17485,6 +19052,143 @@ export namespace Prisma {
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerCreateWithoutScheduledTasksInput = {
+    id?: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    user: UserCreateNestedOneWithoutServersInput
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
+    backups?: BackupCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerUncheckedCreateWithoutScheduledTasksInput = {
+    id?: string
+    userId: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    definitionId?: string | null
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    backups?: BackupUncheckedCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerCreateOrConnectWithoutScheduledTasksInput = {
+    where: ServerWhereUniqueInput
+    create: XOR<ServerCreateWithoutScheduledTasksInput, ServerUncheckedCreateWithoutScheduledTasksInput>
+  }
+
+  export type ServerUpsertWithoutScheduledTasksInput = {
+    update: XOR<ServerUpdateWithoutScheduledTasksInput, ServerUncheckedUpdateWithoutScheduledTasksInput>
+    create: XOR<ServerCreateWithoutScheduledTasksInput, ServerUncheckedCreateWithoutScheduledTasksInput>
+    where?: ServerWhereInput
+  }
+
+  export type ServerUpdateToOneWithWhereWithoutScheduledTasksInput = {
+    where?: ServerWhereInput
+    data: XOR<ServerUpdateWithoutScheduledTasksInput, ServerUncheckedUpdateWithoutScheduledTasksInput>
+  }
+
+  export type ServerUpdateWithoutScheduledTasksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    user?: UserUpdateOneRequiredWithoutServersNestedInput
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
+    backups?: BackupUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerUncheckedUpdateWithoutScheduledTasksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type GameDefinitionCreateManyOwnerInput = {
@@ -17628,6 +19332,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutUserInput = {
@@ -17657,6 +19362,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateManyWithoutUserInput = {
@@ -17792,6 +19498,19 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type ScheduledTaskCreateManyServerInput = {
+    id?: string
+    action: string
+    cronExpression: string
+    enabled?: boolean
+    broadcastMsg?: string | null
+    broadcastMin?: number | null
+    lastRunAt?: Date | string | null
+    lastBroadcastAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type BackupUpdateWithoutServerInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -17909,6 +19628,45 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ScheduledTaskUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    cronExpression?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
+    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScheduledTaskUncheckedUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    cronExpression?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
+    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ScheduledTaskUncheckedUpdateManyWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    cronExpression?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
+    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ServerCreateManyDefinitionInput = {
     id?: string
     userId: string
@@ -17961,6 +19719,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutDefinitionInput = {
@@ -17990,6 +19749,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateManyWithoutDefinitionInput = {
@@ -18074,6 +19834,10 @@ export namespace Prisma {
      * @deprecated Use ServerSnapshotDefaultArgs instead
      */
     export type ServerSnapshotArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ServerSnapshotDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ScheduledTaskDefaultArgs instead
+     */
+    export type ScheduledTaskArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ScheduledTaskDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

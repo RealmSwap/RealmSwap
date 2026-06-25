@@ -243,6 +243,20 @@ exports.Prisma.ServerSnapshotScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ScheduledTaskScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId',
+  action: 'action',
+  cronExpression: 'cronExpression',
+  enabled: 'enabled',
+  broadcastMsg: 'broadcastMsg',
+  broadcastMin: 'broadcastMin',
+  lastRunAt: 'lastRunAt',
+  lastBroadcastAt: 'lastBroadcastAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -264,7 +278,8 @@ exports.Prisma.ModelName = {
   Collaborator: 'Collaborator',
   GameDefinition: 'GameDefinition',
   ModInstallation: 'ModInstallation',
-  ServerSnapshot: 'ServerSnapshot'
+  ServerSnapshot: 'ServerSnapshot',
+  ScheduledTask: 'ScheduledTask'
 };
 
 /**
