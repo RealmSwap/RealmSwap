@@ -73,6 +73,7 @@ model Server {
   collaborators    Collaborator[]
   mods             ModInstallation[]
   snapshots        ServerSnapshot[]
+  scheduledTasks   ScheduledTask[]
 }
 
 
@@ -169,3 +170,17 @@ model ServerSnapshot {
   createdAt   DateTime @default(now())
 }
 
+model ScheduledTask {
+  id              String    @id @default(cuid())
+  serverId        String
+  server          Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  action          String    // "START", "STOP", "RESTART"
+  cronExpression  String    // e.g., "0 4 * * *"
+  enabled         Boolean   @default(true)
+  broadcastMsg    String?   // Optional pre-action warning
+  broadcastMin    Int?      // Minutes before action to warn
+  lastRunAt       DateTime?
+  lastBroadcastAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}

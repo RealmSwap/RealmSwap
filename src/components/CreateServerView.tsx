@@ -20,7 +20,8 @@ import {
   Sparkles,
   Info,
   Settings
-} from "lucide-react";
+,
+  Terminal} from "lucide-react";
 import DefinitionParamFields from "./DefinitionParamFields";
 
 interface CreateServerViewProps {
@@ -211,6 +212,8 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
               { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
               { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
               { label: "Server Config", icon: Settings, href: "/dashboard/config" },
+              { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
+              { label: "Schedules", icon: Clock, href: "/dashboard/schedules" },
               { label: "Team Members", icon: Users, href: "/dashboard/team" },
               { label: "Audit Logs", icon: History, href: "/dashboard/logs" }
             ].map((link, i) => (

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { initBackupScheduler } from "@/lib/backupScheduler";
+import { initActionScheduler } from "@/lib/actionScheduler";
 import { parseSpec, stringifyParamValues } from "@/lib/definitions/serialize";
 import { validateParamValues } from "@/lib/definitions/validate";
 import { isPortAvailable, getFreeDiskSpaceGB, isSteamCmdInstalled } from "@/lib/preflight";

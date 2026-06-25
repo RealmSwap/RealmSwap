@@ -18,7 +18,9 @@ import {
   Info,
   Calendar,
   Settings
-} from "lucide-react";
+,
+  Clock,
+  Terminal} from "lucide-react";
 
 interface AuditLogsViewProps {
   initialLogs: any[];
@@ -133,6 +135,8 @@ export default function AuditLogsView({ initialLogs, user }: AuditLogsViewProps)
               { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
               { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
               { label: "Server Config", icon: Settings, href: "/dashboard/config" },
+              { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
+              { label: "Schedules", icon: Clock, href: "/dashboard/schedules" },
               { label: "Team Members", icon: Users, href: "/dashboard/team" },
               { label: "Audit Logs", icon: History, href: "/dashboard/logs", active: true }
             ].map((link, i) => (
