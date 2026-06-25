@@ -5,6 +5,12 @@ const fs = require("fs");
 const net = require("net");
 const crypto = require("crypto");
 const { stopAllServers } = require("./shutdown");
+const {
+  initAutoUpdate,
+  checkForUpdatesManual,
+  restartToUpdate,
+  isUpdateStaged,
+} = require("./updater");
 
 const isDev = process.env.GAMEVAULT_DEV === "1";
 const internalToken = crypto.randomBytes(16).toString("hex");
@@ -17,6 +23,17 @@ let mainWindow = null;
 let tray = null;
 let isQuitting = false;
 let serverPort = 0;
+
+function beginQuit() {
+  isQuitting = true;
+}
+
+function showMainWindow() {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
 
 function getFreePort() {
   return new Promise((resolve, reject) => {
@@ -87,6 +104,24 @@ function waitForServer(port, timeoutMs) {
   });
 }
 
+function buildTrayMenu() {
+  const items = [
+    { label: "Open RealmSwap", click: showMainWindow },
+    { type: "separator" },
+    { label: "Check for updates", click: () => checkForUpdatesManual() },
+  ];
+  if (isUpdateStaged()) {
+    items.push({ label: "Restart to update", click: () => restartToUpdate() });
+  }
+  items.push({ type: "separator" });
+  items.push({ label: "Quit", click: () => { beginQuit(); app.quit(); } });
+  return items;
+}
+
+function refreshTrayMenu() {
+  if (tray) tray.setContextMenu(Menu.buildFromTemplate(buildTrayMenu()));
+}
+
 function buildTray() {
   const icon = nativeImage.createFromPath(
     isDev ? path.join(__dirname, "..", "build", "tray.png")
@@ -94,15 +129,11 @@ function buildTray() {
   );
   tray = new Tray(icon);
   tray.setToolTip("RealmSwap");
-  tray.setContextMenu(Menu.buildFromTemplate([
-    { label: "Open RealmSwap", click: () => { mainWindow.show(); mainWindow.focus(); } },
-    { type: "separator" },
-    { label: "Quit", click: () => { isQuitting = true; app.quit(); } },
-  ]));
-  tray.on("double-click", () => { mainWindow.show(); mainWindow.focus(); });
+  refreshTrayMenu();
+  tray.on("double-click", showMainWindow);
 
   Menu.setApplicationMenu(Menu.buildFromTemplate([
-    { label: "File", submenu: [{ label: "Quit", click: () => { isQuitting = true; app.quit(); } }] },
+    { label: "File", submenu: [{ label: "Quit", click: () => { beginQuit(); app.quit(); } }] },
     { label: "View", submenu: [{ role: "reload" }, { role: "toggleDevTools" }] },
     { label: "Help", submenu: [{ role: "about" }] },
   ]));
@@ -163,6 +194,11 @@ app.whenReady().then(async () => {
       startNextServer(serverPort, dataDir);
       await waitForServer(serverPort, 30000);
       await createWindow(serverPort);
+      initAutoUpdate({
+        getMainWindow: () => mainWindow,
+        beginQuit,
+        refreshTrayMenu,
+      });
     }
   } catch (err) {
     const { dialog } = require("electron");
