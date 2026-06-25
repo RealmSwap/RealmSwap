@@ -28,7 +28,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       await prisma.server.update({ where: { id: server.id }, data: { status: "STOPPED" } });
     }
 
-    const dataDir = process.env.GAMEVAULT_DATA_DIR || path.join(process.cwd(), "data");
+    const dataDir = process.env.GAMEVAULT_DATA_DIR || process.cwd();
     const serverPath = server.localPath || path.join(dataDir, "local-servers", server.id);
 
     if (!fs.existsSync(serverPath)) {

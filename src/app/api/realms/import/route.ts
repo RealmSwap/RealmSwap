@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return new NextResponse("Invalid manifest format", { status: 400 });
     }
 
-    const dataDir = process.env.GAMEVAULT_DATA_DIR || path.join(process.cwd(), "data");
+    const dataDir = process.env.GAMEVAULT_DATA_DIR || process.cwd();
     
     let targetServerId = serverId;
     let serverRecord;
