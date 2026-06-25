@@ -22,7 +22,8 @@ import {
   Clock,
   Terminal,
   Store,
-  UploadCloud
+  UploadCloud,
+  X
 } from "lucide-react";
 
 interface ConfigEditorViewProps {
@@ -39,10 +40,15 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const [configFormat, setConfigFormat] = useState("");
   const [isEditable, setIsEditable] = useState(false);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // Publish Modal State
+  const [showPublishModal, setShowPublishModal] = useState(false);
+  const [publishName, setPublishName] = useState("");
+  const [publishDescription, setPublishDescription] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
 
@@ -140,14 +146,20 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
     }
   };
 
-  const handlePublish = async () => {
+  const handlePublishClick = () => {
+    setShowPublishModal(true);
+    setPublishName("");
+    setPublishDescription("");
+  };
+
+  const submitPublish = async () => {
     if (!selectedServer) return;
+    if (!publishName || !publishDescription) {
+      alert("Name and description are required.");
+      return;
+    }
     setSaving(true);
     try {
-      const templateName = prompt("Enter a name for your Community Template:");
-      if (!templateName) return;
-      const description = prompt("Enter a brief description for this Template:");
-      if (!description) return;
 
       // Note: Full implementation of gathering mods/configs goes here.
       // For now we simulate the payload based on current config.
@@ -168,8 +180,8 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: templateName,
-          description,
+          name: publishName,
+          description: publishDescription,
           gameSlug: selectedServer.game,
           tags: "Community",
           payload
@@ -189,6 +201,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
       alert(e.message);
     } finally {
       setSaving(false);
+      setShowPublishModal(false);
     }
   };
 
@@ -379,7 +392,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                       )}
                       
                       <button
-                        onClick={handlePublish}
+                        onClick={handlePublishClick}
                         className="px-3 py-1.5 rounded-lg bg-accentBlue/20 border border-accentBlue/30 hover:bg-accentBlue/30 text-xs font-bold text-accentBlue transition-colors flex items-center gap-1.5"
                         title="Publish to Community Marketplace"
                       >
@@ -467,6 +480,66 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
 
         </div>
       </main>
+
+      {/* Publish Modal */}
+      {showPublishModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="flex justify-between items-center p-5 border-b border-slate-800">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <UploadCloud className="w-5 h-5 text-accentBlue" />
+                Publish Template
+              </h2>
+              <button 
+                onClick={() => setShowPublishModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+                disabled={saving}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-300 mb-1.5">Template Name</label>
+                <input 
+                  type="text" 
+                  value={publishName}
+                  onChange={e => setPublishName(e.target.value)}
+                  className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors"
+                  placeholder="e.g. Valheim Hardcore PvP"
+                  disabled={saving}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-300 mb-1.5">Description</label>
+                <textarea 
+                  value={publishDescription}
+                  onChange={e => setPublishDescription(e.target.value)}
+                  className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors resize-none h-24"
+                  placeholder="Describe your server setup and configuration..."
+                  disabled={saving}
+                />
+              </div>
+            </div>
+            <div className="p-5 bg-slate-950 flex justify-end gap-3 border-t border-slate-800">
+              <button 
+                onClick={() => setShowPublishModal(false)}
+                className="px-4 py-2 rounded-lg font-bold text-sm hover:bg-white/5 transition-colors"
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={submitPublish}
+                disabled={saving || !publishName || !publishDescription}
+                className="flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-sm bg-accentBlue hover:bg-blue-500 disabled:opacity-50 text-white transition-all shadow-lg shadow-accentBlue/20"
+              >
+                {saving ? <><RefreshCw className="w-4 h-4 animate-spin" /> Publishing...</> : <><UploadCloud className="w-4 h-4" /> Publish Now</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
