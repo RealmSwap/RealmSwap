@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "postinstall": "prisma generate",
+    "db:push": "cross-env DATABASE_URL=\"file:./dev.db\" prisma db push",
     "electron:dev": "cross-env GAMEVAULT_DEV=1 concurrently -k \"next dev\" \"wait-on http://localhost:3000/start && electron .\"",
     "prepackage": "node scripts/make-template-db.js && next build",
     "electron:build": "npm run prepackage && electron-builder"
