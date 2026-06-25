@@ -1,6 +1,7 @@
 import { prisma } from "./db";
 import { getRunner } from "./runners";
 import { Server } from "@/generated/client";
+import { serverEventBus } from "./eventBus";
 
 // Global store for process monitoring intervals and history
 const globalForMonitor = globalThis as unknown as {
@@ -50,6 +51,15 @@ export function startMonitoring(server: Server): void {
         if (history.memory.length > MAX_HISTORY) history.memory.shift();
       }
 
+      const memoryGB = parseFloat((stats.memoryMB / 1024).toFixed(2));
+
+      // Emit live stats to all connected SSE clients
+      serverEventBus.emit("stats_update", {
+        serverId,
+        cpu: stats.cpuPercent,
+        memory: memoryGB
+      });
+
       // Reset error count on success
       if ((errorCounts.get(serverId) || 0) > 0) {
         errorCounts.set(serverId, 0);
@@ -57,6 +67,11 @@ export function startMonitoring(server: Server): void {
           where: { id: serverId },
           data: { healthStatus: "OK" }
         }).catch(() => {});
+        
+        serverEventBus.emit("status_update", {
+          serverId,
+          healthStatus: "OK"
+        });
       }
 
       // Update DB with latest values (convert memoryMB to GB for display)
@@ -64,7 +79,7 @@ export function startMonitoring(server: Server): void {
         where: { id: serverId },
         data: {
           cpuUsage: stats.cpuPercent,
-          memoryUsage: parseFloat((stats.memoryMB / 1024).toFixed(2)),
+          memoryUsage: memoryGB,
         },
       }).catch(() => {}); // Silently fail if server was deleted
     } catch (e: any) {
@@ -79,6 +94,11 @@ export function startMonitoring(server: Server): void {
           where: { id: serverId },
           data: { healthStatus: "DEGRADED" }
         }).catch(() => {});
+
+        serverEventBus.emit("status_update", {
+          serverId,
+          healthStatus: "DEGRADED"
+        });
 
         const server = await prisma.server.findUnique({ where: { id: serverId } }).catch(() => null);
         if (server) {

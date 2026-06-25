@@ -1,5 +1,5 @@
 import { prisma } from "./db";
-import cronParser from "cron-parser";
+import { CronExpressionParser } from "cron-parser";
 import { getRunner } from "./runners";
 
 const globalForScheduler = globalThis as unknown as {
@@ -20,7 +20,7 @@ async function checkScheduledActions() {
       if (!task.server) continue;
 
       try {
-        const interval = cronParser.parseExpression(task.cronExpression);
+        const interval = CronExpressionParser.parse(task.cronExpression);
         const nextDate = interval.next().toDate();
         const prevDate = interval.prev().toDate(); // the last time it SHOULD have run
 
