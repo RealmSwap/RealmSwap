@@ -5,7 +5,7 @@ import { getRunner } from "@/lib/runners/factory";
 import path from "path";
 import * as tar from "tar";
 import fs from "fs";
-import { Readable } from "stream";
+import { Readable, PassThrough } from "stream";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -78,8 +78,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       if (fs.existsSync(realmJsonPath)) fs.unlinkSync(realmJsonPath);
     });
 
+    const passThrough = new PassThrough();
+    tarStream.pipe(passThrough);
+
     // We can cast the Node stream to any or use Readable.toWeb
-    const webStream = Readable.toWeb(tarStream as any);
+    const webStream = Readable.toWeb(passThrough as any);
 
     const filename = `${server.name.replace(/[^a-zA-Z0-9]/g, "_")}.realm`;
 
