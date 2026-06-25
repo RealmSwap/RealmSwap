@@ -5,6 +5,7 @@ directories:
   buildResources: build
 files:
   - electron/**/*
+  - "!electron/__tests__/**"
   - package.json
 extraResources:
   - from: .next/standalone
