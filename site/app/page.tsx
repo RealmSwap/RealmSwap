@@ -102,7 +102,7 @@ export default function LandingPage() {
       <header className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-borderDark px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 group">
-            <img src={`${ASSET_PREFIX}/logo.png`} alt="RealmSwap" className="h-10 w-auto scale-[5] -translate-x-2 translate-y-1 origin-left pointer-events-none select-none" />
+            <img src={`${ASSET_PREFIX}/logo.png`} alt="RealmSwap" className="h-10 w-auto scale-[5] -translate-x-6 translate-y-1 origin-left pointer-events-none select-none" />
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-mutedText">
@@ -405,7 +405,7 @@ export default function LandingPage() {
       <footer className="mt-auto border-t border-borderDark bg-[#08090c] py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <img src={`${ASSET_PREFIX}/logo.png`} alt="RealmSwap" className="h-8 w-auto scale-[5] -translate-x-2 translate-y-1 origin-left pointer-events-none select-none" />
+            <img src={`${ASSET_PREFIX}/logo.png`} alt="RealmSwap" className="h-8 w-auto scale-[5] -translate-x-6 translate-y-1 origin-left pointer-events-none select-none" />
           </div>
 
           <p className="text-xs text-mutedText">
