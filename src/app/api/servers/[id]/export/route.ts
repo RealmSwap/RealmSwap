@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const serverPath = server.localPath || path.join(dataDir, "local-servers", server.id);
 
     if (!fs.existsSync(serverPath)) {
-      return new NextResponse("Server files not found", { status: 404 });
+      fs.mkdirSync(serverPath, { recursive: true });
     }
 
     // Write realm.json
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     });
 
   } catch (err: any) {
-    console.error(err);
-    return new NextResponse(err.message, { status: 500 });
+    console.error("EXPORT ROUTE ERROR:", err);
+    return new NextResponse(err.message || "Unknown error", { status: 500 });
   }
 }
