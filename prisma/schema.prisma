@@ -71,6 +71,8 @@ model Server {
   lastSnapshotAt   DateTime?
   backups          Backup[]
   collaborators    Collaborator[]
+  mods             ModInstallation[]
+  snapshots        ServerSnapshot[]
 }
 
 
@@ -139,3 +141,31 @@ model GameDefinition {
 
   @@unique([ownerId, slug])
 }
+
+model ModInstallation {
+  id           String   @id @default(cuid())
+  serverId     String
+  server       Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  provider     String   // "thunderstore", "workshop", "manual"
+  packageId    String   // "denikson-BepInExPack_Valheim"
+  version      String   
+  name         String
+  dependencies String?  // JSON array of required packageIds
+  installedAt  DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@unique([serverId, provider, packageId])
+}
+
+model ServerSnapshot {
+  id          String   @id @default(cuid())
+  serverId    String
+  server      Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  userId      String
+  name        String   // "Pre-EpicLoot Update"
+  path        String   // Path to the cloned server state directory
+  gameVersion String?
+  modCount    Int
+  createdAt   DateTime @default(now())
+}
+

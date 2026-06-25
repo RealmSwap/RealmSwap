@@ -220,6 +220,29 @@ exports.Prisma.GameDefinitionScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ModInstallationScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId',
+  provider: 'provider',
+  packageId: 'packageId',
+  version: 'version',
+  name: 'name',
+  dependencies: 'dependencies',
+  installedAt: 'installedAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ServerSnapshotScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId',
+  userId: 'userId',
+  name: 'name',
+  path: 'path',
+  gameVersion: 'gameVersion',
+  modCount: 'modCount',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -239,7 +262,9 @@ exports.Prisma.ModelName = {
   ActivityLog: 'ActivityLog',
   Backup: 'Backup',
   Collaborator: 'Collaborator',
-  GameDefinition: 'GameDefinition'
+  GameDefinition: 'GameDefinition',
+  ModInstallation: 'ModInstallation',
+  ServerSnapshot: 'ServerSnapshot'
 };
 
 /**

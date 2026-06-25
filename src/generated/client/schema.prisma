@@ -62,6 +62,7 @@ model Server {
   definitionId     String?
   definition       GameDefinition? @relation(fields: [definitionId], references: [id])
   paramValues      String? // JSON object of custom param values
+  healthStatus     String          @default("OK") // "OK", "DEGRADED", "FAILING"
   cpuUsage         Float           @default(0) // Mocked live utilization percentage
   memoryUsage      Float           @default(0) // Mocked live RAM utilization in GB
   createdAt        DateTime        @default(now())

@@ -53,6 +53,16 @@ export type Collaborator = $Result.DefaultSelection<Prisma.$CollaboratorPayload>
  * 
  */
 export type GameDefinition = $Result.DefaultSelection<Prisma.$GameDefinitionPayload>
+/**
+ * Model ModInstallation
+ * 
+ */
+export type ModInstallation = $Result.DefaultSelection<Prisma.$ModInstallationPayload>
+/**
+ * Model ServerSnapshot
+ * 
+ */
+export type ServerSnapshot = $Result.DefaultSelection<Prisma.$ServerSnapshotPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -256,6 +266,26 @@ export class PrismaClient<
     * ```
     */
   get gameDefinition(): Prisma.GameDefinitionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.modInstallation`: Exposes CRUD operations for the **ModInstallation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ModInstallations
+    * const modInstallations = await prisma.modInstallation.findMany()
+    * ```
+    */
+  get modInstallation(): Prisma.ModInstallationDelegate<ExtArgs>;
+
+  /**
+   * `prisma.serverSnapshot`: Exposes CRUD operations for the **ServerSnapshot** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ServerSnapshots
+    * const serverSnapshots = await prisma.serverSnapshot.findMany()
+    * ```
+    */
+  get serverSnapshot(): Prisma.ServerSnapshotDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -704,7 +734,9 @@ export namespace Prisma {
     ActivityLog: 'ActivityLog',
     Backup: 'Backup',
     Collaborator: 'Collaborator',
-    GameDefinition: 'GameDefinition'
+    GameDefinition: 'GameDefinition',
+    ModInstallation: 'ModInstallation',
+    ServerSnapshot: 'ServerSnapshot'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -720,7 +752,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "subscription" | "server" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition"
+      modelProps: "user" | "subscription" | "server" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1284,6 +1316,146 @@ export namespace Prisma {
           }
         }
       }
+      ModInstallation: {
+        payload: Prisma.$ModInstallationPayload<ExtArgs>
+        fields: Prisma.ModInstallationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ModInstallationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModInstallationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ModInstallationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModInstallationPayload>
+          }
+          findFirst: {
+            args: Prisma.ModInstallationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModInstallationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ModInstallationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModInstallationPayload>
+          }
+          findMany: {
+            args: Prisma.ModInstallationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModInstallationPayload>[]
+          }
+          create: {
+            args: Prisma.ModInstallationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModInstallationPayload>
+          }
+          createMany: {
+            args: Prisma.ModInstallationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ModInstallationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModInstallationPayload>[]
+          }
+          delete: {
+            args: Prisma.ModInstallationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModInstallationPayload>
+          }
+          update: {
+            args: Prisma.ModInstallationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModInstallationPayload>
+          }
+          deleteMany: {
+            args: Prisma.ModInstallationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ModInstallationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ModInstallationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ModInstallationPayload>
+          }
+          aggregate: {
+            args: Prisma.ModInstallationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateModInstallation>
+          }
+          groupBy: {
+            args: Prisma.ModInstallationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ModInstallationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ModInstallationCountArgs<ExtArgs>
+            result: $Utils.Optional<ModInstallationCountAggregateOutputType> | number
+          }
+        }
+      }
+      ServerSnapshot: {
+        payload: Prisma.$ServerSnapshotPayload<ExtArgs>
+        fields: Prisma.ServerSnapshotFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ServerSnapshotFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerSnapshotPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ServerSnapshotFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerSnapshotPayload>
+          }
+          findFirst: {
+            args: Prisma.ServerSnapshotFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerSnapshotPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ServerSnapshotFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerSnapshotPayload>
+          }
+          findMany: {
+            args: Prisma.ServerSnapshotFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerSnapshotPayload>[]
+          }
+          create: {
+            args: Prisma.ServerSnapshotCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerSnapshotPayload>
+          }
+          createMany: {
+            args: Prisma.ServerSnapshotCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ServerSnapshotCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerSnapshotPayload>[]
+          }
+          delete: {
+            args: Prisma.ServerSnapshotDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerSnapshotPayload>
+          }
+          update: {
+            args: Prisma.ServerSnapshotUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerSnapshotPayload>
+          }
+          deleteMany: {
+            args: Prisma.ServerSnapshotDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ServerSnapshotUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ServerSnapshotUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerSnapshotPayload>
+          }
+          aggregate: {
+            args: Prisma.ServerSnapshotAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateServerSnapshot>
+          }
+          groupBy: {
+            args: Prisma.ServerSnapshotGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ServerSnapshotGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ServerSnapshotCountArgs<ExtArgs>
+            result: $Utils.Optional<ServerSnapshotCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1514,11 +1686,15 @@ export namespace Prisma {
   export type ServerCountOutputType = {
     backups: number
     collaborators: number
+    mods: number
+    snapshots: number
   }
 
   export type ServerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     backups?: boolean | ServerCountOutputTypeCountBackupsArgs
     collaborators?: boolean | ServerCountOutputTypeCountCollaboratorsArgs
+    mods?: boolean | ServerCountOutputTypeCountModsArgs
+    snapshots?: boolean | ServerCountOutputTypeCountSnapshotsArgs
   }
 
   // Custom InputTypes
@@ -1544,6 +1720,20 @@ export namespace Prisma {
    */
   export type ServerCountOutputTypeCountCollaboratorsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CollaboratorWhereInput
+  }
+
+  /**
+   * ServerCountOutputType without action
+   */
+  export type ServerCountOutputTypeCountModsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ModInstallationWhereInput
+  }
+
+  /**
+   * ServerCountOutputType without action
+   */
+  export type ServerCountOutputTypeCountSnapshotsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ServerSnapshotWhereInput
   }
 
 
@@ -4022,6 +4212,8 @@ export namespace Prisma {
     definition?: boolean | Server$definitionArgs<ExtArgs>
     backups?: boolean | Server$backupsArgs<ExtArgs>
     collaborators?: boolean | Server$collaboratorsArgs<ExtArgs>
+    mods?: boolean | Server$modsArgs<ExtArgs>
+    snapshots?: boolean | Server$snapshotsArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["server"]>
 
@@ -4084,6 +4276,8 @@ export namespace Prisma {
     definition?: boolean | Server$definitionArgs<ExtArgs>
     backups?: boolean | Server$backupsArgs<ExtArgs>
     collaborators?: boolean | Server$collaboratorsArgs<ExtArgs>
+    mods?: boolean | Server$modsArgs<ExtArgs>
+    snapshots?: boolean | Server$snapshotsArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ServerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4098,6 +4292,8 @@ export namespace Prisma {
       definition: Prisma.$GameDefinitionPayload<ExtArgs> | null
       backups: Prisma.$BackupPayload<ExtArgs>[]
       collaborators: Prisma.$CollaboratorPayload<ExtArgs>[]
+      mods: Prisma.$ModInstallationPayload<ExtArgs>[]
+      snapshots: Prisma.$ServerSnapshotPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -4491,6 +4687,8 @@ export namespace Prisma {
     definition<T extends Server$definitionArgs<ExtArgs> = {}>(args?: Subset<T, Server$definitionArgs<ExtArgs>>): Prisma__GameDefinitionClient<$Result.GetResult<Prisma.$GameDefinitionPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     backups<T extends Server$backupsArgs<ExtArgs> = {}>(args?: Subset<T, Server$backupsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BackupPayload<ExtArgs>, T, "findMany"> | Null>
     collaborators<T extends Server$collaboratorsArgs<ExtArgs> = {}>(args?: Subset<T, Server$collaboratorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CollaboratorPayload<ExtArgs>, T, "findMany"> | Null>
+    mods<T extends Server$modsArgs<ExtArgs> = {}>(args?: Subset<T, Server$modsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "findMany"> | Null>
+    snapshots<T extends Server$snapshotsArgs<ExtArgs> = {}>(args?: Subset<T, Server$snapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4911,6 +5109,46 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CollaboratorScalarFieldEnum | CollaboratorScalarFieldEnum[]
+  }
+
+  /**
+   * Server.mods
+   */
+  export type Server$modsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+    where?: ModInstallationWhereInput
+    orderBy?: ModInstallationOrderByWithRelationInput | ModInstallationOrderByWithRelationInput[]
+    cursor?: ModInstallationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ModInstallationScalarFieldEnum | ModInstallationScalarFieldEnum[]
+  }
+
+  /**
+   * Server.snapshots
+   */
+  export type Server$snapshotsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+    where?: ServerSnapshotWhereInput
+    orderBy?: ServerSnapshotOrderByWithRelationInput | ServerSnapshotOrderByWithRelationInput[]
+    cursor?: ServerSnapshotWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ServerSnapshotScalarFieldEnum | ServerSnapshotScalarFieldEnum[]
   }
 
   /**
@@ -9917,6 +10155,1986 @@ export namespace Prisma {
 
 
   /**
+   * Model ModInstallation
+   */
+
+  export type AggregateModInstallation = {
+    _count: ModInstallationCountAggregateOutputType | null
+    _min: ModInstallationMinAggregateOutputType | null
+    _max: ModInstallationMaxAggregateOutputType | null
+  }
+
+  export type ModInstallationMinAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    provider: string | null
+    packageId: string | null
+    version: string | null
+    name: string | null
+    dependencies: string | null
+    installedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ModInstallationMaxAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    provider: string | null
+    packageId: string | null
+    version: string | null
+    name: string | null
+    dependencies: string | null
+    installedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ModInstallationCountAggregateOutputType = {
+    id: number
+    serverId: number
+    provider: number
+    packageId: number
+    version: number
+    name: number
+    dependencies: number
+    installedAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ModInstallationMinAggregateInputType = {
+    id?: true
+    serverId?: true
+    provider?: true
+    packageId?: true
+    version?: true
+    name?: true
+    dependencies?: true
+    installedAt?: true
+    updatedAt?: true
+  }
+
+  export type ModInstallationMaxAggregateInputType = {
+    id?: true
+    serverId?: true
+    provider?: true
+    packageId?: true
+    version?: true
+    name?: true
+    dependencies?: true
+    installedAt?: true
+    updatedAt?: true
+  }
+
+  export type ModInstallationCountAggregateInputType = {
+    id?: true
+    serverId?: true
+    provider?: true
+    packageId?: true
+    version?: true
+    name?: true
+    dependencies?: true
+    installedAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ModInstallationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ModInstallation to aggregate.
+     */
+    where?: ModInstallationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModInstallations to fetch.
+     */
+    orderBy?: ModInstallationOrderByWithRelationInput | ModInstallationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ModInstallationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModInstallations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModInstallations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ModInstallations
+    **/
+    _count?: true | ModInstallationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ModInstallationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ModInstallationMaxAggregateInputType
+  }
+
+  export type GetModInstallationAggregateType<T extends ModInstallationAggregateArgs> = {
+        [P in keyof T & keyof AggregateModInstallation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateModInstallation[P]>
+      : GetScalarType<T[P], AggregateModInstallation[P]>
+  }
+
+
+
+
+  export type ModInstallationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ModInstallationWhereInput
+    orderBy?: ModInstallationOrderByWithAggregationInput | ModInstallationOrderByWithAggregationInput[]
+    by: ModInstallationScalarFieldEnum[] | ModInstallationScalarFieldEnum
+    having?: ModInstallationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ModInstallationCountAggregateInputType | true
+    _min?: ModInstallationMinAggregateInputType
+    _max?: ModInstallationMaxAggregateInputType
+  }
+
+  export type ModInstallationGroupByOutputType = {
+    id: string
+    serverId: string
+    provider: string
+    packageId: string
+    version: string
+    name: string
+    dependencies: string | null
+    installedAt: Date
+    updatedAt: Date
+    _count: ModInstallationCountAggregateOutputType | null
+    _min: ModInstallationMinAggregateOutputType | null
+    _max: ModInstallationMaxAggregateOutputType | null
+  }
+
+  type GetModInstallationGroupByPayload<T extends ModInstallationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ModInstallationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ModInstallationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ModInstallationGroupByOutputType[P]>
+            : GetScalarType<T[P], ModInstallationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ModInstallationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    provider?: boolean
+    packageId?: boolean
+    version?: boolean
+    name?: boolean
+    dependencies?: boolean
+    installedAt?: boolean
+    updatedAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["modInstallation"]>
+
+  export type ModInstallationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    provider?: boolean
+    packageId?: boolean
+    version?: boolean
+    name?: boolean
+    dependencies?: boolean
+    installedAt?: boolean
+    updatedAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["modInstallation"]>
+
+  export type ModInstallationSelectScalar = {
+    id?: boolean
+    serverId?: boolean
+    provider?: boolean
+    packageId?: boolean
+    version?: boolean
+    name?: boolean
+    dependencies?: boolean
+    installedAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ModInstallationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+  export type ModInstallationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+
+  export type $ModInstallationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ModInstallation"
+    objects: {
+      server: Prisma.$ServerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      serverId: string
+      provider: string
+      packageId: string
+      version: string
+      name: string
+      dependencies: string | null
+      installedAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["modInstallation"]>
+    composites: {}
+  }
+
+  type ModInstallationGetPayload<S extends boolean | null | undefined | ModInstallationDefaultArgs> = $Result.GetResult<Prisma.$ModInstallationPayload, S>
+
+  type ModInstallationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ModInstallationFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ModInstallationCountAggregateInputType | true
+    }
+
+  export interface ModInstallationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ModInstallation'], meta: { name: 'ModInstallation' } }
+    /**
+     * Find zero or one ModInstallation that matches the filter.
+     * @param {ModInstallationFindUniqueArgs} args - Arguments to find a ModInstallation
+     * @example
+     * // Get one ModInstallation
+     * const modInstallation = await prisma.modInstallation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ModInstallationFindUniqueArgs>(args: SelectSubset<T, ModInstallationFindUniqueArgs<ExtArgs>>): Prisma__ModInstallationClient<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ModInstallation that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ModInstallationFindUniqueOrThrowArgs} args - Arguments to find a ModInstallation
+     * @example
+     * // Get one ModInstallation
+     * const modInstallation = await prisma.modInstallation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ModInstallationFindUniqueOrThrowArgs>(args: SelectSubset<T, ModInstallationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ModInstallationClient<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ModInstallation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModInstallationFindFirstArgs} args - Arguments to find a ModInstallation
+     * @example
+     * // Get one ModInstallation
+     * const modInstallation = await prisma.modInstallation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ModInstallationFindFirstArgs>(args?: SelectSubset<T, ModInstallationFindFirstArgs<ExtArgs>>): Prisma__ModInstallationClient<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ModInstallation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModInstallationFindFirstOrThrowArgs} args - Arguments to find a ModInstallation
+     * @example
+     * // Get one ModInstallation
+     * const modInstallation = await prisma.modInstallation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ModInstallationFindFirstOrThrowArgs>(args?: SelectSubset<T, ModInstallationFindFirstOrThrowArgs<ExtArgs>>): Prisma__ModInstallationClient<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ModInstallations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModInstallationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ModInstallations
+     * const modInstallations = await prisma.modInstallation.findMany()
+     * 
+     * // Get first 10 ModInstallations
+     * const modInstallations = await prisma.modInstallation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const modInstallationWithIdOnly = await prisma.modInstallation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ModInstallationFindManyArgs>(args?: SelectSubset<T, ModInstallationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ModInstallation.
+     * @param {ModInstallationCreateArgs} args - Arguments to create a ModInstallation.
+     * @example
+     * // Create one ModInstallation
+     * const ModInstallation = await prisma.modInstallation.create({
+     *   data: {
+     *     // ... data to create a ModInstallation
+     *   }
+     * })
+     * 
+     */
+    create<T extends ModInstallationCreateArgs>(args: SelectSubset<T, ModInstallationCreateArgs<ExtArgs>>): Prisma__ModInstallationClient<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ModInstallations.
+     * @param {ModInstallationCreateManyArgs} args - Arguments to create many ModInstallations.
+     * @example
+     * // Create many ModInstallations
+     * const modInstallation = await prisma.modInstallation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ModInstallationCreateManyArgs>(args?: SelectSubset<T, ModInstallationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ModInstallations and returns the data saved in the database.
+     * @param {ModInstallationCreateManyAndReturnArgs} args - Arguments to create many ModInstallations.
+     * @example
+     * // Create many ModInstallations
+     * const modInstallation = await prisma.modInstallation.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ModInstallations and only return the `id`
+     * const modInstallationWithIdOnly = await prisma.modInstallation.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ModInstallationCreateManyAndReturnArgs>(args?: SelectSubset<T, ModInstallationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ModInstallation.
+     * @param {ModInstallationDeleteArgs} args - Arguments to delete one ModInstallation.
+     * @example
+     * // Delete one ModInstallation
+     * const ModInstallation = await prisma.modInstallation.delete({
+     *   where: {
+     *     // ... filter to delete one ModInstallation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ModInstallationDeleteArgs>(args: SelectSubset<T, ModInstallationDeleteArgs<ExtArgs>>): Prisma__ModInstallationClient<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ModInstallation.
+     * @param {ModInstallationUpdateArgs} args - Arguments to update one ModInstallation.
+     * @example
+     * // Update one ModInstallation
+     * const modInstallation = await prisma.modInstallation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ModInstallationUpdateArgs>(args: SelectSubset<T, ModInstallationUpdateArgs<ExtArgs>>): Prisma__ModInstallationClient<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ModInstallations.
+     * @param {ModInstallationDeleteManyArgs} args - Arguments to filter ModInstallations to delete.
+     * @example
+     * // Delete a few ModInstallations
+     * const { count } = await prisma.modInstallation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ModInstallationDeleteManyArgs>(args?: SelectSubset<T, ModInstallationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ModInstallations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModInstallationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ModInstallations
+     * const modInstallation = await prisma.modInstallation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ModInstallationUpdateManyArgs>(args: SelectSubset<T, ModInstallationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ModInstallation.
+     * @param {ModInstallationUpsertArgs} args - Arguments to update or create a ModInstallation.
+     * @example
+     * // Update or create a ModInstallation
+     * const modInstallation = await prisma.modInstallation.upsert({
+     *   create: {
+     *     // ... data to create a ModInstallation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ModInstallation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ModInstallationUpsertArgs>(args: SelectSubset<T, ModInstallationUpsertArgs<ExtArgs>>): Prisma__ModInstallationClient<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ModInstallations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModInstallationCountArgs} args - Arguments to filter ModInstallations to count.
+     * @example
+     * // Count the number of ModInstallations
+     * const count = await prisma.modInstallation.count({
+     *   where: {
+     *     // ... the filter for the ModInstallations we want to count
+     *   }
+     * })
+    **/
+    count<T extends ModInstallationCountArgs>(
+      args?: Subset<T, ModInstallationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ModInstallationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ModInstallation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModInstallationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ModInstallationAggregateArgs>(args: Subset<T, ModInstallationAggregateArgs>): Prisma.PrismaPromise<GetModInstallationAggregateType<T>>
+
+    /**
+     * Group by ModInstallation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ModInstallationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ModInstallationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ModInstallationGroupByArgs['orderBy'] }
+        : { orderBy?: ModInstallationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ModInstallationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetModInstallationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ModInstallation model
+   */
+  readonly fields: ModInstallationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ModInstallation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ModInstallationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    server<T extends ServerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServerDefaultArgs<ExtArgs>>): Prisma__ServerClient<$Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ModInstallation model
+   */ 
+  interface ModInstallationFieldRefs {
+    readonly id: FieldRef<"ModInstallation", 'String'>
+    readonly serverId: FieldRef<"ModInstallation", 'String'>
+    readonly provider: FieldRef<"ModInstallation", 'String'>
+    readonly packageId: FieldRef<"ModInstallation", 'String'>
+    readonly version: FieldRef<"ModInstallation", 'String'>
+    readonly name: FieldRef<"ModInstallation", 'String'>
+    readonly dependencies: FieldRef<"ModInstallation", 'String'>
+    readonly installedAt: FieldRef<"ModInstallation", 'DateTime'>
+    readonly updatedAt: FieldRef<"ModInstallation", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ModInstallation findUnique
+   */
+  export type ModInstallationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+    /**
+     * Filter, which ModInstallation to fetch.
+     */
+    where: ModInstallationWhereUniqueInput
+  }
+
+  /**
+   * ModInstallation findUniqueOrThrow
+   */
+  export type ModInstallationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+    /**
+     * Filter, which ModInstallation to fetch.
+     */
+    where: ModInstallationWhereUniqueInput
+  }
+
+  /**
+   * ModInstallation findFirst
+   */
+  export type ModInstallationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+    /**
+     * Filter, which ModInstallation to fetch.
+     */
+    where?: ModInstallationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModInstallations to fetch.
+     */
+    orderBy?: ModInstallationOrderByWithRelationInput | ModInstallationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ModInstallations.
+     */
+    cursor?: ModInstallationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModInstallations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModInstallations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ModInstallations.
+     */
+    distinct?: ModInstallationScalarFieldEnum | ModInstallationScalarFieldEnum[]
+  }
+
+  /**
+   * ModInstallation findFirstOrThrow
+   */
+  export type ModInstallationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+    /**
+     * Filter, which ModInstallation to fetch.
+     */
+    where?: ModInstallationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModInstallations to fetch.
+     */
+    orderBy?: ModInstallationOrderByWithRelationInput | ModInstallationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ModInstallations.
+     */
+    cursor?: ModInstallationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModInstallations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModInstallations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ModInstallations.
+     */
+    distinct?: ModInstallationScalarFieldEnum | ModInstallationScalarFieldEnum[]
+  }
+
+  /**
+   * ModInstallation findMany
+   */
+  export type ModInstallationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+    /**
+     * Filter, which ModInstallations to fetch.
+     */
+    where?: ModInstallationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ModInstallations to fetch.
+     */
+    orderBy?: ModInstallationOrderByWithRelationInput | ModInstallationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ModInstallations.
+     */
+    cursor?: ModInstallationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ModInstallations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ModInstallations.
+     */
+    skip?: number
+    distinct?: ModInstallationScalarFieldEnum | ModInstallationScalarFieldEnum[]
+  }
+
+  /**
+   * ModInstallation create
+   */
+  export type ModInstallationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ModInstallation.
+     */
+    data: XOR<ModInstallationCreateInput, ModInstallationUncheckedCreateInput>
+  }
+
+  /**
+   * ModInstallation createMany
+   */
+  export type ModInstallationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ModInstallations.
+     */
+    data: ModInstallationCreateManyInput | ModInstallationCreateManyInput[]
+  }
+
+  /**
+   * ModInstallation createManyAndReturn
+   */
+  export type ModInstallationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ModInstallations.
+     */
+    data: ModInstallationCreateManyInput | ModInstallationCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ModInstallation update
+   */
+  export type ModInstallationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ModInstallation.
+     */
+    data: XOR<ModInstallationUpdateInput, ModInstallationUncheckedUpdateInput>
+    /**
+     * Choose, which ModInstallation to update.
+     */
+    where: ModInstallationWhereUniqueInput
+  }
+
+  /**
+   * ModInstallation updateMany
+   */
+  export type ModInstallationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ModInstallations.
+     */
+    data: XOR<ModInstallationUpdateManyMutationInput, ModInstallationUncheckedUpdateManyInput>
+    /**
+     * Filter which ModInstallations to update
+     */
+    where?: ModInstallationWhereInput
+  }
+
+  /**
+   * ModInstallation upsert
+   */
+  export type ModInstallationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ModInstallation to update in case it exists.
+     */
+    where: ModInstallationWhereUniqueInput
+    /**
+     * In case the ModInstallation found by the `where` argument doesn't exist, create a new ModInstallation with this data.
+     */
+    create: XOR<ModInstallationCreateInput, ModInstallationUncheckedCreateInput>
+    /**
+     * In case the ModInstallation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ModInstallationUpdateInput, ModInstallationUncheckedUpdateInput>
+  }
+
+  /**
+   * ModInstallation delete
+   */
+  export type ModInstallationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+    /**
+     * Filter which ModInstallation to delete.
+     */
+    where: ModInstallationWhereUniqueInput
+  }
+
+  /**
+   * ModInstallation deleteMany
+   */
+  export type ModInstallationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ModInstallations to delete
+     */
+    where?: ModInstallationWhereInput
+  }
+
+  /**
+   * ModInstallation without action
+   */
+  export type ModInstallationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ModInstallation
+     */
+    select?: ModInstallationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ModInstallationInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ServerSnapshot
+   */
+
+  export type AggregateServerSnapshot = {
+    _count: ServerSnapshotCountAggregateOutputType | null
+    _avg: ServerSnapshotAvgAggregateOutputType | null
+    _sum: ServerSnapshotSumAggregateOutputType | null
+    _min: ServerSnapshotMinAggregateOutputType | null
+    _max: ServerSnapshotMaxAggregateOutputType | null
+  }
+
+  export type ServerSnapshotAvgAggregateOutputType = {
+    modCount: number | null
+  }
+
+  export type ServerSnapshotSumAggregateOutputType = {
+    modCount: number | null
+  }
+
+  export type ServerSnapshotMinAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    userId: string | null
+    name: string | null
+    path: string | null
+    gameVersion: string | null
+    modCount: number | null
+    createdAt: Date | null
+  }
+
+  export type ServerSnapshotMaxAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    userId: string | null
+    name: string | null
+    path: string | null
+    gameVersion: string | null
+    modCount: number | null
+    createdAt: Date | null
+  }
+
+  export type ServerSnapshotCountAggregateOutputType = {
+    id: number
+    serverId: number
+    userId: number
+    name: number
+    path: number
+    gameVersion: number
+    modCount: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ServerSnapshotAvgAggregateInputType = {
+    modCount?: true
+  }
+
+  export type ServerSnapshotSumAggregateInputType = {
+    modCount?: true
+  }
+
+  export type ServerSnapshotMinAggregateInputType = {
+    id?: true
+    serverId?: true
+    userId?: true
+    name?: true
+    path?: true
+    gameVersion?: true
+    modCount?: true
+    createdAt?: true
+  }
+
+  export type ServerSnapshotMaxAggregateInputType = {
+    id?: true
+    serverId?: true
+    userId?: true
+    name?: true
+    path?: true
+    gameVersion?: true
+    modCount?: true
+    createdAt?: true
+  }
+
+  export type ServerSnapshotCountAggregateInputType = {
+    id?: true
+    serverId?: true
+    userId?: true
+    name?: true
+    path?: true
+    gameVersion?: true
+    modCount?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ServerSnapshotAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ServerSnapshot to aggregate.
+     */
+    where?: ServerSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerSnapshots to fetch.
+     */
+    orderBy?: ServerSnapshotOrderByWithRelationInput | ServerSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ServerSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ServerSnapshots
+    **/
+    _count?: true | ServerSnapshotCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ServerSnapshotAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ServerSnapshotSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ServerSnapshotMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ServerSnapshotMaxAggregateInputType
+  }
+
+  export type GetServerSnapshotAggregateType<T extends ServerSnapshotAggregateArgs> = {
+        [P in keyof T & keyof AggregateServerSnapshot]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateServerSnapshot[P]>
+      : GetScalarType<T[P], AggregateServerSnapshot[P]>
+  }
+
+
+
+
+  export type ServerSnapshotGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ServerSnapshotWhereInput
+    orderBy?: ServerSnapshotOrderByWithAggregationInput | ServerSnapshotOrderByWithAggregationInput[]
+    by: ServerSnapshotScalarFieldEnum[] | ServerSnapshotScalarFieldEnum
+    having?: ServerSnapshotScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ServerSnapshotCountAggregateInputType | true
+    _avg?: ServerSnapshotAvgAggregateInputType
+    _sum?: ServerSnapshotSumAggregateInputType
+    _min?: ServerSnapshotMinAggregateInputType
+    _max?: ServerSnapshotMaxAggregateInputType
+  }
+
+  export type ServerSnapshotGroupByOutputType = {
+    id: string
+    serverId: string
+    userId: string
+    name: string
+    path: string
+    gameVersion: string | null
+    modCount: number
+    createdAt: Date
+    _count: ServerSnapshotCountAggregateOutputType | null
+    _avg: ServerSnapshotAvgAggregateOutputType | null
+    _sum: ServerSnapshotSumAggregateOutputType | null
+    _min: ServerSnapshotMinAggregateOutputType | null
+    _max: ServerSnapshotMaxAggregateOutputType | null
+  }
+
+  type GetServerSnapshotGroupByPayload<T extends ServerSnapshotGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ServerSnapshotGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ServerSnapshotGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ServerSnapshotGroupByOutputType[P]>
+            : GetScalarType<T[P], ServerSnapshotGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ServerSnapshotSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    userId?: boolean
+    name?: boolean
+    path?: boolean
+    gameVersion?: boolean
+    modCount?: boolean
+    createdAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["serverSnapshot"]>
+
+  export type ServerSnapshotSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    userId?: boolean
+    name?: boolean
+    path?: boolean
+    gameVersion?: boolean
+    modCount?: boolean
+    createdAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["serverSnapshot"]>
+
+  export type ServerSnapshotSelectScalar = {
+    id?: boolean
+    serverId?: boolean
+    userId?: boolean
+    name?: boolean
+    path?: boolean
+    gameVersion?: boolean
+    modCount?: boolean
+    createdAt?: boolean
+  }
+
+  export type ServerSnapshotInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+  export type ServerSnapshotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+
+  export type $ServerSnapshotPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ServerSnapshot"
+    objects: {
+      server: Prisma.$ServerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      serverId: string
+      userId: string
+      name: string
+      path: string
+      gameVersion: string | null
+      modCount: number
+      createdAt: Date
+    }, ExtArgs["result"]["serverSnapshot"]>
+    composites: {}
+  }
+
+  type ServerSnapshotGetPayload<S extends boolean | null | undefined | ServerSnapshotDefaultArgs> = $Result.GetResult<Prisma.$ServerSnapshotPayload, S>
+
+  type ServerSnapshotCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ServerSnapshotFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ServerSnapshotCountAggregateInputType | true
+    }
+
+  export interface ServerSnapshotDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ServerSnapshot'], meta: { name: 'ServerSnapshot' } }
+    /**
+     * Find zero or one ServerSnapshot that matches the filter.
+     * @param {ServerSnapshotFindUniqueArgs} args - Arguments to find a ServerSnapshot
+     * @example
+     * // Get one ServerSnapshot
+     * const serverSnapshot = await prisma.serverSnapshot.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ServerSnapshotFindUniqueArgs>(args: SelectSubset<T, ServerSnapshotFindUniqueArgs<ExtArgs>>): Prisma__ServerSnapshotClient<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ServerSnapshot that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ServerSnapshotFindUniqueOrThrowArgs} args - Arguments to find a ServerSnapshot
+     * @example
+     * // Get one ServerSnapshot
+     * const serverSnapshot = await prisma.serverSnapshot.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ServerSnapshotFindUniqueOrThrowArgs>(args: SelectSubset<T, ServerSnapshotFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ServerSnapshotClient<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ServerSnapshot that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerSnapshotFindFirstArgs} args - Arguments to find a ServerSnapshot
+     * @example
+     * // Get one ServerSnapshot
+     * const serverSnapshot = await prisma.serverSnapshot.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ServerSnapshotFindFirstArgs>(args?: SelectSubset<T, ServerSnapshotFindFirstArgs<ExtArgs>>): Prisma__ServerSnapshotClient<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ServerSnapshot that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerSnapshotFindFirstOrThrowArgs} args - Arguments to find a ServerSnapshot
+     * @example
+     * // Get one ServerSnapshot
+     * const serverSnapshot = await prisma.serverSnapshot.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ServerSnapshotFindFirstOrThrowArgs>(args?: SelectSubset<T, ServerSnapshotFindFirstOrThrowArgs<ExtArgs>>): Prisma__ServerSnapshotClient<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ServerSnapshots that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerSnapshotFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ServerSnapshots
+     * const serverSnapshots = await prisma.serverSnapshot.findMany()
+     * 
+     * // Get first 10 ServerSnapshots
+     * const serverSnapshots = await prisma.serverSnapshot.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const serverSnapshotWithIdOnly = await prisma.serverSnapshot.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ServerSnapshotFindManyArgs>(args?: SelectSubset<T, ServerSnapshotFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ServerSnapshot.
+     * @param {ServerSnapshotCreateArgs} args - Arguments to create a ServerSnapshot.
+     * @example
+     * // Create one ServerSnapshot
+     * const ServerSnapshot = await prisma.serverSnapshot.create({
+     *   data: {
+     *     // ... data to create a ServerSnapshot
+     *   }
+     * })
+     * 
+     */
+    create<T extends ServerSnapshotCreateArgs>(args: SelectSubset<T, ServerSnapshotCreateArgs<ExtArgs>>): Prisma__ServerSnapshotClient<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ServerSnapshots.
+     * @param {ServerSnapshotCreateManyArgs} args - Arguments to create many ServerSnapshots.
+     * @example
+     * // Create many ServerSnapshots
+     * const serverSnapshot = await prisma.serverSnapshot.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ServerSnapshotCreateManyArgs>(args?: SelectSubset<T, ServerSnapshotCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ServerSnapshots and returns the data saved in the database.
+     * @param {ServerSnapshotCreateManyAndReturnArgs} args - Arguments to create many ServerSnapshots.
+     * @example
+     * // Create many ServerSnapshots
+     * const serverSnapshot = await prisma.serverSnapshot.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ServerSnapshots and only return the `id`
+     * const serverSnapshotWithIdOnly = await prisma.serverSnapshot.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ServerSnapshotCreateManyAndReturnArgs>(args?: SelectSubset<T, ServerSnapshotCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ServerSnapshot.
+     * @param {ServerSnapshotDeleteArgs} args - Arguments to delete one ServerSnapshot.
+     * @example
+     * // Delete one ServerSnapshot
+     * const ServerSnapshot = await prisma.serverSnapshot.delete({
+     *   where: {
+     *     // ... filter to delete one ServerSnapshot
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ServerSnapshotDeleteArgs>(args: SelectSubset<T, ServerSnapshotDeleteArgs<ExtArgs>>): Prisma__ServerSnapshotClient<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ServerSnapshot.
+     * @param {ServerSnapshotUpdateArgs} args - Arguments to update one ServerSnapshot.
+     * @example
+     * // Update one ServerSnapshot
+     * const serverSnapshot = await prisma.serverSnapshot.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ServerSnapshotUpdateArgs>(args: SelectSubset<T, ServerSnapshotUpdateArgs<ExtArgs>>): Prisma__ServerSnapshotClient<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ServerSnapshots.
+     * @param {ServerSnapshotDeleteManyArgs} args - Arguments to filter ServerSnapshots to delete.
+     * @example
+     * // Delete a few ServerSnapshots
+     * const { count } = await prisma.serverSnapshot.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ServerSnapshotDeleteManyArgs>(args?: SelectSubset<T, ServerSnapshotDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ServerSnapshots.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerSnapshotUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ServerSnapshots
+     * const serverSnapshot = await prisma.serverSnapshot.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ServerSnapshotUpdateManyArgs>(args: SelectSubset<T, ServerSnapshotUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ServerSnapshot.
+     * @param {ServerSnapshotUpsertArgs} args - Arguments to update or create a ServerSnapshot.
+     * @example
+     * // Update or create a ServerSnapshot
+     * const serverSnapshot = await prisma.serverSnapshot.upsert({
+     *   create: {
+     *     // ... data to create a ServerSnapshot
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ServerSnapshot we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ServerSnapshotUpsertArgs>(args: SelectSubset<T, ServerSnapshotUpsertArgs<ExtArgs>>): Prisma__ServerSnapshotClient<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ServerSnapshots.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerSnapshotCountArgs} args - Arguments to filter ServerSnapshots to count.
+     * @example
+     * // Count the number of ServerSnapshots
+     * const count = await prisma.serverSnapshot.count({
+     *   where: {
+     *     // ... the filter for the ServerSnapshots we want to count
+     *   }
+     * })
+    **/
+    count<T extends ServerSnapshotCountArgs>(
+      args?: Subset<T, ServerSnapshotCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ServerSnapshotCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ServerSnapshot.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerSnapshotAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ServerSnapshotAggregateArgs>(args: Subset<T, ServerSnapshotAggregateArgs>): Prisma.PrismaPromise<GetServerSnapshotAggregateType<T>>
+
+    /**
+     * Group by ServerSnapshot.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerSnapshotGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ServerSnapshotGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ServerSnapshotGroupByArgs['orderBy'] }
+        : { orderBy?: ServerSnapshotGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ServerSnapshotGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetServerSnapshotGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ServerSnapshot model
+   */
+  readonly fields: ServerSnapshotFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ServerSnapshot.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ServerSnapshotClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    server<T extends ServerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServerDefaultArgs<ExtArgs>>): Prisma__ServerClient<$Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ServerSnapshot model
+   */ 
+  interface ServerSnapshotFieldRefs {
+    readonly id: FieldRef<"ServerSnapshot", 'String'>
+    readonly serverId: FieldRef<"ServerSnapshot", 'String'>
+    readonly userId: FieldRef<"ServerSnapshot", 'String'>
+    readonly name: FieldRef<"ServerSnapshot", 'String'>
+    readonly path: FieldRef<"ServerSnapshot", 'String'>
+    readonly gameVersion: FieldRef<"ServerSnapshot", 'String'>
+    readonly modCount: FieldRef<"ServerSnapshot", 'Int'>
+    readonly createdAt: FieldRef<"ServerSnapshot", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ServerSnapshot findUnique
+   */
+  export type ServerSnapshotFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerSnapshot to fetch.
+     */
+    where: ServerSnapshotWhereUniqueInput
+  }
+
+  /**
+   * ServerSnapshot findUniqueOrThrow
+   */
+  export type ServerSnapshotFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerSnapshot to fetch.
+     */
+    where: ServerSnapshotWhereUniqueInput
+  }
+
+  /**
+   * ServerSnapshot findFirst
+   */
+  export type ServerSnapshotFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerSnapshot to fetch.
+     */
+    where?: ServerSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerSnapshots to fetch.
+     */
+    orderBy?: ServerSnapshotOrderByWithRelationInput | ServerSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ServerSnapshots.
+     */
+    cursor?: ServerSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ServerSnapshots.
+     */
+    distinct?: ServerSnapshotScalarFieldEnum | ServerSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * ServerSnapshot findFirstOrThrow
+   */
+  export type ServerSnapshotFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerSnapshot to fetch.
+     */
+    where?: ServerSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerSnapshots to fetch.
+     */
+    orderBy?: ServerSnapshotOrderByWithRelationInput | ServerSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ServerSnapshots.
+     */
+    cursor?: ServerSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerSnapshots.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ServerSnapshots.
+     */
+    distinct?: ServerSnapshotScalarFieldEnum | ServerSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * ServerSnapshot findMany
+   */
+  export type ServerSnapshotFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerSnapshots to fetch.
+     */
+    where?: ServerSnapshotWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerSnapshots to fetch.
+     */
+    orderBy?: ServerSnapshotOrderByWithRelationInput | ServerSnapshotOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ServerSnapshots.
+     */
+    cursor?: ServerSnapshotWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerSnapshots from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerSnapshots.
+     */
+    skip?: number
+    distinct?: ServerSnapshotScalarFieldEnum | ServerSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * ServerSnapshot create
+   */
+  export type ServerSnapshotCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ServerSnapshot.
+     */
+    data: XOR<ServerSnapshotCreateInput, ServerSnapshotUncheckedCreateInput>
+  }
+
+  /**
+   * ServerSnapshot createMany
+   */
+  export type ServerSnapshotCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ServerSnapshots.
+     */
+    data: ServerSnapshotCreateManyInput | ServerSnapshotCreateManyInput[]
+  }
+
+  /**
+   * ServerSnapshot createManyAndReturn
+   */
+  export type ServerSnapshotCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ServerSnapshots.
+     */
+    data: ServerSnapshotCreateManyInput | ServerSnapshotCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ServerSnapshot update
+   */
+  export type ServerSnapshotUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ServerSnapshot.
+     */
+    data: XOR<ServerSnapshotUpdateInput, ServerSnapshotUncheckedUpdateInput>
+    /**
+     * Choose, which ServerSnapshot to update.
+     */
+    where: ServerSnapshotWhereUniqueInput
+  }
+
+  /**
+   * ServerSnapshot updateMany
+   */
+  export type ServerSnapshotUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ServerSnapshots.
+     */
+    data: XOR<ServerSnapshotUpdateManyMutationInput, ServerSnapshotUncheckedUpdateManyInput>
+    /**
+     * Filter which ServerSnapshots to update
+     */
+    where?: ServerSnapshotWhereInput
+  }
+
+  /**
+   * ServerSnapshot upsert
+   */
+  export type ServerSnapshotUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ServerSnapshot to update in case it exists.
+     */
+    where: ServerSnapshotWhereUniqueInput
+    /**
+     * In case the ServerSnapshot found by the `where` argument doesn't exist, create a new ServerSnapshot with this data.
+     */
+    create: XOR<ServerSnapshotCreateInput, ServerSnapshotUncheckedCreateInput>
+    /**
+     * In case the ServerSnapshot was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ServerSnapshotUpdateInput, ServerSnapshotUncheckedUpdateInput>
+  }
+
+  /**
+   * ServerSnapshot delete
+   */
+  export type ServerSnapshotDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+    /**
+     * Filter which ServerSnapshot to delete.
+     */
+    where: ServerSnapshotWhereUniqueInput
+  }
+
+  /**
+   * ServerSnapshot deleteMany
+   */
+  export type ServerSnapshotDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ServerSnapshots to delete
+     */
+    where?: ServerSnapshotWhereInput
+  }
+
+  /**
+   * ServerSnapshot without action
+   */
+  export type ServerSnapshotDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerSnapshot
+     */
+    select?: ServerSnapshotSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerSnapshotInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -10050,6 +12268,35 @@ export namespace Prisma {
   };
 
   export type GameDefinitionScalarFieldEnum = (typeof GameDefinitionScalarFieldEnum)[keyof typeof GameDefinitionScalarFieldEnum]
+
+
+  export const ModInstallationScalarFieldEnum: {
+    id: 'id',
+    serverId: 'serverId',
+    provider: 'provider',
+    packageId: 'packageId',
+    version: 'version',
+    name: 'name',
+    dependencies: 'dependencies',
+    installedAt: 'installedAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ModInstallationScalarFieldEnum = (typeof ModInstallationScalarFieldEnum)[keyof typeof ModInstallationScalarFieldEnum]
+
+
+  export const ServerSnapshotScalarFieldEnum: {
+    id: 'id',
+    serverId: 'serverId',
+    userId: 'userId',
+    name: 'name',
+    path: 'path',
+    gameVersion: 'gameVersion',
+    modCount: 'modCount',
+    createdAt: 'createdAt'
+  };
+
+  export type ServerSnapshotScalarFieldEnum = (typeof ServerSnapshotScalarFieldEnum)[keyof typeof ServerSnapshotScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -10289,6 +12536,8 @@ export namespace Prisma {
     definition?: XOR<GameDefinitionNullableRelationFilter, GameDefinitionWhereInput> | null
     backups?: BackupListRelationFilter
     collaborators?: CollaboratorListRelationFilter
+    mods?: ModInstallationListRelationFilter
+    snapshots?: ServerSnapshotListRelationFilter
   }
 
   export type ServerOrderByWithRelationInput = {
@@ -10319,6 +12568,8 @@ export namespace Prisma {
     definition?: GameDefinitionOrderByWithRelationInput
     backups?: BackupOrderByRelationAggregateInput
     collaborators?: CollaboratorOrderByRelationAggregateInput
+    mods?: ModInstallationOrderByRelationAggregateInput
+    snapshots?: ServerSnapshotOrderByRelationAggregateInput
   }
 
   export type ServerWhereUniqueInput = Prisma.AtLeast<{
@@ -10352,6 +12603,8 @@ export namespace Prisma {
     definition?: XOR<GameDefinitionNullableRelationFilter, GameDefinitionWhereInput> | null
     backups?: BackupListRelationFilter
     collaborators?: CollaboratorListRelationFilter
+    mods?: ModInstallationListRelationFilter
+    snapshots?: ServerSnapshotListRelationFilter
   }, "id">
 
   export type ServerOrderByWithAggregationInput = {
@@ -10778,6 +13031,154 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"GameDefinition"> | Date | string
   }
 
+  export type ModInstallationWhereInput = {
+    AND?: ModInstallationWhereInput | ModInstallationWhereInput[]
+    OR?: ModInstallationWhereInput[]
+    NOT?: ModInstallationWhereInput | ModInstallationWhereInput[]
+    id?: StringFilter<"ModInstallation"> | string
+    serverId?: StringFilter<"ModInstallation"> | string
+    provider?: StringFilter<"ModInstallation"> | string
+    packageId?: StringFilter<"ModInstallation"> | string
+    version?: StringFilter<"ModInstallation"> | string
+    name?: StringFilter<"ModInstallation"> | string
+    dependencies?: StringNullableFilter<"ModInstallation"> | string | null
+    installedAt?: DateTimeFilter<"ModInstallation"> | Date | string
+    updatedAt?: DateTimeFilter<"ModInstallation"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }
+
+  export type ModInstallationOrderByWithRelationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    provider?: SortOrder
+    packageId?: SortOrder
+    version?: SortOrder
+    name?: SortOrder
+    dependencies?: SortOrderInput | SortOrder
+    installedAt?: SortOrder
+    updatedAt?: SortOrder
+    server?: ServerOrderByWithRelationInput
+  }
+
+  export type ModInstallationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    serverId_provider_packageId?: ModInstallationServerIdProviderPackageIdCompoundUniqueInput
+    AND?: ModInstallationWhereInput | ModInstallationWhereInput[]
+    OR?: ModInstallationWhereInput[]
+    NOT?: ModInstallationWhereInput | ModInstallationWhereInput[]
+    serverId?: StringFilter<"ModInstallation"> | string
+    provider?: StringFilter<"ModInstallation"> | string
+    packageId?: StringFilter<"ModInstallation"> | string
+    version?: StringFilter<"ModInstallation"> | string
+    name?: StringFilter<"ModInstallation"> | string
+    dependencies?: StringNullableFilter<"ModInstallation"> | string | null
+    installedAt?: DateTimeFilter<"ModInstallation"> | Date | string
+    updatedAt?: DateTimeFilter<"ModInstallation"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }, "id" | "serverId_provider_packageId">
+
+  export type ModInstallationOrderByWithAggregationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    provider?: SortOrder
+    packageId?: SortOrder
+    version?: SortOrder
+    name?: SortOrder
+    dependencies?: SortOrderInput | SortOrder
+    installedAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ModInstallationCountOrderByAggregateInput
+    _max?: ModInstallationMaxOrderByAggregateInput
+    _min?: ModInstallationMinOrderByAggregateInput
+  }
+
+  export type ModInstallationScalarWhereWithAggregatesInput = {
+    AND?: ModInstallationScalarWhereWithAggregatesInput | ModInstallationScalarWhereWithAggregatesInput[]
+    OR?: ModInstallationScalarWhereWithAggregatesInput[]
+    NOT?: ModInstallationScalarWhereWithAggregatesInput | ModInstallationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ModInstallation"> | string
+    serverId?: StringWithAggregatesFilter<"ModInstallation"> | string
+    provider?: StringWithAggregatesFilter<"ModInstallation"> | string
+    packageId?: StringWithAggregatesFilter<"ModInstallation"> | string
+    version?: StringWithAggregatesFilter<"ModInstallation"> | string
+    name?: StringWithAggregatesFilter<"ModInstallation"> | string
+    dependencies?: StringNullableWithAggregatesFilter<"ModInstallation"> | string | null
+    installedAt?: DateTimeWithAggregatesFilter<"ModInstallation"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ModInstallation"> | Date | string
+  }
+
+  export type ServerSnapshotWhereInput = {
+    AND?: ServerSnapshotWhereInput | ServerSnapshotWhereInput[]
+    OR?: ServerSnapshotWhereInput[]
+    NOT?: ServerSnapshotWhereInput | ServerSnapshotWhereInput[]
+    id?: StringFilter<"ServerSnapshot"> | string
+    serverId?: StringFilter<"ServerSnapshot"> | string
+    userId?: StringFilter<"ServerSnapshot"> | string
+    name?: StringFilter<"ServerSnapshot"> | string
+    path?: StringFilter<"ServerSnapshot"> | string
+    gameVersion?: StringNullableFilter<"ServerSnapshot"> | string | null
+    modCount?: IntFilter<"ServerSnapshot"> | number
+    createdAt?: DateTimeFilter<"ServerSnapshot"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }
+
+  export type ServerSnapshotOrderByWithRelationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    userId?: SortOrder
+    name?: SortOrder
+    path?: SortOrder
+    gameVersion?: SortOrderInput | SortOrder
+    modCount?: SortOrder
+    createdAt?: SortOrder
+    server?: ServerOrderByWithRelationInput
+  }
+
+  export type ServerSnapshotWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ServerSnapshotWhereInput | ServerSnapshotWhereInput[]
+    OR?: ServerSnapshotWhereInput[]
+    NOT?: ServerSnapshotWhereInput | ServerSnapshotWhereInput[]
+    serverId?: StringFilter<"ServerSnapshot"> | string
+    userId?: StringFilter<"ServerSnapshot"> | string
+    name?: StringFilter<"ServerSnapshot"> | string
+    path?: StringFilter<"ServerSnapshot"> | string
+    gameVersion?: StringNullableFilter<"ServerSnapshot"> | string | null
+    modCount?: IntFilter<"ServerSnapshot"> | number
+    createdAt?: DateTimeFilter<"ServerSnapshot"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }, "id">
+
+  export type ServerSnapshotOrderByWithAggregationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    userId?: SortOrder
+    name?: SortOrder
+    path?: SortOrder
+    gameVersion?: SortOrderInput | SortOrder
+    modCount?: SortOrder
+    createdAt?: SortOrder
+    _count?: ServerSnapshotCountOrderByAggregateInput
+    _avg?: ServerSnapshotAvgOrderByAggregateInput
+    _max?: ServerSnapshotMaxOrderByAggregateInput
+    _min?: ServerSnapshotMinOrderByAggregateInput
+    _sum?: ServerSnapshotSumOrderByAggregateInput
+  }
+
+  export type ServerSnapshotScalarWhereWithAggregatesInput = {
+    AND?: ServerSnapshotScalarWhereWithAggregatesInput | ServerSnapshotScalarWhereWithAggregatesInput[]
+    OR?: ServerSnapshotScalarWhereWithAggregatesInput[]
+    NOT?: ServerSnapshotScalarWhereWithAggregatesInput | ServerSnapshotScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ServerSnapshot"> | string
+    serverId?: StringWithAggregatesFilter<"ServerSnapshot"> | string
+    userId?: StringWithAggregatesFilter<"ServerSnapshot"> | string
+    name?: StringWithAggregatesFilter<"ServerSnapshot"> | string
+    path?: StringWithAggregatesFilter<"ServerSnapshot"> | string
+    gameVersion?: StringNullableWithAggregatesFilter<"ServerSnapshot"> | string | null
+    modCount?: IntWithAggregatesFilter<"ServerSnapshot"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"ServerSnapshot"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -10967,6 +13368,8 @@ export namespace Prisma {
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateInput = {
@@ -10995,6 +13398,8 @@ export namespace Prisma {
     lastSnapshotAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerUpdateInput = {
@@ -11023,6 +13428,8 @@ export namespace Prisma {
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateInput = {
@@ -11051,6 +13458,8 @@ export namespace Prisma {
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateManyInput = {
@@ -11512,6 +13921,165 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ModInstallationCreateInput = {
+    id?: string
+    provider: string
+    packageId: string
+    version: string
+    name: string
+    dependencies?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+    server: ServerCreateNestedOneWithoutModsInput
+  }
+
+  export type ModInstallationUncheckedCreateInput = {
+    id?: string
+    serverId: string
+    provider: string
+    packageId: string
+    version: string
+    name: string
+    dependencies?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ModInstallationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    packageId?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    server?: ServerUpdateOneRequiredWithoutModsNestedInput
+  }
+
+  export type ModInstallationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    packageId?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModInstallationCreateManyInput = {
+    id?: string
+    serverId: string
+    provider: string
+    packageId: string
+    version: string
+    name: string
+    dependencies?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ModInstallationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    packageId?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModInstallationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    packageId?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerSnapshotCreateInput = {
+    id?: string
+    userId: string
+    name: string
+    path: string
+    gameVersion?: string | null
+    modCount: number
+    createdAt?: Date | string
+    server: ServerCreateNestedOneWithoutSnapshotsInput
+  }
+
+  export type ServerSnapshotUncheckedCreateInput = {
+    id?: string
+    serverId: string
+    userId: string
+    name: string
+    path: string
+    gameVersion?: string | null
+    modCount: number
+    createdAt?: Date | string
+  }
+
+  export type ServerSnapshotUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    gameVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    modCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    server?: ServerUpdateOneRequiredWithoutSnapshotsNestedInput
+  }
+
+  export type ServerSnapshotUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    gameVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    modCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerSnapshotCreateManyInput = {
+    id?: string
+    serverId: string
+    userId: string
+    name: string
+    path: string
+    gameVersion?: string | null
+    modCount: number
+    createdAt?: Date | string
+  }
+
+  export type ServerSnapshotUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    gameVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    modCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerSnapshotUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    gameVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    modCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -11786,12 +14354,32 @@ export namespace Prisma {
     none?: BackupWhereInput
   }
 
+  export type ModInstallationListRelationFilter = {
+    every?: ModInstallationWhereInput
+    some?: ModInstallationWhereInput
+    none?: ModInstallationWhereInput
+  }
+
+  export type ServerSnapshotListRelationFilter = {
+    every?: ServerSnapshotWhereInput
+    some?: ServerSnapshotWhereInput
+    none?: ServerSnapshotWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
   }
 
   export type BackupOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ModInstallationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ServerSnapshotOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -12173,6 +14761,89 @@ export namespace Prisma {
     requiredDiskGB?: SortOrder
   }
 
+  export type ModInstallationServerIdProviderPackageIdCompoundUniqueInput = {
+    serverId: string
+    provider: string
+    packageId: string
+  }
+
+  export type ModInstallationCountOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    provider?: SortOrder
+    packageId?: SortOrder
+    version?: SortOrder
+    name?: SortOrder
+    dependencies?: SortOrder
+    installedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ModInstallationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    provider?: SortOrder
+    packageId?: SortOrder
+    version?: SortOrder
+    name?: SortOrder
+    dependencies?: SortOrder
+    installedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ModInstallationMinOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    provider?: SortOrder
+    packageId?: SortOrder
+    version?: SortOrder
+    name?: SortOrder
+    dependencies?: SortOrder
+    installedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ServerSnapshotCountOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    userId?: SortOrder
+    name?: SortOrder
+    path?: SortOrder
+    gameVersion?: SortOrder
+    modCount?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ServerSnapshotAvgOrderByAggregateInput = {
+    modCount?: SortOrder
+  }
+
+  export type ServerSnapshotMaxOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    userId?: SortOrder
+    name?: SortOrder
+    path?: SortOrder
+    gameVersion?: SortOrder
+    modCount?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ServerSnapshotMinOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    userId?: SortOrder
+    name?: SortOrder
+    path?: SortOrder
+    gameVersion?: SortOrder
+    modCount?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ServerSnapshotSumOrderByAggregateInput = {
+    modCount?: SortOrder
+  }
+
   export type GameDefinitionCreateNestedManyWithoutOwnerInput = {
     create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
@@ -12471,6 +15142,20 @@ export namespace Prisma {
     connect?: CollaboratorWhereUniqueInput | CollaboratorWhereUniqueInput[]
   }
 
+  export type ModInstallationCreateNestedManyWithoutServerInput = {
+    create?: XOR<ModInstallationCreateWithoutServerInput, ModInstallationUncheckedCreateWithoutServerInput> | ModInstallationCreateWithoutServerInput[] | ModInstallationUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ModInstallationCreateOrConnectWithoutServerInput | ModInstallationCreateOrConnectWithoutServerInput[]
+    createMany?: ModInstallationCreateManyServerInputEnvelope
+    connect?: ModInstallationWhereUniqueInput | ModInstallationWhereUniqueInput[]
+  }
+
+  export type ServerSnapshotCreateNestedManyWithoutServerInput = {
+    create?: XOR<ServerSnapshotCreateWithoutServerInput, ServerSnapshotUncheckedCreateWithoutServerInput> | ServerSnapshotCreateWithoutServerInput[] | ServerSnapshotUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ServerSnapshotCreateOrConnectWithoutServerInput | ServerSnapshotCreateOrConnectWithoutServerInput[]
+    createMany?: ServerSnapshotCreateManyServerInputEnvelope
+    connect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+  }
+
   export type BackupUncheckedCreateNestedManyWithoutServerInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -12483,6 +15168,20 @@ export namespace Prisma {
     connectOrCreate?: CollaboratorCreateOrConnectWithoutServerInput | CollaboratorCreateOrConnectWithoutServerInput[]
     createMany?: CollaboratorCreateManyServerInputEnvelope
     connect?: CollaboratorWhereUniqueInput | CollaboratorWhereUniqueInput[]
+  }
+
+  export type ModInstallationUncheckedCreateNestedManyWithoutServerInput = {
+    create?: XOR<ModInstallationCreateWithoutServerInput, ModInstallationUncheckedCreateWithoutServerInput> | ModInstallationCreateWithoutServerInput[] | ModInstallationUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ModInstallationCreateOrConnectWithoutServerInput | ModInstallationCreateOrConnectWithoutServerInput[]
+    createMany?: ModInstallationCreateManyServerInputEnvelope
+    connect?: ModInstallationWhereUniqueInput | ModInstallationWhereUniqueInput[]
+  }
+
+  export type ServerSnapshotUncheckedCreateNestedManyWithoutServerInput = {
+    create?: XOR<ServerSnapshotCreateWithoutServerInput, ServerSnapshotUncheckedCreateWithoutServerInput> | ServerSnapshotCreateWithoutServerInput[] | ServerSnapshotUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ServerSnapshotCreateOrConnectWithoutServerInput | ServerSnapshotCreateOrConnectWithoutServerInput[]
+    createMany?: ServerSnapshotCreateManyServerInputEnvelope
+    connect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -12559,6 +15258,34 @@ export namespace Prisma {
     deleteMany?: CollaboratorScalarWhereInput | CollaboratorScalarWhereInput[]
   }
 
+  export type ModInstallationUpdateManyWithoutServerNestedInput = {
+    create?: XOR<ModInstallationCreateWithoutServerInput, ModInstallationUncheckedCreateWithoutServerInput> | ModInstallationCreateWithoutServerInput[] | ModInstallationUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ModInstallationCreateOrConnectWithoutServerInput | ModInstallationCreateOrConnectWithoutServerInput[]
+    upsert?: ModInstallationUpsertWithWhereUniqueWithoutServerInput | ModInstallationUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: ModInstallationCreateManyServerInputEnvelope
+    set?: ModInstallationWhereUniqueInput | ModInstallationWhereUniqueInput[]
+    disconnect?: ModInstallationWhereUniqueInput | ModInstallationWhereUniqueInput[]
+    delete?: ModInstallationWhereUniqueInput | ModInstallationWhereUniqueInput[]
+    connect?: ModInstallationWhereUniqueInput | ModInstallationWhereUniqueInput[]
+    update?: ModInstallationUpdateWithWhereUniqueWithoutServerInput | ModInstallationUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: ModInstallationUpdateManyWithWhereWithoutServerInput | ModInstallationUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: ModInstallationScalarWhereInput | ModInstallationScalarWhereInput[]
+  }
+
+  export type ServerSnapshotUpdateManyWithoutServerNestedInput = {
+    create?: XOR<ServerSnapshotCreateWithoutServerInput, ServerSnapshotUncheckedCreateWithoutServerInput> | ServerSnapshotCreateWithoutServerInput[] | ServerSnapshotUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ServerSnapshotCreateOrConnectWithoutServerInput | ServerSnapshotCreateOrConnectWithoutServerInput[]
+    upsert?: ServerSnapshotUpsertWithWhereUniqueWithoutServerInput | ServerSnapshotUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: ServerSnapshotCreateManyServerInputEnvelope
+    set?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+    disconnect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+    delete?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+    connect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+    update?: ServerSnapshotUpdateWithWhereUniqueWithoutServerInput | ServerSnapshotUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: ServerSnapshotUpdateManyWithWhereWithoutServerInput | ServerSnapshotUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: ServerSnapshotScalarWhereInput | ServerSnapshotScalarWhereInput[]
+  }
+
   export type BackupUncheckedUpdateManyWithoutServerNestedInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -12585,6 +15312,34 @@ export namespace Prisma {
     update?: CollaboratorUpdateWithWhereUniqueWithoutServerInput | CollaboratorUpdateWithWhereUniqueWithoutServerInput[]
     updateMany?: CollaboratorUpdateManyWithWhereWithoutServerInput | CollaboratorUpdateManyWithWhereWithoutServerInput[]
     deleteMany?: CollaboratorScalarWhereInput | CollaboratorScalarWhereInput[]
+  }
+
+  export type ModInstallationUncheckedUpdateManyWithoutServerNestedInput = {
+    create?: XOR<ModInstallationCreateWithoutServerInput, ModInstallationUncheckedCreateWithoutServerInput> | ModInstallationCreateWithoutServerInput[] | ModInstallationUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ModInstallationCreateOrConnectWithoutServerInput | ModInstallationCreateOrConnectWithoutServerInput[]
+    upsert?: ModInstallationUpsertWithWhereUniqueWithoutServerInput | ModInstallationUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: ModInstallationCreateManyServerInputEnvelope
+    set?: ModInstallationWhereUniqueInput | ModInstallationWhereUniqueInput[]
+    disconnect?: ModInstallationWhereUniqueInput | ModInstallationWhereUniqueInput[]
+    delete?: ModInstallationWhereUniqueInput | ModInstallationWhereUniqueInput[]
+    connect?: ModInstallationWhereUniqueInput | ModInstallationWhereUniqueInput[]
+    update?: ModInstallationUpdateWithWhereUniqueWithoutServerInput | ModInstallationUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: ModInstallationUpdateManyWithWhereWithoutServerInput | ModInstallationUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: ModInstallationScalarWhereInput | ModInstallationScalarWhereInput[]
+  }
+
+  export type ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput = {
+    create?: XOR<ServerSnapshotCreateWithoutServerInput, ServerSnapshotUncheckedCreateWithoutServerInput> | ServerSnapshotCreateWithoutServerInput[] | ServerSnapshotUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ServerSnapshotCreateOrConnectWithoutServerInput | ServerSnapshotCreateOrConnectWithoutServerInput[]
+    upsert?: ServerSnapshotUpsertWithWhereUniqueWithoutServerInput | ServerSnapshotUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: ServerSnapshotCreateManyServerInputEnvelope
+    set?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+    disconnect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+    delete?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+    connect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+    update?: ServerSnapshotUpdateWithWhereUniqueWithoutServerInput | ServerSnapshotUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: ServerSnapshotUpdateManyWithWhereWithoutServerInput | ServerSnapshotUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: ServerSnapshotScalarWhereInput | ServerSnapshotScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutArchivesInput = {
@@ -12713,6 +15468,34 @@ export namespace Prisma {
     update?: ServerUpdateWithWhereUniqueWithoutDefinitionInput | ServerUpdateWithWhereUniqueWithoutDefinitionInput[]
     updateMany?: ServerUpdateManyWithWhereWithoutDefinitionInput | ServerUpdateManyWithWhereWithoutDefinitionInput[]
     deleteMany?: ServerScalarWhereInput | ServerScalarWhereInput[]
+  }
+
+  export type ServerCreateNestedOneWithoutModsInput = {
+    create?: XOR<ServerCreateWithoutModsInput, ServerUncheckedCreateWithoutModsInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutModsInput
+    connect?: ServerWhereUniqueInput
+  }
+
+  export type ServerUpdateOneRequiredWithoutModsNestedInput = {
+    create?: XOR<ServerCreateWithoutModsInput, ServerUncheckedCreateWithoutModsInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutModsInput
+    upsert?: ServerUpsertWithoutModsInput
+    connect?: ServerWhereUniqueInput
+    update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutModsInput, ServerUpdateWithoutModsInput>, ServerUncheckedUpdateWithoutModsInput>
+  }
+
+  export type ServerCreateNestedOneWithoutSnapshotsInput = {
+    create?: XOR<ServerCreateWithoutSnapshotsInput, ServerUncheckedCreateWithoutSnapshotsInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutSnapshotsInput
+    connect?: ServerWhereUniqueInput
+  }
+
+  export type ServerUpdateOneRequiredWithoutSnapshotsNestedInput = {
+    create?: XOR<ServerCreateWithoutSnapshotsInput, ServerUncheckedCreateWithoutSnapshotsInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutSnapshotsInput
+    upsert?: ServerUpsertWithoutSnapshotsInput
+    connect?: ServerWhereUniqueInput
+    update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutSnapshotsInput, ServerUpdateWithoutSnapshotsInput>, ServerUncheckedUpdateWithoutSnapshotsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -13023,6 +15806,8 @@ export namespace Prisma {
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutUserInput = {
@@ -13050,6 +15835,8 @@ export namespace Prisma {
     lastSnapshotAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutUserInput = {
@@ -13531,6 +16318,66 @@ export namespace Prisma {
     data: CollaboratorCreateManyServerInput | CollaboratorCreateManyServerInput[]
   }
 
+  export type ModInstallationCreateWithoutServerInput = {
+    id?: string
+    provider: string
+    packageId: string
+    version: string
+    name: string
+    dependencies?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ModInstallationUncheckedCreateWithoutServerInput = {
+    id?: string
+    provider: string
+    packageId: string
+    version: string
+    name: string
+    dependencies?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ModInstallationCreateOrConnectWithoutServerInput = {
+    where: ModInstallationWhereUniqueInput
+    create: XOR<ModInstallationCreateWithoutServerInput, ModInstallationUncheckedCreateWithoutServerInput>
+  }
+
+  export type ModInstallationCreateManyServerInputEnvelope = {
+    data: ModInstallationCreateManyServerInput | ModInstallationCreateManyServerInput[]
+  }
+
+  export type ServerSnapshotCreateWithoutServerInput = {
+    id?: string
+    userId: string
+    name: string
+    path: string
+    gameVersion?: string | null
+    modCount: number
+    createdAt?: Date | string
+  }
+
+  export type ServerSnapshotUncheckedCreateWithoutServerInput = {
+    id?: string
+    userId: string
+    name: string
+    path: string
+    gameVersion?: string | null
+    modCount: number
+    createdAt?: Date | string
+  }
+
+  export type ServerSnapshotCreateOrConnectWithoutServerInput = {
+    where: ServerSnapshotWhereUniqueInput
+    create: XOR<ServerSnapshotCreateWithoutServerInput, ServerSnapshotUncheckedCreateWithoutServerInput>
+  }
+
+  export type ServerSnapshotCreateManyServerInputEnvelope = {
+    data: ServerSnapshotCreateManyServerInput | ServerSnapshotCreateManyServerInput[]
+  }
+
   export type UserUpsertWithoutServersInput = {
     update: XOR<UserUpdateWithoutServersInput, UserUncheckedUpdateWithoutServersInput>
     create: XOR<UserCreateWithoutServersInput, UserUncheckedCreateWithoutServersInput>
@@ -13662,6 +16509,67 @@ export namespace Prisma {
   export type CollaboratorUpdateManyWithWhereWithoutServerInput = {
     where: CollaboratorScalarWhereInput
     data: XOR<CollaboratorUpdateManyMutationInput, CollaboratorUncheckedUpdateManyWithoutServerInput>
+  }
+
+  export type ModInstallationUpsertWithWhereUniqueWithoutServerInput = {
+    where: ModInstallationWhereUniqueInput
+    update: XOR<ModInstallationUpdateWithoutServerInput, ModInstallationUncheckedUpdateWithoutServerInput>
+    create: XOR<ModInstallationCreateWithoutServerInput, ModInstallationUncheckedCreateWithoutServerInput>
+  }
+
+  export type ModInstallationUpdateWithWhereUniqueWithoutServerInput = {
+    where: ModInstallationWhereUniqueInput
+    data: XOR<ModInstallationUpdateWithoutServerInput, ModInstallationUncheckedUpdateWithoutServerInput>
+  }
+
+  export type ModInstallationUpdateManyWithWhereWithoutServerInput = {
+    where: ModInstallationScalarWhereInput
+    data: XOR<ModInstallationUpdateManyMutationInput, ModInstallationUncheckedUpdateManyWithoutServerInput>
+  }
+
+  export type ModInstallationScalarWhereInput = {
+    AND?: ModInstallationScalarWhereInput | ModInstallationScalarWhereInput[]
+    OR?: ModInstallationScalarWhereInput[]
+    NOT?: ModInstallationScalarWhereInput | ModInstallationScalarWhereInput[]
+    id?: StringFilter<"ModInstallation"> | string
+    serverId?: StringFilter<"ModInstallation"> | string
+    provider?: StringFilter<"ModInstallation"> | string
+    packageId?: StringFilter<"ModInstallation"> | string
+    version?: StringFilter<"ModInstallation"> | string
+    name?: StringFilter<"ModInstallation"> | string
+    dependencies?: StringNullableFilter<"ModInstallation"> | string | null
+    installedAt?: DateTimeFilter<"ModInstallation"> | Date | string
+    updatedAt?: DateTimeFilter<"ModInstallation"> | Date | string
+  }
+
+  export type ServerSnapshotUpsertWithWhereUniqueWithoutServerInput = {
+    where: ServerSnapshotWhereUniqueInput
+    update: XOR<ServerSnapshotUpdateWithoutServerInput, ServerSnapshotUncheckedUpdateWithoutServerInput>
+    create: XOR<ServerSnapshotCreateWithoutServerInput, ServerSnapshotUncheckedCreateWithoutServerInput>
+  }
+
+  export type ServerSnapshotUpdateWithWhereUniqueWithoutServerInput = {
+    where: ServerSnapshotWhereUniqueInput
+    data: XOR<ServerSnapshotUpdateWithoutServerInput, ServerSnapshotUncheckedUpdateWithoutServerInput>
+  }
+
+  export type ServerSnapshotUpdateManyWithWhereWithoutServerInput = {
+    where: ServerSnapshotScalarWhereInput
+    data: XOR<ServerSnapshotUpdateManyMutationInput, ServerSnapshotUncheckedUpdateManyWithoutServerInput>
+  }
+
+  export type ServerSnapshotScalarWhereInput = {
+    AND?: ServerSnapshotScalarWhereInput | ServerSnapshotScalarWhereInput[]
+    OR?: ServerSnapshotScalarWhereInput[]
+    NOT?: ServerSnapshotScalarWhereInput | ServerSnapshotScalarWhereInput[]
+    id?: StringFilter<"ServerSnapshot"> | string
+    serverId?: StringFilter<"ServerSnapshot"> | string
+    userId?: StringFilter<"ServerSnapshot"> | string
+    name?: StringFilter<"ServerSnapshot"> | string
+    path?: StringFilter<"ServerSnapshot"> | string
+    gameVersion?: StringNullableFilter<"ServerSnapshot"> | string | null
+    modCount?: IntFilter<"ServerSnapshot"> | number
+    createdAt?: DateTimeFilter<"ServerSnapshot"> | Date | string
   }
 
   export type UserCreateWithoutArchivesInput = {
@@ -13841,6 +16749,8 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutBackupsInput = {
@@ -13868,6 +16778,8 @@ export namespace Prisma {
     snapshotInterval?: number
     lastSnapshotAt?: Date | string | null
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutBackupsInput = {
@@ -13911,6 +16823,8 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutBackupsInput = {
@@ -13938,6 +16852,8 @@ export namespace Prisma {
     snapshotInterval?: IntFieldUpdateOperationsInput | number
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutCollaboratorsInput = {
@@ -13965,6 +16881,8 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutCollaboratorsInput = {
@@ -13992,6 +16910,8 @@ export namespace Prisma {
     snapshotInterval?: number
     lastSnapshotAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutCollaboratorsInput = {
@@ -14070,6 +16990,8 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutCollaboratorsInput = {
@@ -14097,6 +17019,8 @@ export namespace Prisma {
     snapshotInterval?: IntFieldUpdateOperationsInput | number
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type UserUpsertWithoutCollaboratorAccessInput = {
@@ -14200,6 +17124,8 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutDefinitionInput = {
@@ -14227,6 +17153,8 @@ export namespace Prisma {
     lastSnapshotAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutDefinitionInput = {
@@ -14293,6 +17221,270 @@ export namespace Prisma {
   export type ServerUpdateManyWithWhereWithoutDefinitionInput = {
     where: ServerScalarWhereInput
     data: XOR<ServerUpdateManyMutationInput, ServerUncheckedUpdateManyWithoutDefinitionInput>
+  }
+
+  export type ServerCreateWithoutModsInput = {
+    id?: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    user: UserCreateNestedOneWithoutServersInput
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
+    backups?: BackupCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerUncheckedCreateWithoutModsInput = {
+    id?: string
+    userId: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    definitionId?: string | null
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    backups?: BackupUncheckedCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerCreateOrConnectWithoutModsInput = {
+    where: ServerWhereUniqueInput
+    create: XOR<ServerCreateWithoutModsInput, ServerUncheckedCreateWithoutModsInput>
+  }
+
+  export type ServerUpsertWithoutModsInput = {
+    update: XOR<ServerUpdateWithoutModsInput, ServerUncheckedUpdateWithoutModsInput>
+    create: XOR<ServerCreateWithoutModsInput, ServerUncheckedCreateWithoutModsInput>
+    where?: ServerWhereInput
+  }
+
+  export type ServerUpdateToOneWithWhereWithoutModsInput = {
+    where?: ServerWhereInput
+    data: XOR<ServerUpdateWithoutModsInput, ServerUncheckedUpdateWithoutModsInput>
+  }
+
+  export type ServerUpdateWithoutModsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    user?: UserUpdateOneRequiredWithoutServersNestedInput
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
+    backups?: BackupUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerUncheckedUpdateWithoutModsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerCreateWithoutSnapshotsInput = {
+    id?: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    user: UserCreateNestedOneWithoutServersInput
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
+    backups?: BackupCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerUncheckedCreateWithoutSnapshotsInput = {
+    id?: string
+    userId: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    definitionId?: string | null
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    backups?: BackupUncheckedCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerCreateOrConnectWithoutSnapshotsInput = {
+    where: ServerWhereUniqueInput
+    create: XOR<ServerCreateWithoutSnapshotsInput, ServerUncheckedCreateWithoutSnapshotsInput>
+  }
+
+  export type ServerUpsertWithoutSnapshotsInput = {
+    update: XOR<ServerUpdateWithoutSnapshotsInput, ServerUncheckedUpdateWithoutSnapshotsInput>
+    create: XOR<ServerCreateWithoutSnapshotsInput, ServerUncheckedCreateWithoutSnapshotsInput>
+    where?: ServerWhereInput
+  }
+
+  export type ServerUpdateToOneWithWhereWithoutSnapshotsInput = {
+    where?: ServerWhereInput
+    data: XOR<ServerUpdateWithoutSnapshotsInput, ServerUncheckedUpdateWithoutSnapshotsInput>
+  }
+
+  export type ServerUpdateWithoutSnapshotsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    user?: UserUpdateOneRequiredWithoutServersNestedInput
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
+    backups?: BackupUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerUncheckedUpdateWithoutSnapshotsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type GameDefinitionCreateManyOwnerInput = {
@@ -14434,6 +17626,8 @@ export namespace Prisma {
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutUserInput = {
@@ -14461,6 +17655,8 @@ export namespace Prisma {
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateManyWithoutUserInput = {
@@ -14575,6 +17771,27 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type ModInstallationCreateManyServerInput = {
+    id?: string
+    provider: string
+    packageId: string
+    version: string
+    name: string
+    dependencies?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ServerSnapshotCreateManyServerInput = {
+    id?: string
+    userId: string
+    name: string
+    path: string
+    gameVersion?: string | null
+    modCount: number
+    createdAt?: Date | string
+  }
+
   export type BackupUpdateWithoutServerInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -14629,6 +17846,69 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ModInstallationUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    packageId?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModInstallationUncheckedUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    packageId?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ModInstallationUncheckedUpdateManyWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    packageId?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerSnapshotUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    gameVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    modCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerSnapshotUncheckedUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    gameVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    modCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerSnapshotUncheckedUpdateManyWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    path?: StringFieldUpdateOperationsInput | string
+    gameVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    modCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ServerCreateManyDefinitionInput = {
     id?: string
     userId: string
@@ -14679,6 +17959,8 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutDefinitionInput = {
@@ -14706,6 +17988,8 @@ export namespace Prisma {
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateManyWithoutDefinitionInput = {
@@ -14782,6 +18066,14 @@ export namespace Prisma {
      * @deprecated Use GameDefinitionDefaultArgs instead
      */
     export type GameDefinitionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = GameDefinitionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ModInstallationDefaultArgs instead
+     */
+    export type ModInstallationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ModInstallationDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ServerSnapshotDefaultArgs instead
+     */
+    export type ServerSnapshotArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ServerSnapshotDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

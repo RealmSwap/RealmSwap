@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
+import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
+import { testServerBoot } from "@/lib/runners/sandbox";
 import fs from "fs";
 import path from "path";
 import https from "https";
@@ -70,122 +72,168 @@ export async function POST(
 
     const game = server.game.toUpperCase();
 
-    if (game === "MINECRAFT") {
-      if (!downloadUrl) {
-        return NextResponse.json({ error: "Download URL is required for Minecraft mods." }, { status: 400 });
-      }
-      
-      const modsDir = path.join(dataRoot(), "local-servers", serverId, "mods");
-      if (!fs.existsSync(modsDir)) {
-        fs.mkdirSync(modsDir, { recursive: true });
-      }
+    // 1. Create a Snapshot before touching anything
+    const snapshotName = `Pre-install: ${modName || modId || workshopId}`;
+    const snapshot = await createSnapshot(serverId, user.id, snapshotName);
 
-      const filename = modId ? `${modId}.jar` : path.basename(downloadUrl) || "mod.jar";
-      const destPath = path.join(modsDir, filename);
-
-      await downloadFile(downloadUrl, destPath);
-
-    } else if (game === "VALHEIM") {
-      if (modType === "BEPINEX") {
-        const valheimDir = path.join(dataRoot(), "local-servers", serverId, "valheim-server");
-        const zipPath = path.join(dataRoot(), "local-servers", serverId, "bepinex.zip");
-        const defaultBepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
-
-        if (!fs.existsSync(valheimDir)) {
-          return NextResponse.json({ error: "Valheim server directory not found. Please start/install the server first." }, { status: 400 });
-        }
-
-        // Download BepInEx
-        await downloadFile(defaultBepInExUrl, zipPath);
-
-        // Extract using PowerShell
-        await new Promise<void>((resolve, reject) => {
-          const extractCmd = `powershell -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${valheimDir}' -Force"`;
-          exec(extractCmd, (err) => {
-            try { fs.unlinkSync(zipPath); } catch (_) {}
-            if (err) {
-              reject(new Error(`Failed to extract BepInEx: ${err.message}`));
-            } else {
-              resolve();
-            }
-          });
-        });
-      } else {
-        // Valheim plugin installation (.dll files inside BepInEx/plugins)
+    try {
+      // 2. Perform Installation
+      if (game === "MINECRAFT") {
         if (!downloadUrl) {
-          return NextResponse.json({ error: "Download URL is required for Valheim plugins." }, { status: 400 });
+          throw new Error("Download URL is required for Minecraft mods.");
         }
-        const pluginsDir = path.join(dataRoot(), "local-servers", serverId, "valheim-server", "BepInEx", "plugins");
-        if (!fs.existsSync(pluginsDir)) {
-          fs.mkdirSync(pluginsDir, { recursive: true });
+        
+        const modsDir = path.join(dataRoot(), "local-servers", serverId, "mods");
+        if (!fs.existsSync(modsDir)) {
+          fs.mkdirSync(modsDir, { recursive: true });
         }
-        const filename = modId ? `${modId}.dll` : path.basename(downloadUrl) || "plugin.dll";
-        await downloadFile(downloadUrl, path.join(pluginsDir, filename));
+
+        const filename = modId ? `${modId}.jar` : path.basename(downloadUrl) || "mod.jar";
+        const destPath = path.join(modsDir, filename);
+
+        await downloadFile(downloadUrl, destPath);
+
+      } else if (game === "VALHEIM") {
+        if (modType === "BEPINEX") {
+          const valheimDir = path.join(dataRoot(), "local-servers", serverId, "valheim-server");
+          const zipPath = path.join(dataRoot(), "local-servers", serverId, "bepinex.zip");
+          const defaultBepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
+
+          if (!fs.existsSync(valheimDir)) {
+            throw new Error("Valheim server directory not found. Please start/install the server first.");
+          }
+
+          // Download BepInEx
+          await downloadFile(defaultBepInExUrl, zipPath);
+
+          // Extract using PowerShell
+          await new Promise<void>((resolve, reject) => {
+            const extractCmd = `powershell -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${valheimDir}' -Force"`;
+            exec(extractCmd, (err) => {
+              try { fs.unlinkSync(zipPath); } catch (_) {}
+              if (err) {
+                reject(new Error(`Failed to extract BepInEx: ${err.message}`));
+              } else {
+                resolve();
+              }
+            });
+          });
+        } else {
+          // Valheim plugin installation (.dll files inside BepInEx/plugins)
+          if (!downloadUrl) {
+            throw new Error("Download URL is required for Valheim plugins.");
+          }
+          const pluginsDir = path.join(dataRoot(), "local-servers", serverId, "valheim-server", "BepInEx", "plugins");
+          if (!fs.existsSync(pluginsDir)) {
+            fs.mkdirSync(pluginsDir, { recursive: true });
+          }
+          const filename = modId ? `${modId}.dll` : path.basename(downloadUrl) || "plugin.dll";
+          await downloadFile(downloadUrl, path.join(pluginsDir, filename));
+        }
+
+      } else if (game === "ZOMBOID") {
+        if (!workshopId || !modId) {
+          throw new Error("Both Workshop ID and Mod ID are required for Project Zomboid mods.");
+        }
+
+        const zomboidDir = path.join(dataRoot(), "local-servers", serverId, "zomboid-server");
+        const serverConfigDir = path.join(zomboidDir, "zomboid-data", "Server");
+        if (!fs.existsSync(serverConfigDir)) {
+          fs.mkdirSync(serverConfigDir, { recursive: true });
+        }
+        
+        const iniPath = path.join(serverConfigDir, "servertest.ini");
+        let iniContent = "";
+        if (fs.existsSync(iniPath)) {
+          iniContent = fs.readFileSync(iniPath, "utf-8");
+        }
+
+        // 1. Append to WorkshopItems=
+        const workshopRegex = /^WorkshopItems=(.*)$/m;
+        const workshopMatch = iniContent.match(workshopRegex);
+        if (workshopMatch) {
+          const currentItems = workshopMatch[1].trim();
+          if (currentItems.includes(workshopId)) {
+            // Already installed
+          } else {
+            const newItems = currentItems ? `${currentItems};${workshopId}` : workshopId;
+            iniContent = iniContent.replace(workshopRegex, `WorkshopItems=${newItems}`);
+          }
+        } else {
+          iniContent += `\nWorkshopItems=${workshopId}\n`;
+        }
+
+        // 2. Append to Mods=
+        const modsRegex = /^Mods=(.*)$/m;
+        const modsMatch = iniContent.match(modsRegex);
+        if (modsMatch) {
+          const currentMods = modsMatch[1].trim();
+          if (currentMods.includes(modId)) {
+            // Already installed
+          } else {
+            const newMods = currentMods ? `${currentMods};${modId}` : modId;
+            iniContent = iniContent.replace(modsRegex, `Mods=${newMods}`);
+          }
+        } else {
+          iniContent += `\nMods=${modId}\n`;
+        }
+
+        fs.writeFileSync(iniPath, iniContent);
+
+      } else {
+        throw new Error(`Mods are not supported for game: ${server.game}`);
       }
 
-    } else if (game === "ZOMBOID") {
-      if (!workshopId || !modId) {
-        return NextResponse.json({ error: "Both Workshop ID and Mod ID are required for Project Zomboid mods." }, { status: 400 });
-      }
+      // 3. Sandbox Test!
+      console.log(`[Sandbox] Running boot test for ${serverId}`);
+      await testServerBoot(serverId, game);
+      console.log(`[Sandbox] Boot test passed for ${serverId}`);
 
-      const zomboidDir = path.join(dataRoot(), "local-servers", serverId, "zomboid-server");
-      const serverConfigDir = path.join(zomboidDir, "zomboid-data", "Server");
-      if (!fs.existsSync(serverConfigDir)) {
-        fs.mkdirSync(serverConfigDir, { recursive: true });
-      }
+      // 4. Log to ModInstallation
+      await prisma.modInstallation.upsert({
+        where: {
+          serverId_provider_packageId: {
+            serverId,
+            provider: game === "ZOMBOID" ? "workshop" : "thunderstore",
+            packageId: modId || workshopId || "unknown"
+          }
+        },
+        update: {
+          version: "latest",
+        },
+        create: {
+          serverId,
+          provider: game === "ZOMBOID" ? "workshop" : "thunderstore",
+          packageId: modId || workshopId || "unknown",
+          version: "latest",
+          name: modName || modId || workshopId || "Unknown Mod"
+        }
+      });
+
+      // 5. Log action
+      await prisma.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "RESTORE_SERVER", // we probably need an INSTALL_MOD action instead
+          details: `Installed mod '${modName || modId || workshopId}' safely on server '${server.name}' (${server.game}).`,
+        },
+      });
+
+      return NextResponse.json({ success: true, message: "Mod installed successfully and passed sandbox testing!" });
+
+    } catch (installError: any) {
+      // 6. Automatic Rollback
+      console.error(`[Sandbox] Error detected. Rolling back ${serverId} to snapshot ${snapshot.id}`);
+      await restoreSnapshot(snapshot.id);
       
-      const iniPath = path.join(serverConfigDir, "servertest.ini");
-      let iniContent = "";
-      if (fs.existsSync(iniPath)) {
-        iniContent = fs.readFileSync(iniPath, "utf-8");
-      }
+      // Cleanup the failed snapshot record
+      await prisma.serverSnapshot.delete({ where: { id: snapshot.id } });
 
-      // 1. Append to WorkshopItems=
-      const workshopRegex = /^WorkshopItems=(.*)$/m;
-      const workshopMatch = iniContent.match(workshopRegex);
-      if (workshopMatch) {
-        const currentItems = workshopMatch[1].trim();
-        if (currentItems.includes(workshopId)) {
-          // Already installed
-        } else {
-          const newItems = currentItems ? `${currentItems};${workshopId}` : workshopId;
-          iniContent = iniContent.replace(workshopRegex, `WorkshopItems=${newItems}`);
-        }
-      } else {
-        iniContent += `\nWorkshopItems=${workshopId}\n`;
-      }
-
-      // 2. Append to Mods=
-      const modsRegex = /^Mods=(.*)$/m;
-      const modsMatch = iniContent.match(modsRegex);
-      if (modsMatch) {
-        const currentMods = modsMatch[1].trim();
-        if (currentMods.includes(modId)) {
-          // Already installed
-        } else {
-          const newMods = currentMods ? `${currentMods};${modId}` : modId;
-          iniContent = iniContent.replace(modsRegex, `Mods=${newMods}`);
-        }
-      } else {
-        iniContent += `\nMods=${modId}\n`;
-      }
-
-      fs.writeFileSync(iniPath, iniContent);
-
-    } else {
-      return NextResponse.json({ error: `Mods are not supported for game: ${server.game}` }, { status: 400 });
+      return NextResponse.json({ 
+        error: `Installation failed or crashed the server. Safe Rollback completed. Cause: ${installError.message}` 
+      }, { status: 500 });
     }
 
-    // Log action
-    await prisma.activityLog.create({
-      data: {
-        userId: user.id,
-        action: "RESTORE_SERVER",
-        details: `Installed mod '${modName || modId || workshopId}' on server '${server.name}' (${server.game}).`,
-      },
-    });
-
-    return NextResponse.json({ success: true, message: "Mod installed successfully!" });
   } catch (error: any) {
     console.error("POST /api/servers/[id]/mods/install error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
