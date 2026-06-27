@@ -141,6 +141,7 @@ export class DockerRunner implements ServerRunner {
     const readyPattern = spec.launch.readyPattern ? new RegExp(spec.launch.readyPattern, "i") : null;
     let ready = false;
     const markReady = (reason: string) => {
+      if (intentionalStops.has(serverId)) return;
       if (ready) return;
       ready = true;
       clearProgress(serverId);
