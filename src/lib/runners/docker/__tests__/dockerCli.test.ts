@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  shellQuote, parseMemToMB, parseDockerStats, buildStartEntrypoint, buildRunArgs,
+  shellQuote, parseMemToMB, parseDockerStats, buildStartEntrypoint, buildRunArgs, isDockerAvailable,
 } from "../dockerCli";
 
 describe("shellQuote", () => {
@@ -82,5 +82,16 @@ describe("buildRunArgs", () => {
     });
     expect(args).toEqual(["run", "-d", "--name", "c", "-v", "/d:/data", "img", "bash", "-lc", "echo hi"]);
     expect(args).not.toContain("-e");
+  });
+});
+
+describe("isDockerAvailable", () => {
+  it("is true when `docker version` exits 0", async () => {
+    const fake = async () => ({ code: 0, stdout: "27.0.3", stderr: "" });
+    expect(await isDockerAvailable(fake)).toBe(true);
+  });
+  it("is false when the docker command errors", async () => {
+    const fake = async () => ({ code: 1, stdout: "", stderr: "Cannot connect to the Docker daemon" });
+    expect(await isDockerAvailable(fake)).toBe(false);
   });
 });

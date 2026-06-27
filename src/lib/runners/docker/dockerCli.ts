@@ -1,3 +1,4 @@
+import { execFile, spawn, type ChildProcessWithoutNullStreams } from "child_process";
 import type { PortPlan } from "../../definitions/plan";
 import type { ProcessStats } from "../types";
 
@@ -69,4 +70,41 @@ export function buildRunArgs(o: DockerRunOptions): string[] {
   }
   args.push(o.image, "bash", "-lc", o.entrypoint);
   return args;
+}
+
+export type DockerResult = { code: number | null; stdout: string; stderr: string };
+
+/** Environment passed to every docker invocation. Passing process.env through
+ *  means DOCKER_HOST / DOCKER_CONTEXT / DOCKER_TLS_VERIFY / DOCKER_CERT_PATH are
+ *  honored — this is the single seam for targeting a remote daemon later. */
+function dockerEnv(): NodeJS.ProcessEnv {
+  return process.env;
+}
+
+/** Run `docker <args>` and resolve (never reject) with exit code and output. */
+export function docker(args: string[], opts?: { timeoutMs?: number }): Promise<DockerResult> {
+  return new Promise((resolve) => {
+    execFile(
+      "docker",
+      args,
+      { env: dockerEnv(), timeout: opts?.timeoutMs ?? 0, windowsHide: true, maxBuffer: 10 * 1024 * 1024 },
+      (err, stdout, stderr) => {
+        const code = err && typeof (err as any).code === "number" ? (err as any).code : err ? 1 : 0;
+        resolve({ code, stdout: stdout?.toString() ?? "", stderr: stderr?.toString() ?? "" });
+      },
+    );
+  });
+}
+
+/** Spawn a long-lived `docker <args>` process (e.g. `logs -f`, `wait`). */
+export function dockerSpawn(args: string[]): ChildProcessWithoutNullStreams {
+  return spawn("docker", args, { env: dockerEnv(), windowsHide: true });
+}
+
+/** True when the Docker daemon is reachable. `run` is injectable for tests. */
+export async function isDockerAvailable(
+  run: (args: string[]) => Promise<DockerResult> = (a) => docker(a, { timeoutMs: 5000 }),
+): Promise<boolean> {
+  const { code } = await run(["version", "--format", "{{.Server.Version}}"]);
+  return code === 0;
 }
