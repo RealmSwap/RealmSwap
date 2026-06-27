@@ -17,29 +17,7 @@ import type { GameDefinitionSpec } from "../definitions/types";
 import { setProgress, clearProgress, parseSteamProgress, computePercent, isMissingConfigError } from "../downloadProgress";
 import { dataRoot } from "../appPaths";
 import { isCrashExit, evaluateCrash, CRASH_MAX_RETRIES, type CrashCounter } from "../crashPolicy";
-// Local file-based log persistence. Output is appended to
-// <dataRoot>/local-servers/<serverId>/server.log and streamed to the UI by the
-// log-tailing SSE route (see logTailer.ts and api/servers/[id]/logs/stream).
-// Persisting to disk means console history survives app restarts.
-function serverLogFile(serverId: string): string {
-  return path.join(dataRoot(), "local-servers", serverId, "server.log");
-}
-function appendLog(serverId: string, message: string) {
-  try {
-    const file = serverLogFile(serverId);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.appendFileSync(file, message.replace(/\r?\n$/, "") + "\n");
-  } catch {
-    // best-effort logging; never let a log write crash the runner
-  }
-}
-function clearLogs(serverId: string) {
-  try {
-    fs.rmSync(serverLogFile(serverId), { force: true });
-  } catch {
-    // ignore
-  }
-}
+import { appendLog, clearLogs, serverLogFile, getServerLogTail } from "../serverLogs";
 
 // Global process map to persist running processes across Next.js dev server hot-reloads
 const globalForRunner = globalThis as unknown as {
@@ -857,11 +835,7 @@ async function stopLocalServer(serverId: string): Promise<void> {
 
 // Reads tail logs of local server
 export function getLocalServerLogs(serverId: string): string {
-  const file = serverLogFile(serverId);
-  if (!fs.existsSync(file)) {
-    return "No logs available. Start the server to generate logs.";
-  }
-  return fs.readFileSync(file, "utf-8").split("\n").slice(-150).join("\n");
+  return getServerLogTail(serverId);
 }
 
 // Update a game server via SteamCMD (re-runs app_update)
