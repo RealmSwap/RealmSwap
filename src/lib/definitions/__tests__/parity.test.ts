@@ -94,3 +94,70 @@ describe("container: Valheim", () => {
     ]);
   });
 });
+
+describe("container: Project Zomboid", () => {
+  it("produces a Linux container plan with cachedir arg", () => {
+    const c = ctxFor("ZOMBOID", { name: "Zomboid Server", password: null, ram: 8 });
+    const p = planContainer(def("ZOMBOID").spec, c)!;
+    expect(p).not.toBeNull();
+    expect(p.image).toBe("cm2network/steamcmd");
+    expect(p.installSubDir).toBe("zomboid-server");
+    expect(p.executable).toBe("start-server.sh");
+    expect(p.args).toContain("-cachedir=/data/zomboid-server/zomboid-data");
+    expect(p.args).toContain("-servername");
+    expect(p.args).toContain("servertest");
+  });
+});
+
+describe("container: Terraria", () => {
+  it("produces a Linux container plan with world name args", () => {
+    const c = ctxFor("TERRARIA", { name: "My World!", password: null, ram: 2 });
+    const p = planContainer(def("TERRARIA").spec, c)!;
+    expect(p).not.toBeNull();
+    expect(p.image).toBe("cm2network/steamcmd");
+    expect(p.installSubDir).toBe("terraria-server");
+    expect(p.executable).toBe("TerrariaServer.bin.x86_64");
+    expect(p.args).toContain("-port");
+    expect(p.args).toContain("7777");
+    expect(p.args).toContain("-worldname");
+    expect(p.args).toContain("My_World_");
+  });
+});
+
+describe("container: Palworld", () => {
+  it("produces a Linux container plan with password in args", () => {
+    const c = ctxFor("PALWORLD", { name: "Pals", password: "pw", ram: 8 });
+    const p = planContainer(def("PALWORLD").spec, c)!;
+    expect(p).not.toBeNull();
+    expect(p.image).toBe("cm2network/steamcmd");
+    expect(p.installSubDir).toBe("palworld-server");
+    expect(p.executable).toBe("PalServer.sh");
+    expect(p.args).toContain("?port=8211?players=16?AdminPassword=pw");
+  });
+});
+
+describe("container: Rust", () => {
+  it("produces a Linux container plan with LD_LIBRARY_PATH env", () => {
+    const c = ctxFor("RUST", { name: "Rust Box", password: null, ram: 10 });
+    const p = planContainer(def("RUST").spec, c)!;
+    expect(p).not.toBeNull();
+    expect(p.image).toBe("cm2network/steamcmd");
+    expect(p.installSubDir).toBe("rust-server");
+    expect(p.executable).toBe("RustDedicated");
+    expect(p.env).toEqual({ LD_LIBRARY_PATH: "." });
+    expect(p.args).toContain("+server.hostname");
+    expect(p.args).toContain("Rust Box");
+  });
+});
+
+describe("container: ARK", () => {
+  it("produces a Linux container plan with correct executable path", () => {
+    const c = ctxFor("ARK", { name: "The Island", password: "pw", ram: 12 });
+    const p = planContainer(def("ARK").spec, c)!;
+    expect(p).not.toBeNull();
+    expect(p.image).toBe("cm2network/steamcmd");
+    expect(p.installSubDir).toBe("ark-server");
+    expect(p.executable).toBe("ShooterGame/Binaries/Linux/ShooterGameServer");
+    expect(p.args).toContain("TheIsland?SessionName=The Island?ServerPassword=pw?Port=7777?QueryPort=27015?MaxPlayers=20");
+  });
+});
