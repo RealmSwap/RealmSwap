@@ -43,13 +43,17 @@ describe("parseDockerStats", () => {
 });
 
 describe("buildStartEntrypoint", () => {
-  it("runs steamcmd app_update then execs the server binary with quoted args", () => {
+  it("resolves steamcmd portably, warms+updates the app with retry, then execs the binary", () => {
     const ep = buildStartEntrypoint("896660", "valheim-server", "valheim_server.x86_64", ["-name", "Viking Realm", "-port", "2456"]);
-    expect(ep).toBe(
-      'steamcmd_bin="${STEAMCMDDIR:+$STEAMCMDDIR/steamcmd.sh}"; "${steamcmd_bin:-steamcmd}"' +
-      " +force_install_dir /data/valheim-server +login anonymous +app_update 896660 validate +quit" +
-      " && cd /data/valheim-server && exec ./valheim_server.x86_64 -name 'Viking Realm' -port 2456"
-    );
+    // Portable launcher resolution (cm2network ships steamcmd.sh under $STEAMCMDDIR; PATH fallback).
+    expect(ep).toContain('steamcmd_bin="${STEAMCMDDIR:+$STEAMCMDDIR/steamcmd.sh}"; steamcmd_bin="${steamcmd_bin:-steamcmd}"');
+    // Warm the cold metadata cache and validate the install.
+    expect(ep).toContain("+force_install_dir /data/valheim-server +login anonymous +app_info_update 1 +app_update 896660 validate +quit");
+    // Retry the cold-cache "Missing configuration" failure up to 3 attempts.
+    expect(ep).toContain("until ");
+    expect(ep).toContain('[ "$n" -ge 3 ]');
+    // Then run the server binary from the install dir with quoted args.
+    expect(ep).toContain("cd /data/valheim-server && exec ./valheim_server.x86_64 -name 'Viking Realm' -port 2456");
   });
   it("omits the trailing space when args is empty", () => {
     const ep = buildStartEntrypoint("480", "cs2", "cs2.sh", []);

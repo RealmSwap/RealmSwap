@@ -46,12 +46,18 @@ export function buildStartEntrypoint(
   // Resolve the SteamCMD launcher portably: SteamCMD base images (e.g.
   // cm2network/steamcmd) ship it at $STEAMCMDDIR/steamcmd.sh and do NOT put a
   // `steamcmd` command on PATH; fall back to a PATH `steamcmd` for images that do.
-  const steamcmd = `steamcmd_bin="\${STEAMCMDDIR:+\$STEAMCMDDIR/steamcmd.sh}"; "\${steamcmd_bin:-steamcmd}"`;
-  return (
-    `${steamcmd} +force_install_dir /data/${installSubDir} +login anonymous` +
-    ` +app_update ${appId} validate +quit` +
-    ` && cd /data/${installSubDir} && ${execLine}`
-  );
+  const resolve = `steamcmd_bin="\${STEAMCMDDIR:+\$STEAMCMDDIR/steamcmd.sh}"; steamcmd_bin="\${steamcmd_bin:-steamcmd}"`;
+  // A fresh container has a cold app-metadata cache, so the first app_update can fail
+  // with "Missing configuration" (exit 8). +app_info_update 1 warms the cache, and we
+  // retry up to 3 times — mirroring LocalWindowsRunner's SteamCMD handling.
+  const update =
+    `"\$steamcmd_bin" +force_install_dir /data/${installSubDir} +login anonymous` +
+    ` +app_info_update 1 +app_update ${appId} validate +quit`;
+  const installWithRetry =
+    `n=0; until ${update}; do n=\$((n+1)); ` +
+    `[ "\$n" -ge 3 ] && echo "SteamCMD failed after \$n attempts" && exit 1; ` +
+    `echo "SteamCMD retry \$n (cold cache)"; sleep 5; done`;
+  return `${resolve}; ${installWithRetry} && cd /data/${installSubDir} && ${execLine}`;
 }
 
 export interface DockerRunOptions {
