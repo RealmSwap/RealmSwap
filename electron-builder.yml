@@ -29,8 +29,17 @@ extraResources:
     to: migrations
   - from: build/tray.png
     to: tray.png
-  - from: src/generated/client/query-engine-windows.exe
-    to: standalone/src/generated/client/query-engine-windows.exe
+  # The startup migration runner (electron/migrate.js) require()s the generated
+  # Prisma client from this path in the packaged app. The Next standalone trace
+  # only copies the engine + schema here (the client JS is webpack-bundled into
+  # the server chunks), so bundle the FULL generated client dir — index.js,
+  # runtime/, package.json, and the engine — or startup migrations crash with
+  # "Cannot find module .../src/generated/client/index.js". The filter forces
+  # every file to be copied (electron-builder otherwise prunes some).
+  - from: src/generated/client
+    to: standalone/src/generated/client
+    filter:
+      - "**/*"
 win:
   target:
     - nsis
