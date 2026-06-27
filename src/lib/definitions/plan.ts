@@ -69,3 +69,30 @@ export function planLaunch(spec: GameDefinitionSpec, ctx: DefinitionContext): La
 export function planPorts(spec: GameDefinitionSpec, ctx: DefinitionContext): PortPlan[] {
   return spec.ports.map((p) => ({ protocol: p.protocol, port: parseInt(renderTemplate(p.port, ctx), 10) }));
 }
+
+export const DEFAULT_STEAMCMD_IMAGE = "cm2network/steamcmd";
+
+export interface ContainerPlan {
+  image: string;
+  installSubDir: string;
+  executable: string;
+  args: string[];
+  env?: Record<string, string>;
+}
+
+export function planContainer(spec: GameDefinitionSpec, ctx: DefinitionContext): ContainerPlan | null {
+  const c = spec.container;
+  if (!c) return null;
+  const specInstallSubDir = "installSubDir" in spec.install ? spec.install.installSubDir ?? "" : "";
+  const installSubDir = c.installSubDir ?? specInstallSubDir;
+  const env = c.env
+    ? Object.fromEntries(Object.entries(c.env).map(([k, v]) => [k, renderTemplate(v, ctx)]))
+    : undefined;
+  return {
+    image: c.image ?? DEFAULT_STEAMCMD_IMAGE,
+    installSubDir,
+    executable: c.executable,
+    args: renderArgs(c.args ?? [], ctx),
+    env,
+  };
+}

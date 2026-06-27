@@ -44,7 +44,8 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
   const router = useRouter();
 
   const [name, setName] = useState("");
-  const runnerType = "LOCAL";
+  const [runtime, setRuntime] = useState<"LOCAL" | "DOCKER">("LOCAL");
+  const [dockerAvailable, setDockerAvailable] = useState(false);
   const [defs, setDefs] = useState<any[]>([]);
   const [selectedGame, setSelectedGame] = useState<any | null>(null);
   const [ram, setRam] = useState(4);
@@ -86,6 +87,15 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
         console.error("Failed to load definitions:", err);
         setError("Network error: Failed to connect to the server to load game definitions.");
       });
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/system/docker-status")
+      .then((r) => (r.ok ? r.json() : { available: false }))
+      .then((d) => { if (!cancelled) setDockerAvailable(!!d.available); })
+      .catch(() => { if (!cancelled) setDockerAvailable(false); });
+    return () => { cancelled = true; };
   }, []);
 
   const handleGameSelect = (game: any) => {
@@ -133,6 +143,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
           password: password || null,
           enableUpnp,
           paramValues,
+          runnerType: runtime,
         }),
       });
 
@@ -215,6 +226,14 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
       setIsImporting(false);
     }
   };
+
+  const selectedHasContainer = !!selectedGame?.spec?.container;
+  const dockerSelectable = dockerAvailable && selectedHasContainer;
+
+  // Reset to LOCAL when the selected game no longer supports Docker
+  useEffect(() => {
+    if (!dockerSelectable) setRuntime("LOCAL");
+  }, [dockerSelectable]);
 
   // Derive install notice text generically from definition fields
   const installNotice = selectedGame ? (() => {
@@ -573,8 +592,40 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
               </div>
             </div>
 
+            {/* Runtime Selector */}
+            <div className="mt-4">
+              <label className="block text-sm text-mutedText mb-2">Runtime</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setRuntime("LOCAL")}
+                  className={`px-3 py-2 rounded-lg border text-sm ${runtime === "LOCAL" ? "border-accent text-accent" : "border-white/10 text-mutedText"}`}
+                >
+                  Local PC
+                </button>
+                <button
+                  type="button"
+                  disabled={!dockerSelectable}
+                  onClick={() => dockerSelectable && setRuntime("DOCKER")}
+                  title={
+                    !dockerAvailable
+                      ? "Docker daemon not detected"
+                      : !selectedHasContainer
+                      ? "This game does not support containers yet"
+                      : "Run this server in a Docker container"
+                  }
+                  className={`px-3 py-2 rounded-lg border text-sm ${runtime === "DOCKER" ? "border-accent text-accent" : "border-white/10 text-mutedText"} ${!dockerSelectable ? "opacity-40 cursor-not-allowed" : ""}`}
+                >
+                  Docker
+                </button>
+              </div>
+              {runtime === "DOCKER" && (
+                <p className="text-xs text-mutedText mt-2">Runs in a Linux container via SteamCMD. Requires Docker Desktop running.</p>
+              )}
+            </div>
+
             {/* Local Runner Notices */}
-            {runnerType === "LOCAL" && selectedGame && installNotice && (
+            {runtime === "LOCAL" && selectedGame && installNotice && (
               <div className="p-4 rounded-xl bg-accentPurple/10 border border-accentPurple/20 text-xs text-slate-300 flex gap-3 animate-slide-down">
                 <Info className="w-5 h-5 text-accentPurple flex-shrink-0" />
                 <div className="space-y-1">

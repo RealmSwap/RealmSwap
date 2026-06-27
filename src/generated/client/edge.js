@@ -286,7 +286,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "C:\\Users\\Cody\\GameVault\\src\\generated\\client",
+      "value": "C:\\Users\\jimmy\\Documents\\GitHub\\GameVault\\.claude\\worktrees\\feature+docker-runner\\src\\generated\\client",
       "fromEnvVar": null
     },
     "config": {
@@ -300,12 +300,11 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "C:\\Users\\Cody\\GameVault\\prisma\\schema.prisma",
+    "sourceFilePath": "C:\\Users\\jimmy\\Documents\\GitHub\\GameVault\\.claude\\worktrees\\feature+docker-runner\\prisma\\schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null,
-    "schemaEnvPath": "../../../.env"
+    "rootEnvPath": null
   },
   "relativePath": "../../../prisma",
   "clientVersion": "5.22.0",
@@ -314,6 +313,7 @@ const config = {
     "db"
   ],
   "activeProvider": "sqlite",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {

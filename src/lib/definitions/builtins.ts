@@ -53,6 +53,12 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         stdoutPatterns: [{ regex: "registered with join code (\\w+)", updateField: "ipAddress", transform: "joinCode" }],
         readyPattern: "Game server connected",
       },
+      container: {
+        executable: "valheim_server.x86_64",
+        installSubDir: "valheim-server",
+        env: { LD_LIBRARY_PATH: "./linux64", SteamAppId: "892970" },
+        args: ["-nographics", "-batchmode", "-name", "{name}", "-port", "2456", "-world", "Dedicated", "-password", "{password}", "-public", "1", "-crossplay"],
+      },
       defaultPort: 2456, params: [], configFiles: [],
       ports: [{ protocol: "UDP", port: "2456" }, { protocol: "UDP", port: "2457" }, { protocol: "UDP", port: "2458" }],
     },
@@ -88,6 +94,11 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         args: ["/c", "StartServer64.bat", "-cachedir=./zomboid-data", "-servername", "servertest"],
         readyPattern: "LOG\\s*:\\s*General\\s*,\\s*Server started",
       },
+      container: {
+        executable: "start-server.sh",
+        installSubDir: "zomboid-server",
+        args: ["-cachedir=/data/zomboid-server/zomboid-data", "-servername", "servertest"],
+      },
       defaultPort: 16261, params: [],
       configFiles: [{ path: "zomboid-data/Server/servertest.ini", strategy: "zomboidIniMerge" }],
       editableConfigPath: "zomboid-server/zomboid-data/Server/servertest.ini",
@@ -110,6 +121,15 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           "-server", "-nosound", "-QueryPort=27015",
         ],
         readyPattern: "Full Startup:",
+      },
+      container: {
+        executable: "ShooterGame/Binaries/Linux/ShooterGameServer",
+        installSubDir: "ark-server",
+        args: [
+          { value: ["TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers=20"], includeWhen: "password" },
+          { value: ["TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers=20"], includeWhen: "passwordEmpty" },
+          "-server", "-nosound", "-QueryPort=27015",
+        ],
       },
       defaultPort: 7777,
       params: [],
@@ -135,6 +155,16 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         ],
         readyPattern: "Server started",
       },
+      container: {
+        executable: "TerrariaServer.bin.x86_64",
+        installSubDir: "terraria-server",
+        args: [
+          "-port", "7777", "-players", "8",
+          { value: ["-pass", "{password}"], includeWhen: "password" },
+          "-autocreate", "1", "-worldname", "{nameSanitized}",
+          "-world", "worlds/{nameSanitized}.wld",
+        ],
+      },
       defaultPort: 7777, params: [], configFiles: [],
       ports: [{ protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" }],
     },
@@ -148,6 +178,15 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       install: { appId: "2394010", installSubDir: "palworld-server", checkFile: "PalServer.exe", requiredDiskGB: 4.0 },
       launch: {
         executable: "PalServer.exe", cwdSubDir: "palworld-server",
+        args: [
+          { value: ["?port=8211?players=16?AdminPassword={password}"], includeWhen: "password" },
+          { value: ["?port=8211?players=16"], includeWhen: "passwordEmpty" },
+          "-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS",
+        ],
+      },
+      container: {
+        executable: "PalServer.sh",
+        installSubDir: "palworld-server",
         args: [
           { value: ["?port=8211?players=16?AdminPassword={password}"], includeWhen: "password" },
           { value: ["?port=8211?players=16"], includeWhen: "passwordEmpty" },
@@ -176,6 +215,16 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           "+server.hostname", "{name}", "+rcon.port", "28016", "+rcon.password", "{password}", "+rcon.web", "1",
         ],
         readyPattern: "Server startup complete",
+      },
+      container: {
+        executable: "RustDedicated",
+        installSubDir: "rust-server",
+        env: { LD_LIBRARY_PATH: "." },
+        args: [
+          "-batchmode", "+server.port", "28015", "+server.identity", "servertest",
+          "+server.seed", "12345", "+server.worldsize", "3000", "+server.maxplayers", "10",
+          "+server.hostname", "{name}", "+rcon.port", "28016", "+rcon.password", "{password}", "+rcon.web", "1",
+        ],
       },
       defaultPort: 28015, params: [],
       configFiles: [],

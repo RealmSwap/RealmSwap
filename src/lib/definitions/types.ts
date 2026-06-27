@@ -45,6 +45,14 @@ export interface LaunchSpec {
   readyPattern?: string;        // regex pattern to detect when the server has finished starting
 }
 
+export interface ContainerSpec {
+  image?: string;                 // default: DEFAULT_STEAMCMD_IMAGE
+  executable: string;             // Linux server binary, e.g. "valheim_server.x86_64"
+  args?: ArgSpec[];               // reuses ArgSpec (string | { value, includeWhen })
+  env?: Record<string, string>;   // extra env vars set inside the container
+  installSubDir?: string;         // defaults to the steamcmd install.installSubDir
+}
+
 export interface GameDefinitionSpec {
   install: SteamcmdInstall | DownloadInstall | ScriptInstall;
   launch: LaunchSpec;
@@ -57,6 +65,7 @@ export interface GameDefinitionSpec {
   passwordPolicy?: PasswordPolicy;
   queryType?: string;
   queryPort?: string;
+  container?: ContainerSpec;
 }
 
 export interface DefinitionContext {
