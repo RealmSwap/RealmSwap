@@ -23,13 +23,18 @@ This produces two distinct user-facing failures:
    themselves before the app works. (This is the manual step the maintainer hit.)
 2. **Wrong Java version installed** → the check *passes* (some `java` is on PATH), the server
    launches, then crashes with a cryptic `UnsupportedClassVersionError`. The Minecraft server
-   jar requires a specific Java *major* version (current vanilla → Java 21); an older system
-   Java (e.g. 8 or 17) silently fails this way.
+   jar requires a specific Java *major* version (current vanilla, Minecraft 26.2 → Java 25); an
+   older system Java (e.g. 8, 17, or 21) silently fails this way.
 
 Both contradict the app's simplicity goal: the user should never have to think about Java.
 
-The pinned Minecraft server-jar URL being stale was a related earlier symptom; that has already
-been corrected in `builtins.generated.json`, so dynamic URL resolution is **out of scope** here.
+The pinned Minecraft server-jar URL being "wrong" was the related earlier symptom. Investigation
+shows the runtime source (`builtins.ts`) already points at the current latest release
+(Minecraft 26.2), so the URL itself is fine — but that jar requires **Java 25**, and the old
+`requiresJava` check happily passed on any older system Java, producing the mismatch crash. So the
+URL and the Java problem are the same root cause: *the required Java version was never enforced or
+provided.* Dynamic URL resolution remains **out of scope**; matching and providing the right Java
+is the fix.
 
 ## Goal
 
@@ -60,14 +65,23 @@ Add an optional field to `GameDefinitionSpec` in
 
 ```ts
 requiresJava?: boolean;
-javaMajor?: number;   // major version the jar needs (e.g. 21). Meaningful only when requiresJava.
+javaMajor?: number;   // initial Java major version to provision (e.g. 25). Meaningful only when requiresJava.
 ```
 
-- The Minecraft built-in sets `requiresJava: true, javaMajor: 21` (its current pinned jar is a
-  modern version requiring Java 21).
-- The runner treats a missing `javaMajor` as **21** (`spec.javaMajor ?? 21`). This makes the
-  feature **backward compatible**: existing user databases already seeded with the old Minecraft
-  spec (no `javaMajor`) still auto-provision Java 21 — no re-seed required for them to benefit.
+`javaMajor` is the **initial guess**, not a hard requirement — the self-healing mechanism
+(section 3a) corrects it at runtime if the jar actually needs a newer Java.
+
+- The Minecraft built-in sets `requiresJava: true, javaMajor: 25`.
+- **Why 25:** the runtime source `builtins.ts` pins the Minecraft server jar to the *latest*
+  release. As of this writing that hash resolves (via Mojang version metadata) to Minecraft
+  **26.2**, whose declared `javaVersion.majorVersion` is **25**. (The dev-seed JSON's older hash
+  resolves to Minecraft 1.20.4 → Java 17 — see section 4.)
+- **Why 25 is a robust default specifically:** the JVM is backward compatible — a Java 25 runtime
+  runs any jar compiled for Java ≤ 25. So provisioning Java 25 works for the current latest jar
+  *and* every older Minecraft. The only case it cannot cover is a *future* jar requiring Java > 25,
+  which the self-healing path (section 3a) detects and fixes automatically.
+- The runner treats a missing `javaMajor` as **25** (`spec.javaMajor ?? 25`). This keeps existing
+  user DBs that were seeded before this field existed working with no re-seed required.
 
 `javaMajor` flows through unchanged via `parseSpec`/`stringifySpec` (plain JSON). It does not
 need to be added to `InstallPlan`/`LaunchPlan`; the runner already holds the full `spec` and
@@ -112,19 +126,25 @@ decided during implementation; the design requires only that the JRE download fo
 - `adoptiumUrl(major)` → the request URL.
 - `findArchiveJavaRoot(entries, exists)` → locate the extracted top-level dir / the dir containing
   `bin/java.exe` for flattening.
-- `parseJavaMajor(versionOutput)` → parse `java -version` stderr text to a major number (used by
-  the optional system-Java reuse check below).
+- `parseRequiredJavaMajor(text)` → parse a JVM `UnsupportedClassVersionError` message and return
+  the Java major the jar needs (see section 3a). Lives in this module since it concerns Java
+  versioning; consumed by the runner's self-heal path.
 
 ### 3. Runner integration (`LocalWindowsRunner.ts`)
 
 Replace the throw-block (currently lines ~495–499):
 
+A per-server "learned Java major" override map (globalThis-backed, like `localProcesses`) lets the
+self-heal path force a specific version on the next start:
+
 ```ts
+// globalForRunner gains: javaMajorOverrides: Map<string, number>
+const major = javaMajorOverrides.get(serverId) ?? spec.javaMajor ?? 25;
 let javaExe: string | undefined;
 if (requiresJava) {
-  setProgress(serverId, { phase: "java", percent: null, label: "Preparing Java runtime…" });
+  setProgress(serverId, { phase: "java", percent: null, label: `Preparing Java ${major}…` });
   try {
-    javaExe = await ensureJava(spec.javaMajor ?? 21, {
+    javaExe = await ensureJava(major, {
       dataRoot: dataRoot(),
       onLog: logWriter,
       onProgress: (percent, label) => setProgress(serverId, { phase: "java", percent, label }),
@@ -155,33 +175,89 @@ if (requiresJava && launch.executable === "java" && javaExe) {
 
 `executableOnPath` semantics for non-Java launchers (e.g. `cmd.exe` for Zomboid) are unchanged.
 The `"java"` progress phase is added alongside the existing `steam`/`download`/`extract`/`script`
-phases (a UI label of "Downloading Java 21 …%").
+phases (UI label "Downloading Java 25 …%"); the existing `DashboardView` progress UI renders the
+`label`/`percent` and is phase-agnostic, so **no UI change is required**.
 
-**Optional optimization (decide in plan):** before downloading, run the system `java -version`,
-parse its major with `parseJavaMajor`, and reuse it if it equals `major`. The maintainer chose a
-"version-aware" provisioner over "prefer system Java," so the default behavior is to use the
-bundled JRE for determinism; this optimization, if added, must still guarantee the major matches.
+### 3a. Self-healing on Java version mismatch
 
-### 4. Reconcile the drifted builtins sources
+If the provisioned Java is older than the jar needs (only possible for a *future* Minecraft jar
+requiring Java > the `javaMajor` guess), the JVM exits immediately and prints to stderr, e.g.:
 
-`prisma/seed.js` seeds the runtime DB from
-[`src/lib/definitions/builtins.generated.json`](../../../src/lib/definitions/builtins.generated.json),
-which is supposed to be a regenerated mirror of
-[`src/lib/definitions/builtins.ts`](../../../src/lib/definitions/builtins.ts) but has **drifted**:
-the JSON has a newer pinned Minecraft URL plus `queryType: "minecraft"` and a `readyPattern` that
-the `.ts` lacks. Naively regenerating from the current `.ts` would *regress* the live seed.
+```
+java.lang.UnsupportedClassVersionError: net/minecraft/bundler/Main has been compiled by a more
+recent version of the Java Runtime (class file version 69.0), this version of the Java Runtime
+only recognizes class file versions up to 65.0
+```
 
-Therefore, as part of this change:
-1. Bring `builtins.ts` up to match the live JSON for Minecraft (corrected `url`, add `queryType`,
-   add `readyPattern`).
-2. Add `requiresJava: true, javaMajor: 21` to the Minecraft spec in `builtins.ts`.
-3. Regenerate `builtins.generated.json` with the documented command:
-   `npx tsx -e "import {BUILTIN_DEFINITIONS} from './src/lib/definitions/builtins'; import fs from 'fs'; fs.writeFileSync('./src/lib/definitions/builtins.generated.json', JSON.stringify(BUILTIN_DEFINITIONS, null, 2));"`
-4. Confirm the regenerated JSON differs from the old one only in the intended fields (URL stays
-   as the corrected one, `queryType`/`readyPattern` preserved, `javaMajor` added).
+`parseRequiredJavaMajor(text)` (in `javaRuntime.ts`) extracts the **needed** class-file version
+("class file version 69.0") and converts it to a Java major: `classFileVersion - 44`
+(69 → 25, 65 → 21, 61 → 17). It returns `null` when no such line is present.
 
-Existing users whose DB is not re-seeded are still covered by the `spec.javaMajor ?? 21` default
-in the runner.
+The runner already captures all stderr into the per-server log file. In `handleProcessExit`,
+**before** the existing crash-counter logic, check for a version mismatch:
+
+```ts
+// Self-heal: the server may have failed only because the bundled Java was too old for the jar.
+const required = parseRequiredJavaMajor(getServerLogTail(serverId));
+if (required && javaMajorOverrides.get(serverId) !== required) {
+  javaMajorOverrides.set(serverId, required);      // learn it; next start downloads the right Java
+  appendLog(serverId, `[Java] This server needs Java ${required}. Downloading it and retrying…`);
+  await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING", pid: null } });
+  serverEventBus.emit("status_update", { serverId, status: "STARTING" });
+  startLocalServer(serverId, serverRec.game, serverRec.ramAllocation).catch((e) =>
+    appendLog(serverId, `[Java] Retry after version detection failed: ${e.message}`));
+  return;                                            // do NOT consume a crash-retry for this
+}
+```
+
+Key properties:
+- The `javaMajorOverrides.get(serverId) !== required` guard makes this fire **at most once per
+  distinct required version**, so a genuinely broken server cannot loop forever.
+- It runs before crash detection, so a version mismatch does not burn the crash-retry budget and
+  does not get mislabeled as a crash.
+- The learned override is sticky for the process lifetime of the app, so subsequent starts of that
+  server provision the correct Java directly with no failed launch.
+- Offline degradation: if the corrected Java cannot be downloaded (no network), `ensureJava`
+  rejects and the start fails with the clear "Failed to prepare the Java runtime…" message.
+
+### 4. Where the change actually lands (corrected seeding architecture)
+
+Investigation during planning revised the original assumption here. There are **two separate
+built-in sources**, and they have fully diverged:
+
+- **`src/lib/definitions/builtins.ts` (8 games) — the runtime source of truth.** The app seeds
+  built-ins at runtime via [`src/app/api/definitions/route.ts`](../../../src/app/api/definitions/route.ts)
+  → `ensureBuiltinsSeeded()` ([`ensureSeeded.ts`](../../../src/lib/definitions/ensureSeeded.ts))
+  → `upsertBuiltinDefinitions()` ([`seed.ts`](../../../src/lib/definitions/seed.ts)), which reads
+  `BUILTIN_DEFINITIONS` from `builtins.ts`. This is what populates a real user's `gameDefinition`
+  table. The test suite (`builtins.test.ts`, `parity.test.ts`) also pins `builtins.ts` (asserts
+  exactly the 8 games).
+- **`src/lib/definitions/builtins.generated.json` (10 games) — dev/demo seed only.** It is read
+  *only* by `prisma/seed.js`, the script that creates the demo user ("Cody Gamer") and demo
+  servers. It has drifted well ahead of `builtins.ts`: it adds two extra games (Satisfactory,
+  V Rising), `readyPattern` on most games, `preLaunchDirs`, a corrected Minecraft URL, and a
+  different motd. Nothing in the build pipeline regenerates it from `builtins.ts`
+  (`make-template-db.js` ships an *empty* migrated DB; runtime seeding uses `builtins.ts`).
+
+**Implications for this feature:**
+1. The runtime change is a single edit: add `javaMajor: 25` to the Minecraft spec in **`builtins.ts`**
+   (`requiresJava: true` is already present). That reaches real users via `ensureBuiltinsSeeded`.
+2. **Do NOT run the documented `npx tsx … regenerate` command.** Regenerating
+   `builtins.generated.json` from the current `builtins.ts` would delete Satisfactory and V Rising
+   and strip every `readyPattern`/`preLaunchDirs` from the dev seed — a regression. The regenerate
+   workflow noted in the old custom-server-definitions plan is obsolete.
+3. For mirror consistency only, hand-add `"javaMajor": 25` to the existing Minecraft entry in
+   `builtins.generated.json` (a one-line edit, no regeneration). This has no runtime impact (it is
+   dev-seed only) but keeps the demo seed aligned. Note: that dev-seed entry still pins Minecraft
+   1.20.4 (Java 17); 25 is harmless there because the JVM is backward compatible, and the self-heal
+   path would correct it anyway.
+4. Existing user DBs are re-upserted on the next definitions API call (`ensureBuiltinsSeeded` runs
+   `update` for existing slugs), so they pick up `javaMajor: 25`. Even if they didn't, the runner's
+   `spec.javaMajor ?? 25` default plus the self-heal path covers Minecraft regardless.
+
+The broader divergence between `builtins.ts` and `builtins.generated.json` (8 vs 10 games, missing
+`readyPattern`s) is a pre-existing latent issue and is **out of scope** for this feature; it is
+flagged for separate follow-up.
 
 ### 5. Error handling & disk space
 
@@ -198,23 +274,28 @@ and stays thin.
 - `javaRuntime` unit tests (deps injected, no real network/fs):
   - `adoptiumUrl(major)` produces the expected URL for a given major.
   - `findArchiveJavaRoot` locates the `bin/java.exe`-bearing directory for flattening.
-  - `parseJavaMajor` parses representative `java -version` outputs (8, 17, 21) to the right major.
-  - "already provisioned" short-circuit returns the cached path without downloading.
+  - `parseRequiredJavaMajor` maps representative `UnsupportedClassVersionError` messages to the
+    right Java major (class file 69 → 25, 65 → 21, 61 → 17) and returns `null` for unrelated text.
+  - `ensureJava` "already provisioned" short-circuit returns the cached path without downloading
+    (inject the download/extract/exists deps and assert no download is attempted).
 - Definition tests:
-  - Minecraft built-in has `requiresJava: true` and `javaMajor: 21`
-    (`builtins.test.ts` / `parity.test.ts`).
-  - `builtins.generated.json` is in sync with `builtins.ts` for the changed fields
-    (URL, `queryType`, `readyPattern`, `javaMajor`).
-  - Every built-in spec still validates (`validateSpec` returns `[]`).
+  - The Minecraft built-in in `builtins.ts` has `requiresJava: true` and `javaMajor: 25`
+    (extend `builtins.test.ts` / `parity.test.ts`).
+  - Every built-in spec still validates (`validateSpec` returns `[]`), including with the new
+    `javaMajor` field present.
+  - The 8-game assertion in `builtins.test.ts` is unchanged (we are NOT adding games here).
 
 ## Scope
 
 **In scope:** auto-provisioning a version-matched Windows x64 JRE for `requiresJava` definitions;
-launching with its absolute path; reconciling the builtins source drift.
+launching with its absolute path; self-healing the Java version on `UnsupportedClassVersionError`;
+adding `javaMajor` to the Minecraft built-in (and a one-line mirror edit to the dev-seed JSON).
 
 **Out of scope (YAGNI):**
-- Dynamic Minecraft version selection via the Mojang version manifest (the pinned URL is already
-  corrected).
+- Dynamic Minecraft version selection via the Mojang version manifest (the runtime jar already
+  tracks the latest release).
+- Fully reconciling `builtins.ts` ↔ `builtins.generated.json` (8 vs 10 games, missing
+  `readyPattern`s) — pre-existing drift, flagged for separate follow-up.
 - Modded servers (Forge/Fabric/Paper) — different jars/launch flows.
 - Non-Windows / non-x64 runtimes and the Linux container path (the app targets Windows x64;
   Minecraft has no container spec today).
