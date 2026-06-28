@@ -16,17 +16,22 @@ describe("resolveCommand", () => {
 });
 
 describe("resolveExecutablePath", () => {
-  const PATH = ["C:\\jdk\\bin", "C:\\sys"].join(path.delimiter);
+  // Build dirs with path.join and join PATH with path.delimiter so the test runs
+  // on both Windows (";", "\\") and the POSIX CI runner (":", "/"). Plain segment
+  // names avoid drive-letter colons, which would collide with the POSIX delimiter.
+  const binDir = path.join("opt", "jdk", "bin");
+  const sysDir = path.join("opt", "sys");
+  const PATH = [binDir, sysDir].join(path.delimiter);
   const PATHEXT = ".EXE;.CMD;.BAT";
   const existsIn = (paths: string[]) => (p: string) => paths.includes(p);
 
   it("appends PATHEXT and returns the full path of the first match", () => {
-    const target = path.join("C:\\jdk\\bin", "java.EXE");
+    const target = path.join(binDir, "java.EXE");
     expect(resolveExecutablePath("java", PATH, PATHEXT, existsIn([target]))).toBe(target);
   });
 
   it("does not append PATHEXT when the name already has an extension", () => {
-    const target = path.join("C:\\sys", "cmd.exe");
+    const target = path.join(sysDir, "cmd.exe");
     expect(resolveExecutablePath("cmd.exe", PATH, PATHEXT, existsIn([target]))).toBe(target);
   });
 
@@ -35,7 +40,7 @@ describe("resolveExecutablePath", () => {
   });
 
   it("returns an explicit path unchanged without scanning", () => {
-    const explicit = "C:\\jdk\\bin\\java.exe";
+    const explicit = path.join(binDir, "java.exe");
     expect(resolveExecutablePath(explicit, PATH, PATHEXT, () => false)).toBe(explicit);
   });
 });
