@@ -54,7 +54,7 @@ export async function GET(
 
       heartbeat = setInterval(() => send(SSE_HEARTBEAT), 15000);
 
-      if (server.runnerType === "LOCAL") {
+      if (server.runnerType === "LOCAL" || server.runnerType === "DOCKER") {
         (async () => {
           try {
             for await (const lines of streamServerLog(server.id, {

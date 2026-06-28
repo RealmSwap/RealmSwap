@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/scripts/sync-graphify-from-main.ps1",
+            "timeout": 60,
+            "statusMessage": "Syncing graphify-out/ from main repo"
+          }
+        ]
+      }
+    ]
+  }
+}

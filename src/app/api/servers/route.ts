@@ -7,6 +7,8 @@ import { parseSpec, stringifyParamValues } from "@/lib/definitions/serialize";
 import { validateParamValues } from "@/lib/definitions/validate";
 import { isPortAvailable, getFreeDiskSpaceGB, isSteamCmdInstalled } from "@/lib/preflight";
 import { dataRoot } from "@/lib/appPaths";
+import { resolveRunnerType } from "@/lib/runners/resolveRunnerType";
+import { isDockerAvailable } from "@/lib/runners/docker/dockerCli";
 
 // GET /api/servers
 // Returns active servers, archived servers, subscription details, and logs
@@ -74,7 +76,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, definitionId, ramAllocation, password, enableUpnp, paramValues } = await req.json();
+    const { name, definitionId, ramAllocation, password, enableUpnp, paramValues, runnerType: requestedRunner } = await req.json();
     if (!name || !definitionId || !ramAllocation) {
       return NextResponse.json({ error: "Name, definition, and RAM allocation are required" }, { status: 400 });
     }
@@ -130,7 +132,15 @@ export async function POST(req: NextRequest) {
     }
     // --- End Pre-flight Validations ---
 
-    const runnerType = "LOCAL";
+    const hasContainer = !!spec.container;
+    const dockerAvailable = requestedRunner === "DOCKER" ? await isDockerAvailable() : false;
+    const runnerType = resolveRunnerType(requestedRunner, { hasContainer, dockerAvailable });
+    if (requestedRunner === "DOCKER" && runnerType !== "DOCKER") {
+      return NextResponse.json(
+        { error: "Docker runtime is unavailable or unsupported for this game. Ensure Docker is running and the game supports containers." },
+        { status: 400 },
+      );
+    }
     const region = "LOCALHOST";
     const ipAddress = "127.0.0.1";
 
@@ -159,7 +169,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user.id,
         action: "CREATE_SERVER",
-        details: `Deployed new local ${def.slug} server '${name}' (${ramAllocation}GB RAM).`,
+        details: `Deployed new ${runnerType === "DOCKER" ? "containerized" : "local"} ${def.slug} server '${name}' (${ramAllocation}GB RAM).`,
       },
     });
 

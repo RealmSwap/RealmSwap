@@ -9,18 +9,19 @@ import {
   Plus,
   LogOut,
   Users,
-  FolderSync,
   History,
   Terminal,
   Settings,
-  Wrench,
   Clock,
   Search,
   Play,
   Pause,
   Send,
-  X
+  X,
+  FolderOpen,
 } from "lucide-react";
+import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
+import { useToast } from "@/components/ToastProvider";
 
 interface ConsoleViewProps {
   servers: any[];
@@ -29,6 +30,7 @@ interface ConsoleViewProps {
 
 export default function ConsoleView({ servers, user }: ConsoleViewProps) {
   const router = useRouter();
+  const { addToast } = useToast();
   const searchParams = useSearchParams();
   const initialServerId = searchParams.get("server");
   const [selectedServer, setSelectedServer] = useState<any | null>(
@@ -148,6 +150,20 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
     }
   };
 
+  const handleOpenServerFolder = async (serverId: string) => {
+    try {
+      const res = await fetch("/api/system/open-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serverId }),
+      });
+      const data = await res.json();
+      if (!data.ok) addToast("error", data.error || "Could not open server folder");
+    } catch {
+      addToast("error", "Could not open server folder");
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -193,30 +209,25 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
               <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider">Features</span>
             </div>
 
-            {[
-              { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
-              { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
-              { label: "Server Config", icon: Settings, href: "/dashboard/config" },
-              { label: "Server Console", icon: Terminal, href: "/dashboard/console", active: true },
-              { label: "Schedules", icon: Clock, href: "/dashboard/schedules" },
-              { label: "Team Members", icon: Users, href: "/dashboard/team" },
-              { label: "Audit Logs", icon: History, href: "/dashboard/logs" }
-            ].map((link, i) => (
-              <Link 
-                key={i} 
-                href={link.href} 
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
-                  link.active 
-                    ? "bg-accentPurple/10 text-white border border-accentPurple/20" 
-                    : "hover:bg-white/5 text-slate-400 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <link.icon className={`w-4 h-4 ${link.active ? "text-accentPurple" : "text-slate-500 group-hover:text-white transition-colors"}`} />
-                  <span>{link.label}</span>
-                </div>
-              </Link>
-            ))}
+            {DASHBOARD_NAV_LINKS.map((link, i) => {
+              const active = link.href === "/dashboard/console";
+              return (
+                <Link
+                  key={i}
+                  href={link.href}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
+                    active
+                      ? "bg-accentPurple/10 text-white border border-accentPurple/20"
+                      : "hover:bg-white/5 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <link.icon className={`w-4 h-4 ${active ? "text-accentPurple" : "text-slate-500 group-hover:text-white transition-colors"}`} />
+                    <span>{link.label}</span>
+                  </div>
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
@@ -303,6 +314,16 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
                   className="w-full pl-9 pr-3 py-2 rounded-lg bg-black/40 border border-white/10 focus:border-accentPurple/40 outline-none text-xs text-slate-200 placeholder:text-mutedText"
                 />
               </div>
+              {selectedServer?.runnerType === "LOCAL" && (
+                <button
+                  onClick={() => handleOpenServerFolder(selectedServer.id)}
+                  className="px-3.5 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center gap-1.5 transition-all"
+                  title="Open this server's files on disk"
+                >
+                  <FolderOpen className="w-3.5 h-3.5" />
+                  <span>Files</span>
+                </button>
+              )}
               <button
                 onClick={toggleConsolePause}
                 className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 hover:border-white/20 text-xs font-bold text-slate-300 transition-colors flex items-center gap-1.5"

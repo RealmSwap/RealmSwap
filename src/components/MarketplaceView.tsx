@@ -1,20 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  Download, 
-  Search, 
+import {
+  Download,
+  Search,
   ThumbsUp,
   ThumbsDown,
   Filter,
-  Settings, 
-  Wrench, 
+  Settings,
+  Wrench,
   Store,
   ChevronRight,
   HardDrive,
   LayoutDashboard,
   Plus,
-  FolderSync,
   Terminal,
   Clock,
   Users,
@@ -22,8 +21,9 @@ import {
   LogOut,
   ShieldAlert,
   ShieldCheck,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react";
+import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -213,18 +213,10 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
               <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider">Features</span>
             </div>
 
-            {[
-              { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
-              { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
-              { label: "Server Config", icon: Settings, href: "/dashboard/config" },
-              { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
-              { label: "Schedules", icon: Clock, href: "/dashboard/schedules" },
-              { label: "Team Members", icon: Users, href: "/dashboard/team" },
-              { label: "Audit Logs", icon: History, href: "/dashboard/logs" }
-            ].map((link, i) => (
-              <Link 
-                key={i} 
-                href={link.href} 
+            {DASHBOARD_NAV_LINKS.map((link, i) => (
+              <Link
+                key={i}
+                href={link.href}
                 className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-400 hover:text-white transition-all group"
               >
                 <div className="flex items-center gap-3">

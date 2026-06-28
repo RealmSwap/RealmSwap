@@ -12,16 +12,15 @@ import {
   Store,
   LogOut,
   Users,
-  Wrench,
-  FolderSync,
   Search,
   Download,
   Info,
   Calendar,
-  Settings
-,
+  Settings,
   Clock,
-  Terminal} from "lucide-react";
+  Terminal,
+} from "lucide-react";
+import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 
 interface AuditLogsViewProps {
   initialLogs: any[];
@@ -132,30 +131,25 @@ export default function AuditLogsView({ initialLogs, user }: AuditLogsViewProps)
               <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider">Features</span>
             </div>
 
-            {[
-              { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
-              { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
-              { label: "Server Config", icon: Settings, href: "/dashboard/config" },
-              { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
-              { label: "Schedules", icon: Clock, href: "/dashboard/schedules" },
-              { label: "Team Members", icon: Users, href: "/dashboard/team" },
-              { label: "Audit Logs", icon: History, href: "/dashboard/logs", active: true }
-            ].map((link, i) => (
-              <Link 
-                key={i} 
-                href={link.href} 
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
-                  link.active 
-                    ? "bg-accentPurple/10 text-white border border-accentPurple/20" 
-                    : "hover:bg-white/5 text-slate-400 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <link.icon className={`w-4 h-4 ${link.active ? "text-accentPurple" : "text-slate-500 group-hover:text-white transition-colors"}`} />
-                  <span>{link.label}</span>
-                </div>
-              </Link>
-            ))}
+            {DASHBOARD_NAV_LINKS.map((link, i) => {
+              const active = link.href === "/dashboard/logs";
+              return (
+                <Link
+                  key={i}
+                  href={link.href}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
+                    active
+                      ? "bg-accentPurple/10 text-white border border-accentPurple/20"
+                      : "hover:bg-white/5 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <link.icon className={`w-4 h-4 ${active ? "text-accentPurple" : "text-slate-500 group-hover:text-white transition-colors"}`} />
+                    <span>{link.label}</span>
+                  </div>
+                </Link>
+              );
+            })}
           </nav>
         </div>
 

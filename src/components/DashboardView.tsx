@@ -6,41 +6,38 @@ import { useRouter } from "next/navigation";
 import { useModal } from "@/components/ModalProvider";
 import { useToast } from "@/components/ToastProvider";
 import HostTransferModal from "@/components/HostTransferModal";
-import { 
-  Server as ServerIcon, 
-  Archive, 
-  Cpu, 
-  Database, 
-  Layers, 
-  RefreshCw, 
-  Play, 
-  Square, 
-  Trash2, 
-  FolderSync, 
-  Plus, 
-  Copy, 
-  Check, 
-  Clock, 
-  LogOut, 
-  Users, 
-  BadgeCent, 
-  Wrench, 
-  History, 
+import {
+  Server as ServerIcon,
+  Archive,
+  Cpu,
+  Database,
+  Layers,
+  RefreshCw,
+  Play,
+  Square,
+  Trash2,
+  Plus,
+  Copy,
+  Check,
+  Clock,
+  LogOut,
+  BadgeCent,
   LayoutDashboard,
   MapPin,
   AlertCircle,
   Terminal,
   X,
   Download,
-  Settings,
   Pause,
   Search,
   Send,
   Activity,
   Store,
   Package,
+  FolderOpen,
   UploadCloud
 } from "lucide-react";
+import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 
 interface DashboardViewProps {
   initialData: {
@@ -160,6 +157,8 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   const [progressMap, setProgressMap] = useState<
     Record<string, { phase: string; percent: number | null; label: string } | null>
   >({});
+
+  // Server selected for the "Transfer to hosting provider" modal
   const [hostModalServer, setHostModalServer] = useState<{ id: string; name: string } | null>(null);
 
   // Poll database for updates (live stats fluctuation)
@@ -304,6 +303,20 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
     navigator.clipboard.writeText(ip);
     setCopiedIp(ip);
     setTimeout(() => setCopiedIp(null), 2000);
+  };
+
+  const handleOpenServerFolder = async (serverId: string) => {
+    try {
+      const res = await fetch("/api/system/open-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serverId }),
+      });
+      const data = await res.json();
+      if (!data.ok) addToast("error", data.error || "Could not open server folder");
+    } catch {
+      addToast("error", "Could not open server folder");
+    }
   };
 
   const handleLogout = async () => {
@@ -554,18 +567,10 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
               <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider">Features</span>
             </div>
 
-            {[
-              { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
-              { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
-              { label: "Server Config", icon: Settings, href: "/dashboard/config" },
-              { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
-              { label: "Schedules", icon: Clock, href: "/dashboard/schedules" },
-              { label: "Team Members", icon: Users, href: "/dashboard/team" },
-              { label: "Audit Logs", icon: History, href: "/dashboard/logs" }
-            ].map((link, i) => (
-              <Link 
-                key={i} 
-                href={link.href} 
+            {DASHBOARD_NAV_LINKS.map((link, i) => (
+              <Link
+                key={i}
+                href={link.href}
                 className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-400 hover:text-white transition-all group"
               >
                 <div className="flex items-center gap-3">
@@ -941,10 +946,23 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                           <span>Vault</span>
                         </button>
 
+                        {/* Open Folder */}
+                        {isLocal && (
+                          <button
+                            onClick={() => handleOpenServerFolder(server.id)}
+                            disabled={isServerLoading || server.status === "STARTING"}
+                            className={`px-3.5 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center gap-1.5 transition-all ${isServerLoading || server.status === "STARTING" ? "opacity-50 pointer-events-none" : ""}`}
+                            title="Open this server's files on disk"
+                          >
+                            <FolderOpen className="w-3.5 h-3.5" />
+                            <span>Files</span>
+                          </button>
+                        )}
+
                         {/* Transfer to Host */}
                         <button
                           onClick={() => setHostModalServer({ id: server.id, name: server.name })}
-                          className={`px-3.5 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center gap-1.5 transition-all ${isServerLoading || server.status === "STARTING" ? "opacity-50 pointer-events-none" : ""}`}
+                          className={`px-3.5 py-2 rounded-lg bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 text-sky-400 font-bold text-xs flex items-center gap-1.5 transition-all ${isServerLoading || server.status === "STARTING" ? "opacity-50 pointer-events-none" : ""}`}
                           title="Transfer to hosting provider"
                           aria-label="Transfer to hosting provider"
                         >
