@@ -727,7 +727,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
         await prisma.server.update({
           where: { id: serverId },
           data: { status: "STARTING", pid: null, cpuUsage: 0, memoryUsage: 0 },
-        }).catch(() => {});
+        }).catch((e: any) => appendLog(serverId, `[Java] DB status update failed: ${e.message}`));
         serverEventBus.emit("status_update", { serverId, status: "STARTING" });
         clearStatsHistory(serverId);
         startLocalServer(serverId, serverRec.game, serverRec.ramAllocation).catch((e: any) =>

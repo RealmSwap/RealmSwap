@@ -131,8 +131,10 @@ async function defaultProvision(major: number, cacheDir: string, opts: EnsureJav
 }
 
 function extractZip(zip: string, destDir: string): Promise<void> {
+  // PowerShell single-quoted strings escape a quote by doubling it.
+  const psQuote = (p: string) => p.replace(/'/g, "''");
   return new Promise((resolve, reject) => {
-    const cmd = `powershell -NoProfile -Command "Expand-Archive -Path '${zip}' -DestinationPath '${destDir}' -Force"`;
+    const cmd = `powershell -NoProfile -Command "Expand-Archive -Path '${psQuote(zip)}' -DestinationPath '${psQuote(destDir)}' -Force"`;
     exec(cmd, (err) =>
       err ? reject(new Error(`Failed to extract Java archive: ${err.message}`)) : resolve()
     );
