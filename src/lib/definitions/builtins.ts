@@ -14,7 +14,7 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
     installMethod: "DOWNLOAD",
     spec: {
       install: {
-        url: "https://piston-data.mojang.com/v1/objects/8dd1a358e2c3885906f21b6dbec6d7cae504c86a/server.jar",
+        url: "https://piston-data.mojang.com/v1/objects/823e2250d24b3ddac457a60c92a6a941943fcd6a/server.jar",
         fileName: "server.jar", checkFile: "server.jar",
       },
       requiresJava: true,
