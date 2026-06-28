@@ -281,6 +281,56 @@ exports.Prisma.TemplateVoteScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.PlayerScalarFieldEnum = {
+  id: 'id',
+  ownerId: 'ownerId',
+  displayName: 'displayName',
+  steamId: 'steamId',
+  xboxId: 'xboxId',
+  minecraftUuid: 'minecraftUuid',
+  minecraftName: 'minecraftName',
+  discordId: 'discordId',
+  notes: 'notes',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PlayerBanScalarFieldEnum = {
+  id: 'id',
+  playerId: 'playerId',
+  reason: 'reason',
+  expiresAt: 'expiresAt',
+  active: 'active',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PlayerWhitelistScalarFieldEnum = {
+  id: 'id',
+  playerId: 'playerId',
+  serverId: 'serverId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PlayerEnforcementScalarFieldEnum = {
+  id: 'id',
+  playerId: 'playerId',
+  serverId: 'serverId',
+  type: 'type',
+  status: 'status',
+  detail: 'detail',
+  appliedAt: 'appliedAt'
+};
+
+exports.Prisma.PlayerEventScalarFieldEnum = {
+  id: 'id',
+  playerId: 'playerId',
+  actorId: 'actorId',
+  action: 'action',
+  detail: 'detail',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -305,7 +355,12 @@ exports.Prisma.ModelName = {
   ServerSnapshot: 'ServerSnapshot',
   ScheduledTask: 'ScheduledTask',
   MarketplaceTemplate: 'MarketplaceTemplate',
-  TemplateVote: 'TemplateVote'
+  TemplateVote: 'TemplateVote',
+  Player: 'Player',
+  PlayerBan: 'PlayerBan',
+  PlayerWhitelist: 'PlayerWhitelist',
+  PlayerEnforcement: 'PlayerEnforcement',
+  PlayerEvent: 'PlayerEvent'
 };
 
 /**

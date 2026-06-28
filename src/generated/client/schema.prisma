@@ -31,6 +31,7 @@ model User {
   logs               ActivityLog[]
   collaboratorAccess Collaborator[]
   templateVotes      TemplateVote[]
+  players            Player[]
 }
 
 model Subscription {
@@ -218,4 +219,71 @@ model TemplateVote {
   user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, templateId])
+}
+
+model Player {
+  id            String            @id @default(cuid())
+  ownerId       String
+  owner         User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  displayName   String
+  steamId       String?
+  xboxId        String?
+  minecraftUuid String?
+  minecraftName String?
+  discordId     String?
+  notes         String?
+  status        String            @default("NEUTRAL") // NEUTRAL | TRUSTED | BANNED
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  bans          PlayerBan[]
+  whitelists    PlayerWhitelist[]
+  events        PlayerEvent[]
+
+  @@index([ownerId])
+}
+
+model PlayerBan {
+  id        String    @id @default(cuid())
+  playerId  String
+  player    Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  reason    String
+  expiresAt DateTime?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+
+  @@index([playerId])
+}
+
+model PlayerWhitelist {
+  id        String   @id @default(cuid())
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  serverId  String
+  createdAt DateTime @default(now())
+
+  @@unique([playerId, serverId])
+}
+
+model PlayerEnforcement {
+  id        String   @id @default(cuid())
+  playerId  String
+  serverId  String
+  type      String // "BAN" | "WHITELIST"
+  status    String // "APPLIED" | "PENDING" | "UNSUPPORTED" | "FAILED"
+  detail    String?
+  appliedAt DateTime @default(now())
+
+  @@unique([playerId, serverId, type])
+}
+
+model PlayerEvent {
+  id        String   @id @default(cuid())
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  actorId   String
+  action    String // PLAYER_CREATED | BANNED | UNBANNED | WHITELISTED | WHITELIST_REVOKED | EDITED
+  detail    String
+  createdAt DateTime @default(now())
+
+  @@index([playerId])
 }

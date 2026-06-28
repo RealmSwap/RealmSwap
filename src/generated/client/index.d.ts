@@ -78,6 +78,31 @@ export type MarketplaceTemplate = $Result.DefaultSelection<Prisma.$MarketplaceTe
  * 
  */
 export type TemplateVote = $Result.DefaultSelection<Prisma.$TemplateVotePayload>
+/**
+ * Model Player
+ * 
+ */
+export type Player = $Result.DefaultSelection<Prisma.$PlayerPayload>
+/**
+ * Model PlayerBan
+ * 
+ */
+export type PlayerBan = $Result.DefaultSelection<Prisma.$PlayerBanPayload>
+/**
+ * Model PlayerWhitelist
+ * 
+ */
+export type PlayerWhitelist = $Result.DefaultSelection<Prisma.$PlayerWhitelistPayload>
+/**
+ * Model PlayerEnforcement
+ * 
+ */
+export type PlayerEnforcement = $Result.DefaultSelection<Prisma.$PlayerEnforcementPayload>
+/**
+ * Model PlayerEvent
+ * 
+ */
+export type PlayerEvent = $Result.DefaultSelection<Prisma.$PlayerEventPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -331,6 +356,56 @@ export class PrismaClient<
     * ```
     */
   get templateVote(): Prisma.TemplateVoteDelegate<ExtArgs>;
+
+  /**
+   * `prisma.player`: Exposes CRUD operations for the **Player** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Players
+    * const players = await prisma.player.findMany()
+    * ```
+    */
+  get player(): Prisma.PlayerDelegate<ExtArgs>;
+
+  /**
+   * `prisma.playerBan`: Exposes CRUD operations for the **PlayerBan** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PlayerBans
+    * const playerBans = await prisma.playerBan.findMany()
+    * ```
+    */
+  get playerBan(): Prisma.PlayerBanDelegate<ExtArgs>;
+
+  /**
+   * `prisma.playerWhitelist`: Exposes CRUD operations for the **PlayerWhitelist** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PlayerWhitelists
+    * const playerWhitelists = await prisma.playerWhitelist.findMany()
+    * ```
+    */
+  get playerWhitelist(): Prisma.PlayerWhitelistDelegate<ExtArgs>;
+
+  /**
+   * `prisma.playerEnforcement`: Exposes CRUD operations for the **PlayerEnforcement** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PlayerEnforcements
+    * const playerEnforcements = await prisma.playerEnforcement.findMany()
+    * ```
+    */
+  get playerEnforcement(): Prisma.PlayerEnforcementDelegate<ExtArgs>;
+
+  /**
+   * `prisma.playerEvent`: Exposes CRUD operations for the **PlayerEvent** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PlayerEvents
+    * const playerEvents = await prisma.playerEvent.findMany()
+    * ```
+    */
+  get playerEvent(): Prisma.PlayerEventDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -784,7 +859,12 @@ export namespace Prisma {
     ServerSnapshot: 'ServerSnapshot',
     ScheduledTask: 'ScheduledTask',
     MarketplaceTemplate: 'MarketplaceTemplate',
-    TemplateVote: 'TemplateVote'
+    TemplateVote: 'TemplateVote',
+    Player: 'Player',
+    PlayerBan: 'PlayerBan',
+    PlayerWhitelist: 'PlayerWhitelist',
+    PlayerEnforcement: 'PlayerEnforcement',
+    PlayerEvent: 'PlayerEvent'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -800,7 +880,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "subscription" | "server" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "scheduledTask" | "marketplaceTemplate" | "templateVote"
+      modelProps: "user" | "subscription" | "server" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "scheduledTask" | "marketplaceTemplate" | "templateVote" | "player" | "playerBan" | "playerWhitelist" | "playerEnforcement" | "playerEvent"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1714,6 +1794,356 @@ export namespace Prisma {
           }
         }
       }
+      Player: {
+        payload: Prisma.$PlayerPayload<ExtArgs>
+        fields: Prisma.PlayerFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlayerFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlayerFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          findFirst: {
+            args: Prisma.PlayerFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlayerFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          findMany: {
+            args: Prisma.PlayerFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>[]
+          }
+          create: {
+            args: Prisma.PlayerCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          createMany: {
+            args: Prisma.PlayerCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlayerCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>[]
+          }
+          delete: {
+            args: Prisma.PlayerDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          update: {
+            args: Prisma.PlayerUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlayerDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlayerUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PlayerUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          aggregate: {
+            args: Prisma.PlayerAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlayer>
+          }
+          groupBy: {
+            args: Prisma.PlayerGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlayerGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlayerCountArgs<ExtArgs>
+            result: $Utils.Optional<PlayerCountAggregateOutputType> | number
+          }
+        }
+      }
+      PlayerBan: {
+        payload: Prisma.$PlayerBanPayload<ExtArgs>
+        fields: Prisma.PlayerBanFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlayerBanFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerBanPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlayerBanFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerBanPayload>
+          }
+          findFirst: {
+            args: Prisma.PlayerBanFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerBanPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlayerBanFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerBanPayload>
+          }
+          findMany: {
+            args: Prisma.PlayerBanFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerBanPayload>[]
+          }
+          create: {
+            args: Prisma.PlayerBanCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerBanPayload>
+          }
+          createMany: {
+            args: Prisma.PlayerBanCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlayerBanCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerBanPayload>[]
+          }
+          delete: {
+            args: Prisma.PlayerBanDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerBanPayload>
+          }
+          update: {
+            args: Prisma.PlayerBanUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerBanPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlayerBanDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlayerBanUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PlayerBanUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerBanPayload>
+          }
+          aggregate: {
+            args: Prisma.PlayerBanAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlayerBan>
+          }
+          groupBy: {
+            args: Prisma.PlayerBanGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlayerBanGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlayerBanCountArgs<ExtArgs>
+            result: $Utils.Optional<PlayerBanCountAggregateOutputType> | number
+          }
+        }
+      }
+      PlayerWhitelist: {
+        payload: Prisma.$PlayerWhitelistPayload<ExtArgs>
+        fields: Prisma.PlayerWhitelistFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlayerWhitelistFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerWhitelistPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlayerWhitelistFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerWhitelistPayload>
+          }
+          findFirst: {
+            args: Prisma.PlayerWhitelistFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerWhitelistPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlayerWhitelistFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerWhitelistPayload>
+          }
+          findMany: {
+            args: Prisma.PlayerWhitelistFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerWhitelistPayload>[]
+          }
+          create: {
+            args: Prisma.PlayerWhitelistCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerWhitelistPayload>
+          }
+          createMany: {
+            args: Prisma.PlayerWhitelistCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlayerWhitelistCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerWhitelistPayload>[]
+          }
+          delete: {
+            args: Prisma.PlayerWhitelistDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerWhitelistPayload>
+          }
+          update: {
+            args: Prisma.PlayerWhitelistUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerWhitelistPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlayerWhitelistDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlayerWhitelistUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PlayerWhitelistUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerWhitelistPayload>
+          }
+          aggregate: {
+            args: Prisma.PlayerWhitelistAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlayerWhitelist>
+          }
+          groupBy: {
+            args: Prisma.PlayerWhitelistGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlayerWhitelistGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlayerWhitelistCountArgs<ExtArgs>
+            result: $Utils.Optional<PlayerWhitelistCountAggregateOutputType> | number
+          }
+        }
+      }
+      PlayerEnforcement: {
+        payload: Prisma.$PlayerEnforcementPayload<ExtArgs>
+        fields: Prisma.PlayerEnforcementFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlayerEnforcementFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEnforcementPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlayerEnforcementFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEnforcementPayload>
+          }
+          findFirst: {
+            args: Prisma.PlayerEnforcementFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEnforcementPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlayerEnforcementFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEnforcementPayload>
+          }
+          findMany: {
+            args: Prisma.PlayerEnforcementFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEnforcementPayload>[]
+          }
+          create: {
+            args: Prisma.PlayerEnforcementCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEnforcementPayload>
+          }
+          createMany: {
+            args: Prisma.PlayerEnforcementCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlayerEnforcementCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEnforcementPayload>[]
+          }
+          delete: {
+            args: Prisma.PlayerEnforcementDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEnforcementPayload>
+          }
+          update: {
+            args: Prisma.PlayerEnforcementUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEnforcementPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlayerEnforcementDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlayerEnforcementUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PlayerEnforcementUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEnforcementPayload>
+          }
+          aggregate: {
+            args: Prisma.PlayerEnforcementAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlayerEnforcement>
+          }
+          groupBy: {
+            args: Prisma.PlayerEnforcementGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlayerEnforcementGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlayerEnforcementCountArgs<ExtArgs>
+            result: $Utils.Optional<PlayerEnforcementCountAggregateOutputType> | number
+          }
+        }
+      }
+      PlayerEvent: {
+        payload: Prisma.$PlayerEventPayload<ExtArgs>
+        fields: Prisma.PlayerEventFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlayerEventFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEventPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlayerEventFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEventPayload>
+          }
+          findFirst: {
+            args: Prisma.PlayerEventFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEventPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlayerEventFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEventPayload>
+          }
+          findMany: {
+            args: Prisma.PlayerEventFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEventPayload>[]
+          }
+          create: {
+            args: Prisma.PlayerEventCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEventPayload>
+          }
+          createMany: {
+            args: Prisma.PlayerEventCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlayerEventCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEventPayload>[]
+          }
+          delete: {
+            args: Prisma.PlayerEventDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEventPayload>
+          }
+          update: {
+            args: Prisma.PlayerEventUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEventPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlayerEventDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlayerEventUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PlayerEventUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerEventPayload>
+          }
+          aggregate: {
+            args: Prisma.PlayerEventAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlayerEvent>
+          }
+          groupBy: {
+            args: Prisma.PlayerEventGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlayerEventGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlayerEventCountArgs<ExtArgs>
+            result: $Utils.Optional<PlayerEventCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1881,6 +2311,7 @@ export namespace Prisma {
     logs: number
     collaboratorAccess: number
     templateVotes: number
+    players: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1890,6 +2321,7 @@ export namespace Prisma {
     logs?: boolean | UserCountOutputTypeCountLogsArgs
     collaboratorAccess?: boolean | UserCountOutputTypeCountCollaboratorAccessArgs
     templateVotes?: boolean | UserCountOutputTypeCountTemplateVotesArgs
+    players?: boolean | UserCountOutputTypeCountPlayersArgs
   }
 
   // Custom InputTypes
@@ -1943,6 +2375,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountTemplateVotesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TemplateVoteWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountPlayersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerWhereInput
   }
 
 
@@ -2072,6 +2511,55 @@ export namespace Prisma {
    */
   export type MarketplaceTemplateCountOutputTypeCountVotesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TemplateVoteWhereInput
+  }
+
+
+  /**
+   * Count Type PlayerCountOutputType
+   */
+
+  export type PlayerCountOutputType = {
+    bans: number
+    whitelists: number
+    events: number
+  }
+
+  export type PlayerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    bans?: boolean | PlayerCountOutputTypeCountBansArgs
+    whitelists?: boolean | PlayerCountOutputTypeCountWhitelistsArgs
+    events?: boolean | PlayerCountOutputTypeCountEventsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * PlayerCountOutputType without action
+   */
+  export type PlayerCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerCountOutputType
+     */
+    select?: PlayerCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * PlayerCountOutputType without action
+   */
+  export type PlayerCountOutputTypeCountBansArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerBanWhereInput
+  }
+
+  /**
+   * PlayerCountOutputType without action
+   */
+  export type PlayerCountOutputTypeCountWhitelistsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerWhitelistWhereInput
+  }
+
+  /**
+   * PlayerCountOutputType without action
+   */
+  export type PlayerCountOutputTypeCountEventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerEventWhereInput
   }
 
 
@@ -2266,6 +2754,7 @@ export namespace Prisma {
     logs?: boolean | User$logsArgs<ExtArgs>
     collaboratorAccess?: boolean | User$collaboratorAccessArgs<ExtArgs>
     templateVotes?: boolean | User$templateVotesArgs<ExtArgs>
+    players?: boolean | User$playersArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -2297,6 +2786,7 @@ export namespace Prisma {
     logs?: boolean | User$logsArgs<ExtArgs>
     collaboratorAccess?: boolean | User$collaboratorAccessArgs<ExtArgs>
     templateVotes?: boolean | User$templateVotesArgs<ExtArgs>
+    players?: boolean | User$playersArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -2311,6 +2801,7 @@ export namespace Prisma {
       logs: Prisma.$ActivityLogPayload<ExtArgs>[]
       collaboratorAccess: Prisma.$CollaboratorPayload<ExtArgs>[]
       templateVotes: Prisma.$TemplateVotePayload<ExtArgs>[]
+      players: Prisma.$PlayerPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2691,6 +3182,7 @@ export namespace Prisma {
     logs<T extends User$logsArgs<ExtArgs> = {}>(args?: Subset<T, User$logsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "findMany"> | Null>
     collaboratorAccess<T extends User$collaboratorAccessArgs<ExtArgs> = {}>(args?: Subset<T, User$collaboratorAccessArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CollaboratorPayload<ExtArgs>, T, "findMany"> | Null>
     templateVotes<T extends User$templateVotesArgs<ExtArgs> = {}>(args?: Subset<T, User$templateVotesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TemplateVotePayload<ExtArgs>, T, "findMany"> | Null>
+    players<T extends User$playersArgs<ExtArgs> = {}>(args?: Subset<T, User$playersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3171,6 +3663,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TemplateVoteScalarFieldEnum | TemplateVoteScalarFieldEnum[]
+  }
+
+  /**
+   * User.players
+   */
+  export type User$playersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    where?: PlayerWhereInput
+    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    cursor?: PlayerWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
   }
 
   /**
@@ -15548,6 +16060,4800 @@ export namespace Prisma {
 
 
   /**
+   * Model Player
+   */
+
+  export type AggregatePlayer = {
+    _count: PlayerCountAggregateOutputType | null
+    _min: PlayerMinAggregateOutputType | null
+    _max: PlayerMaxAggregateOutputType | null
+  }
+
+  export type PlayerMinAggregateOutputType = {
+    id: string | null
+    ownerId: string | null
+    displayName: string | null
+    steamId: string | null
+    xboxId: string | null
+    minecraftUuid: string | null
+    minecraftName: string | null
+    discordId: string | null
+    notes: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PlayerMaxAggregateOutputType = {
+    id: string | null
+    ownerId: string | null
+    displayName: string | null
+    steamId: string | null
+    xboxId: string | null
+    minecraftUuid: string | null
+    minecraftName: string | null
+    discordId: string | null
+    notes: string | null
+    status: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PlayerCountAggregateOutputType = {
+    id: number
+    ownerId: number
+    displayName: number
+    steamId: number
+    xboxId: number
+    minecraftUuid: number
+    minecraftName: number
+    discordId: number
+    notes: number
+    status: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type PlayerMinAggregateInputType = {
+    id?: true
+    ownerId?: true
+    displayName?: true
+    steamId?: true
+    xboxId?: true
+    minecraftUuid?: true
+    minecraftName?: true
+    discordId?: true
+    notes?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PlayerMaxAggregateInputType = {
+    id?: true
+    ownerId?: true
+    displayName?: true
+    steamId?: true
+    xboxId?: true
+    minecraftUuid?: true
+    minecraftName?: true
+    discordId?: true
+    notes?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PlayerCountAggregateInputType = {
+    id?: true
+    ownerId?: true
+    displayName?: true
+    steamId?: true
+    xboxId?: true
+    minecraftUuid?: true
+    minecraftName?: true
+    discordId?: true
+    notes?: true
+    status?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type PlayerAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Player to aggregate.
+     */
+    where?: PlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Players to fetch.
+     */
+    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Players from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Players.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Players
+    **/
+    _count?: true | PlayerCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlayerMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlayerMaxAggregateInputType
+  }
+
+  export type GetPlayerAggregateType<T extends PlayerAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlayer]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlayer[P]>
+      : GetScalarType<T[P], AggregatePlayer[P]>
+  }
+
+
+
+
+  export type PlayerGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerWhereInput
+    orderBy?: PlayerOrderByWithAggregationInput | PlayerOrderByWithAggregationInput[]
+    by: PlayerScalarFieldEnum[] | PlayerScalarFieldEnum
+    having?: PlayerScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlayerCountAggregateInputType | true
+    _min?: PlayerMinAggregateInputType
+    _max?: PlayerMaxAggregateInputType
+  }
+
+  export type PlayerGroupByOutputType = {
+    id: string
+    ownerId: string
+    displayName: string
+    steamId: string | null
+    xboxId: string | null
+    minecraftUuid: string | null
+    minecraftName: string | null
+    discordId: string | null
+    notes: string | null
+    status: string
+    createdAt: Date
+    updatedAt: Date
+    _count: PlayerCountAggregateOutputType | null
+    _min: PlayerMinAggregateOutputType | null
+    _max: PlayerMaxAggregateOutputType | null
+  }
+
+  type GetPlayerGroupByPayload<T extends PlayerGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlayerGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlayerGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlayerGroupByOutputType[P]>
+            : GetScalarType<T[P], PlayerGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlayerSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ownerId?: boolean
+    displayName?: boolean
+    steamId?: boolean
+    xboxId?: boolean
+    minecraftUuid?: boolean
+    minecraftName?: boolean
+    discordId?: boolean
+    notes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    owner?: boolean | UserDefaultArgs<ExtArgs>
+    bans?: boolean | Player$bansArgs<ExtArgs>
+    whitelists?: boolean | Player$whitelistsArgs<ExtArgs>
+    events?: boolean | Player$eventsArgs<ExtArgs>
+    _count?: boolean | PlayerCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["player"]>
+
+  export type PlayerSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    ownerId?: boolean
+    displayName?: boolean
+    steamId?: boolean
+    xboxId?: boolean
+    minecraftUuid?: boolean
+    minecraftName?: boolean
+    discordId?: boolean
+    notes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    owner?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["player"]>
+
+  export type PlayerSelectScalar = {
+    id?: boolean
+    ownerId?: boolean
+    displayName?: boolean
+    steamId?: boolean
+    xboxId?: boolean
+    minecraftUuid?: boolean
+    minecraftName?: boolean
+    discordId?: boolean
+    notes?: boolean
+    status?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type PlayerInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    owner?: boolean | UserDefaultArgs<ExtArgs>
+    bans?: boolean | Player$bansArgs<ExtArgs>
+    whitelists?: boolean | Player$whitelistsArgs<ExtArgs>
+    events?: boolean | Player$eventsArgs<ExtArgs>
+    _count?: boolean | PlayerCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type PlayerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    owner?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $PlayerPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Player"
+    objects: {
+      owner: Prisma.$UserPayload<ExtArgs>
+      bans: Prisma.$PlayerBanPayload<ExtArgs>[]
+      whitelists: Prisma.$PlayerWhitelistPayload<ExtArgs>[]
+      events: Prisma.$PlayerEventPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      ownerId: string
+      displayName: string
+      steamId: string | null
+      xboxId: string | null
+      minecraftUuid: string | null
+      minecraftName: string | null
+      discordId: string | null
+      notes: string | null
+      status: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["player"]>
+    composites: {}
+  }
+
+  type PlayerGetPayload<S extends boolean | null | undefined | PlayerDefaultArgs> = $Result.GetResult<Prisma.$PlayerPayload, S>
+
+  type PlayerCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PlayerFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PlayerCountAggregateInputType | true
+    }
+
+  export interface PlayerDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Player'], meta: { name: 'Player' } }
+    /**
+     * Find zero or one Player that matches the filter.
+     * @param {PlayerFindUniqueArgs} args - Arguments to find a Player
+     * @example
+     * // Get one Player
+     * const player = await prisma.player.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlayerFindUniqueArgs>(args: SelectSubset<T, PlayerFindUniqueArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Player that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PlayerFindUniqueOrThrowArgs} args - Arguments to find a Player
+     * @example
+     * // Get one Player
+     * const player = await prisma.player.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlayerFindUniqueOrThrowArgs>(args: SelectSubset<T, PlayerFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Player that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerFindFirstArgs} args - Arguments to find a Player
+     * @example
+     * // Get one Player
+     * const player = await prisma.player.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlayerFindFirstArgs>(args?: SelectSubset<T, PlayerFindFirstArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Player that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerFindFirstOrThrowArgs} args - Arguments to find a Player
+     * @example
+     * // Get one Player
+     * const player = await prisma.player.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlayerFindFirstOrThrowArgs>(args?: SelectSubset<T, PlayerFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Players that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Players
+     * const players = await prisma.player.findMany()
+     * 
+     * // Get first 10 Players
+     * const players = await prisma.player.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const playerWithIdOnly = await prisma.player.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PlayerFindManyArgs>(args?: SelectSubset<T, PlayerFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Player.
+     * @param {PlayerCreateArgs} args - Arguments to create a Player.
+     * @example
+     * // Create one Player
+     * const Player = await prisma.player.create({
+     *   data: {
+     *     // ... data to create a Player
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlayerCreateArgs>(args: SelectSubset<T, PlayerCreateArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Players.
+     * @param {PlayerCreateManyArgs} args - Arguments to create many Players.
+     * @example
+     * // Create many Players
+     * const player = await prisma.player.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlayerCreateManyArgs>(args?: SelectSubset<T, PlayerCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Players and returns the data saved in the database.
+     * @param {PlayerCreateManyAndReturnArgs} args - Arguments to create many Players.
+     * @example
+     * // Create many Players
+     * const player = await prisma.player.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Players and only return the `id`
+     * const playerWithIdOnly = await prisma.player.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlayerCreateManyAndReturnArgs>(args?: SelectSubset<T, PlayerCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a Player.
+     * @param {PlayerDeleteArgs} args - Arguments to delete one Player.
+     * @example
+     * // Delete one Player
+     * const Player = await prisma.player.delete({
+     *   where: {
+     *     // ... filter to delete one Player
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlayerDeleteArgs>(args: SelectSubset<T, PlayerDeleteArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Player.
+     * @param {PlayerUpdateArgs} args - Arguments to update one Player.
+     * @example
+     * // Update one Player
+     * const player = await prisma.player.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlayerUpdateArgs>(args: SelectSubset<T, PlayerUpdateArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Players.
+     * @param {PlayerDeleteManyArgs} args - Arguments to filter Players to delete.
+     * @example
+     * // Delete a few Players
+     * const { count } = await prisma.player.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlayerDeleteManyArgs>(args?: SelectSubset<T, PlayerDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Players.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Players
+     * const player = await prisma.player.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlayerUpdateManyArgs>(args: SelectSubset<T, PlayerUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Player.
+     * @param {PlayerUpsertArgs} args - Arguments to update or create a Player.
+     * @example
+     * // Update or create a Player
+     * const player = await prisma.player.upsert({
+     *   create: {
+     *     // ... data to create a Player
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Player we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlayerUpsertArgs>(args: SelectSubset<T, PlayerUpsertArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Players.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerCountArgs} args - Arguments to filter Players to count.
+     * @example
+     * // Count the number of Players
+     * const count = await prisma.player.count({
+     *   where: {
+     *     // ... the filter for the Players we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlayerCountArgs>(
+      args?: Subset<T, PlayerCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlayerCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Player.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlayerAggregateArgs>(args: Subset<T, PlayerAggregateArgs>): Prisma.PrismaPromise<GetPlayerAggregateType<T>>
+
+    /**
+     * Group by Player.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlayerGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlayerGroupByArgs['orderBy'] }
+        : { orderBy?: PlayerGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlayerGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlayerGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Player model
+   */
+  readonly fields: PlayerFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Player.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlayerClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    owner<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    bans<T extends Player$bansArgs<ExtArgs> = {}>(args?: Subset<T, Player$bansArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "findMany"> | Null>
+    whitelists<T extends Player$whitelistsArgs<ExtArgs> = {}>(args?: Subset<T, Player$whitelistsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "findMany"> | Null>
+    events<T extends Player$eventsArgs<ExtArgs> = {}>(args?: Subset<T, Player$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Player model
+   */ 
+  interface PlayerFieldRefs {
+    readonly id: FieldRef<"Player", 'String'>
+    readonly ownerId: FieldRef<"Player", 'String'>
+    readonly displayName: FieldRef<"Player", 'String'>
+    readonly steamId: FieldRef<"Player", 'String'>
+    readonly xboxId: FieldRef<"Player", 'String'>
+    readonly minecraftUuid: FieldRef<"Player", 'String'>
+    readonly minecraftName: FieldRef<"Player", 'String'>
+    readonly discordId: FieldRef<"Player", 'String'>
+    readonly notes: FieldRef<"Player", 'String'>
+    readonly status: FieldRef<"Player", 'String'>
+    readonly createdAt: FieldRef<"Player", 'DateTime'>
+    readonly updatedAt: FieldRef<"Player", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Player findUnique
+   */
+  export type PlayerFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which Player to fetch.
+     */
+    where: PlayerWhereUniqueInput
+  }
+
+  /**
+   * Player findUniqueOrThrow
+   */
+  export type PlayerFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which Player to fetch.
+     */
+    where: PlayerWhereUniqueInput
+  }
+
+  /**
+   * Player findFirst
+   */
+  export type PlayerFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which Player to fetch.
+     */
+    where?: PlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Players to fetch.
+     */
+    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Players.
+     */
+    cursor?: PlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Players from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Players.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Players.
+     */
+    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
+  }
+
+  /**
+   * Player findFirstOrThrow
+   */
+  export type PlayerFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which Player to fetch.
+     */
+    where?: PlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Players to fetch.
+     */
+    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Players.
+     */
+    cursor?: PlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Players from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Players.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Players.
+     */
+    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
+  }
+
+  /**
+   * Player findMany
+   */
+  export type PlayerFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which Players to fetch.
+     */
+    where?: PlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Players to fetch.
+     */
+    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Players.
+     */
+    cursor?: PlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Players from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Players.
+     */
+    skip?: number
+    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
+  }
+
+  /**
+   * Player create
+   */
+  export type PlayerCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Player.
+     */
+    data: XOR<PlayerCreateInput, PlayerUncheckedCreateInput>
+  }
+
+  /**
+   * Player createMany
+   */
+  export type PlayerCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Players.
+     */
+    data: PlayerCreateManyInput | PlayerCreateManyInput[]
+  }
+
+  /**
+   * Player createManyAndReturn
+   */
+  export type PlayerCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many Players.
+     */
+    data: PlayerCreateManyInput | PlayerCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Player update
+   */
+  export type PlayerUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Player.
+     */
+    data: XOR<PlayerUpdateInput, PlayerUncheckedUpdateInput>
+    /**
+     * Choose, which Player to update.
+     */
+    where: PlayerWhereUniqueInput
+  }
+
+  /**
+   * Player updateMany
+   */
+  export type PlayerUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Players.
+     */
+    data: XOR<PlayerUpdateManyMutationInput, PlayerUncheckedUpdateManyInput>
+    /**
+     * Filter which Players to update
+     */
+    where?: PlayerWhereInput
+  }
+
+  /**
+   * Player upsert
+   */
+  export type PlayerUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Player to update in case it exists.
+     */
+    where: PlayerWhereUniqueInput
+    /**
+     * In case the Player found by the `where` argument doesn't exist, create a new Player with this data.
+     */
+    create: XOR<PlayerCreateInput, PlayerUncheckedCreateInput>
+    /**
+     * In case the Player was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlayerUpdateInput, PlayerUncheckedUpdateInput>
+  }
+
+  /**
+   * Player delete
+   */
+  export type PlayerDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter which Player to delete.
+     */
+    where: PlayerWhereUniqueInput
+  }
+
+  /**
+   * Player deleteMany
+   */
+  export type PlayerDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Players to delete
+     */
+    where?: PlayerWhereInput
+  }
+
+  /**
+   * Player.bans
+   */
+  export type Player$bansArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+    where?: PlayerBanWhereInput
+    orderBy?: PlayerBanOrderByWithRelationInput | PlayerBanOrderByWithRelationInput[]
+    cursor?: PlayerBanWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PlayerBanScalarFieldEnum | PlayerBanScalarFieldEnum[]
+  }
+
+  /**
+   * Player.whitelists
+   */
+  export type Player$whitelistsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+    where?: PlayerWhitelistWhereInput
+    orderBy?: PlayerWhitelistOrderByWithRelationInput | PlayerWhitelistOrderByWithRelationInput[]
+    cursor?: PlayerWhitelistWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PlayerWhitelistScalarFieldEnum | PlayerWhitelistScalarFieldEnum[]
+  }
+
+  /**
+   * Player.events
+   */
+  export type Player$eventsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+    where?: PlayerEventWhereInput
+    orderBy?: PlayerEventOrderByWithRelationInput | PlayerEventOrderByWithRelationInput[]
+    cursor?: PlayerEventWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PlayerEventScalarFieldEnum | PlayerEventScalarFieldEnum[]
+  }
+
+  /**
+   * Player without action
+   */
+  export type PlayerDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PlayerBan
+   */
+
+  export type AggregatePlayerBan = {
+    _count: PlayerBanCountAggregateOutputType | null
+    _min: PlayerBanMinAggregateOutputType | null
+    _max: PlayerBanMaxAggregateOutputType | null
+  }
+
+  export type PlayerBanMinAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    reason: string | null
+    expiresAt: Date | null
+    active: boolean | null
+    createdAt: Date | null
+  }
+
+  export type PlayerBanMaxAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    reason: string | null
+    expiresAt: Date | null
+    active: boolean | null
+    createdAt: Date | null
+  }
+
+  export type PlayerBanCountAggregateOutputType = {
+    id: number
+    playerId: number
+    reason: number
+    expiresAt: number
+    active: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type PlayerBanMinAggregateInputType = {
+    id?: true
+    playerId?: true
+    reason?: true
+    expiresAt?: true
+    active?: true
+    createdAt?: true
+  }
+
+  export type PlayerBanMaxAggregateInputType = {
+    id?: true
+    playerId?: true
+    reason?: true
+    expiresAt?: true
+    active?: true
+    createdAt?: true
+  }
+
+  export type PlayerBanCountAggregateInputType = {
+    id?: true
+    playerId?: true
+    reason?: true
+    expiresAt?: true
+    active?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type PlayerBanAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerBan to aggregate.
+     */
+    where?: PlayerBanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerBans to fetch.
+     */
+    orderBy?: PlayerBanOrderByWithRelationInput | PlayerBanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlayerBanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerBans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerBans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PlayerBans
+    **/
+    _count?: true | PlayerBanCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlayerBanMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlayerBanMaxAggregateInputType
+  }
+
+  export type GetPlayerBanAggregateType<T extends PlayerBanAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlayerBan]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlayerBan[P]>
+      : GetScalarType<T[P], AggregatePlayerBan[P]>
+  }
+
+
+
+
+  export type PlayerBanGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerBanWhereInput
+    orderBy?: PlayerBanOrderByWithAggregationInput | PlayerBanOrderByWithAggregationInput[]
+    by: PlayerBanScalarFieldEnum[] | PlayerBanScalarFieldEnum
+    having?: PlayerBanScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlayerBanCountAggregateInputType | true
+    _min?: PlayerBanMinAggregateInputType
+    _max?: PlayerBanMaxAggregateInputType
+  }
+
+  export type PlayerBanGroupByOutputType = {
+    id: string
+    playerId: string
+    reason: string
+    expiresAt: Date | null
+    active: boolean
+    createdAt: Date
+    _count: PlayerBanCountAggregateOutputType | null
+    _min: PlayerBanMinAggregateOutputType | null
+    _max: PlayerBanMaxAggregateOutputType | null
+  }
+
+  type GetPlayerBanGroupByPayload<T extends PlayerBanGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlayerBanGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlayerBanGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlayerBanGroupByOutputType[P]>
+            : GetScalarType<T[P], PlayerBanGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlayerBanSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    reason?: boolean
+    expiresAt?: boolean
+    active?: boolean
+    createdAt?: boolean
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["playerBan"]>
+
+  export type PlayerBanSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    reason?: boolean
+    expiresAt?: boolean
+    active?: boolean
+    createdAt?: boolean
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["playerBan"]>
+
+  export type PlayerBanSelectScalar = {
+    id?: boolean
+    playerId?: boolean
+    reason?: boolean
+    expiresAt?: boolean
+    active?: boolean
+    createdAt?: boolean
+  }
+
+  export type PlayerBanInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }
+  export type PlayerBanIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }
+
+  export type $PlayerBanPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PlayerBan"
+    objects: {
+      player: Prisma.$PlayerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      playerId: string
+      reason: string
+      expiresAt: Date | null
+      active: boolean
+      createdAt: Date
+    }, ExtArgs["result"]["playerBan"]>
+    composites: {}
+  }
+
+  type PlayerBanGetPayload<S extends boolean | null | undefined | PlayerBanDefaultArgs> = $Result.GetResult<Prisma.$PlayerBanPayload, S>
+
+  type PlayerBanCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PlayerBanFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PlayerBanCountAggregateInputType | true
+    }
+
+  export interface PlayerBanDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PlayerBan'], meta: { name: 'PlayerBan' } }
+    /**
+     * Find zero or one PlayerBan that matches the filter.
+     * @param {PlayerBanFindUniqueArgs} args - Arguments to find a PlayerBan
+     * @example
+     * // Get one PlayerBan
+     * const playerBan = await prisma.playerBan.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlayerBanFindUniqueArgs>(args: SelectSubset<T, PlayerBanFindUniqueArgs<ExtArgs>>): Prisma__PlayerBanClient<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PlayerBan that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PlayerBanFindUniqueOrThrowArgs} args - Arguments to find a PlayerBan
+     * @example
+     * // Get one PlayerBan
+     * const playerBan = await prisma.playerBan.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlayerBanFindUniqueOrThrowArgs>(args: SelectSubset<T, PlayerBanFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlayerBanClient<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PlayerBan that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerBanFindFirstArgs} args - Arguments to find a PlayerBan
+     * @example
+     * // Get one PlayerBan
+     * const playerBan = await prisma.playerBan.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlayerBanFindFirstArgs>(args?: SelectSubset<T, PlayerBanFindFirstArgs<ExtArgs>>): Prisma__PlayerBanClient<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PlayerBan that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerBanFindFirstOrThrowArgs} args - Arguments to find a PlayerBan
+     * @example
+     * // Get one PlayerBan
+     * const playerBan = await prisma.playerBan.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlayerBanFindFirstOrThrowArgs>(args?: SelectSubset<T, PlayerBanFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlayerBanClient<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PlayerBans that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerBanFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PlayerBans
+     * const playerBans = await prisma.playerBan.findMany()
+     * 
+     * // Get first 10 PlayerBans
+     * const playerBans = await prisma.playerBan.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const playerBanWithIdOnly = await prisma.playerBan.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PlayerBanFindManyArgs>(args?: SelectSubset<T, PlayerBanFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PlayerBan.
+     * @param {PlayerBanCreateArgs} args - Arguments to create a PlayerBan.
+     * @example
+     * // Create one PlayerBan
+     * const PlayerBan = await prisma.playerBan.create({
+     *   data: {
+     *     // ... data to create a PlayerBan
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlayerBanCreateArgs>(args: SelectSubset<T, PlayerBanCreateArgs<ExtArgs>>): Prisma__PlayerBanClient<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PlayerBans.
+     * @param {PlayerBanCreateManyArgs} args - Arguments to create many PlayerBans.
+     * @example
+     * // Create many PlayerBans
+     * const playerBan = await prisma.playerBan.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlayerBanCreateManyArgs>(args?: SelectSubset<T, PlayerBanCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PlayerBans and returns the data saved in the database.
+     * @param {PlayerBanCreateManyAndReturnArgs} args - Arguments to create many PlayerBans.
+     * @example
+     * // Create many PlayerBans
+     * const playerBan = await prisma.playerBan.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PlayerBans and only return the `id`
+     * const playerBanWithIdOnly = await prisma.playerBan.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlayerBanCreateManyAndReturnArgs>(args?: SelectSubset<T, PlayerBanCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PlayerBan.
+     * @param {PlayerBanDeleteArgs} args - Arguments to delete one PlayerBan.
+     * @example
+     * // Delete one PlayerBan
+     * const PlayerBan = await prisma.playerBan.delete({
+     *   where: {
+     *     // ... filter to delete one PlayerBan
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlayerBanDeleteArgs>(args: SelectSubset<T, PlayerBanDeleteArgs<ExtArgs>>): Prisma__PlayerBanClient<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PlayerBan.
+     * @param {PlayerBanUpdateArgs} args - Arguments to update one PlayerBan.
+     * @example
+     * // Update one PlayerBan
+     * const playerBan = await prisma.playerBan.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlayerBanUpdateArgs>(args: SelectSubset<T, PlayerBanUpdateArgs<ExtArgs>>): Prisma__PlayerBanClient<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PlayerBans.
+     * @param {PlayerBanDeleteManyArgs} args - Arguments to filter PlayerBans to delete.
+     * @example
+     * // Delete a few PlayerBans
+     * const { count } = await prisma.playerBan.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlayerBanDeleteManyArgs>(args?: SelectSubset<T, PlayerBanDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PlayerBans.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerBanUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PlayerBans
+     * const playerBan = await prisma.playerBan.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlayerBanUpdateManyArgs>(args: SelectSubset<T, PlayerBanUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PlayerBan.
+     * @param {PlayerBanUpsertArgs} args - Arguments to update or create a PlayerBan.
+     * @example
+     * // Update or create a PlayerBan
+     * const playerBan = await prisma.playerBan.upsert({
+     *   create: {
+     *     // ... data to create a PlayerBan
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PlayerBan we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlayerBanUpsertArgs>(args: SelectSubset<T, PlayerBanUpsertArgs<ExtArgs>>): Prisma__PlayerBanClient<$Result.GetResult<Prisma.$PlayerBanPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PlayerBans.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerBanCountArgs} args - Arguments to filter PlayerBans to count.
+     * @example
+     * // Count the number of PlayerBans
+     * const count = await prisma.playerBan.count({
+     *   where: {
+     *     // ... the filter for the PlayerBans we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlayerBanCountArgs>(
+      args?: Subset<T, PlayerBanCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlayerBanCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PlayerBan.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerBanAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlayerBanAggregateArgs>(args: Subset<T, PlayerBanAggregateArgs>): Prisma.PrismaPromise<GetPlayerBanAggregateType<T>>
+
+    /**
+     * Group by PlayerBan.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerBanGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlayerBanGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlayerBanGroupByArgs['orderBy'] }
+        : { orderBy?: PlayerBanGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlayerBanGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlayerBanGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PlayerBan model
+   */
+  readonly fields: PlayerBanFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PlayerBan.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlayerBanClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    player<T extends PlayerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PlayerDefaultArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PlayerBan model
+   */ 
+  interface PlayerBanFieldRefs {
+    readonly id: FieldRef<"PlayerBan", 'String'>
+    readonly playerId: FieldRef<"PlayerBan", 'String'>
+    readonly reason: FieldRef<"PlayerBan", 'String'>
+    readonly expiresAt: FieldRef<"PlayerBan", 'DateTime'>
+    readonly active: FieldRef<"PlayerBan", 'Boolean'>
+    readonly createdAt: FieldRef<"PlayerBan", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PlayerBan findUnique
+   */
+  export type PlayerBanFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerBan to fetch.
+     */
+    where: PlayerBanWhereUniqueInput
+  }
+
+  /**
+   * PlayerBan findUniqueOrThrow
+   */
+  export type PlayerBanFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerBan to fetch.
+     */
+    where: PlayerBanWhereUniqueInput
+  }
+
+  /**
+   * PlayerBan findFirst
+   */
+  export type PlayerBanFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerBan to fetch.
+     */
+    where?: PlayerBanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerBans to fetch.
+     */
+    orderBy?: PlayerBanOrderByWithRelationInput | PlayerBanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerBans.
+     */
+    cursor?: PlayerBanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerBans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerBans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerBans.
+     */
+    distinct?: PlayerBanScalarFieldEnum | PlayerBanScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerBan findFirstOrThrow
+   */
+  export type PlayerBanFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerBan to fetch.
+     */
+    where?: PlayerBanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerBans to fetch.
+     */
+    orderBy?: PlayerBanOrderByWithRelationInput | PlayerBanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerBans.
+     */
+    cursor?: PlayerBanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerBans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerBans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerBans.
+     */
+    distinct?: PlayerBanScalarFieldEnum | PlayerBanScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerBan findMany
+   */
+  export type PlayerBanFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerBans to fetch.
+     */
+    where?: PlayerBanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerBans to fetch.
+     */
+    orderBy?: PlayerBanOrderByWithRelationInput | PlayerBanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PlayerBans.
+     */
+    cursor?: PlayerBanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerBans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerBans.
+     */
+    skip?: number
+    distinct?: PlayerBanScalarFieldEnum | PlayerBanScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerBan create
+   */
+  export type PlayerBanCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PlayerBan.
+     */
+    data: XOR<PlayerBanCreateInput, PlayerBanUncheckedCreateInput>
+  }
+
+  /**
+   * PlayerBan createMany
+   */
+  export type PlayerBanCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PlayerBans.
+     */
+    data: PlayerBanCreateManyInput | PlayerBanCreateManyInput[]
+  }
+
+  /**
+   * PlayerBan createManyAndReturn
+   */
+  export type PlayerBanCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PlayerBans.
+     */
+    data: PlayerBanCreateManyInput | PlayerBanCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PlayerBan update
+   */
+  export type PlayerBanUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PlayerBan.
+     */
+    data: XOR<PlayerBanUpdateInput, PlayerBanUncheckedUpdateInput>
+    /**
+     * Choose, which PlayerBan to update.
+     */
+    where: PlayerBanWhereUniqueInput
+  }
+
+  /**
+   * PlayerBan updateMany
+   */
+  export type PlayerBanUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PlayerBans.
+     */
+    data: XOR<PlayerBanUpdateManyMutationInput, PlayerBanUncheckedUpdateManyInput>
+    /**
+     * Filter which PlayerBans to update
+     */
+    where?: PlayerBanWhereInput
+  }
+
+  /**
+   * PlayerBan upsert
+   */
+  export type PlayerBanUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PlayerBan to update in case it exists.
+     */
+    where: PlayerBanWhereUniqueInput
+    /**
+     * In case the PlayerBan found by the `where` argument doesn't exist, create a new PlayerBan with this data.
+     */
+    create: XOR<PlayerBanCreateInput, PlayerBanUncheckedCreateInput>
+    /**
+     * In case the PlayerBan was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlayerBanUpdateInput, PlayerBanUncheckedUpdateInput>
+  }
+
+  /**
+   * PlayerBan delete
+   */
+  export type PlayerBanDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+    /**
+     * Filter which PlayerBan to delete.
+     */
+    where: PlayerBanWhereUniqueInput
+  }
+
+  /**
+   * PlayerBan deleteMany
+   */
+  export type PlayerBanDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerBans to delete
+     */
+    where?: PlayerBanWhereInput
+  }
+
+  /**
+   * PlayerBan without action
+   */
+  export type PlayerBanDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerBan
+     */
+    select?: PlayerBanSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerBanInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PlayerWhitelist
+   */
+
+  export type AggregatePlayerWhitelist = {
+    _count: PlayerWhitelistCountAggregateOutputType | null
+    _min: PlayerWhitelistMinAggregateOutputType | null
+    _max: PlayerWhitelistMaxAggregateOutputType | null
+  }
+
+  export type PlayerWhitelistMinAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    serverId: string | null
+    createdAt: Date | null
+  }
+
+  export type PlayerWhitelistMaxAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    serverId: string | null
+    createdAt: Date | null
+  }
+
+  export type PlayerWhitelistCountAggregateOutputType = {
+    id: number
+    playerId: number
+    serverId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type PlayerWhitelistMinAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    createdAt?: true
+  }
+
+  export type PlayerWhitelistMaxAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    createdAt?: true
+  }
+
+  export type PlayerWhitelistCountAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type PlayerWhitelistAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerWhitelist to aggregate.
+     */
+    where?: PlayerWhitelistWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerWhitelists to fetch.
+     */
+    orderBy?: PlayerWhitelistOrderByWithRelationInput | PlayerWhitelistOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlayerWhitelistWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerWhitelists from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerWhitelists.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PlayerWhitelists
+    **/
+    _count?: true | PlayerWhitelistCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlayerWhitelistMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlayerWhitelistMaxAggregateInputType
+  }
+
+  export type GetPlayerWhitelistAggregateType<T extends PlayerWhitelistAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlayerWhitelist]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlayerWhitelist[P]>
+      : GetScalarType<T[P], AggregatePlayerWhitelist[P]>
+  }
+
+
+
+
+  export type PlayerWhitelistGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerWhitelistWhereInput
+    orderBy?: PlayerWhitelistOrderByWithAggregationInput | PlayerWhitelistOrderByWithAggregationInput[]
+    by: PlayerWhitelistScalarFieldEnum[] | PlayerWhitelistScalarFieldEnum
+    having?: PlayerWhitelistScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlayerWhitelistCountAggregateInputType | true
+    _min?: PlayerWhitelistMinAggregateInputType
+    _max?: PlayerWhitelistMaxAggregateInputType
+  }
+
+  export type PlayerWhitelistGroupByOutputType = {
+    id: string
+    playerId: string
+    serverId: string
+    createdAt: Date
+    _count: PlayerWhitelistCountAggregateOutputType | null
+    _min: PlayerWhitelistMinAggregateOutputType | null
+    _max: PlayerWhitelistMaxAggregateOutputType | null
+  }
+
+  type GetPlayerWhitelistGroupByPayload<T extends PlayerWhitelistGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlayerWhitelistGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlayerWhitelistGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlayerWhitelistGroupByOutputType[P]>
+            : GetScalarType<T[P], PlayerWhitelistGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlayerWhitelistSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    createdAt?: boolean
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["playerWhitelist"]>
+
+  export type PlayerWhitelistSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    createdAt?: boolean
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["playerWhitelist"]>
+
+  export type PlayerWhitelistSelectScalar = {
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    createdAt?: boolean
+  }
+
+  export type PlayerWhitelistInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }
+  export type PlayerWhitelistIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }
+
+  export type $PlayerWhitelistPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PlayerWhitelist"
+    objects: {
+      player: Prisma.$PlayerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      playerId: string
+      serverId: string
+      createdAt: Date
+    }, ExtArgs["result"]["playerWhitelist"]>
+    composites: {}
+  }
+
+  type PlayerWhitelistGetPayload<S extends boolean | null | undefined | PlayerWhitelistDefaultArgs> = $Result.GetResult<Prisma.$PlayerWhitelistPayload, S>
+
+  type PlayerWhitelistCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PlayerWhitelistFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PlayerWhitelistCountAggregateInputType | true
+    }
+
+  export interface PlayerWhitelistDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PlayerWhitelist'], meta: { name: 'PlayerWhitelist' } }
+    /**
+     * Find zero or one PlayerWhitelist that matches the filter.
+     * @param {PlayerWhitelistFindUniqueArgs} args - Arguments to find a PlayerWhitelist
+     * @example
+     * // Get one PlayerWhitelist
+     * const playerWhitelist = await prisma.playerWhitelist.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlayerWhitelistFindUniqueArgs>(args: SelectSubset<T, PlayerWhitelistFindUniqueArgs<ExtArgs>>): Prisma__PlayerWhitelistClient<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PlayerWhitelist that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PlayerWhitelistFindUniqueOrThrowArgs} args - Arguments to find a PlayerWhitelist
+     * @example
+     * // Get one PlayerWhitelist
+     * const playerWhitelist = await prisma.playerWhitelist.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlayerWhitelistFindUniqueOrThrowArgs>(args: SelectSubset<T, PlayerWhitelistFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlayerWhitelistClient<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PlayerWhitelist that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerWhitelistFindFirstArgs} args - Arguments to find a PlayerWhitelist
+     * @example
+     * // Get one PlayerWhitelist
+     * const playerWhitelist = await prisma.playerWhitelist.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlayerWhitelistFindFirstArgs>(args?: SelectSubset<T, PlayerWhitelistFindFirstArgs<ExtArgs>>): Prisma__PlayerWhitelistClient<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PlayerWhitelist that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerWhitelistFindFirstOrThrowArgs} args - Arguments to find a PlayerWhitelist
+     * @example
+     * // Get one PlayerWhitelist
+     * const playerWhitelist = await prisma.playerWhitelist.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlayerWhitelistFindFirstOrThrowArgs>(args?: SelectSubset<T, PlayerWhitelistFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlayerWhitelistClient<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PlayerWhitelists that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerWhitelistFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PlayerWhitelists
+     * const playerWhitelists = await prisma.playerWhitelist.findMany()
+     * 
+     * // Get first 10 PlayerWhitelists
+     * const playerWhitelists = await prisma.playerWhitelist.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const playerWhitelistWithIdOnly = await prisma.playerWhitelist.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PlayerWhitelistFindManyArgs>(args?: SelectSubset<T, PlayerWhitelistFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PlayerWhitelist.
+     * @param {PlayerWhitelistCreateArgs} args - Arguments to create a PlayerWhitelist.
+     * @example
+     * // Create one PlayerWhitelist
+     * const PlayerWhitelist = await prisma.playerWhitelist.create({
+     *   data: {
+     *     // ... data to create a PlayerWhitelist
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlayerWhitelistCreateArgs>(args: SelectSubset<T, PlayerWhitelistCreateArgs<ExtArgs>>): Prisma__PlayerWhitelistClient<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PlayerWhitelists.
+     * @param {PlayerWhitelistCreateManyArgs} args - Arguments to create many PlayerWhitelists.
+     * @example
+     * // Create many PlayerWhitelists
+     * const playerWhitelist = await prisma.playerWhitelist.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlayerWhitelistCreateManyArgs>(args?: SelectSubset<T, PlayerWhitelistCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PlayerWhitelists and returns the data saved in the database.
+     * @param {PlayerWhitelistCreateManyAndReturnArgs} args - Arguments to create many PlayerWhitelists.
+     * @example
+     * // Create many PlayerWhitelists
+     * const playerWhitelist = await prisma.playerWhitelist.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PlayerWhitelists and only return the `id`
+     * const playerWhitelistWithIdOnly = await prisma.playerWhitelist.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlayerWhitelistCreateManyAndReturnArgs>(args?: SelectSubset<T, PlayerWhitelistCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PlayerWhitelist.
+     * @param {PlayerWhitelistDeleteArgs} args - Arguments to delete one PlayerWhitelist.
+     * @example
+     * // Delete one PlayerWhitelist
+     * const PlayerWhitelist = await prisma.playerWhitelist.delete({
+     *   where: {
+     *     // ... filter to delete one PlayerWhitelist
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlayerWhitelistDeleteArgs>(args: SelectSubset<T, PlayerWhitelistDeleteArgs<ExtArgs>>): Prisma__PlayerWhitelistClient<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PlayerWhitelist.
+     * @param {PlayerWhitelistUpdateArgs} args - Arguments to update one PlayerWhitelist.
+     * @example
+     * // Update one PlayerWhitelist
+     * const playerWhitelist = await prisma.playerWhitelist.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlayerWhitelistUpdateArgs>(args: SelectSubset<T, PlayerWhitelistUpdateArgs<ExtArgs>>): Prisma__PlayerWhitelistClient<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PlayerWhitelists.
+     * @param {PlayerWhitelistDeleteManyArgs} args - Arguments to filter PlayerWhitelists to delete.
+     * @example
+     * // Delete a few PlayerWhitelists
+     * const { count } = await prisma.playerWhitelist.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlayerWhitelistDeleteManyArgs>(args?: SelectSubset<T, PlayerWhitelistDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PlayerWhitelists.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerWhitelistUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PlayerWhitelists
+     * const playerWhitelist = await prisma.playerWhitelist.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlayerWhitelistUpdateManyArgs>(args: SelectSubset<T, PlayerWhitelistUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PlayerWhitelist.
+     * @param {PlayerWhitelistUpsertArgs} args - Arguments to update or create a PlayerWhitelist.
+     * @example
+     * // Update or create a PlayerWhitelist
+     * const playerWhitelist = await prisma.playerWhitelist.upsert({
+     *   create: {
+     *     // ... data to create a PlayerWhitelist
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PlayerWhitelist we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlayerWhitelistUpsertArgs>(args: SelectSubset<T, PlayerWhitelistUpsertArgs<ExtArgs>>): Prisma__PlayerWhitelistClient<$Result.GetResult<Prisma.$PlayerWhitelistPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PlayerWhitelists.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerWhitelistCountArgs} args - Arguments to filter PlayerWhitelists to count.
+     * @example
+     * // Count the number of PlayerWhitelists
+     * const count = await prisma.playerWhitelist.count({
+     *   where: {
+     *     // ... the filter for the PlayerWhitelists we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlayerWhitelistCountArgs>(
+      args?: Subset<T, PlayerWhitelistCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlayerWhitelistCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PlayerWhitelist.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerWhitelistAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlayerWhitelistAggregateArgs>(args: Subset<T, PlayerWhitelistAggregateArgs>): Prisma.PrismaPromise<GetPlayerWhitelistAggregateType<T>>
+
+    /**
+     * Group by PlayerWhitelist.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerWhitelistGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlayerWhitelistGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlayerWhitelistGroupByArgs['orderBy'] }
+        : { orderBy?: PlayerWhitelistGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlayerWhitelistGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlayerWhitelistGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PlayerWhitelist model
+   */
+  readonly fields: PlayerWhitelistFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PlayerWhitelist.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlayerWhitelistClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    player<T extends PlayerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PlayerDefaultArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PlayerWhitelist model
+   */ 
+  interface PlayerWhitelistFieldRefs {
+    readonly id: FieldRef<"PlayerWhitelist", 'String'>
+    readonly playerId: FieldRef<"PlayerWhitelist", 'String'>
+    readonly serverId: FieldRef<"PlayerWhitelist", 'String'>
+    readonly createdAt: FieldRef<"PlayerWhitelist", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PlayerWhitelist findUnique
+   */
+  export type PlayerWhitelistFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerWhitelist to fetch.
+     */
+    where: PlayerWhitelistWhereUniqueInput
+  }
+
+  /**
+   * PlayerWhitelist findUniqueOrThrow
+   */
+  export type PlayerWhitelistFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerWhitelist to fetch.
+     */
+    where: PlayerWhitelistWhereUniqueInput
+  }
+
+  /**
+   * PlayerWhitelist findFirst
+   */
+  export type PlayerWhitelistFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerWhitelist to fetch.
+     */
+    where?: PlayerWhitelistWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerWhitelists to fetch.
+     */
+    orderBy?: PlayerWhitelistOrderByWithRelationInput | PlayerWhitelistOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerWhitelists.
+     */
+    cursor?: PlayerWhitelistWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerWhitelists from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerWhitelists.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerWhitelists.
+     */
+    distinct?: PlayerWhitelistScalarFieldEnum | PlayerWhitelistScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerWhitelist findFirstOrThrow
+   */
+  export type PlayerWhitelistFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerWhitelist to fetch.
+     */
+    where?: PlayerWhitelistWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerWhitelists to fetch.
+     */
+    orderBy?: PlayerWhitelistOrderByWithRelationInput | PlayerWhitelistOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerWhitelists.
+     */
+    cursor?: PlayerWhitelistWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerWhitelists from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerWhitelists.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerWhitelists.
+     */
+    distinct?: PlayerWhitelistScalarFieldEnum | PlayerWhitelistScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerWhitelist findMany
+   */
+  export type PlayerWhitelistFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerWhitelists to fetch.
+     */
+    where?: PlayerWhitelistWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerWhitelists to fetch.
+     */
+    orderBy?: PlayerWhitelistOrderByWithRelationInput | PlayerWhitelistOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PlayerWhitelists.
+     */
+    cursor?: PlayerWhitelistWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerWhitelists from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerWhitelists.
+     */
+    skip?: number
+    distinct?: PlayerWhitelistScalarFieldEnum | PlayerWhitelistScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerWhitelist create
+   */
+  export type PlayerWhitelistCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PlayerWhitelist.
+     */
+    data: XOR<PlayerWhitelistCreateInput, PlayerWhitelistUncheckedCreateInput>
+  }
+
+  /**
+   * PlayerWhitelist createMany
+   */
+  export type PlayerWhitelistCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PlayerWhitelists.
+     */
+    data: PlayerWhitelistCreateManyInput | PlayerWhitelistCreateManyInput[]
+  }
+
+  /**
+   * PlayerWhitelist createManyAndReturn
+   */
+  export type PlayerWhitelistCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PlayerWhitelists.
+     */
+    data: PlayerWhitelistCreateManyInput | PlayerWhitelistCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PlayerWhitelist update
+   */
+  export type PlayerWhitelistUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PlayerWhitelist.
+     */
+    data: XOR<PlayerWhitelistUpdateInput, PlayerWhitelistUncheckedUpdateInput>
+    /**
+     * Choose, which PlayerWhitelist to update.
+     */
+    where: PlayerWhitelistWhereUniqueInput
+  }
+
+  /**
+   * PlayerWhitelist updateMany
+   */
+  export type PlayerWhitelistUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PlayerWhitelists.
+     */
+    data: XOR<PlayerWhitelistUpdateManyMutationInput, PlayerWhitelistUncheckedUpdateManyInput>
+    /**
+     * Filter which PlayerWhitelists to update
+     */
+    where?: PlayerWhitelistWhereInput
+  }
+
+  /**
+   * PlayerWhitelist upsert
+   */
+  export type PlayerWhitelistUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PlayerWhitelist to update in case it exists.
+     */
+    where: PlayerWhitelistWhereUniqueInput
+    /**
+     * In case the PlayerWhitelist found by the `where` argument doesn't exist, create a new PlayerWhitelist with this data.
+     */
+    create: XOR<PlayerWhitelistCreateInput, PlayerWhitelistUncheckedCreateInput>
+    /**
+     * In case the PlayerWhitelist was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlayerWhitelistUpdateInput, PlayerWhitelistUncheckedUpdateInput>
+  }
+
+  /**
+   * PlayerWhitelist delete
+   */
+  export type PlayerWhitelistDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+    /**
+     * Filter which PlayerWhitelist to delete.
+     */
+    where: PlayerWhitelistWhereUniqueInput
+  }
+
+  /**
+   * PlayerWhitelist deleteMany
+   */
+  export type PlayerWhitelistDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerWhitelists to delete
+     */
+    where?: PlayerWhitelistWhereInput
+  }
+
+  /**
+   * PlayerWhitelist without action
+   */
+  export type PlayerWhitelistDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerWhitelist
+     */
+    select?: PlayerWhitelistSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerWhitelistInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PlayerEnforcement
+   */
+
+  export type AggregatePlayerEnforcement = {
+    _count: PlayerEnforcementCountAggregateOutputType | null
+    _min: PlayerEnforcementMinAggregateOutputType | null
+    _max: PlayerEnforcementMaxAggregateOutputType | null
+  }
+
+  export type PlayerEnforcementMinAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    serverId: string | null
+    type: string | null
+    status: string | null
+    detail: string | null
+    appliedAt: Date | null
+  }
+
+  export type PlayerEnforcementMaxAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    serverId: string | null
+    type: string | null
+    status: string | null
+    detail: string | null
+    appliedAt: Date | null
+  }
+
+  export type PlayerEnforcementCountAggregateOutputType = {
+    id: number
+    playerId: number
+    serverId: number
+    type: number
+    status: number
+    detail: number
+    appliedAt: number
+    _all: number
+  }
+
+
+  export type PlayerEnforcementMinAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    type?: true
+    status?: true
+    detail?: true
+    appliedAt?: true
+  }
+
+  export type PlayerEnforcementMaxAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    type?: true
+    status?: true
+    detail?: true
+    appliedAt?: true
+  }
+
+  export type PlayerEnforcementCountAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    type?: true
+    status?: true
+    detail?: true
+    appliedAt?: true
+    _all?: true
+  }
+
+  export type PlayerEnforcementAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerEnforcement to aggregate.
+     */
+    where?: PlayerEnforcementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerEnforcements to fetch.
+     */
+    orderBy?: PlayerEnforcementOrderByWithRelationInput | PlayerEnforcementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlayerEnforcementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerEnforcements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerEnforcements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PlayerEnforcements
+    **/
+    _count?: true | PlayerEnforcementCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlayerEnforcementMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlayerEnforcementMaxAggregateInputType
+  }
+
+  export type GetPlayerEnforcementAggregateType<T extends PlayerEnforcementAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlayerEnforcement]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlayerEnforcement[P]>
+      : GetScalarType<T[P], AggregatePlayerEnforcement[P]>
+  }
+
+
+
+
+  export type PlayerEnforcementGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerEnforcementWhereInput
+    orderBy?: PlayerEnforcementOrderByWithAggregationInput | PlayerEnforcementOrderByWithAggregationInput[]
+    by: PlayerEnforcementScalarFieldEnum[] | PlayerEnforcementScalarFieldEnum
+    having?: PlayerEnforcementScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlayerEnforcementCountAggregateInputType | true
+    _min?: PlayerEnforcementMinAggregateInputType
+    _max?: PlayerEnforcementMaxAggregateInputType
+  }
+
+  export type PlayerEnforcementGroupByOutputType = {
+    id: string
+    playerId: string
+    serverId: string
+    type: string
+    status: string
+    detail: string | null
+    appliedAt: Date
+    _count: PlayerEnforcementCountAggregateOutputType | null
+    _min: PlayerEnforcementMinAggregateOutputType | null
+    _max: PlayerEnforcementMaxAggregateOutputType | null
+  }
+
+  type GetPlayerEnforcementGroupByPayload<T extends PlayerEnforcementGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlayerEnforcementGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlayerEnforcementGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlayerEnforcementGroupByOutputType[P]>
+            : GetScalarType<T[P], PlayerEnforcementGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlayerEnforcementSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    type?: boolean
+    status?: boolean
+    detail?: boolean
+    appliedAt?: boolean
+  }, ExtArgs["result"]["playerEnforcement"]>
+
+  export type PlayerEnforcementSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    type?: boolean
+    status?: boolean
+    detail?: boolean
+    appliedAt?: boolean
+  }, ExtArgs["result"]["playerEnforcement"]>
+
+  export type PlayerEnforcementSelectScalar = {
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    type?: boolean
+    status?: boolean
+    detail?: boolean
+    appliedAt?: boolean
+  }
+
+
+  export type $PlayerEnforcementPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PlayerEnforcement"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      playerId: string
+      serverId: string
+      type: string
+      status: string
+      detail: string | null
+      appliedAt: Date
+    }, ExtArgs["result"]["playerEnforcement"]>
+    composites: {}
+  }
+
+  type PlayerEnforcementGetPayload<S extends boolean | null | undefined | PlayerEnforcementDefaultArgs> = $Result.GetResult<Prisma.$PlayerEnforcementPayload, S>
+
+  type PlayerEnforcementCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PlayerEnforcementFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PlayerEnforcementCountAggregateInputType | true
+    }
+
+  export interface PlayerEnforcementDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PlayerEnforcement'], meta: { name: 'PlayerEnforcement' } }
+    /**
+     * Find zero or one PlayerEnforcement that matches the filter.
+     * @param {PlayerEnforcementFindUniqueArgs} args - Arguments to find a PlayerEnforcement
+     * @example
+     * // Get one PlayerEnforcement
+     * const playerEnforcement = await prisma.playerEnforcement.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlayerEnforcementFindUniqueArgs>(args: SelectSubset<T, PlayerEnforcementFindUniqueArgs<ExtArgs>>): Prisma__PlayerEnforcementClient<$Result.GetResult<Prisma.$PlayerEnforcementPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PlayerEnforcement that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PlayerEnforcementFindUniqueOrThrowArgs} args - Arguments to find a PlayerEnforcement
+     * @example
+     * // Get one PlayerEnforcement
+     * const playerEnforcement = await prisma.playerEnforcement.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlayerEnforcementFindUniqueOrThrowArgs>(args: SelectSubset<T, PlayerEnforcementFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlayerEnforcementClient<$Result.GetResult<Prisma.$PlayerEnforcementPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PlayerEnforcement that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEnforcementFindFirstArgs} args - Arguments to find a PlayerEnforcement
+     * @example
+     * // Get one PlayerEnforcement
+     * const playerEnforcement = await prisma.playerEnforcement.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlayerEnforcementFindFirstArgs>(args?: SelectSubset<T, PlayerEnforcementFindFirstArgs<ExtArgs>>): Prisma__PlayerEnforcementClient<$Result.GetResult<Prisma.$PlayerEnforcementPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PlayerEnforcement that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEnforcementFindFirstOrThrowArgs} args - Arguments to find a PlayerEnforcement
+     * @example
+     * // Get one PlayerEnforcement
+     * const playerEnforcement = await prisma.playerEnforcement.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlayerEnforcementFindFirstOrThrowArgs>(args?: SelectSubset<T, PlayerEnforcementFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlayerEnforcementClient<$Result.GetResult<Prisma.$PlayerEnforcementPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PlayerEnforcements that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEnforcementFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PlayerEnforcements
+     * const playerEnforcements = await prisma.playerEnforcement.findMany()
+     * 
+     * // Get first 10 PlayerEnforcements
+     * const playerEnforcements = await prisma.playerEnforcement.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const playerEnforcementWithIdOnly = await prisma.playerEnforcement.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PlayerEnforcementFindManyArgs>(args?: SelectSubset<T, PlayerEnforcementFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerEnforcementPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PlayerEnforcement.
+     * @param {PlayerEnforcementCreateArgs} args - Arguments to create a PlayerEnforcement.
+     * @example
+     * // Create one PlayerEnforcement
+     * const PlayerEnforcement = await prisma.playerEnforcement.create({
+     *   data: {
+     *     // ... data to create a PlayerEnforcement
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlayerEnforcementCreateArgs>(args: SelectSubset<T, PlayerEnforcementCreateArgs<ExtArgs>>): Prisma__PlayerEnforcementClient<$Result.GetResult<Prisma.$PlayerEnforcementPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PlayerEnforcements.
+     * @param {PlayerEnforcementCreateManyArgs} args - Arguments to create many PlayerEnforcements.
+     * @example
+     * // Create many PlayerEnforcements
+     * const playerEnforcement = await prisma.playerEnforcement.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlayerEnforcementCreateManyArgs>(args?: SelectSubset<T, PlayerEnforcementCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PlayerEnforcements and returns the data saved in the database.
+     * @param {PlayerEnforcementCreateManyAndReturnArgs} args - Arguments to create many PlayerEnforcements.
+     * @example
+     * // Create many PlayerEnforcements
+     * const playerEnforcement = await prisma.playerEnforcement.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PlayerEnforcements and only return the `id`
+     * const playerEnforcementWithIdOnly = await prisma.playerEnforcement.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlayerEnforcementCreateManyAndReturnArgs>(args?: SelectSubset<T, PlayerEnforcementCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerEnforcementPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PlayerEnforcement.
+     * @param {PlayerEnforcementDeleteArgs} args - Arguments to delete one PlayerEnforcement.
+     * @example
+     * // Delete one PlayerEnforcement
+     * const PlayerEnforcement = await prisma.playerEnforcement.delete({
+     *   where: {
+     *     // ... filter to delete one PlayerEnforcement
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlayerEnforcementDeleteArgs>(args: SelectSubset<T, PlayerEnforcementDeleteArgs<ExtArgs>>): Prisma__PlayerEnforcementClient<$Result.GetResult<Prisma.$PlayerEnforcementPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PlayerEnforcement.
+     * @param {PlayerEnforcementUpdateArgs} args - Arguments to update one PlayerEnforcement.
+     * @example
+     * // Update one PlayerEnforcement
+     * const playerEnforcement = await prisma.playerEnforcement.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlayerEnforcementUpdateArgs>(args: SelectSubset<T, PlayerEnforcementUpdateArgs<ExtArgs>>): Prisma__PlayerEnforcementClient<$Result.GetResult<Prisma.$PlayerEnforcementPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PlayerEnforcements.
+     * @param {PlayerEnforcementDeleteManyArgs} args - Arguments to filter PlayerEnforcements to delete.
+     * @example
+     * // Delete a few PlayerEnforcements
+     * const { count } = await prisma.playerEnforcement.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlayerEnforcementDeleteManyArgs>(args?: SelectSubset<T, PlayerEnforcementDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PlayerEnforcements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEnforcementUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PlayerEnforcements
+     * const playerEnforcement = await prisma.playerEnforcement.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlayerEnforcementUpdateManyArgs>(args: SelectSubset<T, PlayerEnforcementUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PlayerEnforcement.
+     * @param {PlayerEnforcementUpsertArgs} args - Arguments to update or create a PlayerEnforcement.
+     * @example
+     * // Update or create a PlayerEnforcement
+     * const playerEnforcement = await prisma.playerEnforcement.upsert({
+     *   create: {
+     *     // ... data to create a PlayerEnforcement
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PlayerEnforcement we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlayerEnforcementUpsertArgs>(args: SelectSubset<T, PlayerEnforcementUpsertArgs<ExtArgs>>): Prisma__PlayerEnforcementClient<$Result.GetResult<Prisma.$PlayerEnforcementPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PlayerEnforcements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEnforcementCountArgs} args - Arguments to filter PlayerEnforcements to count.
+     * @example
+     * // Count the number of PlayerEnforcements
+     * const count = await prisma.playerEnforcement.count({
+     *   where: {
+     *     // ... the filter for the PlayerEnforcements we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlayerEnforcementCountArgs>(
+      args?: Subset<T, PlayerEnforcementCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlayerEnforcementCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PlayerEnforcement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEnforcementAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlayerEnforcementAggregateArgs>(args: Subset<T, PlayerEnforcementAggregateArgs>): Prisma.PrismaPromise<GetPlayerEnforcementAggregateType<T>>
+
+    /**
+     * Group by PlayerEnforcement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEnforcementGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlayerEnforcementGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlayerEnforcementGroupByArgs['orderBy'] }
+        : { orderBy?: PlayerEnforcementGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlayerEnforcementGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlayerEnforcementGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PlayerEnforcement model
+   */
+  readonly fields: PlayerEnforcementFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PlayerEnforcement.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlayerEnforcementClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PlayerEnforcement model
+   */ 
+  interface PlayerEnforcementFieldRefs {
+    readonly id: FieldRef<"PlayerEnforcement", 'String'>
+    readonly playerId: FieldRef<"PlayerEnforcement", 'String'>
+    readonly serverId: FieldRef<"PlayerEnforcement", 'String'>
+    readonly type: FieldRef<"PlayerEnforcement", 'String'>
+    readonly status: FieldRef<"PlayerEnforcement", 'String'>
+    readonly detail: FieldRef<"PlayerEnforcement", 'String'>
+    readonly appliedAt: FieldRef<"PlayerEnforcement", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PlayerEnforcement findUnique
+   */
+  export type PlayerEnforcementFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelect<ExtArgs> | null
+    /**
+     * Filter, which PlayerEnforcement to fetch.
+     */
+    where: PlayerEnforcementWhereUniqueInput
+  }
+
+  /**
+   * PlayerEnforcement findUniqueOrThrow
+   */
+  export type PlayerEnforcementFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelect<ExtArgs> | null
+    /**
+     * Filter, which PlayerEnforcement to fetch.
+     */
+    where: PlayerEnforcementWhereUniqueInput
+  }
+
+  /**
+   * PlayerEnforcement findFirst
+   */
+  export type PlayerEnforcementFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelect<ExtArgs> | null
+    /**
+     * Filter, which PlayerEnforcement to fetch.
+     */
+    where?: PlayerEnforcementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerEnforcements to fetch.
+     */
+    orderBy?: PlayerEnforcementOrderByWithRelationInput | PlayerEnforcementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerEnforcements.
+     */
+    cursor?: PlayerEnforcementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerEnforcements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerEnforcements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerEnforcements.
+     */
+    distinct?: PlayerEnforcementScalarFieldEnum | PlayerEnforcementScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerEnforcement findFirstOrThrow
+   */
+  export type PlayerEnforcementFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelect<ExtArgs> | null
+    /**
+     * Filter, which PlayerEnforcement to fetch.
+     */
+    where?: PlayerEnforcementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerEnforcements to fetch.
+     */
+    orderBy?: PlayerEnforcementOrderByWithRelationInput | PlayerEnforcementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerEnforcements.
+     */
+    cursor?: PlayerEnforcementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerEnforcements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerEnforcements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerEnforcements.
+     */
+    distinct?: PlayerEnforcementScalarFieldEnum | PlayerEnforcementScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerEnforcement findMany
+   */
+  export type PlayerEnforcementFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelect<ExtArgs> | null
+    /**
+     * Filter, which PlayerEnforcements to fetch.
+     */
+    where?: PlayerEnforcementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerEnforcements to fetch.
+     */
+    orderBy?: PlayerEnforcementOrderByWithRelationInput | PlayerEnforcementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PlayerEnforcements.
+     */
+    cursor?: PlayerEnforcementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerEnforcements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerEnforcements.
+     */
+    skip?: number
+    distinct?: PlayerEnforcementScalarFieldEnum | PlayerEnforcementScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerEnforcement create
+   */
+  export type PlayerEnforcementCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelect<ExtArgs> | null
+    /**
+     * The data needed to create a PlayerEnforcement.
+     */
+    data: XOR<PlayerEnforcementCreateInput, PlayerEnforcementUncheckedCreateInput>
+  }
+
+  /**
+   * PlayerEnforcement createMany
+   */
+  export type PlayerEnforcementCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PlayerEnforcements.
+     */
+    data: PlayerEnforcementCreateManyInput | PlayerEnforcementCreateManyInput[]
+  }
+
+  /**
+   * PlayerEnforcement createManyAndReturn
+   */
+  export type PlayerEnforcementCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PlayerEnforcements.
+     */
+    data: PlayerEnforcementCreateManyInput | PlayerEnforcementCreateManyInput[]
+  }
+
+  /**
+   * PlayerEnforcement update
+   */
+  export type PlayerEnforcementUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelect<ExtArgs> | null
+    /**
+     * The data needed to update a PlayerEnforcement.
+     */
+    data: XOR<PlayerEnforcementUpdateInput, PlayerEnforcementUncheckedUpdateInput>
+    /**
+     * Choose, which PlayerEnforcement to update.
+     */
+    where: PlayerEnforcementWhereUniqueInput
+  }
+
+  /**
+   * PlayerEnforcement updateMany
+   */
+  export type PlayerEnforcementUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PlayerEnforcements.
+     */
+    data: XOR<PlayerEnforcementUpdateManyMutationInput, PlayerEnforcementUncheckedUpdateManyInput>
+    /**
+     * Filter which PlayerEnforcements to update
+     */
+    where?: PlayerEnforcementWhereInput
+  }
+
+  /**
+   * PlayerEnforcement upsert
+   */
+  export type PlayerEnforcementUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelect<ExtArgs> | null
+    /**
+     * The filter to search for the PlayerEnforcement to update in case it exists.
+     */
+    where: PlayerEnforcementWhereUniqueInput
+    /**
+     * In case the PlayerEnforcement found by the `where` argument doesn't exist, create a new PlayerEnforcement with this data.
+     */
+    create: XOR<PlayerEnforcementCreateInput, PlayerEnforcementUncheckedCreateInput>
+    /**
+     * In case the PlayerEnforcement was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlayerEnforcementUpdateInput, PlayerEnforcementUncheckedUpdateInput>
+  }
+
+  /**
+   * PlayerEnforcement delete
+   */
+  export type PlayerEnforcementDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelect<ExtArgs> | null
+    /**
+     * Filter which PlayerEnforcement to delete.
+     */
+    where: PlayerEnforcementWhereUniqueInput
+  }
+
+  /**
+   * PlayerEnforcement deleteMany
+   */
+  export type PlayerEnforcementDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerEnforcements to delete
+     */
+    where?: PlayerEnforcementWhereInput
+  }
+
+  /**
+   * PlayerEnforcement without action
+   */
+  export type PlayerEnforcementDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEnforcement
+     */
+    select?: PlayerEnforcementSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PlayerEvent
+   */
+
+  export type AggregatePlayerEvent = {
+    _count: PlayerEventCountAggregateOutputType | null
+    _min: PlayerEventMinAggregateOutputType | null
+    _max: PlayerEventMaxAggregateOutputType | null
+  }
+
+  export type PlayerEventMinAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    actorId: string | null
+    action: string | null
+    detail: string | null
+    createdAt: Date | null
+  }
+
+  export type PlayerEventMaxAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    actorId: string | null
+    action: string | null
+    detail: string | null
+    createdAt: Date | null
+  }
+
+  export type PlayerEventCountAggregateOutputType = {
+    id: number
+    playerId: number
+    actorId: number
+    action: number
+    detail: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type PlayerEventMinAggregateInputType = {
+    id?: true
+    playerId?: true
+    actorId?: true
+    action?: true
+    detail?: true
+    createdAt?: true
+  }
+
+  export type PlayerEventMaxAggregateInputType = {
+    id?: true
+    playerId?: true
+    actorId?: true
+    action?: true
+    detail?: true
+    createdAt?: true
+  }
+
+  export type PlayerEventCountAggregateInputType = {
+    id?: true
+    playerId?: true
+    actorId?: true
+    action?: true
+    detail?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type PlayerEventAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerEvent to aggregate.
+     */
+    where?: PlayerEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerEvents to fetch.
+     */
+    orderBy?: PlayerEventOrderByWithRelationInput | PlayerEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlayerEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PlayerEvents
+    **/
+    _count?: true | PlayerEventCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlayerEventMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlayerEventMaxAggregateInputType
+  }
+
+  export type GetPlayerEventAggregateType<T extends PlayerEventAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlayerEvent]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlayerEvent[P]>
+      : GetScalarType<T[P], AggregatePlayerEvent[P]>
+  }
+
+
+
+
+  export type PlayerEventGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerEventWhereInput
+    orderBy?: PlayerEventOrderByWithAggregationInput | PlayerEventOrderByWithAggregationInput[]
+    by: PlayerEventScalarFieldEnum[] | PlayerEventScalarFieldEnum
+    having?: PlayerEventScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlayerEventCountAggregateInputType | true
+    _min?: PlayerEventMinAggregateInputType
+    _max?: PlayerEventMaxAggregateInputType
+  }
+
+  export type PlayerEventGroupByOutputType = {
+    id: string
+    playerId: string
+    actorId: string
+    action: string
+    detail: string
+    createdAt: Date
+    _count: PlayerEventCountAggregateOutputType | null
+    _min: PlayerEventMinAggregateOutputType | null
+    _max: PlayerEventMaxAggregateOutputType | null
+  }
+
+  type GetPlayerEventGroupByPayload<T extends PlayerEventGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlayerEventGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlayerEventGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlayerEventGroupByOutputType[P]>
+            : GetScalarType<T[P], PlayerEventGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlayerEventSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    actorId?: boolean
+    action?: boolean
+    detail?: boolean
+    createdAt?: boolean
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["playerEvent"]>
+
+  export type PlayerEventSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    actorId?: boolean
+    action?: boolean
+    detail?: boolean
+    createdAt?: boolean
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["playerEvent"]>
+
+  export type PlayerEventSelectScalar = {
+    id?: boolean
+    playerId?: boolean
+    actorId?: boolean
+    action?: boolean
+    detail?: boolean
+    createdAt?: boolean
+  }
+
+  export type PlayerEventInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }
+  export type PlayerEventIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+  }
+
+  export type $PlayerEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PlayerEvent"
+    objects: {
+      player: Prisma.$PlayerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      playerId: string
+      actorId: string
+      action: string
+      detail: string
+      createdAt: Date
+    }, ExtArgs["result"]["playerEvent"]>
+    composites: {}
+  }
+
+  type PlayerEventGetPayload<S extends boolean | null | undefined | PlayerEventDefaultArgs> = $Result.GetResult<Prisma.$PlayerEventPayload, S>
+
+  type PlayerEventCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PlayerEventFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PlayerEventCountAggregateInputType | true
+    }
+
+  export interface PlayerEventDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PlayerEvent'], meta: { name: 'PlayerEvent' } }
+    /**
+     * Find zero or one PlayerEvent that matches the filter.
+     * @param {PlayerEventFindUniqueArgs} args - Arguments to find a PlayerEvent
+     * @example
+     * // Get one PlayerEvent
+     * const playerEvent = await prisma.playerEvent.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlayerEventFindUniqueArgs>(args: SelectSubset<T, PlayerEventFindUniqueArgs<ExtArgs>>): Prisma__PlayerEventClient<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PlayerEvent that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PlayerEventFindUniqueOrThrowArgs} args - Arguments to find a PlayerEvent
+     * @example
+     * // Get one PlayerEvent
+     * const playerEvent = await prisma.playerEvent.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlayerEventFindUniqueOrThrowArgs>(args: SelectSubset<T, PlayerEventFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlayerEventClient<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PlayerEvent that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEventFindFirstArgs} args - Arguments to find a PlayerEvent
+     * @example
+     * // Get one PlayerEvent
+     * const playerEvent = await prisma.playerEvent.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlayerEventFindFirstArgs>(args?: SelectSubset<T, PlayerEventFindFirstArgs<ExtArgs>>): Prisma__PlayerEventClient<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PlayerEvent that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEventFindFirstOrThrowArgs} args - Arguments to find a PlayerEvent
+     * @example
+     * // Get one PlayerEvent
+     * const playerEvent = await prisma.playerEvent.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlayerEventFindFirstOrThrowArgs>(args?: SelectSubset<T, PlayerEventFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlayerEventClient<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PlayerEvents that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEventFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PlayerEvents
+     * const playerEvents = await prisma.playerEvent.findMany()
+     * 
+     * // Get first 10 PlayerEvents
+     * const playerEvents = await prisma.playerEvent.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const playerEventWithIdOnly = await prisma.playerEvent.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PlayerEventFindManyArgs>(args?: SelectSubset<T, PlayerEventFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PlayerEvent.
+     * @param {PlayerEventCreateArgs} args - Arguments to create a PlayerEvent.
+     * @example
+     * // Create one PlayerEvent
+     * const PlayerEvent = await prisma.playerEvent.create({
+     *   data: {
+     *     // ... data to create a PlayerEvent
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlayerEventCreateArgs>(args: SelectSubset<T, PlayerEventCreateArgs<ExtArgs>>): Prisma__PlayerEventClient<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PlayerEvents.
+     * @param {PlayerEventCreateManyArgs} args - Arguments to create many PlayerEvents.
+     * @example
+     * // Create many PlayerEvents
+     * const playerEvent = await prisma.playerEvent.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlayerEventCreateManyArgs>(args?: SelectSubset<T, PlayerEventCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PlayerEvents and returns the data saved in the database.
+     * @param {PlayerEventCreateManyAndReturnArgs} args - Arguments to create many PlayerEvents.
+     * @example
+     * // Create many PlayerEvents
+     * const playerEvent = await prisma.playerEvent.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PlayerEvents and only return the `id`
+     * const playerEventWithIdOnly = await prisma.playerEvent.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlayerEventCreateManyAndReturnArgs>(args?: SelectSubset<T, PlayerEventCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PlayerEvent.
+     * @param {PlayerEventDeleteArgs} args - Arguments to delete one PlayerEvent.
+     * @example
+     * // Delete one PlayerEvent
+     * const PlayerEvent = await prisma.playerEvent.delete({
+     *   where: {
+     *     // ... filter to delete one PlayerEvent
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlayerEventDeleteArgs>(args: SelectSubset<T, PlayerEventDeleteArgs<ExtArgs>>): Prisma__PlayerEventClient<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PlayerEvent.
+     * @param {PlayerEventUpdateArgs} args - Arguments to update one PlayerEvent.
+     * @example
+     * // Update one PlayerEvent
+     * const playerEvent = await prisma.playerEvent.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlayerEventUpdateArgs>(args: SelectSubset<T, PlayerEventUpdateArgs<ExtArgs>>): Prisma__PlayerEventClient<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PlayerEvents.
+     * @param {PlayerEventDeleteManyArgs} args - Arguments to filter PlayerEvents to delete.
+     * @example
+     * // Delete a few PlayerEvents
+     * const { count } = await prisma.playerEvent.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlayerEventDeleteManyArgs>(args?: SelectSubset<T, PlayerEventDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PlayerEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEventUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PlayerEvents
+     * const playerEvent = await prisma.playerEvent.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlayerEventUpdateManyArgs>(args: SelectSubset<T, PlayerEventUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PlayerEvent.
+     * @param {PlayerEventUpsertArgs} args - Arguments to update or create a PlayerEvent.
+     * @example
+     * // Update or create a PlayerEvent
+     * const playerEvent = await prisma.playerEvent.upsert({
+     *   create: {
+     *     // ... data to create a PlayerEvent
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PlayerEvent we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlayerEventUpsertArgs>(args: SelectSubset<T, PlayerEventUpsertArgs<ExtArgs>>): Prisma__PlayerEventClient<$Result.GetResult<Prisma.$PlayerEventPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PlayerEvents.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEventCountArgs} args - Arguments to filter PlayerEvents to count.
+     * @example
+     * // Count the number of PlayerEvents
+     * const count = await prisma.playerEvent.count({
+     *   where: {
+     *     // ... the filter for the PlayerEvents we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlayerEventCountArgs>(
+      args?: Subset<T, PlayerEventCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlayerEventCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PlayerEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEventAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlayerEventAggregateArgs>(args: Subset<T, PlayerEventAggregateArgs>): Prisma.PrismaPromise<GetPlayerEventAggregateType<T>>
+
+    /**
+     * Group by PlayerEvent.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerEventGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlayerEventGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlayerEventGroupByArgs['orderBy'] }
+        : { orderBy?: PlayerEventGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlayerEventGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlayerEventGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PlayerEvent model
+   */
+  readonly fields: PlayerEventFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PlayerEvent.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlayerEventClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    player<T extends PlayerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PlayerDefaultArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PlayerEvent model
+   */ 
+  interface PlayerEventFieldRefs {
+    readonly id: FieldRef<"PlayerEvent", 'String'>
+    readonly playerId: FieldRef<"PlayerEvent", 'String'>
+    readonly actorId: FieldRef<"PlayerEvent", 'String'>
+    readonly action: FieldRef<"PlayerEvent", 'String'>
+    readonly detail: FieldRef<"PlayerEvent", 'String'>
+    readonly createdAt: FieldRef<"PlayerEvent", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PlayerEvent findUnique
+   */
+  export type PlayerEventFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerEvent to fetch.
+     */
+    where: PlayerEventWhereUniqueInput
+  }
+
+  /**
+   * PlayerEvent findUniqueOrThrow
+   */
+  export type PlayerEventFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerEvent to fetch.
+     */
+    where: PlayerEventWhereUniqueInput
+  }
+
+  /**
+   * PlayerEvent findFirst
+   */
+  export type PlayerEventFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerEvent to fetch.
+     */
+    where?: PlayerEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerEvents to fetch.
+     */
+    orderBy?: PlayerEventOrderByWithRelationInput | PlayerEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerEvents.
+     */
+    cursor?: PlayerEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerEvents.
+     */
+    distinct?: PlayerEventScalarFieldEnum | PlayerEventScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerEvent findFirstOrThrow
+   */
+  export type PlayerEventFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerEvent to fetch.
+     */
+    where?: PlayerEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerEvents to fetch.
+     */
+    orderBy?: PlayerEventOrderByWithRelationInput | PlayerEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerEvents.
+     */
+    cursor?: PlayerEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerEvents.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerEvents.
+     */
+    distinct?: PlayerEventScalarFieldEnum | PlayerEventScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerEvent findMany
+   */
+  export type PlayerEventFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerEvents to fetch.
+     */
+    where?: PlayerEventWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerEvents to fetch.
+     */
+    orderBy?: PlayerEventOrderByWithRelationInput | PlayerEventOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PlayerEvents.
+     */
+    cursor?: PlayerEventWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerEvents from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerEvents.
+     */
+    skip?: number
+    distinct?: PlayerEventScalarFieldEnum | PlayerEventScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerEvent create
+   */
+  export type PlayerEventCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PlayerEvent.
+     */
+    data: XOR<PlayerEventCreateInput, PlayerEventUncheckedCreateInput>
+  }
+
+  /**
+   * PlayerEvent createMany
+   */
+  export type PlayerEventCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PlayerEvents.
+     */
+    data: PlayerEventCreateManyInput | PlayerEventCreateManyInput[]
+  }
+
+  /**
+   * PlayerEvent createManyAndReturn
+   */
+  export type PlayerEventCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PlayerEvents.
+     */
+    data: PlayerEventCreateManyInput | PlayerEventCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PlayerEvent update
+   */
+  export type PlayerEventUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PlayerEvent.
+     */
+    data: XOR<PlayerEventUpdateInput, PlayerEventUncheckedUpdateInput>
+    /**
+     * Choose, which PlayerEvent to update.
+     */
+    where: PlayerEventWhereUniqueInput
+  }
+
+  /**
+   * PlayerEvent updateMany
+   */
+  export type PlayerEventUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PlayerEvents.
+     */
+    data: XOR<PlayerEventUpdateManyMutationInput, PlayerEventUncheckedUpdateManyInput>
+    /**
+     * Filter which PlayerEvents to update
+     */
+    where?: PlayerEventWhereInput
+  }
+
+  /**
+   * PlayerEvent upsert
+   */
+  export type PlayerEventUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PlayerEvent to update in case it exists.
+     */
+    where: PlayerEventWhereUniqueInput
+    /**
+     * In case the PlayerEvent found by the `where` argument doesn't exist, create a new PlayerEvent with this data.
+     */
+    create: XOR<PlayerEventCreateInput, PlayerEventUncheckedCreateInput>
+    /**
+     * In case the PlayerEvent was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlayerEventUpdateInput, PlayerEventUncheckedUpdateInput>
+  }
+
+  /**
+   * PlayerEvent delete
+   */
+  export type PlayerEventDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+    /**
+     * Filter which PlayerEvent to delete.
+     */
+    where: PlayerEventWhereUniqueInput
+  }
+
+  /**
+   * PlayerEvent deleteMany
+   */
+  export type PlayerEventDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerEvents to delete
+     */
+    where?: PlayerEventWhereInput
+  }
+
+  /**
+   * PlayerEvent without action
+   */
+  export type PlayerEventDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerEvent
+     */
+    select?: PlayerEventSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerEventInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -15759,6 +21065,71 @@ export namespace Prisma {
   export type TemplateVoteScalarFieldEnum = (typeof TemplateVoteScalarFieldEnum)[keyof typeof TemplateVoteScalarFieldEnum]
 
 
+  export const PlayerScalarFieldEnum: {
+    id: 'id',
+    ownerId: 'ownerId',
+    displayName: 'displayName',
+    steamId: 'steamId',
+    xboxId: 'xboxId',
+    minecraftUuid: 'minecraftUuid',
+    minecraftName: 'minecraftName',
+    discordId: 'discordId',
+    notes: 'notes',
+    status: 'status',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type PlayerScalarFieldEnum = (typeof PlayerScalarFieldEnum)[keyof typeof PlayerScalarFieldEnum]
+
+
+  export const PlayerBanScalarFieldEnum: {
+    id: 'id',
+    playerId: 'playerId',
+    reason: 'reason',
+    expiresAt: 'expiresAt',
+    active: 'active',
+    createdAt: 'createdAt'
+  };
+
+  export type PlayerBanScalarFieldEnum = (typeof PlayerBanScalarFieldEnum)[keyof typeof PlayerBanScalarFieldEnum]
+
+
+  export const PlayerWhitelistScalarFieldEnum: {
+    id: 'id',
+    playerId: 'playerId',
+    serverId: 'serverId',
+    createdAt: 'createdAt'
+  };
+
+  export type PlayerWhitelistScalarFieldEnum = (typeof PlayerWhitelistScalarFieldEnum)[keyof typeof PlayerWhitelistScalarFieldEnum]
+
+
+  export const PlayerEnforcementScalarFieldEnum: {
+    id: 'id',
+    playerId: 'playerId',
+    serverId: 'serverId',
+    type: 'type',
+    status: 'status',
+    detail: 'detail',
+    appliedAt: 'appliedAt'
+  };
+
+  export type PlayerEnforcementScalarFieldEnum = (typeof PlayerEnforcementScalarFieldEnum)[keyof typeof PlayerEnforcementScalarFieldEnum]
+
+
+  export const PlayerEventScalarFieldEnum: {
+    id: 'id',
+    playerId: 'playerId',
+    actorId: 'actorId',
+    action: 'action',
+    detail: 'detail',
+    createdAt: 'createdAt'
+  };
+
+  export type PlayerEventScalarFieldEnum = (typeof PlayerEventScalarFieldEnum)[keyof typeof PlayerEventScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -15836,6 +21207,7 @@ export namespace Prisma {
     logs?: ActivityLogListRelationFilter
     collaboratorAccess?: CollaboratorListRelationFilter
     templateVotes?: TemplateVoteListRelationFilter
+    players?: PlayerListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -15853,6 +21225,7 @@ export namespace Prisma {
     logs?: ActivityLogOrderByRelationAggregateInput
     collaboratorAccess?: CollaboratorOrderByRelationAggregateInput
     templateVotes?: TemplateVoteOrderByRelationAggregateInput
+    players?: PlayerOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -15873,6 +21246,7 @@ export namespace Prisma {
     logs?: ActivityLogListRelationFilter
     collaboratorAccess?: CollaboratorListRelationFilter
     templateVotes?: TemplateVoteListRelationFilter
+    players?: PlayerListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -16888,6 +22262,339 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"TemplateVote"> | Date | string
   }
 
+  export type PlayerWhereInput = {
+    AND?: PlayerWhereInput | PlayerWhereInput[]
+    OR?: PlayerWhereInput[]
+    NOT?: PlayerWhereInput | PlayerWhereInput[]
+    id?: StringFilter<"Player"> | string
+    ownerId?: StringFilter<"Player"> | string
+    displayName?: StringFilter<"Player"> | string
+    steamId?: StringNullableFilter<"Player"> | string | null
+    xboxId?: StringNullableFilter<"Player"> | string | null
+    minecraftUuid?: StringNullableFilter<"Player"> | string | null
+    minecraftName?: StringNullableFilter<"Player"> | string | null
+    discordId?: StringNullableFilter<"Player"> | string | null
+    notes?: StringNullableFilter<"Player"> | string | null
+    status?: StringFilter<"Player"> | string
+    createdAt?: DateTimeFilter<"Player"> | Date | string
+    updatedAt?: DateTimeFilter<"Player"> | Date | string
+    owner?: XOR<UserRelationFilter, UserWhereInput>
+    bans?: PlayerBanListRelationFilter
+    whitelists?: PlayerWhitelistListRelationFilter
+    events?: PlayerEventListRelationFilter
+  }
+
+  export type PlayerOrderByWithRelationInput = {
+    id?: SortOrder
+    ownerId?: SortOrder
+    displayName?: SortOrder
+    steamId?: SortOrderInput | SortOrder
+    xboxId?: SortOrderInput | SortOrder
+    minecraftUuid?: SortOrderInput | SortOrder
+    minecraftName?: SortOrderInput | SortOrder
+    discordId?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    owner?: UserOrderByWithRelationInput
+    bans?: PlayerBanOrderByRelationAggregateInput
+    whitelists?: PlayerWhitelistOrderByRelationAggregateInput
+    events?: PlayerEventOrderByRelationAggregateInput
+  }
+
+  export type PlayerWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PlayerWhereInput | PlayerWhereInput[]
+    OR?: PlayerWhereInput[]
+    NOT?: PlayerWhereInput | PlayerWhereInput[]
+    ownerId?: StringFilter<"Player"> | string
+    displayName?: StringFilter<"Player"> | string
+    steamId?: StringNullableFilter<"Player"> | string | null
+    xboxId?: StringNullableFilter<"Player"> | string | null
+    minecraftUuid?: StringNullableFilter<"Player"> | string | null
+    minecraftName?: StringNullableFilter<"Player"> | string | null
+    discordId?: StringNullableFilter<"Player"> | string | null
+    notes?: StringNullableFilter<"Player"> | string | null
+    status?: StringFilter<"Player"> | string
+    createdAt?: DateTimeFilter<"Player"> | Date | string
+    updatedAt?: DateTimeFilter<"Player"> | Date | string
+    owner?: XOR<UserRelationFilter, UserWhereInput>
+    bans?: PlayerBanListRelationFilter
+    whitelists?: PlayerWhitelistListRelationFilter
+    events?: PlayerEventListRelationFilter
+  }, "id">
+
+  export type PlayerOrderByWithAggregationInput = {
+    id?: SortOrder
+    ownerId?: SortOrder
+    displayName?: SortOrder
+    steamId?: SortOrderInput | SortOrder
+    xboxId?: SortOrderInput | SortOrder
+    minecraftUuid?: SortOrderInput | SortOrder
+    minecraftName?: SortOrderInput | SortOrder
+    discordId?: SortOrderInput | SortOrder
+    notes?: SortOrderInput | SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: PlayerCountOrderByAggregateInput
+    _max?: PlayerMaxOrderByAggregateInput
+    _min?: PlayerMinOrderByAggregateInput
+  }
+
+  export type PlayerScalarWhereWithAggregatesInput = {
+    AND?: PlayerScalarWhereWithAggregatesInput | PlayerScalarWhereWithAggregatesInput[]
+    OR?: PlayerScalarWhereWithAggregatesInput[]
+    NOT?: PlayerScalarWhereWithAggregatesInput | PlayerScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Player"> | string
+    ownerId?: StringWithAggregatesFilter<"Player"> | string
+    displayName?: StringWithAggregatesFilter<"Player"> | string
+    steamId?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    xboxId?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    minecraftUuid?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    minecraftName?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    discordId?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    notes?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    status?: StringWithAggregatesFilter<"Player"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"Player"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Player"> | Date | string
+  }
+
+  export type PlayerBanWhereInput = {
+    AND?: PlayerBanWhereInput | PlayerBanWhereInput[]
+    OR?: PlayerBanWhereInput[]
+    NOT?: PlayerBanWhereInput | PlayerBanWhereInput[]
+    id?: StringFilter<"PlayerBan"> | string
+    playerId?: StringFilter<"PlayerBan"> | string
+    reason?: StringFilter<"PlayerBan"> | string
+    expiresAt?: DateTimeNullableFilter<"PlayerBan"> | Date | string | null
+    active?: BoolFilter<"PlayerBan"> | boolean
+    createdAt?: DateTimeFilter<"PlayerBan"> | Date | string
+    player?: XOR<PlayerRelationFilter, PlayerWhereInput>
+  }
+
+  export type PlayerBanOrderByWithRelationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    reason?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    player?: PlayerOrderByWithRelationInput
+  }
+
+  export type PlayerBanWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PlayerBanWhereInput | PlayerBanWhereInput[]
+    OR?: PlayerBanWhereInput[]
+    NOT?: PlayerBanWhereInput | PlayerBanWhereInput[]
+    playerId?: StringFilter<"PlayerBan"> | string
+    reason?: StringFilter<"PlayerBan"> | string
+    expiresAt?: DateTimeNullableFilter<"PlayerBan"> | Date | string | null
+    active?: BoolFilter<"PlayerBan"> | boolean
+    createdAt?: DateTimeFilter<"PlayerBan"> | Date | string
+    player?: XOR<PlayerRelationFilter, PlayerWhereInput>
+  }, "id">
+
+  export type PlayerBanOrderByWithAggregationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    reason?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+    _count?: PlayerBanCountOrderByAggregateInput
+    _max?: PlayerBanMaxOrderByAggregateInput
+    _min?: PlayerBanMinOrderByAggregateInput
+  }
+
+  export type PlayerBanScalarWhereWithAggregatesInput = {
+    AND?: PlayerBanScalarWhereWithAggregatesInput | PlayerBanScalarWhereWithAggregatesInput[]
+    OR?: PlayerBanScalarWhereWithAggregatesInput[]
+    NOT?: PlayerBanScalarWhereWithAggregatesInput | PlayerBanScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PlayerBan"> | string
+    playerId?: StringWithAggregatesFilter<"PlayerBan"> | string
+    reason?: StringWithAggregatesFilter<"PlayerBan"> | string
+    expiresAt?: DateTimeNullableWithAggregatesFilter<"PlayerBan"> | Date | string | null
+    active?: BoolWithAggregatesFilter<"PlayerBan"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"PlayerBan"> | Date | string
+  }
+
+  export type PlayerWhitelistWhereInput = {
+    AND?: PlayerWhitelistWhereInput | PlayerWhitelistWhereInput[]
+    OR?: PlayerWhitelistWhereInput[]
+    NOT?: PlayerWhitelistWhereInput | PlayerWhitelistWhereInput[]
+    id?: StringFilter<"PlayerWhitelist"> | string
+    playerId?: StringFilter<"PlayerWhitelist"> | string
+    serverId?: StringFilter<"PlayerWhitelist"> | string
+    createdAt?: DateTimeFilter<"PlayerWhitelist"> | Date | string
+    player?: XOR<PlayerRelationFilter, PlayerWhereInput>
+  }
+
+  export type PlayerWhitelistOrderByWithRelationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    createdAt?: SortOrder
+    player?: PlayerOrderByWithRelationInput
+  }
+
+  export type PlayerWhitelistWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    playerId_serverId?: PlayerWhitelistPlayerIdServerIdCompoundUniqueInput
+    AND?: PlayerWhitelistWhereInput | PlayerWhitelistWhereInput[]
+    OR?: PlayerWhitelistWhereInput[]
+    NOT?: PlayerWhitelistWhereInput | PlayerWhitelistWhereInput[]
+    playerId?: StringFilter<"PlayerWhitelist"> | string
+    serverId?: StringFilter<"PlayerWhitelist"> | string
+    createdAt?: DateTimeFilter<"PlayerWhitelist"> | Date | string
+    player?: XOR<PlayerRelationFilter, PlayerWhereInput>
+  }, "id" | "playerId_serverId">
+
+  export type PlayerWhitelistOrderByWithAggregationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    createdAt?: SortOrder
+    _count?: PlayerWhitelistCountOrderByAggregateInput
+    _max?: PlayerWhitelistMaxOrderByAggregateInput
+    _min?: PlayerWhitelistMinOrderByAggregateInput
+  }
+
+  export type PlayerWhitelistScalarWhereWithAggregatesInput = {
+    AND?: PlayerWhitelistScalarWhereWithAggregatesInput | PlayerWhitelistScalarWhereWithAggregatesInput[]
+    OR?: PlayerWhitelistScalarWhereWithAggregatesInput[]
+    NOT?: PlayerWhitelistScalarWhereWithAggregatesInput | PlayerWhitelistScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PlayerWhitelist"> | string
+    playerId?: StringWithAggregatesFilter<"PlayerWhitelist"> | string
+    serverId?: StringWithAggregatesFilter<"PlayerWhitelist"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"PlayerWhitelist"> | Date | string
+  }
+
+  export type PlayerEnforcementWhereInput = {
+    AND?: PlayerEnforcementWhereInput | PlayerEnforcementWhereInput[]
+    OR?: PlayerEnforcementWhereInput[]
+    NOT?: PlayerEnforcementWhereInput | PlayerEnforcementWhereInput[]
+    id?: StringFilter<"PlayerEnforcement"> | string
+    playerId?: StringFilter<"PlayerEnforcement"> | string
+    serverId?: StringFilter<"PlayerEnforcement"> | string
+    type?: StringFilter<"PlayerEnforcement"> | string
+    status?: StringFilter<"PlayerEnforcement"> | string
+    detail?: StringNullableFilter<"PlayerEnforcement"> | string | null
+    appliedAt?: DateTimeFilter<"PlayerEnforcement"> | Date | string
+  }
+
+  export type PlayerEnforcementOrderByWithRelationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    type?: SortOrder
+    status?: SortOrder
+    detail?: SortOrderInput | SortOrder
+    appliedAt?: SortOrder
+  }
+
+  export type PlayerEnforcementWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    playerId_serverId_type?: PlayerEnforcementPlayerIdServerIdTypeCompoundUniqueInput
+    AND?: PlayerEnforcementWhereInput | PlayerEnforcementWhereInput[]
+    OR?: PlayerEnforcementWhereInput[]
+    NOT?: PlayerEnforcementWhereInput | PlayerEnforcementWhereInput[]
+    playerId?: StringFilter<"PlayerEnforcement"> | string
+    serverId?: StringFilter<"PlayerEnforcement"> | string
+    type?: StringFilter<"PlayerEnforcement"> | string
+    status?: StringFilter<"PlayerEnforcement"> | string
+    detail?: StringNullableFilter<"PlayerEnforcement"> | string | null
+    appliedAt?: DateTimeFilter<"PlayerEnforcement"> | Date | string
+  }, "id" | "playerId_serverId_type">
+
+  export type PlayerEnforcementOrderByWithAggregationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    type?: SortOrder
+    status?: SortOrder
+    detail?: SortOrderInput | SortOrder
+    appliedAt?: SortOrder
+    _count?: PlayerEnforcementCountOrderByAggregateInput
+    _max?: PlayerEnforcementMaxOrderByAggregateInput
+    _min?: PlayerEnforcementMinOrderByAggregateInput
+  }
+
+  export type PlayerEnforcementScalarWhereWithAggregatesInput = {
+    AND?: PlayerEnforcementScalarWhereWithAggregatesInput | PlayerEnforcementScalarWhereWithAggregatesInput[]
+    OR?: PlayerEnforcementScalarWhereWithAggregatesInput[]
+    NOT?: PlayerEnforcementScalarWhereWithAggregatesInput | PlayerEnforcementScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PlayerEnforcement"> | string
+    playerId?: StringWithAggregatesFilter<"PlayerEnforcement"> | string
+    serverId?: StringWithAggregatesFilter<"PlayerEnforcement"> | string
+    type?: StringWithAggregatesFilter<"PlayerEnforcement"> | string
+    status?: StringWithAggregatesFilter<"PlayerEnforcement"> | string
+    detail?: StringNullableWithAggregatesFilter<"PlayerEnforcement"> | string | null
+    appliedAt?: DateTimeWithAggregatesFilter<"PlayerEnforcement"> | Date | string
+  }
+
+  export type PlayerEventWhereInput = {
+    AND?: PlayerEventWhereInput | PlayerEventWhereInput[]
+    OR?: PlayerEventWhereInput[]
+    NOT?: PlayerEventWhereInput | PlayerEventWhereInput[]
+    id?: StringFilter<"PlayerEvent"> | string
+    playerId?: StringFilter<"PlayerEvent"> | string
+    actorId?: StringFilter<"PlayerEvent"> | string
+    action?: StringFilter<"PlayerEvent"> | string
+    detail?: StringFilter<"PlayerEvent"> | string
+    createdAt?: DateTimeFilter<"PlayerEvent"> | Date | string
+    player?: XOR<PlayerRelationFilter, PlayerWhereInput>
+  }
+
+  export type PlayerEventOrderByWithRelationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    actorId?: SortOrder
+    action?: SortOrder
+    detail?: SortOrder
+    createdAt?: SortOrder
+    player?: PlayerOrderByWithRelationInput
+  }
+
+  export type PlayerEventWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PlayerEventWhereInput | PlayerEventWhereInput[]
+    OR?: PlayerEventWhereInput[]
+    NOT?: PlayerEventWhereInput | PlayerEventWhereInput[]
+    playerId?: StringFilter<"PlayerEvent"> | string
+    actorId?: StringFilter<"PlayerEvent"> | string
+    action?: StringFilter<"PlayerEvent"> | string
+    detail?: StringFilter<"PlayerEvent"> | string
+    createdAt?: DateTimeFilter<"PlayerEvent"> | Date | string
+    player?: XOR<PlayerRelationFilter, PlayerWhereInput>
+  }, "id">
+
+  export type PlayerEventOrderByWithAggregationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    actorId?: SortOrder
+    action?: SortOrder
+    detail?: SortOrder
+    createdAt?: SortOrder
+    _count?: PlayerEventCountOrderByAggregateInput
+    _max?: PlayerEventMaxOrderByAggregateInput
+    _min?: PlayerEventMinOrderByAggregateInput
+  }
+
+  export type PlayerEventScalarWhereWithAggregatesInput = {
+    AND?: PlayerEventScalarWhereWithAggregatesInput | PlayerEventScalarWhereWithAggregatesInput[]
+    OR?: PlayerEventScalarWhereWithAggregatesInput[]
+    NOT?: PlayerEventScalarWhereWithAggregatesInput | PlayerEventScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PlayerEvent"> | string
+    playerId?: StringWithAggregatesFilter<"PlayerEvent"> | string
+    actorId?: StringWithAggregatesFilter<"PlayerEvent"> | string
+    action?: StringWithAggregatesFilter<"PlayerEvent"> | string
+    detail?: StringWithAggregatesFilter<"PlayerEvent"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"PlayerEvent"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -16903,6 +22610,7 @@ export namespace Prisma {
     logs?: ActivityLogCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutOwnerInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -16920,6 +22628,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutOwnerInput
   }
 
   export type UserUpdateInput = {
@@ -16937,6 +22646,7 @@ export namespace Prisma {
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -16954,6 +22664,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -18064,6 +23775,364 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type PlayerCreateInput = {
+    id?: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner: UserCreateNestedOneWithoutPlayersInput
+    bans?: PlayerBanCreateNestedManyWithoutPlayerInput
+    whitelists?: PlayerWhitelistCreateNestedManyWithoutPlayerInput
+    events?: PlayerEventCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerUncheckedCreateInput = {
+    id?: string
+    ownerId: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bans?: PlayerBanUncheckedCreateNestedManyWithoutPlayerInput
+    whitelists?: PlayerWhitelistUncheckedCreateNestedManyWithoutPlayerInput
+    events?: PlayerEventUncheckedCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneRequiredWithoutPlayersNestedInput
+    bans?: PlayerBanUpdateManyWithoutPlayerNestedInput
+    whitelists?: PlayerWhitelistUpdateManyWithoutPlayerNestedInput
+    events?: PlayerEventUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bans?: PlayerBanUncheckedUpdateManyWithoutPlayerNestedInput
+    whitelists?: PlayerWhitelistUncheckedUpdateManyWithoutPlayerNestedInput
+    events?: PlayerEventUncheckedUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerCreateManyInput = {
+    id?: string
+    ownerId: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PlayerUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerBanCreateInput = {
+    id?: string
+    reason: string
+    expiresAt?: Date | string | null
+    active?: boolean
+    createdAt?: Date | string
+    player: PlayerCreateNestedOneWithoutBansInput
+  }
+
+  export type PlayerBanUncheckedCreateInput = {
+    id?: string
+    playerId: string
+    reason: string
+    expiresAt?: Date | string | null
+    active?: boolean
+    createdAt?: Date | string
+  }
+
+  export type PlayerBanUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    player?: PlayerUpdateOneRequiredWithoutBansNestedInput
+  }
+
+  export type PlayerBanUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerBanCreateManyInput = {
+    id?: string
+    playerId: string
+    reason: string
+    expiresAt?: Date | string | null
+    active?: boolean
+    createdAt?: Date | string
+  }
+
+  export type PlayerBanUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerBanUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerWhitelistCreateInput = {
+    id?: string
+    serverId: string
+    createdAt?: Date | string
+    player: PlayerCreateNestedOneWithoutWhitelistsInput
+  }
+
+  export type PlayerWhitelistUncheckedCreateInput = {
+    id?: string
+    playerId: string
+    serverId: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerWhitelistUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    player?: PlayerUpdateOneRequiredWithoutWhitelistsNestedInput
+  }
+
+  export type PlayerWhitelistUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerWhitelistCreateManyInput = {
+    id?: string
+    playerId: string
+    serverId: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerWhitelistUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerWhitelistUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerEnforcementCreateInput = {
+    id?: string
+    playerId: string
+    serverId: string
+    type: string
+    status: string
+    detail?: string | null
+    appliedAt?: Date | string
+  }
+
+  export type PlayerEnforcementUncheckedCreateInput = {
+    id?: string
+    playerId: string
+    serverId: string
+    type: string
+    status: string
+    detail?: string | null
+    appliedAt?: Date | string
+  }
+
+  export type PlayerEnforcementUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerEnforcementUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerEnforcementCreateManyInput = {
+    id?: string
+    playerId: string
+    serverId: string
+    type: string
+    status: string
+    detail?: string | null
+    appliedAt?: Date | string
+  }
+
+  export type PlayerEnforcementUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerEnforcementUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    detail?: NullableStringFieldUpdateOperationsInput | string | null
+    appliedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerEventCreateInput = {
+    id?: string
+    actorId: string
+    action: string
+    detail: string
+    createdAt?: Date | string
+    player: PlayerCreateNestedOneWithoutEventsInput
+  }
+
+  export type PlayerEventUncheckedCreateInput = {
+    id?: string
+    playerId: string
+    actorId: string
+    action: string
+    detail: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerEventUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    actorId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    detail?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    player?: PlayerUpdateOneRequiredWithoutEventsNestedInput
+  }
+
+  export type PlayerEventUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    actorId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    detail?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerEventCreateManyInput = {
+    id?: string
+    playerId: string
+    actorId: string
+    action: string
+    detail: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerEventUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    actorId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    detail?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerEventUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    actorId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    detail?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -18130,6 +24199,12 @@ export namespace Prisma {
     none?: TemplateVoteWhereInput
   }
 
+  export type PlayerListRelationFilter = {
+    every?: PlayerWhereInput
+    some?: PlayerWhereInput
+    none?: PlayerWhereInput
+  }
+
   export type GameDefinitionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -18151,6 +24226,10 @@ export namespace Prisma {
   }
 
   export type TemplateVoteOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PlayerOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -18992,6 +25071,202 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type PlayerBanListRelationFilter = {
+    every?: PlayerBanWhereInput
+    some?: PlayerBanWhereInput
+    none?: PlayerBanWhereInput
+  }
+
+  export type PlayerWhitelistListRelationFilter = {
+    every?: PlayerWhitelistWhereInput
+    some?: PlayerWhitelistWhereInput
+    none?: PlayerWhitelistWhereInput
+  }
+
+  export type PlayerEventListRelationFilter = {
+    every?: PlayerEventWhereInput
+    some?: PlayerEventWhereInput
+    none?: PlayerEventWhereInput
+  }
+
+  export type PlayerBanOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PlayerWhitelistOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PlayerEventOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PlayerCountOrderByAggregateInput = {
+    id?: SortOrder
+    ownerId?: SortOrder
+    displayName?: SortOrder
+    steamId?: SortOrder
+    xboxId?: SortOrder
+    minecraftUuid?: SortOrder
+    minecraftName?: SortOrder
+    discordId?: SortOrder
+    notes?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PlayerMaxOrderByAggregateInput = {
+    id?: SortOrder
+    ownerId?: SortOrder
+    displayName?: SortOrder
+    steamId?: SortOrder
+    xboxId?: SortOrder
+    minecraftUuid?: SortOrder
+    minecraftName?: SortOrder
+    discordId?: SortOrder
+    notes?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PlayerMinOrderByAggregateInput = {
+    id?: SortOrder
+    ownerId?: SortOrder
+    displayName?: SortOrder
+    steamId?: SortOrder
+    xboxId?: SortOrder
+    minecraftUuid?: SortOrder
+    minecraftName?: SortOrder
+    discordId?: SortOrder
+    notes?: SortOrder
+    status?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PlayerRelationFilter = {
+    is?: PlayerWhereInput
+    isNot?: PlayerWhereInput
+  }
+
+  export type PlayerBanCountOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    reason?: SortOrder
+    expiresAt?: SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerBanMaxOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    reason?: SortOrder
+    expiresAt?: SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerBanMinOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    reason?: SortOrder
+    expiresAt?: SortOrder
+    active?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerWhitelistPlayerIdServerIdCompoundUniqueInput = {
+    playerId: string
+    serverId: string
+  }
+
+  export type PlayerWhitelistCountOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerWhitelistMaxOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerWhitelistMinOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerEnforcementPlayerIdServerIdTypeCompoundUniqueInput = {
+    playerId: string
+    serverId: string
+    type: string
+  }
+
+  export type PlayerEnforcementCountOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    type?: SortOrder
+    status?: SortOrder
+    detail?: SortOrder
+    appliedAt?: SortOrder
+  }
+
+  export type PlayerEnforcementMaxOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    type?: SortOrder
+    status?: SortOrder
+    detail?: SortOrder
+    appliedAt?: SortOrder
+  }
+
+  export type PlayerEnforcementMinOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    type?: SortOrder
+    status?: SortOrder
+    detail?: SortOrder
+    appliedAt?: SortOrder
+  }
+
+  export type PlayerEventCountOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    actorId?: SortOrder
+    action?: SortOrder
+    detail?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerEventMaxOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    actorId?: SortOrder
+    action?: SortOrder
+    detail?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerEventMinOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    actorId?: SortOrder
+    action?: SortOrder
+    detail?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type GameDefinitionCreateNestedManyWithoutOwnerInput = {
     create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
@@ -19040,6 +25315,13 @@ export namespace Prisma {
     connect?: TemplateVoteWhereUniqueInput | TemplateVoteWhereUniqueInput[]
   }
 
+  export type PlayerCreateNestedManyWithoutOwnerInput = {
+    create?: XOR<PlayerCreateWithoutOwnerInput, PlayerUncheckedCreateWithoutOwnerInput> | PlayerCreateWithoutOwnerInput[] | PlayerUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: PlayerCreateOrConnectWithoutOwnerInput | PlayerCreateOrConnectWithoutOwnerInput[]
+    createMany?: PlayerCreateManyOwnerInputEnvelope
+    connect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+  }
+
   export type GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput = {
     create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
@@ -19086,6 +25368,13 @@ export namespace Prisma {
     connectOrCreate?: TemplateVoteCreateOrConnectWithoutUserInput | TemplateVoteCreateOrConnectWithoutUserInput[]
     createMany?: TemplateVoteCreateManyUserInputEnvelope
     connect?: TemplateVoteWhereUniqueInput | TemplateVoteWhereUniqueInput[]
+  }
+
+  export type PlayerUncheckedCreateNestedManyWithoutOwnerInput = {
+    create?: XOR<PlayerCreateWithoutOwnerInput, PlayerUncheckedCreateWithoutOwnerInput> | PlayerCreateWithoutOwnerInput[] | PlayerUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: PlayerCreateOrConnectWithoutOwnerInput | PlayerCreateOrConnectWithoutOwnerInput[]
+    createMany?: PlayerCreateManyOwnerInputEnvelope
+    connect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -19190,6 +25479,20 @@ export namespace Prisma {
     deleteMany?: TemplateVoteScalarWhereInput | TemplateVoteScalarWhereInput[]
   }
 
+  export type PlayerUpdateManyWithoutOwnerNestedInput = {
+    create?: XOR<PlayerCreateWithoutOwnerInput, PlayerUncheckedCreateWithoutOwnerInput> | PlayerCreateWithoutOwnerInput[] | PlayerUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: PlayerCreateOrConnectWithoutOwnerInput | PlayerCreateOrConnectWithoutOwnerInput[]
+    upsert?: PlayerUpsertWithWhereUniqueWithoutOwnerInput | PlayerUpsertWithWhereUniqueWithoutOwnerInput[]
+    createMany?: PlayerCreateManyOwnerInputEnvelope
+    set?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    disconnect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    delete?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    connect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    update?: PlayerUpdateWithWhereUniqueWithoutOwnerInput | PlayerUpdateWithWhereUniqueWithoutOwnerInput[]
+    updateMany?: PlayerUpdateManyWithWhereWithoutOwnerInput | PlayerUpdateManyWithWhereWithoutOwnerInput[]
+    deleteMany?: PlayerScalarWhereInput | PlayerScalarWhereInput[]
+  }
+
   export type GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput = {
     create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
@@ -19282,6 +25585,20 @@ export namespace Prisma {
     update?: TemplateVoteUpdateWithWhereUniqueWithoutUserInput | TemplateVoteUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: TemplateVoteUpdateManyWithWhereWithoutUserInput | TemplateVoteUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: TemplateVoteScalarWhereInput | TemplateVoteScalarWhereInput[]
+  }
+
+  export type PlayerUncheckedUpdateManyWithoutOwnerNestedInput = {
+    create?: XOR<PlayerCreateWithoutOwnerInput, PlayerUncheckedCreateWithoutOwnerInput> | PlayerCreateWithoutOwnerInput[] | PlayerUncheckedCreateWithoutOwnerInput[]
+    connectOrCreate?: PlayerCreateOrConnectWithoutOwnerInput | PlayerCreateOrConnectWithoutOwnerInput[]
+    upsert?: PlayerUpsertWithWhereUniqueWithoutOwnerInput | PlayerUpsertWithWhereUniqueWithoutOwnerInput[]
+    createMany?: PlayerCreateManyOwnerInputEnvelope
+    set?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    disconnect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    delete?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    connect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    update?: PlayerUpdateWithWhereUniqueWithoutOwnerInput | PlayerUpdateWithWhereUniqueWithoutOwnerInput[]
+    updateMany?: PlayerUpdateManyWithWhereWithoutOwnerInput | PlayerUpdateManyWithWhereWithoutOwnerInput[]
+    deleteMany?: PlayerScalarWhereInput | PlayerScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutSubscriptionInput = {
@@ -19814,6 +26131,188 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutTemplateVotesInput, UserUpdateWithoutTemplateVotesInput>, UserUncheckedUpdateWithoutTemplateVotesInput>
   }
 
+  export type UserCreateNestedOneWithoutPlayersInput = {
+    create?: XOR<UserCreateWithoutPlayersInput, UserUncheckedCreateWithoutPlayersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutPlayersInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type PlayerBanCreateNestedManyWithoutPlayerInput = {
+    create?: XOR<PlayerBanCreateWithoutPlayerInput, PlayerBanUncheckedCreateWithoutPlayerInput> | PlayerBanCreateWithoutPlayerInput[] | PlayerBanUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerBanCreateOrConnectWithoutPlayerInput | PlayerBanCreateOrConnectWithoutPlayerInput[]
+    createMany?: PlayerBanCreateManyPlayerInputEnvelope
+    connect?: PlayerBanWhereUniqueInput | PlayerBanWhereUniqueInput[]
+  }
+
+  export type PlayerWhitelistCreateNestedManyWithoutPlayerInput = {
+    create?: XOR<PlayerWhitelistCreateWithoutPlayerInput, PlayerWhitelistUncheckedCreateWithoutPlayerInput> | PlayerWhitelistCreateWithoutPlayerInput[] | PlayerWhitelistUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerWhitelistCreateOrConnectWithoutPlayerInput | PlayerWhitelistCreateOrConnectWithoutPlayerInput[]
+    createMany?: PlayerWhitelistCreateManyPlayerInputEnvelope
+    connect?: PlayerWhitelistWhereUniqueInput | PlayerWhitelistWhereUniqueInput[]
+  }
+
+  export type PlayerEventCreateNestedManyWithoutPlayerInput = {
+    create?: XOR<PlayerEventCreateWithoutPlayerInput, PlayerEventUncheckedCreateWithoutPlayerInput> | PlayerEventCreateWithoutPlayerInput[] | PlayerEventUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerEventCreateOrConnectWithoutPlayerInput | PlayerEventCreateOrConnectWithoutPlayerInput[]
+    createMany?: PlayerEventCreateManyPlayerInputEnvelope
+    connect?: PlayerEventWhereUniqueInput | PlayerEventWhereUniqueInput[]
+  }
+
+  export type PlayerBanUncheckedCreateNestedManyWithoutPlayerInput = {
+    create?: XOR<PlayerBanCreateWithoutPlayerInput, PlayerBanUncheckedCreateWithoutPlayerInput> | PlayerBanCreateWithoutPlayerInput[] | PlayerBanUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerBanCreateOrConnectWithoutPlayerInput | PlayerBanCreateOrConnectWithoutPlayerInput[]
+    createMany?: PlayerBanCreateManyPlayerInputEnvelope
+    connect?: PlayerBanWhereUniqueInput | PlayerBanWhereUniqueInput[]
+  }
+
+  export type PlayerWhitelistUncheckedCreateNestedManyWithoutPlayerInput = {
+    create?: XOR<PlayerWhitelistCreateWithoutPlayerInput, PlayerWhitelistUncheckedCreateWithoutPlayerInput> | PlayerWhitelistCreateWithoutPlayerInput[] | PlayerWhitelistUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerWhitelistCreateOrConnectWithoutPlayerInput | PlayerWhitelistCreateOrConnectWithoutPlayerInput[]
+    createMany?: PlayerWhitelistCreateManyPlayerInputEnvelope
+    connect?: PlayerWhitelistWhereUniqueInput | PlayerWhitelistWhereUniqueInput[]
+  }
+
+  export type PlayerEventUncheckedCreateNestedManyWithoutPlayerInput = {
+    create?: XOR<PlayerEventCreateWithoutPlayerInput, PlayerEventUncheckedCreateWithoutPlayerInput> | PlayerEventCreateWithoutPlayerInput[] | PlayerEventUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerEventCreateOrConnectWithoutPlayerInput | PlayerEventCreateOrConnectWithoutPlayerInput[]
+    createMany?: PlayerEventCreateManyPlayerInputEnvelope
+    connect?: PlayerEventWhereUniqueInput | PlayerEventWhereUniqueInput[]
+  }
+
+  export type UserUpdateOneRequiredWithoutPlayersNestedInput = {
+    create?: XOR<UserCreateWithoutPlayersInput, UserUncheckedCreateWithoutPlayersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutPlayersInput
+    upsert?: UserUpsertWithoutPlayersInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutPlayersInput, UserUpdateWithoutPlayersInput>, UserUncheckedUpdateWithoutPlayersInput>
+  }
+
+  export type PlayerBanUpdateManyWithoutPlayerNestedInput = {
+    create?: XOR<PlayerBanCreateWithoutPlayerInput, PlayerBanUncheckedCreateWithoutPlayerInput> | PlayerBanCreateWithoutPlayerInput[] | PlayerBanUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerBanCreateOrConnectWithoutPlayerInput | PlayerBanCreateOrConnectWithoutPlayerInput[]
+    upsert?: PlayerBanUpsertWithWhereUniqueWithoutPlayerInput | PlayerBanUpsertWithWhereUniqueWithoutPlayerInput[]
+    createMany?: PlayerBanCreateManyPlayerInputEnvelope
+    set?: PlayerBanWhereUniqueInput | PlayerBanWhereUniqueInput[]
+    disconnect?: PlayerBanWhereUniqueInput | PlayerBanWhereUniqueInput[]
+    delete?: PlayerBanWhereUniqueInput | PlayerBanWhereUniqueInput[]
+    connect?: PlayerBanWhereUniqueInput | PlayerBanWhereUniqueInput[]
+    update?: PlayerBanUpdateWithWhereUniqueWithoutPlayerInput | PlayerBanUpdateWithWhereUniqueWithoutPlayerInput[]
+    updateMany?: PlayerBanUpdateManyWithWhereWithoutPlayerInput | PlayerBanUpdateManyWithWhereWithoutPlayerInput[]
+    deleteMany?: PlayerBanScalarWhereInput | PlayerBanScalarWhereInput[]
+  }
+
+  export type PlayerWhitelistUpdateManyWithoutPlayerNestedInput = {
+    create?: XOR<PlayerWhitelistCreateWithoutPlayerInput, PlayerWhitelistUncheckedCreateWithoutPlayerInput> | PlayerWhitelistCreateWithoutPlayerInput[] | PlayerWhitelistUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerWhitelistCreateOrConnectWithoutPlayerInput | PlayerWhitelistCreateOrConnectWithoutPlayerInput[]
+    upsert?: PlayerWhitelistUpsertWithWhereUniqueWithoutPlayerInput | PlayerWhitelistUpsertWithWhereUniqueWithoutPlayerInput[]
+    createMany?: PlayerWhitelistCreateManyPlayerInputEnvelope
+    set?: PlayerWhitelistWhereUniqueInput | PlayerWhitelistWhereUniqueInput[]
+    disconnect?: PlayerWhitelistWhereUniqueInput | PlayerWhitelistWhereUniqueInput[]
+    delete?: PlayerWhitelistWhereUniqueInput | PlayerWhitelistWhereUniqueInput[]
+    connect?: PlayerWhitelistWhereUniqueInput | PlayerWhitelistWhereUniqueInput[]
+    update?: PlayerWhitelistUpdateWithWhereUniqueWithoutPlayerInput | PlayerWhitelistUpdateWithWhereUniqueWithoutPlayerInput[]
+    updateMany?: PlayerWhitelistUpdateManyWithWhereWithoutPlayerInput | PlayerWhitelistUpdateManyWithWhereWithoutPlayerInput[]
+    deleteMany?: PlayerWhitelistScalarWhereInput | PlayerWhitelistScalarWhereInput[]
+  }
+
+  export type PlayerEventUpdateManyWithoutPlayerNestedInput = {
+    create?: XOR<PlayerEventCreateWithoutPlayerInput, PlayerEventUncheckedCreateWithoutPlayerInput> | PlayerEventCreateWithoutPlayerInput[] | PlayerEventUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerEventCreateOrConnectWithoutPlayerInput | PlayerEventCreateOrConnectWithoutPlayerInput[]
+    upsert?: PlayerEventUpsertWithWhereUniqueWithoutPlayerInput | PlayerEventUpsertWithWhereUniqueWithoutPlayerInput[]
+    createMany?: PlayerEventCreateManyPlayerInputEnvelope
+    set?: PlayerEventWhereUniqueInput | PlayerEventWhereUniqueInput[]
+    disconnect?: PlayerEventWhereUniqueInput | PlayerEventWhereUniqueInput[]
+    delete?: PlayerEventWhereUniqueInput | PlayerEventWhereUniqueInput[]
+    connect?: PlayerEventWhereUniqueInput | PlayerEventWhereUniqueInput[]
+    update?: PlayerEventUpdateWithWhereUniqueWithoutPlayerInput | PlayerEventUpdateWithWhereUniqueWithoutPlayerInput[]
+    updateMany?: PlayerEventUpdateManyWithWhereWithoutPlayerInput | PlayerEventUpdateManyWithWhereWithoutPlayerInput[]
+    deleteMany?: PlayerEventScalarWhereInput | PlayerEventScalarWhereInput[]
+  }
+
+  export type PlayerBanUncheckedUpdateManyWithoutPlayerNestedInput = {
+    create?: XOR<PlayerBanCreateWithoutPlayerInput, PlayerBanUncheckedCreateWithoutPlayerInput> | PlayerBanCreateWithoutPlayerInput[] | PlayerBanUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerBanCreateOrConnectWithoutPlayerInput | PlayerBanCreateOrConnectWithoutPlayerInput[]
+    upsert?: PlayerBanUpsertWithWhereUniqueWithoutPlayerInput | PlayerBanUpsertWithWhereUniqueWithoutPlayerInput[]
+    createMany?: PlayerBanCreateManyPlayerInputEnvelope
+    set?: PlayerBanWhereUniqueInput | PlayerBanWhereUniqueInput[]
+    disconnect?: PlayerBanWhereUniqueInput | PlayerBanWhereUniqueInput[]
+    delete?: PlayerBanWhereUniqueInput | PlayerBanWhereUniqueInput[]
+    connect?: PlayerBanWhereUniqueInput | PlayerBanWhereUniqueInput[]
+    update?: PlayerBanUpdateWithWhereUniqueWithoutPlayerInput | PlayerBanUpdateWithWhereUniqueWithoutPlayerInput[]
+    updateMany?: PlayerBanUpdateManyWithWhereWithoutPlayerInput | PlayerBanUpdateManyWithWhereWithoutPlayerInput[]
+    deleteMany?: PlayerBanScalarWhereInput | PlayerBanScalarWhereInput[]
+  }
+
+  export type PlayerWhitelistUncheckedUpdateManyWithoutPlayerNestedInput = {
+    create?: XOR<PlayerWhitelistCreateWithoutPlayerInput, PlayerWhitelistUncheckedCreateWithoutPlayerInput> | PlayerWhitelistCreateWithoutPlayerInput[] | PlayerWhitelistUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerWhitelistCreateOrConnectWithoutPlayerInput | PlayerWhitelistCreateOrConnectWithoutPlayerInput[]
+    upsert?: PlayerWhitelistUpsertWithWhereUniqueWithoutPlayerInput | PlayerWhitelistUpsertWithWhereUniqueWithoutPlayerInput[]
+    createMany?: PlayerWhitelistCreateManyPlayerInputEnvelope
+    set?: PlayerWhitelistWhereUniqueInput | PlayerWhitelistWhereUniqueInput[]
+    disconnect?: PlayerWhitelistWhereUniqueInput | PlayerWhitelistWhereUniqueInput[]
+    delete?: PlayerWhitelistWhereUniqueInput | PlayerWhitelistWhereUniqueInput[]
+    connect?: PlayerWhitelistWhereUniqueInput | PlayerWhitelistWhereUniqueInput[]
+    update?: PlayerWhitelistUpdateWithWhereUniqueWithoutPlayerInput | PlayerWhitelistUpdateWithWhereUniqueWithoutPlayerInput[]
+    updateMany?: PlayerWhitelistUpdateManyWithWhereWithoutPlayerInput | PlayerWhitelistUpdateManyWithWhereWithoutPlayerInput[]
+    deleteMany?: PlayerWhitelistScalarWhereInput | PlayerWhitelistScalarWhereInput[]
+  }
+
+  export type PlayerEventUncheckedUpdateManyWithoutPlayerNestedInput = {
+    create?: XOR<PlayerEventCreateWithoutPlayerInput, PlayerEventUncheckedCreateWithoutPlayerInput> | PlayerEventCreateWithoutPlayerInput[] | PlayerEventUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerEventCreateOrConnectWithoutPlayerInput | PlayerEventCreateOrConnectWithoutPlayerInput[]
+    upsert?: PlayerEventUpsertWithWhereUniqueWithoutPlayerInput | PlayerEventUpsertWithWhereUniqueWithoutPlayerInput[]
+    createMany?: PlayerEventCreateManyPlayerInputEnvelope
+    set?: PlayerEventWhereUniqueInput | PlayerEventWhereUniqueInput[]
+    disconnect?: PlayerEventWhereUniqueInput | PlayerEventWhereUniqueInput[]
+    delete?: PlayerEventWhereUniqueInput | PlayerEventWhereUniqueInput[]
+    connect?: PlayerEventWhereUniqueInput | PlayerEventWhereUniqueInput[]
+    update?: PlayerEventUpdateWithWhereUniqueWithoutPlayerInput | PlayerEventUpdateWithWhereUniqueWithoutPlayerInput[]
+    updateMany?: PlayerEventUpdateManyWithWhereWithoutPlayerInput | PlayerEventUpdateManyWithWhereWithoutPlayerInput[]
+    deleteMany?: PlayerEventScalarWhereInput | PlayerEventScalarWhereInput[]
+  }
+
+  export type PlayerCreateNestedOneWithoutBansInput = {
+    create?: XOR<PlayerCreateWithoutBansInput, PlayerUncheckedCreateWithoutBansInput>
+    connectOrCreate?: PlayerCreateOrConnectWithoutBansInput
+    connect?: PlayerWhereUniqueInput
+  }
+
+  export type PlayerUpdateOneRequiredWithoutBansNestedInput = {
+    create?: XOR<PlayerCreateWithoutBansInput, PlayerUncheckedCreateWithoutBansInput>
+    connectOrCreate?: PlayerCreateOrConnectWithoutBansInput
+    upsert?: PlayerUpsertWithoutBansInput
+    connect?: PlayerWhereUniqueInput
+    update?: XOR<XOR<PlayerUpdateToOneWithWhereWithoutBansInput, PlayerUpdateWithoutBansInput>, PlayerUncheckedUpdateWithoutBansInput>
+  }
+
+  export type PlayerCreateNestedOneWithoutWhitelistsInput = {
+    create?: XOR<PlayerCreateWithoutWhitelistsInput, PlayerUncheckedCreateWithoutWhitelistsInput>
+    connectOrCreate?: PlayerCreateOrConnectWithoutWhitelistsInput
+    connect?: PlayerWhereUniqueInput
+  }
+
+  export type PlayerUpdateOneRequiredWithoutWhitelistsNestedInput = {
+    create?: XOR<PlayerCreateWithoutWhitelistsInput, PlayerUncheckedCreateWithoutWhitelistsInput>
+    connectOrCreate?: PlayerCreateOrConnectWithoutWhitelistsInput
+    upsert?: PlayerUpsertWithoutWhitelistsInput
+    connect?: PlayerWhereUniqueInput
+    update?: XOR<XOR<PlayerUpdateToOneWithWhereWithoutWhitelistsInput, PlayerUpdateWithoutWhitelistsInput>, PlayerUncheckedUpdateWithoutWhitelistsInput>
+  }
+
+  export type PlayerCreateNestedOneWithoutEventsInput = {
+    create?: XOR<PlayerCreateWithoutEventsInput, PlayerUncheckedCreateWithoutEventsInput>
+    connectOrCreate?: PlayerCreateOrConnectWithoutEventsInput
+    connect?: PlayerWhereUniqueInput
+  }
+
+  export type PlayerUpdateOneRequiredWithoutEventsNestedInput = {
+    create?: XOR<PlayerCreateWithoutEventsInput, PlayerUncheckedCreateWithoutEventsInput>
+    connectOrCreate?: PlayerCreateOrConnectWithoutEventsInput
+    upsert?: PlayerUpsertWithoutEventsInput
+    connect?: PlayerWhereUniqueInput
+    update?: XOR<XOR<PlayerUpdateToOneWithWhereWithoutEventsInput, PlayerUpdateWithoutEventsInput>, PlayerUncheckedUpdateWithoutEventsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -20262,6 +26761,49 @@ export namespace Prisma {
     data: TemplateVoteCreateManyUserInput | TemplateVoteCreateManyUserInput[]
   }
 
+  export type PlayerCreateWithoutOwnerInput = {
+    id?: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bans?: PlayerBanCreateNestedManyWithoutPlayerInput
+    whitelists?: PlayerWhitelistCreateNestedManyWithoutPlayerInput
+    events?: PlayerEventCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerUncheckedCreateWithoutOwnerInput = {
+    id?: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bans?: PlayerBanUncheckedCreateNestedManyWithoutPlayerInput
+    whitelists?: PlayerWhitelistUncheckedCreateNestedManyWithoutPlayerInput
+    events?: PlayerEventUncheckedCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerCreateOrConnectWithoutOwnerInput = {
+    where: PlayerWhereUniqueInput
+    create: XOR<PlayerCreateWithoutOwnerInput, PlayerUncheckedCreateWithoutOwnerInput>
+  }
+
+  export type PlayerCreateManyOwnerInputEnvelope = {
+    data: PlayerCreateManyOwnerInput | PlayerCreateManyOwnerInput[]
+  }
+
   export type GameDefinitionUpsertWithWhereUniqueWithoutOwnerInput = {
     where: GameDefinitionWhereUniqueInput
     update: XOR<GameDefinitionUpdateWithoutOwnerInput, GameDefinitionUncheckedUpdateWithoutOwnerInput>
@@ -20482,6 +27024,40 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"TemplateVote"> | Date | string
   }
 
+  export type PlayerUpsertWithWhereUniqueWithoutOwnerInput = {
+    where: PlayerWhereUniqueInput
+    update: XOR<PlayerUpdateWithoutOwnerInput, PlayerUncheckedUpdateWithoutOwnerInput>
+    create: XOR<PlayerCreateWithoutOwnerInput, PlayerUncheckedCreateWithoutOwnerInput>
+  }
+
+  export type PlayerUpdateWithWhereUniqueWithoutOwnerInput = {
+    where: PlayerWhereUniqueInput
+    data: XOR<PlayerUpdateWithoutOwnerInput, PlayerUncheckedUpdateWithoutOwnerInput>
+  }
+
+  export type PlayerUpdateManyWithWhereWithoutOwnerInput = {
+    where: PlayerScalarWhereInput
+    data: XOR<PlayerUpdateManyMutationInput, PlayerUncheckedUpdateManyWithoutOwnerInput>
+  }
+
+  export type PlayerScalarWhereInput = {
+    AND?: PlayerScalarWhereInput | PlayerScalarWhereInput[]
+    OR?: PlayerScalarWhereInput[]
+    NOT?: PlayerScalarWhereInput | PlayerScalarWhereInput[]
+    id?: StringFilter<"Player"> | string
+    ownerId?: StringFilter<"Player"> | string
+    displayName?: StringFilter<"Player"> | string
+    steamId?: StringNullableFilter<"Player"> | string | null
+    xboxId?: StringNullableFilter<"Player"> | string | null
+    minecraftUuid?: StringNullableFilter<"Player"> | string | null
+    minecraftName?: StringNullableFilter<"Player"> | string | null
+    discordId?: StringNullableFilter<"Player"> | string | null
+    notes?: StringNullableFilter<"Player"> | string | null
+    status?: StringFilter<"Player"> | string
+    createdAt?: DateTimeFilter<"Player"> | Date | string
+    updatedAt?: DateTimeFilter<"Player"> | Date | string
+  }
+
   export type UserCreateWithoutSubscriptionInput = {
     id?: string
     email: string
@@ -20496,6 +27072,7 @@ export namespace Prisma {
     logs?: ActivityLogCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutOwnerInput
   }
 
   export type UserUncheckedCreateWithoutSubscriptionInput = {
@@ -20512,6 +27089,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutOwnerInput
   }
 
   export type UserCreateOrConnectWithoutSubscriptionInput = {
@@ -20544,6 +27122,7 @@ export namespace Prisma {
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSubscriptionInput = {
@@ -20560,6 +27139,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserCreateWithoutServersInput = {
@@ -20576,6 +27156,7 @@ export namespace Prisma {
     logs?: ActivityLogCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutOwnerInput
   }
 
   export type UserUncheckedCreateWithoutServersInput = {
@@ -20592,6 +27173,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutOwnerInput
   }
 
   export type UserCreateOrConnectWithoutServersInput = {
@@ -20812,6 +27394,7 @@ export namespace Prisma {
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutServersInput = {
@@ -20828,6 +27411,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutOwnerNestedInput
   }
 
   export type GameDefinitionUpsertWithoutServersInput = {
@@ -21030,6 +27614,7 @@ export namespace Prisma {
     logs?: ActivityLogCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutOwnerInput
   }
 
   export type UserUncheckedCreateWithoutArchivesInput = {
@@ -21046,6 +27631,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutOwnerInput
   }
 
   export type UserCreateOrConnectWithoutArchivesInput = {
@@ -21078,6 +27664,7 @@ export namespace Prisma {
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutArchivesInput = {
@@ -21094,6 +27681,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserCreateWithoutLogsInput = {
@@ -21110,6 +27698,7 @@ export namespace Prisma {
     archives?: ArchiveCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutOwnerInput
   }
 
   export type UserUncheckedCreateWithoutLogsInput = {
@@ -21126,6 +27715,7 @@ export namespace Prisma {
     archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutOwnerInput
   }
 
   export type UserCreateOrConnectWithoutLogsInput = {
@@ -21158,6 +27748,7 @@ export namespace Prisma {
     archives?: ArchiveUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutLogsInput = {
@@ -21174,6 +27765,7 @@ export namespace Prisma {
     archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutOwnerNestedInput
   }
 
   export type ServerCreateWithoutBackupsInput = {
@@ -21391,6 +27983,7 @@ export namespace Prisma {
     archives?: ArchiveCreateNestedManyWithoutUserInput
     logs?: ActivityLogCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutOwnerInput
   }
 
   export type UserUncheckedCreateWithoutCollaboratorAccessInput = {
@@ -21407,6 +28000,7 @@ export namespace Prisma {
     archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutOwnerInput
   }
 
   export type UserCreateOrConnectWithoutCollaboratorAccessInput = {
@@ -21510,6 +28104,7 @@ export namespace Prisma {
     archives?: ArchiveUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCollaboratorAccessInput = {
@@ -21526,6 +28121,7 @@ export namespace Prisma {
     archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserCreateWithoutDefinitionsInput = {
@@ -21542,6 +28138,7 @@ export namespace Prisma {
     logs?: ActivityLogCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutOwnerInput
   }
 
   export type UserUncheckedCreateWithoutDefinitionsInput = {
@@ -21558,6 +28155,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutOwnerInput
   }
 
   export type UserCreateOrConnectWithoutDefinitionsInput = {
@@ -21659,6 +28257,7 @@ export namespace Prisma {
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutDefinitionsInput = {
@@ -21675,6 +28274,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutOwnerNestedInput
   }
 
   export type ServerUpsertWithWhereUniqueWithoutDefinitionInput = {
@@ -22191,6 +28791,7 @@ export namespace Prisma {
     archives?: ArchiveCreateNestedManyWithoutUserInput
     logs?: ActivityLogCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutOwnerInput
   }
 
   export type UserUncheckedCreateWithoutTemplateVotesInput = {
@@ -22207,6 +28808,7 @@ export namespace Prisma {
     archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutOwnerInput
   }
 
   export type UserCreateOrConnectWithoutTemplateVotesInput = {
@@ -22282,6 +28884,7 @@ export namespace Prisma {
     archives?: ArchiveUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutOwnerNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTemplateVotesInput = {
@@ -22298,6 +28901,496 @@ export namespace Prisma {
     archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutOwnerNestedInput
+  }
+
+  export type UserCreateWithoutPlayersInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionCreateNestedManyWithoutOwnerInput
+    subscription?: SubscriptionCreateNestedOneWithoutUserInput
+    servers?: ServerCreateNestedManyWithoutUserInput
+    archives?: ArchiveCreateNestedManyWithoutUserInput
+    logs?: ActivityLogCreateNestedManyWithoutUserInput
+    collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
+    templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutPlayersInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: string
+    definitions?: GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput
+    subscription?: SubscriptionUncheckedCreateNestedOneWithoutUserInput
+    servers?: ServerUncheckedCreateNestedManyWithoutUserInput
+    archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
+    logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
+    collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
+    templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutPlayersInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutPlayersInput, UserUncheckedCreateWithoutPlayersInput>
+  }
+
+  export type PlayerBanCreateWithoutPlayerInput = {
+    id?: string
+    reason: string
+    expiresAt?: Date | string | null
+    active?: boolean
+    createdAt?: Date | string
+  }
+
+  export type PlayerBanUncheckedCreateWithoutPlayerInput = {
+    id?: string
+    reason: string
+    expiresAt?: Date | string | null
+    active?: boolean
+    createdAt?: Date | string
+  }
+
+  export type PlayerBanCreateOrConnectWithoutPlayerInput = {
+    where: PlayerBanWhereUniqueInput
+    create: XOR<PlayerBanCreateWithoutPlayerInput, PlayerBanUncheckedCreateWithoutPlayerInput>
+  }
+
+  export type PlayerBanCreateManyPlayerInputEnvelope = {
+    data: PlayerBanCreateManyPlayerInput | PlayerBanCreateManyPlayerInput[]
+  }
+
+  export type PlayerWhitelistCreateWithoutPlayerInput = {
+    id?: string
+    serverId: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerWhitelistUncheckedCreateWithoutPlayerInput = {
+    id?: string
+    serverId: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerWhitelistCreateOrConnectWithoutPlayerInput = {
+    where: PlayerWhitelistWhereUniqueInput
+    create: XOR<PlayerWhitelistCreateWithoutPlayerInput, PlayerWhitelistUncheckedCreateWithoutPlayerInput>
+  }
+
+  export type PlayerWhitelistCreateManyPlayerInputEnvelope = {
+    data: PlayerWhitelistCreateManyPlayerInput | PlayerWhitelistCreateManyPlayerInput[]
+  }
+
+  export type PlayerEventCreateWithoutPlayerInput = {
+    id?: string
+    actorId: string
+    action: string
+    detail: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerEventUncheckedCreateWithoutPlayerInput = {
+    id?: string
+    actorId: string
+    action: string
+    detail: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerEventCreateOrConnectWithoutPlayerInput = {
+    where: PlayerEventWhereUniqueInput
+    create: XOR<PlayerEventCreateWithoutPlayerInput, PlayerEventUncheckedCreateWithoutPlayerInput>
+  }
+
+  export type PlayerEventCreateManyPlayerInputEnvelope = {
+    data: PlayerEventCreateManyPlayerInput | PlayerEventCreateManyPlayerInput[]
+  }
+
+  export type UserUpsertWithoutPlayersInput = {
+    update: XOR<UserUpdateWithoutPlayersInput, UserUncheckedUpdateWithoutPlayersInput>
+    create: XOR<UserCreateWithoutPlayersInput, UserUncheckedCreateWithoutPlayersInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutPlayersInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutPlayersInput, UserUncheckedUpdateWithoutPlayersInput>
+  }
+
+  export type UserUpdateWithoutPlayersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUpdateManyWithoutOwnerNestedInput
+    subscription?: SubscriptionUpdateOneWithoutUserNestedInput
+    servers?: ServerUpdateManyWithoutUserNestedInput
+    archives?: ArchiveUpdateManyWithoutUserNestedInput
+    logs?: ActivityLogUpdateManyWithoutUserNestedInput
+    collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
+    templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutPlayersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    definitions?: GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput
+    subscription?: SubscriptionUncheckedUpdateOneWithoutUserNestedInput
+    servers?: ServerUncheckedUpdateManyWithoutUserNestedInput
+    archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
+    logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
+    collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
+    templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type PlayerBanUpsertWithWhereUniqueWithoutPlayerInput = {
+    where: PlayerBanWhereUniqueInput
+    update: XOR<PlayerBanUpdateWithoutPlayerInput, PlayerBanUncheckedUpdateWithoutPlayerInput>
+    create: XOR<PlayerBanCreateWithoutPlayerInput, PlayerBanUncheckedCreateWithoutPlayerInput>
+  }
+
+  export type PlayerBanUpdateWithWhereUniqueWithoutPlayerInput = {
+    where: PlayerBanWhereUniqueInput
+    data: XOR<PlayerBanUpdateWithoutPlayerInput, PlayerBanUncheckedUpdateWithoutPlayerInput>
+  }
+
+  export type PlayerBanUpdateManyWithWhereWithoutPlayerInput = {
+    where: PlayerBanScalarWhereInput
+    data: XOR<PlayerBanUpdateManyMutationInput, PlayerBanUncheckedUpdateManyWithoutPlayerInput>
+  }
+
+  export type PlayerBanScalarWhereInput = {
+    AND?: PlayerBanScalarWhereInput | PlayerBanScalarWhereInput[]
+    OR?: PlayerBanScalarWhereInput[]
+    NOT?: PlayerBanScalarWhereInput | PlayerBanScalarWhereInput[]
+    id?: StringFilter<"PlayerBan"> | string
+    playerId?: StringFilter<"PlayerBan"> | string
+    reason?: StringFilter<"PlayerBan"> | string
+    expiresAt?: DateTimeNullableFilter<"PlayerBan"> | Date | string | null
+    active?: BoolFilter<"PlayerBan"> | boolean
+    createdAt?: DateTimeFilter<"PlayerBan"> | Date | string
+  }
+
+  export type PlayerWhitelistUpsertWithWhereUniqueWithoutPlayerInput = {
+    where: PlayerWhitelistWhereUniqueInput
+    update: XOR<PlayerWhitelistUpdateWithoutPlayerInput, PlayerWhitelistUncheckedUpdateWithoutPlayerInput>
+    create: XOR<PlayerWhitelistCreateWithoutPlayerInput, PlayerWhitelistUncheckedCreateWithoutPlayerInput>
+  }
+
+  export type PlayerWhitelistUpdateWithWhereUniqueWithoutPlayerInput = {
+    where: PlayerWhitelistWhereUniqueInput
+    data: XOR<PlayerWhitelistUpdateWithoutPlayerInput, PlayerWhitelistUncheckedUpdateWithoutPlayerInput>
+  }
+
+  export type PlayerWhitelistUpdateManyWithWhereWithoutPlayerInput = {
+    where: PlayerWhitelistScalarWhereInput
+    data: XOR<PlayerWhitelistUpdateManyMutationInput, PlayerWhitelistUncheckedUpdateManyWithoutPlayerInput>
+  }
+
+  export type PlayerWhitelistScalarWhereInput = {
+    AND?: PlayerWhitelistScalarWhereInput | PlayerWhitelistScalarWhereInput[]
+    OR?: PlayerWhitelistScalarWhereInput[]
+    NOT?: PlayerWhitelistScalarWhereInput | PlayerWhitelistScalarWhereInput[]
+    id?: StringFilter<"PlayerWhitelist"> | string
+    playerId?: StringFilter<"PlayerWhitelist"> | string
+    serverId?: StringFilter<"PlayerWhitelist"> | string
+    createdAt?: DateTimeFilter<"PlayerWhitelist"> | Date | string
+  }
+
+  export type PlayerEventUpsertWithWhereUniqueWithoutPlayerInput = {
+    where: PlayerEventWhereUniqueInput
+    update: XOR<PlayerEventUpdateWithoutPlayerInput, PlayerEventUncheckedUpdateWithoutPlayerInput>
+    create: XOR<PlayerEventCreateWithoutPlayerInput, PlayerEventUncheckedCreateWithoutPlayerInput>
+  }
+
+  export type PlayerEventUpdateWithWhereUniqueWithoutPlayerInput = {
+    where: PlayerEventWhereUniqueInput
+    data: XOR<PlayerEventUpdateWithoutPlayerInput, PlayerEventUncheckedUpdateWithoutPlayerInput>
+  }
+
+  export type PlayerEventUpdateManyWithWhereWithoutPlayerInput = {
+    where: PlayerEventScalarWhereInput
+    data: XOR<PlayerEventUpdateManyMutationInput, PlayerEventUncheckedUpdateManyWithoutPlayerInput>
+  }
+
+  export type PlayerEventScalarWhereInput = {
+    AND?: PlayerEventScalarWhereInput | PlayerEventScalarWhereInput[]
+    OR?: PlayerEventScalarWhereInput[]
+    NOT?: PlayerEventScalarWhereInput | PlayerEventScalarWhereInput[]
+    id?: StringFilter<"PlayerEvent"> | string
+    playerId?: StringFilter<"PlayerEvent"> | string
+    actorId?: StringFilter<"PlayerEvent"> | string
+    action?: StringFilter<"PlayerEvent"> | string
+    detail?: StringFilter<"PlayerEvent"> | string
+    createdAt?: DateTimeFilter<"PlayerEvent"> | Date | string
+  }
+
+  export type PlayerCreateWithoutBansInput = {
+    id?: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner: UserCreateNestedOneWithoutPlayersInput
+    whitelists?: PlayerWhitelistCreateNestedManyWithoutPlayerInput
+    events?: PlayerEventCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerUncheckedCreateWithoutBansInput = {
+    id?: string
+    ownerId: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    whitelists?: PlayerWhitelistUncheckedCreateNestedManyWithoutPlayerInput
+    events?: PlayerEventUncheckedCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerCreateOrConnectWithoutBansInput = {
+    where: PlayerWhereUniqueInput
+    create: XOR<PlayerCreateWithoutBansInput, PlayerUncheckedCreateWithoutBansInput>
+  }
+
+  export type PlayerUpsertWithoutBansInput = {
+    update: XOR<PlayerUpdateWithoutBansInput, PlayerUncheckedUpdateWithoutBansInput>
+    create: XOR<PlayerCreateWithoutBansInput, PlayerUncheckedCreateWithoutBansInput>
+    where?: PlayerWhereInput
+  }
+
+  export type PlayerUpdateToOneWithWhereWithoutBansInput = {
+    where?: PlayerWhereInput
+    data: XOR<PlayerUpdateWithoutBansInput, PlayerUncheckedUpdateWithoutBansInput>
+  }
+
+  export type PlayerUpdateWithoutBansInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneRequiredWithoutPlayersNestedInput
+    whitelists?: PlayerWhitelistUpdateManyWithoutPlayerNestedInput
+    events?: PlayerEventUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerUncheckedUpdateWithoutBansInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    whitelists?: PlayerWhitelistUncheckedUpdateManyWithoutPlayerNestedInput
+    events?: PlayerEventUncheckedUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerCreateWithoutWhitelistsInput = {
+    id?: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner: UserCreateNestedOneWithoutPlayersInput
+    bans?: PlayerBanCreateNestedManyWithoutPlayerInput
+    events?: PlayerEventCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerUncheckedCreateWithoutWhitelistsInput = {
+    id?: string
+    ownerId: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bans?: PlayerBanUncheckedCreateNestedManyWithoutPlayerInput
+    events?: PlayerEventUncheckedCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerCreateOrConnectWithoutWhitelistsInput = {
+    where: PlayerWhereUniqueInput
+    create: XOR<PlayerCreateWithoutWhitelistsInput, PlayerUncheckedCreateWithoutWhitelistsInput>
+  }
+
+  export type PlayerUpsertWithoutWhitelistsInput = {
+    update: XOR<PlayerUpdateWithoutWhitelistsInput, PlayerUncheckedUpdateWithoutWhitelistsInput>
+    create: XOR<PlayerCreateWithoutWhitelistsInput, PlayerUncheckedCreateWithoutWhitelistsInput>
+    where?: PlayerWhereInput
+  }
+
+  export type PlayerUpdateToOneWithWhereWithoutWhitelistsInput = {
+    where?: PlayerWhereInput
+    data: XOR<PlayerUpdateWithoutWhitelistsInput, PlayerUncheckedUpdateWithoutWhitelistsInput>
+  }
+
+  export type PlayerUpdateWithoutWhitelistsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneRequiredWithoutPlayersNestedInput
+    bans?: PlayerBanUpdateManyWithoutPlayerNestedInput
+    events?: PlayerEventUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerUncheckedUpdateWithoutWhitelistsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bans?: PlayerBanUncheckedUpdateManyWithoutPlayerNestedInput
+    events?: PlayerEventUncheckedUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerCreateWithoutEventsInput = {
+    id?: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    owner: UserCreateNestedOneWithoutPlayersInput
+    bans?: PlayerBanCreateNestedManyWithoutPlayerInput
+    whitelists?: PlayerWhitelistCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerUncheckedCreateWithoutEventsInput = {
+    id?: string
+    ownerId: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    bans?: PlayerBanUncheckedCreateNestedManyWithoutPlayerInput
+    whitelists?: PlayerWhitelistUncheckedCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerCreateOrConnectWithoutEventsInput = {
+    where: PlayerWhereUniqueInput
+    create: XOR<PlayerCreateWithoutEventsInput, PlayerUncheckedCreateWithoutEventsInput>
+  }
+
+  export type PlayerUpsertWithoutEventsInput = {
+    update: XOR<PlayerUpdateWithoutEventsInput, PlayerUncheckedUpdateWithoutEventsInput>
+    create: XOR<PlayerCreateWithoutEventsInput, PlayerUncheckedCreateWithoutEventsInput>
+    where?: PlayerWhereInput
+  }
+
+  export type PlayerUpdateToOneWithWhereWithoutEventsInput = {
+    where?: PlayerWhereInput
+    data: XOR<PlayerUpdateWithoutEventsInput, PlayerUncheckedUpdateWithoutEventsInput>
+  }
+
+  export type PlayerUpdateWithoutEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    owner?: UserUpdateOneRequiredWithoutPlayersNestedInput
+    bans?: PlayerBanUpdateManyWithoutPlayerNestedInput
+    whitelists?: PlayerWhitelistUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerUncheckedUpdateWithoutEventsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bans?: PlayerBanUncheckedUpdateManyWithoutPlayerNestedInput
+    whitelists?: PlayerWhitelistUncheckedUpdateManyWithoutPlayerNestedInput
   }
 
   export type GameDefinitionCreateManyOwnerInput = {
@@ -22369,6 +29462,20 @@ export namespace Prisma {
     templateId: string
     type: string
     createdAt?: Date | string
+  }
+
+  export type PlayerCreateManyOwnerInput = {
+    id?: string
+    displayName: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    minecraftName?: string | null
+    discordId?: string | null
+    notes?: string | null
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type GameDefinitionUpdateWithoutOwnerInput = {
@@ -22594,6 +29701,54 @@ export namespace Prisma {
     templateId?: StringFieldUpdateOperationsInput | string
     type?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerUpdateWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bans?: PlayerBanUpdateManyWithoutPlayerNestedInput
+    whitelists?: PlayerWhitelistUpdateManyWithoutPlayerNestedInput
+    events?: PlayerEventUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerUncheckedUpdateWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    bans?: PlayerBanUncheckedUpdateManyWithoutPlayerNestedInput
+    whitelists?: PlayerWhitelistUncheckedUpdateManyWithoutPlayerNestedInput
+    events?: PlayerEventUncheckedUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerUncheckedUpdateManyWithoutOwnerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftName?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    notes?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type BackupCreateManyServerInput = {
@@ -22942,6 +30097,94 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type PlayerBanCreateManyPlayerInput = {
+    id?: string
+    reason: string
+    expiresAt?: Date | string | null
+    active?: boolean
+    createdAt?: Date | string
+  }
+
+  export type PlayerWhitelistCreateManyPlayerInput = {
+    id?: string
+    serverId: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerEventCreateManyPlayerInput = {
+    id?: string
+    actorId: string
+    action: string
+    detail: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerBanUpdateWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerBanUncheckedUpdateWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerBanUncheckedUpdateManyWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    active?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerWhitelistUpdateWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerWhitelistUncheckedUpdateWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerWhitelistUncheckedUpdateManyWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerEventUpdateWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    actorId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    detail?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerEventUncheckedUpdateWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    actorId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    detail?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerEventUncheckedUpdateManyWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    actorId?: StringFieldUpdateOperationsInput | string
+    action?: StringFieldUpdateOperationsInput | string
+    detail?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
 
 
   /**
@@ -22963,6 +30206,10 @@ export namespace Prisma {
      * @deprecated Use MarketplaceTemplateCountOutputTypeDefaultArgs instead
      */
     export type MarketplaceTemplateCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = MarketplaceTemplateCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PlayerCountOutputTypeDefaultArgs instead
+     */
+    export type PlayerCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use UserDefaultArgs instead
      */
@@ -23015,6 +30262,26 @@ export namespace Prisma {
      * @deprecated Use TemplateVoteDefaultArgs instead
      */
     export type TemplateVoteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = TemplateVoteDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PlayerDefaultArgs instead
+     */
+    export type PlayerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PlayerBanDefaultArgs instead
+     */
+    export type PlayerBanArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerBanDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PlayerWhitelistDefaultArgs instead
+     */
+    export type PlayerWhitelistArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerWhitelistDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PlayerEnforcementDefaultArgs instead
+     */
+    export type PlayerEnforcementArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerEnforcementDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PlayerEventDefaultArgs instead
+     */
+    export type PlayerEventArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerEventDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany
