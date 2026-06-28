@@ -11,7 +11,7 @@ import { startMonitoring, stopMonitoring, clearStatsHistory } from "../processMo
 import { serverEventBus } from "../eventBus";
 import { parseSpec } from "../definitions/serialize";
 import { buildContext } from "../definitions/context";
-import { planInstall, planConfigFiles, planLaunch, planPorts, resolveCommand } from "../definitions/plan";
+import { planInstall, planConfigFiles, planLaunch, planPorts, resolveCommand, resolveExecutablePath } from "../definitions/plan";
 import { writeStrategyConfig } from "../definitions/strategies";
 import type { GameDefinitionSpec } from "../definitions/types";
 import { setProgress, clearProgress, parseSteamProgress, computePercent, isMissingConfigError } from "../downloadProgress";
@@ -578,6 +578,9 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
         }
       } catch (err: any) {
         clearProgress(serverId);
+        // Remove the partial / zero-byte file so it doesn't block a later retry
+        // (the install guard treats any existing checkFile as "already installed").
+        try { fs.unlinkSync(target); } catch (_) {}
         logWriter(`Download failed: ${err.message}`);
         throw new Error(`Failed to download game server binaries: ${err.message}`);
       }
@@ -627,9 +630,20 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
       env: { ...process.env, ...(launch.env || {}) },
     });
   } else {
-    // Resolve the executable: PATH commands (java, cmd.exe) by name; all others relative to installDir
+    // Resolve the executable: PATH commands (java, cmd.exe) by name; all others relative to installDir.
+    // On Windows a no-shell spawn does not apply PATHEXT, so a bare "java" fails
+    // to launch even when java.exe is on PATH — resolve it to the full path here
+    // (keeping a direct stdin so the server console / stop command still work).
     const resolvedExe = resolveCommand(installDir, launch.executable, launch.executableOnPath);
-    child = spawn(resolvedExe, launch.args, {
+    const finalExe = launch.executableOnPath
+      ? resolveExecutablePath(
+          resolvedExe,
+          process.env.PATH || "",
+          process.env.PATHEXT || ".EXE;.CMD;.BAT;.COM",
+          fs.existsSync
+        )
+      : resolvedExe;
+    child = spawn(finalExe, launch.args, {
       cwd,
       stdio: ["pipe", "pipe", "pipe"],
       env: { ...process.env, ...(launch.env || {}) },

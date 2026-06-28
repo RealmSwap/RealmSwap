@@ -27,6 +27,33 @@ export interface LaunchPlan {
 export function resolveCommand(installDir: string, executable: string, executableOnPath?: boolean): string {
   return executableOnPath ? executable : path.join(installDir, executable);
 }
+
+/** Resolve a PATH-based executable (e.g. "java") to an absolute file path by
+ *  scanning PATH directories and PATHEXT extensions. On Windows a bare-name
+ *  spawn WITHOUT a shell does not apply PATHEXT, so "java" fails to launch even
+ *  when "java.exe" is on PATH; resolving to the full path fixes that while
+ *  keeping the child's stdin wired directly (a shell would break the console /
+ *  stop commands). PATH, PATHEXT, and the existence check are injected so this
+ *  stays pure and testable. Returns the bare name as a fallback when nothing
+ *  matches (let spawn attempt its own resolution). */
+export function resolveExecutablePath(
+  name: string,
+  pathVar: string,
+  pathExt: string,
+  exists: (p: string) => boolean
+): string {
+  if (name.includes("/") || name.includes("\\")) return name; // already an explicit path
+  const dirs = pathVar.split(path.delimiter).map((d) => d.trim()).filter(Boolean);
+  const hasExt = /\.[^.]+$/.test(name);
+  const exts = hasExt ? [""] : pathExt.split(";").map((e) => e.trim()).filter(Boolean);
+  for (const dir of dirs) {
+    for (const ext of exts) {
+      const candidate = path.join(dir, name + ext);
+      if (exists(candidate)) return candidate;
+    }
+  }
+  return name;
+}
 export interface PortPlan { protocol: Protocol; port: number; }
 
 export function planInstall(spec: GameDefinitionSpec, installMethod: InstallMethod): InstallPlan {
