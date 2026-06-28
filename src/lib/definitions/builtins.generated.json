@@ -579,11 +579,11 @@
     "installMethod": "STEAMCMD",
     "spec": {
       "install": { "appId": "4129620", "installSubDir": "windrose-server", "checkFile": "WindroseServer.exe", "requiredDiskGB": 35 },
-      "launch": { "executable": "WindroseServer.exe", "cwdSubDir": "windrose-server", "args": [] },
+      "launch": { "executable": "WindroseServer.exe", "cwdSubDir": "windrose-server", "args": [], "inviteCodeFile": "R5/ServerDescription.json" },
       "defaultPort": 7777,
       "params": [],
-      "configFiles": [{ "path": "ServerDescription.json", "strategy": "windroseJson" }],
-      "editableConfigPath": "windrose-server/ServerDescription.json",
+      "configFiles": [],
+      "editableConfigPath": "windrose-server/R5/ServerDescription.json",
       "ports": [{ "protocol": "TCP", "port": "7777" }, { "protocol": "UDP", "port": "7777" }]
     }
   },

@@ -1,7 +1,7 @@
 export type InstallMethod = "STEAMCMD" | "DOWNLOAD" | "CUSTOM_SCRIPT";
 export type ParamType = "text" | "number" | "boolean" | "enum";
 export type Protocol = "TCP" | "UDP";
-export type ConfigStrategy = "template" | "enshroudedJson" | "zomboidIniMerge" | "windroseJson";
+export type ConfigStrategy = "template" | "enshroudedJson" | "zomboidIniMerge";
 
 export interface ParamSpec {
   key: string;
@@ -43,6 +43,9 @@ export interface LaunchSpec {
   executableOnPath?: boolean;   // true: spawn executable by name (found on PATH, e.g. "java", "cmd.exe"); false/omitted: resolve against the install dir
   preLaunchDirs?: string[];     // directories (relative to install dir) to create before launch
   readyPattern?: string;        // regex pattern to detect when the server has finished starting
+  inviteCodeFile?: string;      // generated JSON file (relative to install dir) whose
+                                // ServerDescription_Persistent.InviteCode is the join code to
+                                // surface as the server's connect info (e.g. Windrose)
 }
 
 export interface ContainerSpec {

@@ -227,10 +227,14 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
     installMethod: "STEAMCMD",
     spec: {
       install: { appId: "4129620", installSubDir: "windrose-server", checkFile: "WindroseServer.exe", requiredDiskGB: 35.0 },
-      launch: { executable: "WindroseServer.exe", cwdSubDir: "windrose-server", args: [] },
+      // The server generates R5/ServerDescription.json on first launch with its own invite
+      // code (an 8-char hex). Players join via the game client (Play -> Connect to Server)
+      // with that code — not a direct IP. We read it from that file post-launch and surface
+      // it as the connect info; we do NOT pre-write a config (the server ignores ours).
+      launch: { executable: "WindroseServer.exe", cwdSubDir: "windrose-server", args: [], inviteCodeFile: "R5/ServerDescription.json" },
       defaultPort: 7777, params: [],
-      configFiles: [{ path: "ServerDescription.json", strategy: "windroseJson" }],
-      editableConfigPath: "windrose-server/ServerDescription.json",
+      configFiles: [],
+      editableConfigPath: "windrose-server/R5/ServerDescription.json",
       ports: [{ protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" }],
     },
   },

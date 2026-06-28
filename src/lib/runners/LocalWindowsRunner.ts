@@ -13,6 +13,7 @@ import { parseSpec } from "../definitions/serialize";
 import { buildContext } from "../definitions/context";
 import { planInstall, planConfigFiles, planLaunch, planPorts, resolveCommand, resolveExecutablePath } from "../definitions/plan";
 import { writeStrategyConfig } from "../definitions/strategies";
+import { parseWindroseInviteCode } from "../definitions/windrose";
 import type { GameDefinitionSpec } from "../definitions/types";
 import { setProgress, clearProgress, parseSteamProgress, computePercent, isMissingConfigError } from "../downloadProgress";
 import { dataRoot } from "../appPaths";
@@ -581,7 +582,7 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
       fs.writeFileSync(full, cf.content ?? "");
     } else {
       writeStrategyConfig({
-        strategy: cf.strategy as "enshroudedJson" | "zomboidIniMerge" | "windroseJson",
+        strategy: cf.strategy as "enshroudedJson" | "zomboidIniMerge",
         installDir,
         serverName: server.name,
         password: server.password || undefined,
@@ -674,7 +675,48 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
   const tcpPorts = planPorts(spec, ctx).filter(p => p.protocol === "TCP").map(p => p.port);
   waitForReadiness(serverId, child as any, launch, tcpPorts, logWriter);
 
+  // Surface a file-generated join code (e.g. Windrose) once the server writes it.
+  if (launch.inviteCodeFile) {
+    watchInviteCodeFile(serverId, installDir, launch.inviteCodeFile, child as any, logWriter);
+  }
+
   child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
+}
+
+// Some servers (Windrose) expose no join code on stdout — they write a server-generated
+// invite code into a JSON file on first launch. Poll that file after launch and, once the
+// code appears, surface it as the server's connect info (ipAddress). Best-effort: stops on
+// success, on child exit, or after a generous deadline.
+function watchInviteCodeFile(
+  serverId: string,
+  installDir: string,
+  relPath: string,
+  child: import("child_process").ChildProcessWithoutNullStreams,
+  logWriter: (msg: string) => void
+) {
+  const filePath = path.join(installDir, relPath);
+  const deadline = Date.now() + 6 * 60 * 1000; // server can take minutes to generate the file
+  const interval = setInterval(() => {
+    let code: string | null = null;
+    try {
+      code = parseWindroseInviteCode(fs.readFileSync(filePath, "utf-8"));
+    } catch {
+      code = null; // not generated yet, or caught mid-write
+    }
+    if (code) {
+      clearInterval(interval);
+      logWriter(`[Invite Code] Server invite code: ${code} (join via the game client's "Connect to Server")`);
+      prisma.server.update({
+        where: { id: serverId },
+        data: { ipAddress: `Invite Code: ${code}` },
+      }).then(() => serverEventBus.emit("status_update", { serverId, status: "RUNNING" }))
+        .catch((err) => console.error("Error updating invite code in DB:", err));
+    } else if (Date.now() > deadline) {
+      clearInterval(interval);
+      logWriter(`[Invite Code] No invite code found in ${relPath} within 6 minutes.`);
+    }
+  }, 5000);
+  child.on("exit", () => clearInterval(interval));
 }
 
 // Clean up database on process exit — with crash detection & auto-restart

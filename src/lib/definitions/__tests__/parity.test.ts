@@ -108,6 +108,16 @@ describe("parity: Windrose", () => {
     expect(p.executable).toBe("WindroseServer.exe");
     expect(p.args).toEqual([]);
   });
+
+  it("surfaces the server-generated invite code from the generated config, writes no config", () => {
+    // The server ignores any config we pre-write; it generates R5/ServerDescription.json
+    // with its own invite code, which we read post-launch via launch.inviteCodeFile.
+    const spec = def("WINDROSE").spec;
+    expect(spec.configFiles).toEqual([]);
+    expect(spec.editableConfigPath).toBe("windrose-server/R5/ServerDescription.json");
+    const c = ctxFor("WINDROSE", { name: "Sea Dogs", password: null, ram: 8 });
+    expect(planLaunch(spec, c).inviteCodeFile).toBe("R5/ServerDescription.json");
+  });
 });
 
 describe("parity: Satisfactory", () => {

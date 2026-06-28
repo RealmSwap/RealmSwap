@@ -97,7 +97,7 @@ export class DockerRunner implements ServerRunner {
         fs.writeFileSync(full, cf.content ?? "");
       } else {
         writeStrategyConfig({
-          strategy: cf.strategy as "enshroudedJson" | "zomboidIniMerge" | "windroseJson",
+          strategy: cf.strategy as "enshroudedJson" | "zomboidIniMerge",
           installDir, serverName: record.name, password: record.password || undefined,
         });
       }
