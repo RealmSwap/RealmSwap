@@ -14,7 +14,7 @@ function baseCtx(over: Partial<TransferContext> = {}): TransferContext {
     excludeConfig: false,
     localEntries: [f("world/level.dat", 10, 100), f("server.properties", 5, 100)],
     remoteEntries: [],
-    sizesFor: (entries) => new Map(entries.map((e) => [e.relPath, e.size])),
+    sizesFor: (entries: FileEntry[]) => new Map(entries.map((e) => [e.relPath, e.size])),
     makeTransferer: () => transferer,
     onProgress: () => {},
     _copied: copied,
