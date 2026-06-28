@@ -716,6 +716,27 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
     const serverRec = await prisma.server.findUnique({ where: { id: serverId } });
     if (!serverRec) return;
 
+    // Self-heal: the server may have failed only because the bundled Java was too old for its jar.
+    // Detect the required version from the JVM error, learn it, and relaunch once with the right Java.
+    // Runs before crash detection so a version mismatch never burns the crash-retry budget.
+    if (!wasIntentional) {
+      const requiredJava = parseRequiredJavaMajor(getServerLogTail(serverId));
+      if (requiredJava && javaMajorOverrides.get(serverId) !== requiredJava) {
+        javaMajorOverrides.set(serverId, requiredJava);
+        appendLog(serverId, `[Java] This server needs Java ${requiredJava}. Downloading it and retrying…`);
+        await prisma.server.update({
+          where: { id: serverId },
+          data: { status: "STARTING", pid: null, cpuUsage: 0, memoryUsage: 0 },
+        }).catch(() => {});
+        serverEventBus.emit("status_update", { serverId, status: "STARTING" });
+        clearStatsHistory(serverId);
+        startLocalServer(serverId, serverRec.game, serverRec.ramAllocation).catch((e: any) =>
+          appendLog(serverId, `[Java] Retry after version detection failed: ${e.message}`)
+        );
+        return;
+      }
+    }
+
     if (isCrash) {
       // Apply the crash to the rolling retry counter and decide whether to restart.
       const { counter, shouldRestart } = evaluateCrash(crashCounters.get(serverId), Date.now());
