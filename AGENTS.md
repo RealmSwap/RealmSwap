@@ -59,6 +59,22 @@ skill's commands are written in PowerShell to match.
 `graphify-out/` is generated output — it is gitignored (see below) and should not be
 committed.
 
+## The graph lives in the main repo; worktrees get a copy automatically
+
+The built graph (`graphify-out/`) is kept in the **main repo root** and is gitignored, so
+it does not travel through git. To keep worktrees in sync, a committed `SessionStart` hook
+([.claude/settings.json](.claude/settings.json) →
+[.claude/scripts/sync-graphify-from-main.ps1](.claude/scripts/sync-graphify-from-main.ps1))
+copies the latest `graphify-out/` from the main repo into any worktree under
+`.claude/worktrees/` when a session starts there. It is copy-only (never deletes), only
+copies when the worktree's graph is missing or older, and is a no-op in the main workspace.
+
+Practical implications:
+- In a fresh worktree, just start a session — the graph is already there to `query`.
+- After you change code, run `/graphify --update` to refresh the graph. Run it in the
+  **main repo** (`C:\Users\jimmy\Documents\GitHub\GameVault`) so the canonical copy stays
+  current; worktrees pick up the refresh on their next session start.
+
 ## Other conventions for this repo
 
 - Branch off `main` and open a pull request; do not commit straight to `main`.
