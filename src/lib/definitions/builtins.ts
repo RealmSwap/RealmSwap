@@ -1,5 +1,3 @@
-// NOTE: After editing BUILTIN_DEFINITIONS, regenerate builtins.generated.json:
-//   npx tsx -e "import {BUILTIN_DEFINITIONS} from './src/lib/definitions/builtins'; import fs from 'fs'; fs.writeFileSync('./src/lib/definitions/builtins.generated.json', JSON.stringify(BUILTIN_DEFINITIONS, null, 2));"
 import type { GameDefinitionSpec, InstallMethod } from "./types";
 
 export interface BuiltinDefinition {
@@ -16,24 +14,22 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
     installMethod: "DOWNLOAD",
     spec: {
       install: {
-        url: "https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar",
+        url: "https://piston-data.mojang.com/v1/objects/823e2250d24b3ddac457a60c92a6a941943fcd6a/server.jar",
         fileName: "server.jar", checkFile: "server.jar",
       },
       requiresJava: true,
-      queryType: "minecraft",
       launch: {
         executable: "java",
         executableOnPath: true,
         args: ["-Xms512M", "-Xmx{ram}G", "-jar", "server.jar", "nogui"],
         stdinStopCommand: "stop\n",
-        readyPattern: "Done \\([\\d.]+s\\)!",
       },
       defaultPort: 25565,
       params: [],
       configFiles: [
         { path: "eula.txt", strategy: "template", template: "eula=true\n" },
         { path: "server.properties", strategy: "template",
-          template: "server-port={port}\nquery.port=25565\nonline-mode=false\nmax-players=10\nmotd=RealmSwap Local Runner Minecraft Server - {name}" },
+          template: "server-port={port}\nquery.port=25565\nonline-mode=false\nmax-players=10\nmotd=GameVault Local Runner Minecraft Server - {name}" },
       ],
       editableConfigPath: "server.properties",
       ports: [{ protocol: "TCP", port: "25565" }, { protocol: "UDP", port: "25565" }],
@@ -51,7 +47,6 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         executable: "valheim_server.exe", cwdSubDir: "valheim-server",
         args: ["-nographics", "-batchmode", "-name", "{name}", "-port", "2456", "-world", "Dedicated", "-password", "{password}", "-public", "1", "-crossplay"],
         stdoutPatterns: [{ regex: "registered with join code (\\w+)", updateField: "ipAddress", transform: "joinCode" }],
-        readyPattern: "Game server connected",
       },
       container: {
         executable: "valheim_server.x86_64",
@@ -88,11 +83,8 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
     spec: {
       install: { appId: "380870", installSubDir: "zomboid-server", checkFile: "StartServer64.bat", requiredDiskGB: 3.0 },
       launch: {
-        executable: "cmd.exe",
-        executableOnPath: true,
-        cwdSubDir: "zomboid-server",
+        executable: "cmd.exe", executableOnPath: true, cwdSubDir: "zomboid-server",
         args: ["/c", "StartServer64.bat", "-cachedir=./zomboid-data", "-servername", "servertest"],
-        readyPattern: "LOG\\s*:\\s*General\\s*,\\s*Server started",
       },
       container: {
         executable: "start-server.sh",
@@ -120,7 +112,6 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           { value: ["TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers=20"], includeWhen: "passwordEmpty" },
           "-server", "-nosound", "-QueryPort=27015",
         ],
-        readyPattern: "Full Startup:",
       },
       container: {
         executable: "ShooterGame/Binaries/Linux/ShooterGameServer",
@@ -146,14 +137,12 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       install: { appId: "282440", installSubDir: "terraria-server", checkFile: "TerrariaServer.exe", requiredDiskGB: 1.0 },
       launch: {
         executable: "TerrariaServer.exe", cwdSubDir: "terraria-server",
-        preLaunchDirs: ["worlds"],
         args: [
           "-port", "7777", "-players", "8",
           { value: ["-pass", "{password}"], includeWhen: "password" },
           "-autocreate", "1", "-worldname", "{nameSanitized}",
           "-world", "worlds/{nameSanitized}.wld",
         ],
-        readyPattern: "Server started",
       },
       container: {
         executable: "TerrariaServer.bin.x86_64",
@@ -214,7 +203,6 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           "+server.seed", "12345", "+server.worldsize", "3000", "+server.maxplayers", "10",
           "+server.hostname", "{name}", "+rcon.port", "28016", "+rcon.password", "{password}", "+rcon.web", "1",
         ],
-        readyPattern: "Server startup complete",
       },
       container: {
         executable: "RustDedicated",
@@ -230,44 +218,6 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       configFiles: [],
       editableConfigPath: "rust-server/server/servertest/cfg/server.cfg",
       ports: [{ protocol: "UDP", port: "28015" }, { protocol: "TCP", port: "28016" }],
-    },
-  },
-  {
-    slug: "SATISFACTORY", displayName: "Satisfactory", icon: "🏭",
-    color: "from-orange-500 to-amber-700 bg-orange-500/10 border-orange-500/30 text-orange-400",
-    description: "Co-op factory automation", recommendedRamGB: 8.0,
-    installMethod: "STEAMCMD",
-    spec: {
-      install: { appId: "1690800", installSubDir: "satisfactory-server", checkFile: "FactoryServer.exe", requiredDiskGB: 15.0 },
-      // Server is administered in-game via the Server Manager (claim + set admin password
-      // after first connecting from the game client); there is no CLI password or config file.
-      // readyPattern omitted until a real first-launch log line is confirmed.
-      launch: {
-        executable: "FactoryServer.exe", cwdSubDir: "satisfactory-server",
-        args: ["-log", "-unattended"],
-      },
-      defaultPort: 7777, params: [], configFiles: [],
-      ports: [{ protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" }],
-    },
-  },
-  {
-    slug: "VRISING", displayName: "V Rising", icon: "🧛",
-    color: "from-purple-500 to-red-800 bg-purple-500/10 border-purple-500/30 text-purple-400",
-    description: "Vampire survival RPG", recommendedRamGB: 6.0,
-    installMethod: "STEAMCMD",
-    spec: {
-      install: { appId: "1829350", installSubDir: "vrising-server", checkFile: "VRisingServer.exe", requiredDiskGB: 5.0 },
-      // Password/max-players live in save-data/Settings/ServerHostSettings.json (generated on
-      // first launch); name + save are passed on the command line, which takes priority.
-      // readyPattern omitted until a real first-launch log line is confirmed.
-      launch: {
-        executable: "VRisingServer.exe", cwdSubDir: "vrising-server",
-        preLaunchDirs: ["save-data"],
-        args: ["-persistentDataPath", "./save-data", "-serverName", "{name}", "-saveName", "world1"],
-      },
-      defaultPort: 9876, params: [], configFiles: [],
-      editableConfigPath: "vrising-server/save-data/Settings/ServerHostSettings.json",
-      ports: [{ protocol: "UDP", port: "9876" }, { protocol: "UDP", port: "9877" }],
     },
   },
 ];

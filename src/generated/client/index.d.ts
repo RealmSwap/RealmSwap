@@ -29,6 +29,11 @@ export type Subscription = $Result.DefaultSelection<Prisma.$SubscriptionPayload>
  */
 export type Server = $Result.DefaultSelection<Prisma.$ServerPayload>
 /**
+ * Model ServerHostLink
+ * 
+ */
+export type ServerHostLink = $Result.DefaultSelection<Prisma.$ServerHostLinkPayload>
+/**
  * Model Archive
  * 
  */
@@ -231,6 +236,16 @@ export class PrismaClient<
     * ```
     */
   get server(): Prisma.ServerDelegate<ExtArgs>;
+
+  /**
+   * `prisma.serverHostLink`: Exposes CRUD operations for the **ServerHostLink** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ServerHostLinks
+    * const serverHostLinks = await prisma.serverHostLink.findMany()
+    * ```
+    */
+  get serverHostLink(): Prisma.ServerHostLinkDelegate<ExtArgs>;
 
   /**
    * `prisma.archive`: Exposes CRUD operations for the **Archive** model.
@@ -775,6 +790,7 @@ export namespace Prisma {
     User: 'User',
     Subscription: 'Subscription',
     Server: 'Server',
+    ServerHostLink: 'ServerHostLink',
     Archive: 'Archive',
     ActivityLog: 'ActivityLog',
     Backup: 'Backup',
@@ -800,7 +816,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "subscription" | "server" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "scheduledTask" | "marketplaceTemplate" | "templateVote"
+      modelProps: "user" | "subscription" | "server" | "serverHostLink" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "scheduledTask" | "marketplaceTemplate" | "templateVote"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1011,6 +1027,76 @@ export namespace Prisma {
           count: {
             args: Prisma.ServerCountArgs<ExtArgs>
             result: $Utils.Optional<ServerCountAggregateOutputType> | number
+          }
+        }
+      }
+      ServerHostLink: {
+        payload: Prisma.$ServerHostLinkPayload<ExtArgs>
+        fields: Prisma.ServerHostLinkFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ServerHostLinkFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerHostLinkPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ServerHostLinkFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerHostLinkPayload>
+          }
+          findFirst: {
+            args: Prisma.ServerHostLinkFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerHostLinkPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ServerHostLinkFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerHostLinkPayload>
+          }
+          findMany: {
+            args: Prisma.ServerHostLinkFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerHostLinkPayload>[]
+          }
+          create: {
+            args: Prisma.ServerHostLinkCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerHostLinkPayload>
+          }
+          createMany: {
+            args: Prisma.ServerHostLinkCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ServerHostLinkCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerHostLinkPayload>[]
+          }
+          delete: {
+            args: Prisma.ServerHostLinkDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerHostLinkPayload>
+          }
+          update: {
+            args: Prisma.ServerHostLinkUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerHostLinkPayload>
+          }
+          deleteMany: {
+            args: Prisma.ServerHostLinkDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ServerHostLinkUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ServerHostLinkUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerHostLinkPayload>
+          }
+          aggregate: {
+            args: Prisma.ServerHostLinkAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateServerHostLink>
+          }
+          groupBy: {
+            args: Prisma.ServerHostLinkGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ServerHostLinkGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ServerHostLinkCountArgs<ExtArgs>
+            result: $Utils.Optional<ServerHostLinkCountAggregateOutputType> | number
           }
         }
       }
@@ -4546,6 +4632,7 @@ export namespace Prisma {
     mods?: boolean | Server$modsArgs<ExtArgs>
     snapshots?: boolean | Server$snapshotsArgs<ExtArgs>
     scheduledTasks?: boolean | Server$scheduledTasksArgs<ExtArgs>
+    hostLink?: boolean | Server$hostLinkArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["server"]>
 
@@ -4611,6 +4698,7 @@ export namespace Prisma {
     mods?: boolean | Server$modsArgs<ExtArgs>
     snapshots?: boolean | Server$snapshotsArgs<ExtArgs>
     scheduledTasks?: boolean | Server$scheduledTasksArgs<ExtArgs>
+    hostLink?: boolean | Server$hostLinkArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ServerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4628,6 +4716,7 @@ export namespace Prisma {
       mods: Prisma.$ModInstallationPayload<ExtArgs>[]
       snapshots: Prisma.$ServerSnapshotPayload<ExtArgs>[]
       scheduledTasks: Prisma.$ScheduledTaskPayload<ExtArgs>[]
+      hostLink: Prisma.$ServerHostLinkPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -5024,6 +5113,7 @@ export namespace Prisma {
     mods<T extends Server$modsArgs<ExtArgs> = {}>(args?: Subset<T, Server$modsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "findMany"> | Null>
     snapshots<T extends Server$snapshotsArgs<ExtArgs> = {}>(args?: Subset<T, Server$snapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "findMany"> | Null>
     scheduledTasks<T extends Server$scheduledTasksArgs<ExtArgs> = {}>(args?: Subset<T, Server$scheduledTasksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findMany"> | Null>
+    hostLink<T extends Server$hostLinkArgs<ExtArgs> = {}>(args?: Subset<T, Server$hostLinkArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -5507,6 +5597,21 @@ export namespace Prisma {
   }
 
   /**
+   * Server.hostLink
+   */
+  export type Server$hostLinkArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
+    where?: ServerHostLinkWhereInput
+  }
+
+  /**
    * Server without action
    */
   export type ServerDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -5518,6 +5623,1079 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: ServerInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ServerHostLink
+   */
+
+  export type AggregateServerHostLink = {
+    _count: ServerHostLinkCountAggregateOutputType | null
+    _avg: ServerHostLinkAvgAggregateOutputType | null
+    _sum: ServerHostLinkSumAggregateOutputType | null
+    _min: ServerHostLinkMinAggregateOutputType | null
+    _max: ServerHostLinkMaxAggregateOutputType | null
+  }
+
+  export type ServerHostLinkAvgAggregateOutputType = {
+    port: number | null
+  }
+
+  export type ServerHostLinkSumAggregateOutputType = {
+    port: number | null
+  }
+
+  export type ServerHostLinkMinAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    provider: string | null
+    host: string | null
+    port: number | null
+    username: string | null
+    secret: string | null
+    remoteBasePath: string | null
+    excludeConfig: boolean | null
+    lastPushAt: Date | null
+    lastPullAt: Date | null
+    lastError: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ServerHostLinkMaxAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    provider: string | null
+    host: string | null
+    port: number | null
+    username: string | null
+    secret: string | null
+    remoteBasePath: string | null
+    excludeConfig: boolean | null
+    lastPushAt: Date | null
+    lastPullAt: Date | null
+    lastError: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ServerHostLinkCountAggregateOutputType = {
+    id: number
+    serverId: number
+    provider: number
+    host: number
+    port: number
+    username: number
+    secret: number
+    remoteBasePath: number
+    excludeConfig: number
+    lastPushAt: number
+    lastPullAt: number
+    lastError: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ServerHostLinkAvgAggregateInputType = {
+    port?: true
+  }
+
+  export type ServerHostLinkSumAggregateInputType = {
+    port?: true
+  }
+
+  export type ServerHostLinkMinAggregateInputType = {
+    id?: true
+    serverId?: true
+    provider?: true
+    host?: true
+    port?: true
+    username?: true
+    secret?: true
+    remoteBasePath?: true
+    excludeConfig?: true
+    lastPushAt?: true
+    lastPullAt?: true
+    lastError?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ServerHostLinkMaxAggregateInputType = {
+    id?: true
+    serverId?: true
+    provider?: true
+    host?: true
+    port?: true
+    username?: true
+    secret?: true
+    remoteBasePath?: true
+    excludeConfig?: true
+    lastPushAt?: true
+    lastPullAt?: true
+    lastError?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ServerHostLinkCountAggregateInputType = {
+    id?: true
+    serverId?: true
+    provider?: true
+    host?: true
+    port?: true
+    username?: true
+    secret?: true
+    remoteBasePath?: true
+    excludeConfig?: true
+    lastPushAt?: true
+    lastPullAt?: true
+    lastError?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ServerHostLinkAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ServerHostLink to aggregate.
+     */
+    where?: ServerHostLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerHostLinks to fetch.
+     */
+    orderBy?: ServerHostLinkOrderByWithRelationInput | ServerHostLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ServerHostLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerHostLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerHostLinks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ServerHostLinks
+    **/
+    _count?: true | ServerHostLinkCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ServerHostLinkAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ServerHostLinkSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ServerHostLinkMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ServerHostLinkMaxAggregateInputType
+  }
+
+  export type GetServerHostLinkAggregateType<T extends ServerHostLinkAggregateArgs> = {
+        [P in keyof T & keyof AggregateServerHostLink]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateServerHostLink[P]>
+      : GetScalarType<T[P], AggregateServerHostLink[P]>
+  }
+
+
+
+
+  export type ServerHostLinkGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ServerHostLinkWhereInput
+    orderBy?: ServerHostLinkOrderByWithAggregationInput | ServerHostLinkOrderByWithAggregationInput[]
+    by: ServerHostLinkScalarFieldEnum[] | ServerHostLinkScalarFieldEnum
+    having?: ServerHostLinkScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ServerHostLinkCountAggregateInputType | true
+    _avg?: ServerHostLinkAvgAggregateInputType
+    _sum?: ServerHostLinkSumAggregateInputType
+    _min?: ServerHostLinkMinAggregateInputType
+    _max?: ServerHostLinkMaxAggregateInputType
+  }
+
+  export type ServerHostLinkGroupByOutputType = {
+    id: string
+    serverId: string
+    provider: string
+    host: string
+    port: number
+    username: string
+    secret: string
+    remoteBasePath: string
+    excludeConfig: boolean
+    lastPushAt: Date | null
+    lastPullAt: Date | null
+    lastError: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: ServerHostLinkCountAggregateOutputType | null
+    _avg: ServerHostLinkAvgAggregateOutputType | null
+    _sum: ServerHostLinkSumAggregateOutputType | null
+    _min: ServerHostLinkMinAggregateOutputType | null
+    _max: ServerHostLinkMaxAggregateOutputType | null
+  }
+
+  type GetServerHostLinkGroupByPayload<T extends ServerHostLinkGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ServerHostLinkGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ServerHostLinkGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ServerHostLinkGroupByOutputType[P]>
+            : GetScalarType<T[P], ServerHostLinkGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ServerHostLinkSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    provider?: boolean
+    host?: boolean
+    port?: boolean
+    username?: boolean
+    secret?: boolean
+    remoteBasePath?: boolean
+    excludeConfig?: boolean
+    lastPushAt?: boolean
+    lastPullAt?: boolean
+    lastError?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["serverHostLink"]>
+
+  export type ServerHostLinkSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    provider?: boolean
+    host?: boolean
+    port?: boolean
+    username?: boolean
+    secret?: boolean
+    remoteBasePath?: boolean
+    excludeConfig?: boolean
+    lastPushAt?: boolean
+    lastPullAt?: boolean
+    lastError?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["serverHostLink"]>
+
+  export type ServerHostLinkSelectScalar = {
+    id?: boolean
+    serverId?: boolean
+    provider?: boolean
+    host?: boolean
+    port?: boolean
+    username?: boolean
+    secret?: boolean
+    remoteBasePath?: boolean
+    excludeConfig?: boolean
+    lastPushAt?: boolean
+    lastPullAt?: boolean
+    lastError?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ServerHostLinkInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+  export type ServerHostLinkIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+
+  export type $ServerHostLinkPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ServerHostLink"
+    objects: {
+      server: Prisma.$ServerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      serverId: string
+      provider: string
+      host: string
+      port: number
+      username: string
+      secret: string
+      remoteBasePath: string
+      excludeConfig: boolean
+      lastPushAt: Date | null
+      lastPullAt: Date | null
+      lastError: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["serverHostLink"]>
+    composites: {}
+  }
+
+  type ServerHostLinkGetPayload<S extends boolean | null | undefined | ServerHostLinkDefaultArgs> = $Result.GetResult<Prisma.$ServerHostLinkPayload, S>
+
+  type ServerHostLinkCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ServerHostLinkFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ServerHostLinkCountAggregateInputType | true
+    }
+
+  export interface ServerHostLinkDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ServerHostLink'], meta: { name: 'ServerHostLink' } }
+    /**
+     * Find zero or one ServerHostLink that matches the filter.
+     * @param {ServerHostLinkFindUniqueArgs} args - Arguments to find a ServerHostLink
+     * @example
+     * // Get one ServerHostLink
+     * const serverHostLink = await prisma.serverHostLink.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ServerHostLinkFindUniqueArgs>(args: SelectSubset<T, ServerHostLinkFindUniqueArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ServerHostLink that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ServerHostLinkFindUniqueOrThrowArgs} args - Arguments to find a ServerHostLink
+     * @example
+     * // Get one ServerHostLink
+     * const serverHostLink = await prisma.serverHostLink.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ServerHostLinkFindUniqueOrThrowArgs>(args: SelectSubset<T, ServerHostLinkFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ServerHostLink that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerHostLinkFindFirstArgs} args - Arguments to find a ServerHostLink
+     * @example
+     * // Get one ServerHostLink
+     * const serverHostLink = await prisma.serverHostLink.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ServerHostLinkFindFirstArgs>(args?: SelectSubset<T, ServerHostLinkFindFirstArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ServerHostLink that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerHostLinkFindFirstOrThrowArgs} args - Arguments to find a ServerHostLink
+     * @example
+     * // Get one ServerHostLink
+     * const serverHostLink = await prisma.serverHostLink.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ServerHostLinkFindFirstOrThrowArgs>(args?: SelectSubset<T, ServerHostLinkFindFirstOrThrowArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ServerHostLinks that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerHostLinkFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ServerHostLinks
+     * const serverHostLinks = await prisma.serverHostLink.findMany()
+     * 
+     * // Get first 10 ServerHostLinks
+     * const serverHostLinks = await prisma.serverHostLink.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const serverHostLinkWithIdOnly = await prisma.serverHostLink.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ServerHostLinkFindManyArgs>(args?: SelectSubset<T, ServerHostLinkFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ServerHostLink.
+     * @param {ServerHostLinkCreateArgs} args - Arguments to create a ServerHostLink.
+     * @example
+     * // Create one ServerHostLink
+     * const ServerHostLink = await prisma.serverHostLink.create({
+     *   data: {
+     *     // ... data to create a ServerHostLink
+     *   }
+     * })
+     * 
+     */
+    create<T extends ServerHostLinkCreateArgs>(args: SelectSubset<T, ServerHostLinkCreateArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ServerHostLinks.
+     * @param {ServerHostLinkCreateManyArgs} args - Arguments to create many ServerHostLinks.
+     * @example
+     * // Create many ServerHostLinks
+     * const serverHostLink = await prisma.serverHostLink.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ServerHostLinkCreateManyArgs>(args?: SelectSubset<T, ServerHostLinkCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ServerHostLinks and returns the data saved in the database.
+     * @param {ServerHostLinkCreateManyAndReturnArgs} args - Arguments to create many ServerHostLinks.
+     * @example
+     * // Create many ServerHostLinks
+     * const serverHostLink = await prisma.serverHostLink.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ServerHostLinks and only return the `id`
+     * const serverHostLinkWithIdOnly = await prisma.serverHostLink.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ServerHostLinkCreateManyAndReturnArgs>(args?: SelectSubset<T, ServerHostLinkCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ServerHostLink.
+     * @param {ServerHostLinkDeleteArgs} args - Arguments to delete one ServerHostLink.
+     * @example
+     * // Delete one ServerHostLink
+     * const ServerHostLink = await prisma.serverHostLink.delete({
+     *   where: {
+     *     // ... filter to delete one ServerHostLink
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ServerHostLinkDeleteArgs>(args: SelectSubset<T, ServerHostLinkDeleteArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ServerHostLink.
+     * @param {ServerHostLinkUpdateArgs} args - Arguments to update one ServerHostLink.
+     * @example
+     * // Update one ServerHostLink
+     * const serverHostLink = await prisma.serverHostLink.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ServerHostLinkUpdateArgs>(args: SelectSubset<T, ServerHostLinkUpdateArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ServerHostLinks.
+     * @param {ServerHostLinkDeleteManyArgs} args - Arguments to filter ServerHostLinks to delete.
+     * @example
+     * // Delete a few ServerHostLinks
+     * const { count } = await prisma.serverHostLink.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ServerHostLinkDeleteManyArgs>(args?: SelectSubset<T, ServerHostLinkDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ServerHostLinks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerHostLinkUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ServerHostLinks
+     * const serverHostLink = await prisma.serverHostLink.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ServerHostLinkUpdateManyArgs>(args: SelectSubset<T, ServerHostLinkUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ServerHostLink.
+     * @param {ServerHostLinkUpsertArgs} args - Arguments to update or create a ServerHostLink.
+     * @example
+     * // Update or create a ServerHostLink
+     * const serverHostLink = await prisma.serverHostLink.upsert({
+     *   create: {
+     *     // ... data to create a ServerHostLink
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ServerHostLink we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ServerHostLinkUpsertArgs>(args: SelectSubset<T, ServerHostLinkUpsertArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ServerHostLinks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerHostLinkCountArgs} args - Arguments to filter ServerHostLinks to count.
+     * @example
+     * // Count the number of ServerHostLinks
+     * const count = await prisma.serverHostLink.count({
+     *   where: {
+     *     // ... the filter for the ServerHostLinks we want to count
+     *   }
+     * })
+    **/
+    count<T extends ServerHostLinkCountArgs>(
+      args?: Subset<T, ServerHostLinkCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ServerHostLinkCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ServerHostLink.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerHostLinkAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ServerHostLinkAggregateArgs>(args: Subset<T, ServerHostLinkAggregateArgs>): Prisma.PrismaPromise<GetServerHostLinkAggregateType<T>>
+
+    /**
+     * Group by ServerHostLink.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerHostLinkGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ServerHostLinkGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ServerHostLinkGroupByArgs['orderBy'] }
+        : { orderBy?: ServerHostLinkGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ServerHostLinkGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetServerHostLinkGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ServerHostLink model
+   */
+  readonly fields: ServerHostLinkFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ServerHostLink.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ServerHostLinkClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    server<T extends ServerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServerDefaultArgs<ExtArgs>>): Prisma__ServerClient<$Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ServerHostLink model
+   */ 
+  interface ServerHostLinkFieldRefs {
+    readonly id: FieldRef<"ServerHostLink", 'String'>
+    readonly serverId: FieldRef<"ServerHostLink", 'String'>
+    readonly provider: FieldRef<"ServerHostLink", 'String'>
+    readonly host: FieldRef<"ServerHostLink", 'String'>
+    readonly port: FieldRef<"ServerHostLink", 'Int'>
+    readonly username: FieldRef<"ServerHostLink", 'String'>
+    readonly secret: FieldRef<"ServerHostLink", 'String'>
+    readonly remoteBasePath: FieldRef<"ServerHostLink", 'String'>
+    readonly excludeConfig: FieldRef<"ServerHostLink", 'Boolean'>
+    readonly lastPushAt: FieldRef<"ServerHostLink", 'DateTime'>
+    readonly lastPullAt: FieldRef<"ServerHostLink", 'DateTime'>
+    readonly lastError: FieldRef<"ServerHostLink", 'String'>
+    readonly createdAt: FieldRef<"ServerHostLink", 'DateTime'>
+    readonly updatedAt: FieldRef<"ServerHostLink", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ServerHostLink findUnique
+   */
+  export type ServerHostLinkFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerHostLink to fetch.
+     */
+    where: ServerHostLinkWhereUniqueInput
+  }
+
+  /**
+   * ServerHostLink findUniqueOrThrow
+   */
+  export type ServerHostLinkFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerHostLink to fetch.
+     */
+    where: ServerHostLinkWhereUniqueInput
+  }
+
+  /**
+   * ServerHostLink findFirst
+   */
+  export type ServerHostLinkFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerHostLink to fetch.
+     */
+    where?: ServerHostLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerHostLinks to fetch.
+     */
+    orderBy?: ServerHostLinkOrderByWithRelationInput | ServerHostLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ServerHostLinks.
+     */
+    cursor?: ServerHostLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerHostLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerHostLinks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ServerHostLinks.
+     */
+    distinct?: ServerHostLinkScalarFieldEnum | ServerHostLinkScalarFieldEnum[]
+  }
+
+  /**
+   * ServerHostLink findFirstOrThrow
+   */
+  export type ServerHostLinkFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerHostLink to fetch.
+     */
+    where?: ServerHostLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerHostLinks to fetch.
+     */
+    orderBy?: ServerHostLinkOrderByWithRelationInput | ServerHostLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ServerHostLinks.
+     */
+    cursor?: ServerHostLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerHostLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerHostLinks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ServerHostLinks.
+     */
+    distinct?: ServerHostLinkScalarFieldEnum | ServerHostLinkScalarFieldEnum[]
+  }
+
+  /**
+   * ServerHostLink findMany
+   */
+  export type ServerHostLinkFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerHostLinks to fetch.
+     */
+    where?: ServerHostLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerHostLinks to fetch.
+     */
+    orderBy?: ServerHostLinkOrderByWithRelationInput | ServerHostLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ServerHostLinks.
+     */
+    cursor?: ServerHostLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerHostLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerHostLinks.
+     */
+    skip?: number
+    distinct?: ServerHostLinkScalarFieldEnum | ServerHostLinkScalarFieldEnum[]
+  }
+
+  /**
+   * ServerHostLink create
+   */
+  export type ServerHostLinkCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ServerHostLink.
+     */
+    data: XOR<ServerHostLinkCreateInput, ServerHostLinkUncheckedCreateInput>
+  }
+
+  /**
+   * ServerHostLink createMany
+   */
+  export type ServerHostLinkCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ServerHostLinks.
+     */
+    data: ServerHostLinkCreateManyInput | ServerHostLinkCreateManyInput[]
+  }
+
+  /**
+   * ServerHostLink createManyAndReturn
+   */
+  export type ServerHostLinkCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ServerHostLinks.
+     */
+    data: ServerHostLinkCreateManyInput | ServerHostLinkCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ServerHostLink update
+   */
+  export type ServerHostLinkUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ServerHostLink.
+     */
+    data: XOR<ServerHostLinkUpdateInput, ServerHostLinkUncheckedUpdateInput>
+    /**
+     * Choose, which ServerHostLink to update.
+     */
+    where: ServerHostLinkWhereUniqueInput
+  }
+
+  /**
+   * ServerHostLink updateMany
+   */
+  export type ServerHostLinkUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ServerHostLinks.
+     */
+    data: XOR<ServerHostLinkUpdateManyMutationInput, ServerHostLinkUncheckedUpdateManyInput>
+    /**
+     * Filter which ServerHostLinks to update
+     */
+    where?: ServerHostLinkWhereInput
+  }
+
+  /**
+   * ServerHostLink upsert
+   */
+  export type ServerHostLinkUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ServerHostLink to update in case it exists.
+     */
+    where: ServerHostLinkWhereUniqueInput
+    /**
+     * In case the ServerHostLink found by the `where` argument doesn't exist, create a new ServerHostLink with this data.
+     */
+    create: XOR<ServerHostLinkCreateInput, ServerHostLinkUncheckedCreateInput>
+    /**
+     * In case the ServerHostLink was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ServerHostLinkUpdateInput, ServerHostLinkUncheckedUpdateInput>
+  }
+
+  /**
+   * ServerHostLink delete
+   */
+  export type ServerHostLinkDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
+    /**
+     * Filter which ServerHostLink to delete.
+     */
+    where: ServerHostLinkWhereUniqueInput
+  }
+
+  /**
+   * ServerHostLink deleteMany
+   */
+  export type ServerHostLinkDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ServerHostLinks to delete
+     */
+    where?: ServerHostLinkWhereInput
+  }
+
+  /**
+   * ServerHostLink without action
+   */
+  export type ServerHostLinkDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerHostLink
+     */
+    select?: ServerHostLinkSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerHostLinkInclude<ExtArgs> | null
   }
 
 
@@ -15613,6 +16791,26 @@ export namespace Prisma {
   export type ServerScalarFieldEnum = (typeof ServerScalarFieldEnum)[keyof typeof ServerScalarFieldEnum]
 
 
+  export const ServerHostLinkScalarFieldEnum: {
+    id: 'id',
+    serverId: 'serverId',
+    provider: 'provider',
+    host: 'host',
+    port: 'port',
+    username: 'username',
+    secret: 'secret',
+    remoteBasePath: 'remoteBasePath',
+    excludeConfig: 'excludeConfig',
+    lastPushAt: 'lastPushAt',
+    lastPullAt: 'lastPullAt',
+    lastError: 'lastError',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ServerHostLinkScalarFieldEnum = (typeof ServerHostLinkScalarFieldEnum)[keyof typeof ServerHostLinkScalarFieldEnum]
+
+
   export const ArchiveScalarFieldEnum: {
     id: 'id',
     userId: 'userId',
@@ -16002,6 +17200,7 @@ export namespace Prisma {
     mods?: ModInstallationListRelationFilter
     snapshots?: ServerSnapshotListRelationFilter
     scheduledTasks?: ScheduledTaskListRelationFilter
+    hostLink?: XOR<ServerHostLinkNullableRelationFilter, ServerHostLinkWhereInput> | null
   }
 
   export type ServerOrderByWithRelationInput = {
@@ -16035,6 +17234,7 @@ export namespace Prisma {
     mods?: ModInstallationOrderByRelationAggregateInput
     snapshots?: ServerSnapshotOrderByRelationAggregateInput
     scheduledTasks?: ScheduledTaskOrderByRelationAggregateInput
+    hostLink?: ServerHostLinkOrderByWithRelationInput
   }
 
   export type ServerWhereUniqueInput = Prisma.AtLeast<{
@@ -16071,6 +17271,7 @@ export namespace Prisma {
     mods?: ModInstallationListRelationFilter
     snapshots?: ServerSnapshotListRelationFilter
     scheduledTasks?: ScheduledTaskListRelationFilter
+    hostLink?: XOR<ServerHostLinkNullableRelationFilter, ServerHostLinkWhereInput> | null
   }, "id">
 
   export type ServerOrderByWithAggregationInput = {
@@ -16131,6 +17332,108 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"Server"> | Date | string
     snapshotInterval?: IntWithAggregatesFilter<"Server"> | number
     lastSnapshotAt?: DateTimeNullableWithAggregatesFilter<"Server"> | Date | string | null
+  }
+
+  export type ServerHostLinkWhereInput = {
+    AND?: ServerHostLinkWhereInput | ServerHostLinkWhereInput[]
+    OR?: ServerHostLinkWhereInput[]
+    NOT?: ServerHostLinkWhereInput | ServerHostLinkWhereInput[]
+    id?: StringFilter<"ServerHostLink"> | string
+    serverId?: StringFilter<"ServerHostLink"> | string
+    provider?: StringFilter<"ServerHostLink"> | string
+    host?: StringFilter<"ServerHostLink"> | string
+    port?: IntFilter<"ServerHostLink"> | number
+    username?: StringFilter<"ServerHostLink"> | string
+    secret?: StringFilter<"ServerHostLink"> | string
+    remoteBasePath?: StringFilter<"ServerHostLink"> | string
+    excludeConfig?: BoolFilter<"ServerHostLink"> | boolean
+    lastPushAt?: DateTimeNullableFilter<"ServerHostLink"> | Date | string | null
+    lastPullAt?: DateTimeNullableFilter<"ServerHostLink"> | Date | string | null
+    lastError?: StringNullableFilter<"ServerHostLink"> | string | null
+    createdAt?: DateTimeFilter<"ServerHostLink"> | Date | string
+    updatedAt?: DateTimeFilter<"ServerHostLink"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }
+
+  export type ServerHostLinkOrderByWithRelationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    provider?: SortOrder
+    host?: SortOrder
+    port?: SortOrder
+    username?: SortOrder
+    secret?: SortOrder
+    remoteBasePath?: SortOrder
+    excludeConfig?: SortOrder
+    lastPushAt?: SortOrderInput | SortOrder
+    lastPullAt?: SortOrderInput | SortOrder
+    lastError?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    server?: ServerOrderByWithRelationInput
+  }
+
+  export type ServerHostLinkWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    serverId?: string
+    AND?: ServerHostLinkWhereInput | ServerHostLinkWhereInput[]
+    OR?: ServerHostLinkWhereInput[]
+    NOT?: ServerHostLinkWhereInput | ServerHostLinkWhereInput[]
+    provider?: StringFilter<"ServerHostLink"> | string
+    host?: StringFilter<"ServerHostLink"> | string
+    port?: IntFilter<"ServerHostLink"> | number
+    username?: StringFilter<"ServerHostLink"> | string
+    secret?: StringFilter<"ServerHostLink"> | string
+    remoteBasePath?: StringFilter<"ServerHostLink"> | string
+    excludeConfig?: BoolFilter<"ServerHostLink"> | boolean
+    lastPushAt?: DateTimeNullableFilter<"ServerHostLink"> | Date | string | null
+    lastPullAt?: DateTimeNullableFilter<"ServerHostLink"> | Date | string | null
+    lastError?: StringNullableFilter<"ServerHostLink"> | string | null
+    createdAt?: DateTimeFilter<"ServerHostLink"> | Date | string
+    updatedAt?: DateTimeFilter<"ServerHostLink"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }, "id" | "serverId">
+
+  export type ServerHostLinkOrderByWithAggregationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    provider?: SortOrder
+    host?: SortOrder
+    port?: SortOrder
+    username?: SortOrder
+    secret?: SortOrder
+    remoteBasePath?: SortOrder
+    excludeConfig?: SortOrder
+    lastPushAt?: SortOrderInput | SortOrder
+    lastPullAt?: SortOrderInput | SortOrder
+    lastError?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ServerHostLinkCountOrderByAggregateInput
+    _avg?: ServerHostLinkAvgOrderByAggregateInput
+    _max?: ServerHostLinkMaxOrderByAggregateInput
+    _min?: ServerHostLinkMinOrderByAggregateInput
+    _sum?: ServerHostLinkSumOrderByAggregateInput
+  }
+
+  export type ServerHostLinkScalarWhereWithAggregatesInput = {
+    AND?: ServerHostLinkScalarWhereWithAggregatesInput | ServerHostLinkScalarWhereWithAggregatesInput[]
+    OR?: ServerHostLinkScalarWhereWithAggregatesInput[]
+    NOT?: ServerHostLinkScalarWhereWithAggregatesInput | ServerHostLinkScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ServerHostLink"> | string
+    serverId?: StringWithAggregatesFilter<"ServerHostLink"> | string
+    provider?: StringWithAggregatesFilter<"ServerHostLink"> | string
+    host?: StringWithAggregatesFilter<"ServerHostLink"> | string
+    port?: IntWithAggregatesFilter<"ServerHostLink"> | number
+    username?: StringWithAggregatesFilter<"ServerHostLink"> | string
+    secret?: StringWithAggregatesFilter<"ServerHostLink"> | string
+    remoteBasePath?: StringWithAggregatesFilter<"ServerHostLink"> | string
+    excludeConfig?: BoolWithAggregatesFilter<"ServerHostLink"> | boolean
+    lastPushAt?: DateTimeNullableWithAggregatesFilter<"ServerHostLink"> | Date | string | null
+    lastPullAt?: DateTimeNullableWithAggregatesFilter<"ServerHostLink"> | Date | string | null
+    lastError?: StringNullableWithAggregatesFilter<"ServerHostLink"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ServerHostLink"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ServerHostLink"> | Date | string
   }
 
   export type ArchiveWhereInput = {
@@ -17084,6 +18387,7 @@ export namespace Prisma {
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
   }
 
   export type ServerUncheckedCreateInput = {
@@ -17115,6 +18419,7 @@ export namespace Prisma {
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
   }
 
   export type ServerUpdateInput = {
@@ -17146,6 +18451,7 @@ export namespace Prisma {
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateInput = {
@@ -17177,6 +18483,7 @@ export namespace Prisma {
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
   }
 
   export type ServerCreateManyInput = {
@@ -17253,6 +18560,124 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     snapshotInterval?: IntFieldUpdateOperationsInput | number
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ServerHostLinkCreateInput = {
+    id?: string
+    provider?: string
+    host: string
+    port?: number
+    username: string
+    secret: string
+    remoteBasePath?: string
+    excludeConfig?: boolean
+    lastPushAt?: Date | string | null
+    lastPullAt?: Date | string | null
+    lastError?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    server: ServerCreateNestedOneWithoutHostLinkInput
+  }
+
+  export type ServerHostLinkUncheckedCreateInput = {
+    id?: string
+    serverId: string
+    provider?: string
+    host: string
+    port?: number
+    username: string
+    secret: string
+    remoteBasePath?: string
+    excludeConfig?: boolean
+    lastPushAt?: Date | string | null
+    lastPullAt?: Date | string | null
+    lastError?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ServerHostLinkUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    host?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    secret?: StringFieldUpdateOperationsInput | string
+    remoteBasePath?: StringFieldUpdateOperationsInput | string
+    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    server?: ServerUpdateOneRequiredWithoutHostLinkNestedInput
+  }
+
+  export type ServerHostLinkUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    host?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    secret?: StringFieldUpdateOperationsInput | string
+    remoteBasePath?: StringFieldUpdateOperationsInput | string
+    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerHostLinkCreateManyInput = {
+    id?: string
+    serverId: string
+    provider?: string
+    host: string
+    port?: number
+    username: string
+    secret: string
+    remoteBasePath?: string
+    excludeConfig?: boolean
+    lastPushAt?: Date | string | null
+    lastPullAt?: Date | string | null
+    lastError?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ServerHostLinkUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    host?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    secret?: StringFieldUpdateOperationsInput | string
+    remoteBasePath?: StringFieldUpdateOperationsInput | string
+    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerHostLinkUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    host?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    secret?: StringFieldUpdateOperationsInput | string
+    remoteBasePath?: StringFieldUpdateOperationsInput | string
+    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ArchiveCreateInput = {
@@ -18366,6 +19791,11 @@ export namespace Prisma {
     none?: ScheduledTaskWhereInput
   }
 
+  export type ServerHostLinkNullableRelationFilter = {
+    is?: ServerHostLinkWhereInput | null
+    isNot?: ServerHostLinkWhereInput | null
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -18554,6 +19984,70 @@ export namespace Prisma {
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
+  export type ServerRelationFilter = {
+    is?: ServerWhereInput
+    isNot?: ServerWhereInput
+  }
+
+  export type ServerHostLinkCountOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    provider?: SortOrder
+    host?: SortOrder
+    port?: SortOrder
+    username?: SortOrder
+    secret?: SortOrder
+    remoteBasePath?: SortOrder
+    excludeConfig?: SortOrder
+    lastPushAt?: SortOrder
+    lastPullAt?: SortOrder
+    lastError?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ServerHostLinkAvgOrderByAggregateInput = {
+    port?: SortOrder
+  }
+
+  export type ServerHostLinkMaxOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    provider?: SortOrder
+    host?: SortOrder
+    port?: SortOrder
+    username?: SortOrder
+    secret?: SortOrder
+    remoteBasePath?: SortOrder
+    excludeConfig?: SortOrder
+    lastPushAt?: SortOrder
+    lastPullAt?: SortOrder
+    lastError?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ServerHostLinkMinOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    provider?: SortOrder
+    host?: SortOrder
+    port?: SortOrder
+    username?: SortOrder
+    secret?: SortOrder
+    remoteBasePath?: SortOrder
+    excludeConfig?: SortOrder
+    lastPushAt?: SortOrder
+    lastPullAt?: SortOrder
+    lastError?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ServerHostLinkSumOrderByAggregateInput = {
+    port?: SortOrder
+  }
+
   export type ArchiveCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -18614,11 +20108,6 @@ export namespace Prisma {
     action?: SortOrder
     details?: SortOrder
     createdAt?: SortOrder
-  }
-
-  export type ServerRelationFilter = {
-    is?: ServerWhereInput
-    isNot?: ServerWhereInput
   }
 
   export type BackupCountOrderByAggregateInput = {
@@ -19353,6 +20842,12 @@ export namespace Prisma {
     connect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
   }
 
+  export type ServerHostLinkCreateNestedOneWithoutServerInput = {
+    create?: XOR<ServerHostLinkCreateWithoutServerInput, ServerHostLinkUncheckedCreateWithoutServerInput>
+    connectOrCreate?: ServerHostLinkCreateOrConnectWithoutServerInput
+    connect?: ServerHostLinkWhereUniqueInput
+  }
+
   export type BackupUncheckedCreateNestedManyWithoutServerInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -19386,6 +20881,12 @@ export namespace Prisma {
     connectOrCreate?: ScheduledTaskCreateOrConnectWithoutServerInput | ScheduledTaskCreateOrConnectWithoutServerInput[]
     createMany?: ScheduledTaskCreateManyServerInputEnvelope
     connect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+  }
+
+  export type ServerHostLinkUncheckedCreateNestedOneWithoutServerInput = {
+    create?: XOR<ServerHostLinkCreateWithoutServerInput, ServerHostLinkUncheckedCreateWithoutServerInput>
+    connectOrCreate?: ServerHostLinkCreateOrConnectWithoutServerInput
+    connect?: ServerHostLinkWhereUniqueInput
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -19504,6 +21005,16 @@ export namespace Prisma {
     deleteMany?: ScheduledTaskScalarWhereInput | ScheduledTaskScalarWhereInput[]
   }
 
+  export type ServerHostLinkUpdateOneWithoutServerNestedInput = {
+    create?: XOR<ServerHostLinkCreateWithoutServerInput, ServerHostLinkUncheckedCreateWithoutServerInput>
+    connectOrCreate?: ServerHostLinkCreateOrConnectWithoutServerInput
+    upsert?: ServerHostLinkUpsertWithoutServerInput
+    disconnect?: ServerHostLinkWhereInput | boolean
+    delete?: ServerHostLinkWhereInput | boolean
+    connect?: ServerHostLinkWhereUniqueInput
+    update?: XOR<XOR<ServerHostLinkUpdateToOneWithWhereWithoutServerInput, ServerHostLinkUpdateWithoutServerInput>, ServerHostLinkUncheckedUpdateWithoutServerInput>
+  }
+
   export type BackupUncheckedUpdateManyWithoutServerNestedInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -19572,6 +21083,30 @@ export namespace Prisma {
     update?: ScheduledTaskUpdateWithWhereUniqueWithoutServerInput | ScheduledTaskUpdateWithWhereUniqueWithoutServerInput[]
     updateMany?: ScheduledTaskUpdateManyWithWhereWithoutServerInput | ScheduledTaskUpdateManyWithWhereWithoutServerInput[]
     deleteMany?: ScheduledTaskScalarWhereInput | ScheduledTaskScalarWhereInput[]
+  }
+
+  export type ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput = {
+    create?: XOR<ServerHostLinkCreateWithoutServerInput, ServerHostLinkUncheckedCreateWithoutServerInput>
+    connectOrCreate?: ServerHostLinkCreateOrConnectWithoutServerInput
+    upsert?: ServerHostLinkUpsertWithoutServerInput
+    disconnect?: ServerHostLinkWhereInput | boolean
+    delete?: ServerHostLinkWhereInput | boolean
+    connect?: ServerHostLinkWhereUniqueInput
+    update?: XOR<XOR<ServerHostLinkUpdateToOneWithWhereWithoutServerInput, ServerHostLinkUpdateWithoutServerInput>, ServerHostLinkUncheckedUpdateWithoutServerInput>
+  }
+
+  export type ServerCreateNestedOneWithoutHostLinkInput = {
+    create?: XOR<ServerCreateWithoutHostLinkInput, ServerUncheckedCreateWithoutHostLinkInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutHostLinkInput
+    connect?: ServerWhereUniqueInput
+  }
+
+  export type ServerUpdateOneRequiredWithoutHostLinkNestedInput = {
+    create?: XOR<ServerCreateWithoutHostLinkInput, ServerUncheckedCreateWithoutHostLinkInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutHostLinkInput
+    upsert?: ServerUpsertWithoutHostLinkInput
+    connect?: ServerWhereUniqueInput
+    update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutHostLinkInput, ServerUpdateWithoutHostLinkInput>, ServerUncheckedUpdateWithoutHostLinkInput>
   }
 
   export type UserCreateNestedOneWithoutArchivesInput = {
@@ -20125,6 +21660,7 @@ export namespace Prisma {
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutUserInput = {
@@ -20155,6 +21691,7 @@ export namespace Prisma {
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutUserInput = {
@@ -20787,6 +22324,43 @@ export namespace Prisma {
     data: ScheduledTaskCreateManyServerInput | ScheduledTaskCreateManyServerInput[]
   }
 
+  export type ServerHostLinkCreateWithoutServerInput = {
+    id?: string
+    provider?: string
+    host: string
+    port?: number
+    username: string
+    secret: string
+    remoteBasePath?: string
+    excludeConfig?: boolean
+    lastPushAt?: Date | string | null
+    lastPullAt?: Date | string | null
+    lastError?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ServerHostLinkUncheckedCreateWithoutServerInput = {
+    id?: string
+    provider?: string
+    host: string
+    port?: number
+    username: string
+    secret: string
+    remoteBasePath?: string
+    excludeConfig?: boolean
+    lastPushAt?: Date | string | null
+    lastPullAt?: Date | string | null
+    lastError?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ServerHostLinkCreateOrConnectWithoutServerInput = {
+    where: ServerHostLinkWhereUniqueInput
+    create: XOR<ServerHostLinkCreateWithoutServerInput, ServerHostLinkUncheckedCreateWithoutServerInput>
+  }
+
   export type UserUpsertWithoutServersInput = {
     update: XOR<UserUpdateWithoutServersInput, UserUncheckedUpdateWithoutServersInput>
     create: XOR<UserCreateWithoutServersInput, UserUncheckedCreateWithoutServersInput>
@@ -21016,6 +22590,189 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"ScheduledTask"> | Date | string
   }
 
+  export type ServerHostLinkUpsertWithoutServerInput = {
+    update: XOR<ServerHostLinkUpdateWithoutServerInput, ServerHostLinkUncheckedUpdateWithoutServerInput>
+    create: XOR<ServerHostLinkCreateWithoutServerInput, ServerHostLinkUncheckedCreateWithoutServerInput>
+    where?: ServerHostLinkWhereInput
+  }
+
+  export type ServerHostLinkUpdateToOneWithWhereWithoutServerInput = {
+    where?: ServerHostLinkWhereInput
+    data: XOR<ServerHostLinkUpdateWithoutServerInput, ServerHostLinkUncheckedUpdateWithoutServerInput>
+  }
+
+  export type ServerHostLinkUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    host?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    secret?: StringFieldUpdateOperationsInput | string
+    remoteBasePath?: StringFieldUpdateOperationsInput | string
+    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerHostLinkUncheckedUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    host?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    username?: StringFieldUpdateOperationsInput | string
+    secret?: StringFieldUpdateOperationsInput | string
+    remoteBasePath?: StringFieldUpdateOperationsInput | string
+    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerCreateWithoutHostLinkInput = {
+    id?: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    user: UserCreateNestedOneWithoutServersInput
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
+    backups?: BackupCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerUncheckedCreateWithoutHostLinkInput = {
+    id?: string
+    userId: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    definitionId?: string | null
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    backups?: BackupUncheckedCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerCreateOrConnectWithoutHostLinkInput = {
+    where: ServerWhereUniqueInput
+    create: XOR<ServerCreateWithoutHostLinkInput, ServerUncheckedCreateWithoutHostLinkInput>
+  }
+
+  export type ServerUpsertWithoutHostLinkInput = {
+    update: XOR<ServerUpdateWithoutHostLinkInput, ServerUncheckedUpdateWithoutHostLinkInput>
+    create: XOR<ServerCreateWithoutHostLinkInput, ServerUncheckedCreateWithoutHostLinkInput>
+    where?: ServerWhereInput
+  }
+
+  export type ServerUpdateToOneWithWhereWithoutHostLinkInput = {
+    where?: ServerWhereInput
+    data: XOR<ServerUpdateWithoutHostLinkInput, ServerUncheckedUpdateWithoutHostLinkInput>
+  }
+
+  export type ServerUpdateWithoutHostLinkInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    user?: UserUpdateOneRequiredWithoutServersNestedInput
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
+    backups?: BackupUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerUncheckedUpdateWithoutHostLinkInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+  }
+
   export type UserCreateWithoutArchivesInput = {
     id?: string
     email: string
@@ -21204,6 +22961,7 @@ export namespace Prisma {
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutBackupsInput = {
@@ -21234,6 +22992,7 @@ export namespace Prisma {
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutBackupsInput = {
@@ -21280,6 +23039,7 @@ export namespace Prisma {
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutBackupsInput = {
@@ -21310,6 +23070,7 @@ export namespace Prisma {
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutCollaboratorsInput = {
@@ -21340,6 +23101,7 @@ export namespace Prisma {
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutCollaboratorsInput = {
@@ -21370,6 +23132,7 @@ export namespace Prisma {
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutCollaboratorsInput = {
@@ -21453,6 +23216,7 @@ export namespace Prisma {
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutCollaboratorsInput = {
@@ -21483,6 +23247,7 @@ export namespace Prisma {
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
   }
 
   export type UserUpsertWithoutCollaboratorAccessInput = {
@@ -21593,6 +23358,7 @@ export namespace Prisma {
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutDefinitionInput = {
@@ -21623,6 +23389,7 @@ export namespace Prisma {
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutDefinitionInput = {
@@ -21721,6 +23488,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutModsInput = {
@@ -21751,6 +23519,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutModsInput = {
@@ -21797,6 +23566,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutModsInput = {
@@ -21827,6 +23597,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutSnapshotsInput = {
@@ -21857,6 +23628,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutSnapshotsInput = {
@@ -21887,6 +23659,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutSnapshotsInput = {
@@ -21933,6 +23706,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutSnapshotsInput = {
@@ -21963,6 +23737,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutScheduledTasksInput = {
@@ -21993,6 +23768,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutScheduledTasksInput = {
@@ -22023,6 +23799,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutScheduledTasksInput = {
@@ -22069,6 +23846,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutScheduledTasksInput = {
@@ -22099,6 +23877,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
   }
 
   export type TemplateVoteCreateWithoutTemplateInput = {
@@ -22449,6 +24228,7 @@ export namespace Prisma {
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutUserInput = {
@@ -22479,6 +24259,7 @@ export namespace Prisma {
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateManyWithoutUserInput = {
@@ -22857,6 +24638,7 @@ export namespace Prisma {
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutDefinitionInput = {
@@ -22887,6 +24669,7 @@ export namespace Prisma {
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
     scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateManyWithoutDefinitionInput = {
@@ -22975,6 +24758,10 @@ export namespace Prisma {
      * @deprecated Use ServerDefaultArgs instead
      */
     export type ServerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ServerDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ServerHostLinkDefaultArgs instead
+     */
+    export type ServerHostLinkArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ServerHostLinkDefaultArgs<ExtArgs>
     /**
      * @deprecated Use ArchiveDefaultArgs instead
      */

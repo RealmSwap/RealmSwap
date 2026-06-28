@@ -75,8 +75,27 @@ model Server {
   mods             ModInstallation[]
   snapshots        ServerSnapshot[]
   scheduledTasks   ScheduledTask[]
+  hostLink         ServerHostLink?
 }
 
+
+model ServerHostLink {
+  id             String    @id @default(cuid())
+  serverId       String    @unique
+  server         Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  provider       String    @default("AKLIZ")
+  host           String
+  port           Int       @default(22)
+  username       String
+  secret         String
+  remoteBasePath String    @default(".")
+  excludeConfig  Boolean   @default(false)
+  lastPushAt     DateTime?
+  lastPullAt     DateTime?
+  lastError      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
 
 model Archive {
   id         String   @id @default(cuid())

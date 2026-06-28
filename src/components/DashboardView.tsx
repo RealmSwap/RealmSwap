@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/components/ModalProvider";
 import { useToast } from "@/components/ToastProvider";
+import HostTransferModal from "@/components/HostTransferModal";
 import {
   Server as ServerIcon,
   Archive,
@@ -33,7 +34,8 @@ import {
   Activity,
   Store,
   Package,
-  FolderOpen
+  FolderOpen,
+  UploadCloud
 } from "lucide-react";
 import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 
@@ -155,6 +157,9 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   const [progressMap, setProgressMap] = useState<
     Record<string, { phase: string; percent: number | null; label: string } | null>
   >({});
+
+  // Server selected for the "Transfer to hosting provider" modal
+  const [hostModalServer, setHostModalServer] = useState<{ id: string; name: string } | null>(null);
 
   // Poll database for updates (live stats fluctuation)
   useEffect(() => {
@@ -954,6 +959,16 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                           </button>
                         )}
 
+                        {/* Transfer to Host */}
+                        <button
+                          onClick={() => setHostModalServer({ id: server.id, name: server.name })}
+                          className={`px-3.5 py-2 rounded-lg bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 text-sky-400 font-bold text-xs flex items-center gap-1.5 transition-all ${isServerLoading || server.status === "STARTING" ? "opacity-50 pointer-events-none" : ""}`}
+                          title="Transfer to hosting provider"
+                          aria-label="Transfer to hosting provider"
+                        >
+                          <UploadCloud className="w-4 h-4" />
+                        </button>
+
                         {/* Export Realm */}
                         <a
                           href={`/api/servers/${server.id}/export`}
@@ -1245,6 +1260,14 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
 
           </div>
         </div>
+      )}
+
+      {hostModalServer && (
+        <HostTransferModal
+          serverId={hostModalServer.id}
+          serverName={hostModalServer.name}
+          onClose={() => setHostModalServer(null)}
+        />
       )}
 
     </div>

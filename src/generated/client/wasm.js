@@ -165,6 +165,23 @@ exports.Prisma.ServerScalarFieldEnum = {
   lastSnapshotAt: 'lastSnapshotAt'
 };
 
+exports.Prisma.ServerHostLinkScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId',
+  provider: 'provider',
+  host: 'host',
+  port: 'port',
+  username: 'username',
+  secret: 'secret',
+  remoteBasePath: 'remoteBasePath',
+  excludeConfig: 'excludeConfig',
+  lastPushAt: 'lastPushAt',
+  lastPullAt: 'lastPullAt',
+  lastError: 'lastError',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ArchiveScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -296,6 +313,7 @@ exports.Prisma.ModelName = {
   User: 'User',
   Subscription: 'Subscription',
   Server: 'Server',
+  ServerHostLink: 'ServerHostLink',
   Archive: 'Archive',
   ActivityLog: 'ActivityLog',
   Backup: 'Backup',

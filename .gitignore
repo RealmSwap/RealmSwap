@@ -63,6 +63,9 @@ dist/
 # Electron packaging temp resources
 .tmp-res/
 
+# Do NOT upload dev-only AES key
+.secret.key
+
 # Marketing site (separate Next project)
 /site/.next/
 /site/out/

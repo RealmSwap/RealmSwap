@@ -17,8 +17,27 @@ describe("parity: Minecraft", () => {
     const c = ctxFor("MINECRAFT", { name: "Survival World", password: null, ram: 4 });
     const p = planLaunch(def("MINECRAFT").spec, c);
     expect(p.executable).toBe("java");
+    // PATH command: must be flagged so the runner spawns "java" from PATH rather
+    // than resolving it against the install dir (<installDir>\java -> ENOENT).
+    expect(p.executableOnPath).toBe(true);
     expect(p.args).toEqual(["-Xms512M", "-Xmx4G", "-jar", "server.jar", "nogui"]);
   });
+});
+
+describe("parity: PATH-command launchers are flagged executableOnPath", () => {
+  // System commands resolved on PATH (not produced by the install) must set
+  // executableOnPath; otherwise the runner joins them to the install dir and the
+  // spawn fails with ENOENT (e.g. <installDir>\java). Install-produced binaries
+  // like valheim_server.exe are correctly resolved against the install dir.
+  const PATH_COMMANDS = new Set(["java", "cmd.exe"]);
+  for (const d of BUILTIN_DEFINITIONS) {
+    const exe = (d.spec.launch as any).executable as string;
+    if (PATH_COMMANDS.has(exe)) {
+      it(`${d.slug} (${exe}) sets executableOnPath`, () => {
+        expect((d.spec.launch as any).executableOnPath).toBe(true);
+      });
+    }
+  }
 });
 
 describe("parity: Valheim", () => {
