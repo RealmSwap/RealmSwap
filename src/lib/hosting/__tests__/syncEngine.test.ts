@@ -103,4 +103,35 @@ describe("runTransfer", () => {
     expect(summary.bytesTransferred).toBe(100);
     expect(summary.failures).toEqual([{ relPath: "server.properties", error: "boom" }]);
   });
+
+  it("collects a failed mkdir without aborting later ops", async () => {
+    const plan: TransferPlan = {
+      ops: [
+        { type: "mkdir", relPath: "world" },
+        { type: "copy", relPath: "world/level.dat" },
+      ],
+    };
+    const sizes = new Map([["world/level.dat", 50]]);
+    const transferer: Transferer = {
+      async mkdir(rel) {
+        if (rel === "world") throw new Error("denied");
+      },
+      async copy() {},
+    };
+    const summary = await runTransfer(plan, transferer, sizes, () => {});
+    expect(summary.failures).toEqual([{ relPath: "world", error: "denied" }]);
+    expect(summary.filesTransferred).toBe(1);
+    expect(summary.bytesTransferred).toBe(50);
+  });
+
+  it("onProgress receives a label for each op", async () => {
+    const { t } = fakeTransferer();
+    const labels: string[] = [];
+    await runTransfer(plan, t, sizes, (done, total, label) => {
+      if (label) labels.push(label);
+    });
+    expect(labels.length).toBeGreaterThan(0);
+    expect(labels).toContain("world/level.dat");
+    expect(labels.some((l) => l.includes("world"))).toBe(true);
+  });
 });
