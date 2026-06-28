@@ -66,6 +66,27 @@ export interface GameDefinitionSpec {
   queryType?: string;
   queryPort?: string;
   container?: ContainerSpec;
+  playerList?: PlayerListSpec;
+}
+
+export type PlayerIdentityKey = "minecraftName" | "minecraftUuid" | "steamId" | "xboxId";
+export type PlayerListFileFormat = "jsonArray" | "lineList";
+
+export interface PlayerListFile {
+  path: string;                 // relative to the server install dir
+  format: PlayerListFileFormat;
+  field?: string;               // for jsonArray-of-objects: key holding the id (omit for array-of-strings)
+}
+
+export interface PlayerListAction {
+  file?: PlayerListFile;
+  console?: { add: string; remove: string }; // templated with {id} and {reason}
+}
+
+export interface PlayerListSpec {
+  identity: PlayerIdentityKey;
+  ban?: PlayerListAction;
+  whitelist?: PlayerListAction & { enforced?: boolean };
 }
 
 export interface DefinitionContext {
