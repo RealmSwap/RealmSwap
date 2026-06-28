@@ -13,4 +13,9 @@ describe("builtin definitions", () => {
       expect(validateSpec(d.spec, d.installMethod), `${d.slug} should validate`).toEqual([]);
     }
   });
+  it("Minecraft requires Java and pins an initial major version", () => {
+    const mc = BUILTIN_DEFINITIONS.find((d) => d.slug === "MINECRAFT")!;
+    expect(mc.spec.requiresJava).toBe(true);
+    expect(mc.spec.javaMajor).toBe(25);
+  });
 });

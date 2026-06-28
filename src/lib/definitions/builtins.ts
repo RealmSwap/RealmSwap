@@ -18,6 +18,7 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         fileName: "server.jar", checkFile: "server.jar",
       },
       requiresJava: true,
+      javaMajor: 25,
       launch: {
         executable: "java",
         executableOnPath: true,

@@ -62,6 +62,7 @@ export interface GameDefinitionSpec {
   editableConfigPath?: string;
   ports: PortSpec[];
   requiresJava?: boolean;
+  javaMajor?: number;   // initial Java major to provision (e.g. 25); runner self-heals to a higher one if the jar needs it
   passwordPolicy?: PasswordPolicy;
   queryType?: string;
   queryPort?: string;
