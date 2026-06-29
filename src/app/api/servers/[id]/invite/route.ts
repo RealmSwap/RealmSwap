@@ -32,7 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ inviteCode: updated.inviteCode });
   } catch (err: any) {
     console.error(err);
-    return new NextResponse(err.message, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
@@ -64,6 +64,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     return new NextResponse(null, { status: 204 });
   } catch (err: any) {
     console.error(err);
-    return new NextResponse(err.message, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
