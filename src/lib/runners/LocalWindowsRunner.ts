@@ -23,11 +23,25 @@ import { appendLog, clearLogs, serverLogFile, getServerLogTail } from "../server
 
 // Global process map to persist running processes across Next.js dev server hot-reloads
 const globalForRunner = globalThis as unknown as {
-  localProcesses: Map<string, any> | undefined;
+  localProcesses: Map<string, ChildProcessWithoutNullStreams> | undefined;
   intentionalStops: Set<string> | undefined;
   crashCounters: Map<string, CrashCounter> | undefined;
   javaMajorOverrides: Map<string, number> | undefined;
+  localServersReconciled: boolean | undefined;
 };
+
+// Reconcile stuck servers on boot
+if (!globalForRunner.localServersReconciled) {
+  globalForRunner.localServersReconciled = true;
+  // If the app restarted, we lost track of the processes. Mark them as STOPPED so the user isn't permanently locked out of starting them again.
+  prisma.server.updateMany({
+    where: { 
+      runnerType: "LOCAL", 
+      status: { in: ["STARTING", "RUNNING", "UPDATING"] } 
+    },
+    data: { status: "STOPPED", pid: null, cpuUsage: 0, memoryUsage: 0 }
+  }).catch(e => console.error("[Boot] Error reconciling stuck servers:", e));
+}
 
 if (!globalForRunner.localProcesses) {
   globalForRunner.localProcesses = new Map();
