@@ -126,8 +126,8 @@ export async function startRealmSyncServer(): Promise<{ publicIp: string, port: 
       reject(err);
     });
 
-    // Listen on a random available port on 0.0.0.0
-    server.listen(0, "0.0.0.0", async () => {
+    // Listen on a static port (e.g., 3001) so manual port forwarding is possible if UPnP fails
+    server.listen(3001, "0.0.0.0", async () => {
       const address = server.address();
       if (!address || typeof address === "string") {
         reject(new Error("Failed to bind server"));
@@ -139,9 +139,8 @@ export async function startRealmSyncServer(): Promise<{ publicIp: string, port: 
       // UPnP Map Port
       const mapped = await mapPort(port, "TCP", "RealmSync Host");
       if (!mapped) {
-        server.close();
-        reject(new Error(`Failed to UPnP port forward port ${port}. Please manually port forward TCP ${port} on your router.`));
-        return;
+        console.warn(`[RealmSync] Failed to UPnP port forward. Manual port forwarding for TCP ${port} is required.`);
+        // We do NOT reject here anymore. We allow the server to run so the user can manually port forward.
       }
 
       globalForSyncServer.syncServer = server;
