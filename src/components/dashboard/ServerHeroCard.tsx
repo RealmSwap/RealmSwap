@@ -93,11 +93,12 @@ export function ServerHeroCard({
       <div 
         className={`h-32 relative p-4 flex flex-col justify-between overflow-hidden`}
       >
+        <div className="absolute inset-0 bg-slate-900 z-0" />
         <div 
-          className="absolute inset-0 bg-cover bg-center z-0" 
+          className="absolute inset-0 bg-cover bg-center z-0 opacity-50 mix-blend-screen" 
           style={{ backgroundImage: `url('${getGameArt(server.game)}')` }}
         />
-        <div className={`absolute inset-0 bg-gradient-to-br ${getThumbnailStyle(server.game)} z-0 mix-blend-multiply`} />
+        <div className={`absolute inset-0 bg-gradient-to-br ${getThumbnailStyle(server.game)} z-0`} />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 to-transparent z-0" />
         
         <div className="relative z-10 flex justify-between items-start">

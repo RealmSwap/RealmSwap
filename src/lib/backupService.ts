@@ -104,6 +104,12 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
       }
     });
 
+    // Update server's lastSnapshotAt
+    await prisma.server.update({
+      where: { id: serverId },
+      data: { lastSnapshotAt: new Date() }
+    });
+
     // Write Activity Log
     await prisma.activityLog.create({
       data: {
