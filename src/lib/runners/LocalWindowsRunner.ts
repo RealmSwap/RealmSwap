@@ -415,9 +415,14 @@ function waitForReadiness(
   // 1. Stdout listener
   const readyPattern = launch.readyPattern ? new RegExp(launch.readyPattern, "i") : null;
   if (readyPattern) {
+    let outputBuffer = "";
     const onData = (chunk: Buffer) => {
       if (isReady) return;
-      if (readyPattern.test(chunk.toString())) {
+      outputBuffer += chunk.toString();
+      if (outputBuffer.length > 4096) {
+        outputBuffer = outputBuffer.slice(outputBuffer.length - 4096);
+      }
+      if (readyPattern.test(outputBuffer)) {
         markReady(`Matched log pattern: ${launch.readyPattern}`);
       }
     };
@@ -672,13 +677,18 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
   clearProgress(serverId);
 
   // 6. Capture all stdout and check for patterns
+  let patternBuffer = "";
   child.stdout.on("data", (chunk) => {
     const s = chunk.toString();
     appendLog(serverId, s);
 
     if (launch.stdoutPatterns?.length) {
+      patternBuffer += s;
+      if (patternBuffer.length > 8192) {
+        patternBuffer = patternBuffer.slice(patternBuffer.length - 8192);
+      }
       for (const pat of launch.stdoutPatterns!) {
-        const m = s.match(new RegExp(pat.regex, "i"));
+        const m = patternBuffer.match(new RegExp(pat.regex, "i"));
         if (m && m[1] && pat.updateField === "ipAddress") {
           const value = pat.transform === "joinCode" ? `Join Code: ${m[1]}` : m[1];
           logWriter(`[PlayFab] Success! Server registered with join code: ${m[1]}`);
@@ -686,6 +696,10 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
             where: { id: serverId },
             data: { ipAddress: value },
           }).catch((err) => console.error("Error updating join code in DB:", err));
+          
+          // Prevent multiple matches by clearing this pattern (or just let it match again if needed)
+          // To be safe we will just empty the buffer so it doesn't match the exact same string immediately
+          patternBuffer = "";
         }
       }
     }

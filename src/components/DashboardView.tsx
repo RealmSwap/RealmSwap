@@ -347,7 +347,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       }));
 
       // Force refresh logs shortly after
-      const logRes = await fetch("/api/servers");
+      const logRes = await fetch("/api/servers", { cache: "no-store" });
       if (logRes.ok) {
         const fresh = await logRes.json();
         setData(fresh);
@@ -371,7 +371,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       if (!res.ok) throw new Error(archive.error || "Failed to vault server");
 
       // Refetch whole state because a server was deleted and an archive created
-      const stateRes = await fetch("/api/servers");
+      const stateRes = await fetch("/api/servers", { cache: "no-store" });
       if (stateRes.ok) {
         const fresh = await stateRes.json();
         setData(fresh);
@@ -395,7 +395,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       if (!res.ok) throw new Error(restored.error || "Failed to restore server");
 
       // Refetch whole state
-      const stateRes = await fetch("/api/servers");
+      const stateRes = await fetch("/api/servers", { cache: "no-store" });
       if (stateRes.ok) {
         const fresh = await stateRes.json();
         setData(fresh);
