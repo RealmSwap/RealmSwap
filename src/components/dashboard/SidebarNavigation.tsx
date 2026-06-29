@@ -53,9 +53,9 @@ export function SidebarNavigation({ user }: { user: any }) {
   return (
     <aside className="w-64 bg-slate-900/50 backdrop-blur-xl border-r border-white/5 flex flex-col h-screen shrink-0 sticky top-0 shadow-2xl">
       {/* Sidebar Logo */}
-      <div className="px-6 py-8">
+      <div className="px-6 py-8 flex items-center justify-center">
         <Link href="/" className="inline-block transition-transform hover:scale-105">
-          <img src="/logo.png" alt="RealmSwap" className="h-9 w-auto" />
+          <img src="/logo.png" alt="RealmSwap" className="h-16 w-auto object-contain" />
         </Link>
       </div>
 

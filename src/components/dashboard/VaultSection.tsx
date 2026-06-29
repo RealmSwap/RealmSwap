@@ -28,12 +28,14 @@ export function VaultSection({
 
   if (archives.length === 0) {
     return (
-      <section className="h-full flex flex-col">
-        <div className="flex items-center gap-2 mb-4 shrink-0">
-          <Archive className="w-5 h-5 text-accentPurple" />
-          <h2 className="text-sm font-extrabold text-white uppercase tracking-wider">Game History Vault</h2>
+      <section className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] shadow-xl overflow-hidden h-full flex flex-col">
+        <div className="p-4 border-b border-white/5 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 shrink-0">
+          <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+            <Archive className="w-4 h-4 text-accentPurple" />
+            <span>Game History Vault</span>
+          </h2>
         </div>
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] shadow-xl p-12 flex flex-col items-center justify-center text-center flex-1">
+        <div className="p-12 flex flex-col items-center justify-center text-center flex-1">
           <div className="w-20 h-20 rounded-full bg-accentPurple/10 flex items-center justify-center mb-6 relative group">
             <div className="absolute inset-0 rounded-full bg-accentPurple/20 animate-ping opacity-20"></div>
             <Box className="w-10 h-10 text-accentPurple group-hover:scale-110 transition-transform duration-300" />
@@ -51,21 +53,21 @@ export function VaultSection({
   }
 
   return (
-    <section className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4 shrink-0">
-        <div className="flex items-center gap-2">
-          <Archive className="w-5 h-5 text-accentPurple" />
-          <h2 className="text-sm font-extrabold text-white uppercase tracking-wider">Game History Vault</h2>
-        </div>
+    <section className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] shadow-xl overflow-hidden h-full flex flex-col">
+      <div className="p-4 border-b border-white/5 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 shrink-0">
+        <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+          <Archive className="w-4 h-4 text-accentPurple" />
+          <span>Game History Vault</span>
+        </h2>
         <div className="text-xs font-bold text-slate-400 bg-slate-900/50 px-3 py-1 rounded-full border border-white/5">
           {archives.length} items
         </div>
       </div>
       
-      <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] shadow-xl overflow-hidden">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-white/5 bg-slate-950/40 text-xs text-slate-400 uppercase tracking-wider">
+            <tr className="border-b border-white/5 bg-slate-950/80 text-xs text-slate-400 uppercase tracking-wider sticky top-0 backdrop-blur-md">
               <th className="p-4 font-bold">Game</th>
               <th className="p-4 font-bold">World Name</th>
               <th className="p-4 font-bold text-center">Save Footprint</th>

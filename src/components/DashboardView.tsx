@@ -588,13 +588,14 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
         <GlobalHeader />
 
         {/* Dashboard Content */}
-        <main className="flex-1 overflow-y-auto p-8 flex gap-8">
+        <main className="flex-1 overflow-y-auto p-8 flex flex-col gap-8">
           
-          {/* Center Column: KPI, Servers, Vault, Logs */}
-          <div className="flex-1 max-w-5xl space-y-8 min-w-0">
-            
-            {/* KPI Cards */}
-            <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="flex gap-8 items-start w-full">
+            {/* Center Column: KPI, Servers */}
+            <div className="flex-1 max-w-5xl space-y-8 min-w-0">
+              
+              {/* KPI Cards */}
+              <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] p-5 shadow-xl hover:-translate-y-1 transition-transform group">
                 <div className="flex items-start justify-between">
                   <div>
@@ -713,18 +714,19 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                 )}
               </div>
             </section>
-            {/* Vault and Feed Row */}
-            <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-8 h-[420px] items-stretch">
-              <VaultSection archives={data.archives} actions={{ handleRestoreArchive, handleDeleteArchive }} actionLoading={actionLoading} />
-              <ActivityFeed activityLogs={data.activityLogs} />
             </div>
-
+            
+            {/* Right Column: Server Health */}
+            <HealthSidebar 
+              server={data.servers.find((s: any) => s.id === selectedServerId) || data.servers[0]} 
+            />
           </div>
 
-          {/* Right Column: Server Health */}
-          <HealthSidebar 
-            server={data.servers.find((s: any) => s.id === selectedServerId) || data.servers[0]} 
-          />
+          {/* Vault and Feed Row */}
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-8 h-[420px] items-stretch w-full max-w-[calc(1024px+320px+2rem)]">
+            <VaultSection archives={data.archives} actions={{ handleRestoreArchive, handleDeleteArchive }} actionLoading={actionLoading} />
+            <ActivityFeed activityLogs={data.activityLogs} />
+          </div>
           
         </main>
       </div>
