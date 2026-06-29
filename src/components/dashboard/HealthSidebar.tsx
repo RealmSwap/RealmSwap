@@ -23,8 +23,8 @@ export function HealthSidebar({
   const isHealthy = server.healthStatus !== "DEGRADED" && server.status !== "CRASHED";
   
   // Format last backup date if it exists
-  const lastBackupStr = server.lastBackupAt 
-    ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(server.lastBackupAt))
+  const lastBackupStr = server.lastSnapshotAt 
+    ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(server.lastSnapshotAt))
     : "No backups yet";
 
   return (
