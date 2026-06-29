@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, ShieldAlert, Sparkles } from "lucide-react";
 
-export default function LoginPage() {
+export default function LoginPage({ searchParams }: { searchParams: { link?: string } }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +35,11 @@ export default function LoginPage() {
         throw new Error(data.error || "Failed to log in");
       }
 
-      router.push("/dashboard");
+      let dest = "/dashboard";
+      if (searchParams?.link) {
+        dest += `?link=${encodeURIComponent(searchParams.link)}`;
+      }
+      router.push(dest);
       router.refresh();
     } catch (err: any) {
       setError(err.message || "An error occurred. Please try again.");
