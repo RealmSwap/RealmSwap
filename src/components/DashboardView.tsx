@@ -165,7 +165,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   useEffect(() => {
     const fetchUpdates = async () => {
       try {
-        const res = await fetch("/api/servers");
+        const res = await fetch("/api/servers", { cache: "no-store" });
         if (res.ok) {
           const updated = await res.json();
           setData(updated);
@@ -347,7 +347,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       }));
 
       // Force refresh logs shortly after
-      const logRes = await fetch("/api/servers");
+      const logRes = await fetch("/api/servers", { cache: "no-store" });
       if (logRes.ok) {
         const fresh = await logRes.json();
         setData(fresh);
@@ -371,7 +371,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       if (!res.ok) throw new Error(archive.error || "Failed to vault server");
 
       // Refetch whole state because a server was deleted and an archive created
-      const stateRes = await fetch("/api/servers");
+      const stateRes = await fetch("/api/servers", { cache: "no-store" });
       if (stateRes.ok) {
         const fresh = await stateRes.json();
         setData(fresh);
@@ -395,7 +395,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       if (!res.ok) throw new Error(restored.error || "Failed to restore server");
 
       // Refetch whole state
-      const stateRes = await fetch("/api/servers");
+      const stateRes = await fetch("/api/servers", { cache: "no-store" });
       if (stateRes.ok) {
         const fresh = await stateRes.json();
         setData(fresh);
@@ -946,7 +946,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                         {/* Stop */}
                         <button
                           onClick={() => handlePowerAction(server.id, "stop")}
-                          disabled={!isRunning || isServerLoading}
+                          disabled={(!isRunning && server.status !== "STARTING") || isServerLoading}
                           className="p-2 rounded-lg bg-slate-900 border border-white/5 hover:border-red-500/40 text-slate-400 hover:text-red-400 disabled:opacity-40 disabled:hover:text-slate-400 transition-colors"
                           title="Stop Server"
                         >
