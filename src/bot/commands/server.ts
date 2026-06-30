@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from "discord.js";
 import { prisma } from "../../lib/db";
-import { LocalRunner } from "../../lib/runners/localRunner";
+import { getRunner } from "../../lib/runners/factory";
 
 export default {
   data: new SlashCommandBuilder()
@@ -60,7 +60,7 @@ export default {
     }
 
     const server = servers[0];
-    const runner = new LocalRunner();
+    const runner = getRunner(server.runnerType);
 
     if (subcommand === "status") {
       const statusIcon = server.status === "RUNNING" ? "🟢" : server.status === "STARTING" ? "⏳" : "🔴";
