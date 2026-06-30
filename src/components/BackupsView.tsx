@@ -210,7 +210,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
       <SidebarNavigation user={user} />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto px-6 py-8">
+      <main className="flex-1 overflow-y-auto px-6 py-8 pb-24 md:pb-8">
         
         {/* Navigation back */}
         <div className="mb-6">

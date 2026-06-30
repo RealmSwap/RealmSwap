@@ -603,7 +603,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         
         {/* Dashboard Content */}
-        <main className="flex-1 overflow-y-auto p-8 flex flex-col gap-8">
+        <main className="flex-1 overflow-y-auto p-8 pb-24 md:pb-8 flex flex-col gap-8">
           
           <div className="flex gap-8 items-start w-full">
             {/* Center Column: KPI, Servers */}

@@ -163,7 +163,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
       <SidebarNavigation user={user} />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col relative">
+      <main className="flex-1 flex flex-col relative pb-24 md:pb-0">
         <header className="h-16 border-b border-white/5 flex items-center justify-between px-6 bg-sidebarDark/50 backdrop-blur-md">
           <h1 className="text-xl font-extrabold tracking-tight">Community Marketplace</h1>
           <div className="flex items-center gap-4">

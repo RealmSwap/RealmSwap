@@ -17,14 +17,17 @@ generator client {
 }
 
 model User {
-  id                 String           @id @default(cuid())
-  email              String           @unique
+  id                 String             @id @default(cuid())
+  email              String             @unique
   passwordHash       String
   name               String
-  discordId          String?          @unique
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-  role               String           @default("USER") // "USER" | "ADMIN"
+  discordId          String?            @unique
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  role               String             @default("USER") // "USER" | "ADMIN"
+  notifyDiscord      Boolean            @default(true)
+  notifyEmail        Boolean            @default(true)
+  notifyWebPush      Boolean            @default(true)
   definitions        GameDefinition[]
   subscription       Subscription?
   servers            Server[]
@@ -32,6 +35,7 @@ model User {
   logs               ActivityLog[]
   collaboratorAccess Collaborator[]
   templateVotes      TemplateVote[]
+  PushSubscription   PushSubscription[]
 }
 
 model DiscordLinkCode {
@@ -273,4 +277,14 @@ model TemplateVote {
   user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, templateId])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
 }

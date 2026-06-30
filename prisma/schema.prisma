@@ -17,21 +17,25 @@ generator client {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  passwordHash String
-  name         String
-  discordId    String?       @unique
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  role         String        @default("USER") // "USER" | "ADMIN"
-  definitions  GameDefinition[]
-  subscription Subscription?
-  servers      Server[]
-  archives     Archive[]
+  id                 String             @id @default(cuid())
+  email              String             @unique
+  passwordHash       String
+  name               String
+  discordId          String?            @unique
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  role               String             @default("USER") // "USER" | "ADMIN"
+  notifyDiscord      Boolean            @default(true)
+  notifyEmail        Boolean            @default(true)
+  notifyWebPush      Boolean            @default(true)
+  definitions        GameDefinition[]
+  subscription       Subscription?
+  servers            Server[]
+  archives           Archive[]
   logs               ActivityLog[]
   collaboratorAccess Collaborator[]
   templateVotes      TemplateVote[]
+  PushSubscription   PushSubscription[]
 }
 
 model DiscordLinkCode {
@@ -46,38 +50,38 @@ model Subscription {
   id          String   @id @default(cuid())
   userId      String   @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan        String   // "STARTER", "PARTY", "GUILD"
-  status      String   // "ACTIVE", "CANCELED"
-  activeSlots Int      // 1, 2, or 4 based on plan
+  plan        String // "STARTER", "PARTY", "GUILD"
+  status      String // "ACTIVE", "CANCELED"
+  activeSlots Int // 1, 2, or 4 based on plan
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model Server {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name          String
-  game          String   // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
-  ramAllocation Float    // GB allocated
-  region        String   // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
-  status        String   // "RUNNING", "STOPPED", "STARTING"
-  runnerType    String   @default("CLOUD") // "CLOUD" or "LOCAL"
-  localPath     String?  // File path for local server storage
-  pid           Int?     // Process ID for local runner execution
-  password      String?  // Unhashed password for Valheim/game server configs
-  enableUpnp    Boolean  @default(false) // Trigger router port mapping
-  ipAddress     String
-  port          Int
-  definitionId  String?
-  definition    GameDefinition? @relation(fields: [definitionId], references: [id])
-  paramValues   String?         // JSON object of custom param values
-  healthStatus  String   @default("OK") // "OK", "DEGRADED", "FAILING"
-  cpuUsage      Float    @default(0) // Mocked live utilization percentage
-  memoryUsage   Float    @default(0) // Mocked live RAM utilization in GB
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  snapshotInterval Int       @default(0) // 0 = disabled, 1, 6, 12, 24 hours
+  id               String              @id @default(cuid())
+  userId           String
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  game             String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
+  ramAllocation    Float // GB allocated
+  region           String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
+  status           String // "RUNNING", "STOPPED", "STARTING"
+  runnerType       String              @default("CLOUD") // "CLOUD" or "LOCAL"
+  localPath        String? // File path for local server storage
+  pid              Int? // Process ID for local runner execution
+  password         String? // Unhashed password for Valheim/game server configs
+  enableUpnp       Boolean             @default(false) // Trigger router port mapping
+  ipAddress        String
+  port             Int
+  definitionId     String?
+  definition       GameDefinition?     @relation(fields: [definitionId], references: [id])
+  paramValues      String? // JSON object of custom param values
+  healthStatus     String              @default("OK") // "OK", "DEGRADED", "FAILING"
+  cpuUsage         Float               @default(0) // Mocked live utilization percentage
+  memoryUsage      Float               @default(0) // Mocked live RAM utilization in GB
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  snapshotInterval Int                 @default(0) // 0 = disabled, 1, 6, 12, 24 hours
   lastSnapshotAt   DateTime?
   backups          Backup[]
   collaborators    Collaborator[]
@@ -85,7 +89,7 @@ model Server {
   snapshots        ServerSnapshot[]
   scheduledTasks   ScheduledTask[]
   hostLink         ServerHostLink?
-  inviteCode       String?         @unique // For RealmSync
+  inviteCode       String?             @unique // For RealmSync
   plannedSessions  PlannedSession[]
   discordRoles     DiscordRoleAccess[]
 }
@@ -101,19 +105,18 @@ model DiscordRoleAccess {
 }
 
 model PlannedSession {
-  id          String   @id @default(cuid())
-  serverId    String
-  title       String
-  startTime   DateTime
-  channelId   String   // The Discord channel where the event was posted
-  messageId   String   // The Discord message ID of the embed
-  roster      String   // JSON array of Discord User IDs who clicked "I'm In"
-  notified    Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  serverId  String
+  title     String
+  startTime DateTime
+  channelId String // The Discord channel where the event was posted
+  messageId String // The Discord message ID of the embed
+  roster    String // JSON array of Discord User IDs who clicked "I'm In"
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
 
-  server      Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
 }
-
 
 model ServerHostLink {
   id             String    @id @default(cuid())
@@ -138,8 +141,8 @@ model Archive {
   userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   serverName String
-  game       String   // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
-  saveSizeGB Float    // Saved world storage size in GB
+  game       String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
+  saveSizeGB Float // Saved world storage size in GB
   archivedAt DateTime @default(now())
   createdAt  DateTime @default(now())
 }
@@ -148,7 +151,7 @@ model ActivityLog {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  action    String   // "CREATE_SERVER", "START_SERVER", "STOP_SERVER", "RESTART_SERVER", "ARCHIVE_SERVER", "RESTORE_SERVER", "DELETE_ARCHIVE"
+  action    String // "CREATE_SERVER", "START_SERVER", "STOP_SERVER", "RESTART_SERVER", "ARCHIVE_SERVER", "RESTORE_SERVER", "DELETE_ARCHIVE"
   details   String
   createdAt DateTime @default(now())
 }
@@ -158,11 +161,11 @@ model Backup {
   serverId   String
   server     Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
   userId     String
-  name       String   // e.g. "Survival World - Auto Save" or "Manual Snapshot"
-  game       String   // "MINECRAFT", etc.
-  filePath   String   // path to backup zip/folder on disk
+  name       String // e.g. "Survival World - Auto Save" or "Manual Snapshot"
+  game       String // "MINECRAFT", etc.
+  filePath   String // path to backup zip/folder on disk
   fileSizeMB Float
-  backupType String   // "MANUAL" or "AUTOMATED"
+  backupType String // "MANUAL" or "AUTOMATED"
   createdAt  DateTime @default(now())
 }
 
@@ -172,7 +175,7 @@ model Collaborator {
   server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      String   // "ADMIN" or "CO_HOST"
+  role      String // "ADMIN" or "CO_HOST"
   createdAt DateTime @default(now())
 
   @@unique([serverId, userId])
@@ -190,8 +193,8 @@ model GameDefinition {
   ownerId          String?
   owner            User?    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   isBuiltIn        Boolean  @default(false)
-  installMethod    String   // "STEAMCMD" | "DOWNLOAD" | "CUSTOM_SCRIPT"
-  spec             String   // JSON GameDefinitionSpec
+  installMethod    String // "STEAMCMD" | "DOWNLOAD" | "CUSTOM_SCRIPT"
+  spec             String // JSON GameDefinitionSpec
   servers          Server[]
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -203,14 +206,14 @@ model ModInstallation {
   id           String   @id @default(cuid())
   serverId     String
   server       Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  provider     String   // "thunderstore", "workshop", "manual"
-  packageId    String   // "denikson-BepInExPack_Valheim"
-  version      String   
+  provider     String // "thunderstore", "workshop", "manual"
+  packageId    String // "denikson-BepInExPack_Valheim"
+  version      String
   name         String
-  dependencies String?  // JSON array of required packageIds
+  dependencies String? // JSON array of required packageIds
   installedAt  DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
+
   @@unique([serverId, provider, packageId])
 }
 
@@ -219,8 +222,8 @@ model ServerSnapshot {
   serverId    String
   server      Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
   userId      String
-  name        String   // "Pre-EpicLoot Update"
-  path        String   // Path to the cloned server state directory
+  name        String // "Pre-EpicLoot Update"
+  path        String // Path to the cloned server state directory
   gameVersion String?
   modCount    Int
   createdAt   DateTime @default(now())
@@ -230,11 +233,11 @@ model ScheduledTask {
   id              String    @id @default(cuid())
   serverId        String
   server          Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  action          String    // "START", "STOP", "RESTART"
-  cronExpression  String    // e.g., "0 4 * * *"
+  action          String // "START", "STOP", "RESTART"
+  cronExpression  String // e.g., "0 4 * * *"
   enabled         Boolean   @default(true)
-  broadcastMsg    String?   // Optional pre-action warning
-  broadcastMin    Int?      // Minutes before action to warn
+  broadcastMsg    String? // Optional pre-action warning
+  broadcastMin    Int? // Minutes before action to warn
   lastRunAt       DateTime?
   lastBroadcastAt DateTime?
   createdAt       DateTime  @default(now())
@@ -242,36 +245,46 @@ model ScheduledTask {
 }
 
 model MarketplaceTemplate {
-  id              String   @id @default(cuid())
-  name            String
-  description     String
-  author          String
-  gameSlug        String
-  tags            String   // Comma separated
-  downloads       Int      @default(0)
-  likes           Int      @default(0)
-  dislikes        Int      @default(0)
-  verifiedLevel   String   @default("UNVERIFIED") // "UNVERIFIED", "VERIFIED", "OFFICIAL"
-  votes           TemplateVote[]
-  
+  id            String         @id @default(cuid())
+  name          String
+  description   String
+  author        String
+  gameSlug      String
+  tags          String // Comma separated
+  downloads     Int            @default(0)
+  likes         Int            @default(0)
+  dislikes      Int            @default(0)
+  verifiedLevel String         @default("UNVERIFIED") // "UNVERIFIED", "VERIFIED", "OFFICIAL"
+  votes         TemplateVote[]
+
   // The payload contains Mod lists, Config file overrides, and Params
-  payload         String   // JSON TemplatePayload
-  
+  payload String // JSON TemplatePayload
+
   // If the template introduces an UNSUPPORTED game, the full definition goes here
-  customDefSpec   String?  // JSON GameDefinitionSpec
-  
-  createdAt       DateTime @default(now())
+  customDefSpec String? // JSON GameDefinitionSpec
+
+  createdAt DateTime @default(now())
 }
 
 model TemplateVote {
-  id          String   @id @default(cuid())
-  userId      String
-  templateId  String
-  type        String   // "LIKE" or "DISLIKE"
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  userId     String
+  templateId String
+  type       String // "LIKE" or "DISLIKE"
+  createdAt  DateTime @default(now())
 
-  template    MarketplaceTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template MarketplaceTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, templateId])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
 }

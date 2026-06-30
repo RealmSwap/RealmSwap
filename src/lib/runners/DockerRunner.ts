@@ -212,6 +212,9 @@ export class DockerRunner implements ServerRunner {
       }
       appendLog(serverId, `[Crash Detection] Max retries (${CRASH_MAX_RETRIES}) exhausted. Marking server as CRASHED.`);
       await setStatus(serverId, "CRASHED", { pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 });
+      import("../../notifications").then(({ sendNotification }) => {
+        sendNotification(rec.userId, "⚠️ Server Crashed", `Your server '${rec.name}' has crashed and exhausted all auto-restart attempts.`);
+      }).catch(err => console.error("Failed to load notifications module:", err));
       return;
     }
 

@@ -127,7 +127,10 @@ exports.Prisma.UserScalarFieldEnum = {
   discordId: 'discordId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  role: 'role'
+  role: 'role',
+  notifyDiscord: 'notifyDiscord',
+  notifyEmail: 'notifyEmail',
+  notifyWebPush: 'notifyWebPush'
 };
 
 exports.Prisma.DiscordLinkCodeScalarFieldEnum = {
@@ -327,6 +330,15 @@ exports.Prisma.TemplateVoteScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.PushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -355,7 +367,8 @@ exports.Prisma.ModelName = {
   ServerSnapshot: 'ServerSnapshot',
   ScheduledTask: 'ScheduledTask',
   MarketplaceTemplate: 'MarketplaceTemplate',
-  TemplateVote: 'TemplateVote'
+  TemplateVote: 'TemplateVote',
+  PushSubscription: 'PushSubscription'
 };
 
 /**

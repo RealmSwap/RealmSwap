@@ -839,6 +839,9 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
           data: { status: "CRASHED", pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 },
         });
         serverEventBus.emit("status_update", { serverId, status: "CRASHED" });
+        import("../notifications").then(({ sendNotification }) => {
+          sendNotification(serverRec.userId, "⚠️ Server Crashed", `Your server '${serverRec.name}' has crashed and exhausted all auto-restart attempts.`);
+        }).catch(err => console.error("Failed to load notifications module:", err));
         return;
       }
     }

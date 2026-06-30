@@ -182,7 +182,7 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
       <SidebarNavigation user={user} />
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-y-auto px-6 py-8 flex flex-col">
+      <main className="flex-1 overflow-y-auto px-6 py-8 pb-24 md:pb-8 flex flex-col">
         {/* Navigation back */}
         <div className="mb-6 flex-shrink-0">
           <Link 

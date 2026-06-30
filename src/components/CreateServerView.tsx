@@ -298,7 +298,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
       <SidebarNavigation user={user} />
 
       {/* Main Form Area */}
-      <main className="flex-1 overflow-y-auto px-6 py-8">
+      <main className="flex-1 overflow-y-auto px-6 py-8 pb-24 md:pb-8">
 
         {/* Navigation back helper */}
         <div className="mb-6">
