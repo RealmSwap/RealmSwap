@@ -29,8 +29,13 @@ export function startEventWatcher(client: Client) {
           const roster: string[] = JSON.parse(event.roster);
           const mentions = roster.map(id => `<@${id}>`).join(" ");
           
+          let joinInfo = `\`${event.server.ipAddress}:${event.server.port}\``;
+          if (event.server.inviteCode) {
+            joinInfo += `\n**Invite Code:** \`${event.server.inviteCode}\``;
+          }
+
           await (channel as TextChannel).send({
-            content: `⏰ **It's almost time!**\n${mentions}\n\nThe planned session **"${event.title}"** for **${event.server.name}** is starting in 15 minutes!\n\n🚀 *Automatically booting up the server now...*`
+            content: `⏰ **It's almost time!**\n${mentions}\n\nThe planned session **"${event.title}"** for **${event.server.name}** is starting in 15 minutes!\n\n🚀 *Automatically booting up the server now...*\n\n**Join Info:**\n${joinInfo}`
           });
         }
 
