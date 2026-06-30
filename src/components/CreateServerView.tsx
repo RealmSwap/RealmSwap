@@ -387,8 +387,8 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                             : "border-white/5 bg-slate-950/20 hover:bg-white/5 hover:border-white/10 cursor-pointer"
                       }`}
                     >
-                      <div className={`absolute inset-0 bg-cover bg-center transition-all duration-500 ${selectedGame?.id === game.id ? 'opacity-30 scale-105 mix-blend-screen' : 'opacity-10 mix-blend-screen group-hover:opacity-20 group-hover:scale-105'}`} style={{ backgroundImage: `url('${getGameArt(game.id)}')` }}></div>
-                      <div className="absolute inset-0 bg-gradient-to-b from-slate-950/40 to-slate-950/90 pointer-events-none"></div>
+                      <div className={`absolute inset-0 bg-cover bg-center transition-all duration-500 ${selectedGame?.id === game.id ? 'opacity-60 scale-105' : 'opacity-30 group-hover:opacity-50 group-hover:scale-105'}`} style={{ backgroundImage: `url('${getGameArt(game.slug)}')` }}></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/20 pointer-events-none"></div>
                       
                       <div className="relative z-10 flex justify-between items-start">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gradient-to-br ${getIconGradient(game.color)} shadow border border-white/10`}>
