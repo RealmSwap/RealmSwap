@@ -268,6 +268,23 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
     return classes.join(" ") || "from-slate-600 to-slate-800";
   };
 
+  const getGameArt = (game: string) => {
+    switch(game) {
+      case "MINECRAFT": return "/games/minecraft.jpg";
+      case "VALHEIM": return "/games/valheim.jpg";
+      case "ENSHROUDED": return "/games/enshrouded.jpg";
+      case "ZOMBOID": return "/games/zomboid.jpg";
+      case "ARK": return "/games/ark.jpg";
+      case "TERRARIA": return "/games/terraria.jpg";
+      case "PALWORLD": return "/games/palworld.jpg";
+      case "RUST": return "/games/rust.jpg";
+      case "SATISFACTORY": return "/games/satisfactory.jpg";
+      case "VRISING": return "/games/vrising.jpg";
+      case "WINDROSE": return "/games/windrose.jpg";
+      default: return "/games/generic.jpg";
+    }
+  };
+
   const minLen = selectedGame?.spec?.passwordPolicy?.minLength as number | undefined;
   const hasPasswordPolicy = typeof minLen === "number";
   // Show password field when there's a policy or when no spec indicates it's optional
@@ -362,7 +379,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                     <div
                       key={game.id}
                       onClick={() => !isLocked && handleGameSelect(game)}
-                      className={`p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between h-40 relative ${
+                      className={`p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between h-40 relative overflow-hidden group ${
                         isLocked
                           ? "opacity-30 cursor-not-allowed border-white/5 bg-slate-950/10"
                           : selectedGame?.id === game.id
@@ -370,14 +387,17 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                             : "border-white/5 bg-slate-950/20 hover:bg-white/5 hover:border-white/10 cursor-pointer"
                       }`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gradient-to-br ${getIconGradient(game.color)} shadow`}>
+                      <div className={`absolute inset-0 bg-cover bg-center transition-all duration-500 ${selectedGame?.id === game.id ? 'opacity-60 scale-105' : 'opacity-30 group-hover:opacity-50 group-hover:scale-105'}`} style={{ backgroundImage: `url('${getGameArt(game.slug)}')` }}></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/20 pointer-events-none"></div>
+                      
+                      <div className="relative z-10 flex justify-between items-start">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gradient-to-br ${getIconGradient(game.color)} shadow border border-white/10`}>
                           {game.icon}
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           {selectedGame?.id === game.id && !isLocked && (
-                            <span className="text-[10px] bg-accentPurple/25 text-accentPurple px-2 py-0.5 rounded-full font-bold">
-                              Active
+                            <span className="text-[10px] bg-accentPurple/30 border border-accentPurple/50 text-white px-2 py-0.5 rounded-full font-bold shadow-[0_0_10px_rgba(167,139,250,0.5)]">
+                              Selected
                             </span>
                           )}
                           {isLocked && (
@@ -392,9 +412,9 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                           )}
                         </div>
                       </div>
-                      <div>
+                      <div className="relative z-10">
                         <h4 className="font-extrabold text-sm text-slate-100">{game.displayName}</h4>
-                        <p className="text-[11px] text-mutedText leading-snug mt-0.5">{game.description}</p>
+                        <p className="text-[11px] text-slate-300 leading-snug mt-0.5 drop-shadow-md">{game.description}</p>
                       </div>
                     </div>
                   );

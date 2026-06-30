@@ -208,7 +208,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   };
 
   const getGameIcon = (game: string) => {
-    switch (game?.toUpperCase()) {
+    switch(game) {
       case "MINECRAFT": return "⛏️";
       case "VALHEIM": return "⛵";
       case "ENSHROUDED": return "🔥";
@@ -217,6 +217,9 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
       case "TERRARIA": return "🌳";
       case "PALWORLD": return "🦊";
       case "RUST": return "⚙️";
+      case "SATISFACTORY": return "🏭";
+      case "VRISING": return "🦇";
+      case "WINDROSE": return "⚔️";
       default: return "🎮";
     }
   };

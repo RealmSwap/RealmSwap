@@ -52,6 +52,9 @@ export function ServerHeroCard({
       case "ZOMBOID": return "from-stone-600/80 to-neutral-900/80";
       case "ARK": return "from-emerald-700/80 to-teal-900/80";
       case "RUST": return "from-red-700/80 to-orange-900/80";
+      case "SATISFACTORY": return "from-orange-500/80 to-stone-900/80";
+      case "VRISING": return "from-red-900/80 to-black/80";
+      case "WINDROSE": return "from-sky-500/80 to-blue-900/80";
       default: return "from-purple-600/80 to-slate-900/80";
     }
   };
@@ -66,6 +69,9 @@ export function ServerHeroCard({
       case "TERRARIA": return "/games/terraria.jpg";
       case "PALWORLD": return "/games/palworld.jpg";
       case "RUST": return "/games/rust.jpg";
+      case "SATISFACTORY": return "/games/satisfactory.jpg";
+      case "VRISING": return "/games/vrising.jpg";
+      case "WINDROSE": return "/games/windrose.jpg";
       default: return "/games/generic.jpg";
     }
   };
@@ -80,6 +86,9 @@ export function ServerHeroCard({
       case "TERRARIA": return "🌳";
       case "PALWORLD": return "🦊";
       case "RUST": return "⚙️";
+      case "SATISFACTORY": return "🏭";
+      case "VRISING": return "🦇";
+      case "WINDROSE": return "⚔️";
       default: return "🎮";
     }
   };
@@ -299,19 +308,37 @@ export function ServerHeroCard({
           </div>
         </div>
         {server.inviteCode ? (
-          <div className="bg-black/40 rounded-xl p-2 border border-white/5 flex flex-col gap-1.5 hover:border-accentPurple/30 transition-colors cursor-pointer group/link" onClick={() => navigator.clipboard.writeText(`realmsync://${server.inviteCode}`)}>
-            <div className="font-mono text-[10px] text-slate-300 truncate select-all">realmsync://{server.inviteCode}</div>
-            <div className="text-[9px] font-bold text-accentPurple opacity-0 group-hover/link:opacity-100 transition-opacity flex items-center justify-between">
-              <span>Click to Copy Deep Link</span>
-              <Copy className="w-3 h-3" />
+          <div className="relative group/link mt-1">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-accentPurple to-blue-500 rounded-xl opacity-20 group-hover/link:opacity-50 blur transition duration-300"></div>
+            <div className="relative flex items-center justify-between bg-slate-950/90 border border-white/10 rounded-xl p-1.5 backdrop-blur-md">
+              <div className="flex items-center gap-2 pl-2 overflow-hidden">
+                <span className="font-mono text-[11px] text-slate-300 truncate select-all">realmsync://{server.inviteCode}</span>
+              </div>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigator.clipboard.writeText(`realmsync://${server.inviteCode}`);
+                  actions.setCopiedIp(server.id + '-sync');
+                  setTimeout(() => actions.setCopiedIp(null), 2000);
+                }}
+                className="shrink-0 ml-2 p-2 rounded-lg bg-white/5 hover:bg-accentPurple hover:text-white text-slate-400 transition-all duration-200"
+                title="Copy Deep Link"
+              >
+                {copiedIp === server.id + '-sync' ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+              </button>
             </div>
           </div>
         ) : (
           <button
             onClick={() => actions.handleGenerateInvite(server.id)}
-            className="w-full py-1.5 bg-accentPurple hover:bg-accentPurple/90 text-white font-bold text-[10px] rounded-lg transition-all shadow-md shadow-accentPurple/20"
+            className="w-full py-2 bg-white/5 border border-white/10 hover:border-accentPurple/50 hover:bg-accentPurple/10 text-white font-bold text-xs rounded-xl transition-all shadow-md group/gen flex items-center justify-center gap-2"
           >
-            Generate Sync Link
+            <BadgeCent className="w-3.5 h-3.5 text-slate-400 group-hover/gen:text-accentPurple transition-colors" />
+            <span>Generate Sync Link</span>
           </button>
         )}
       </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 import { SidebarNavigation } from "./dashboard/SidebarNavigation";
 import { ServerHeroCard } from "./dashboard/ServerHeroCard";
 import { HealthSidebar } from "./dashboard/HealthSidebar";
@@ -137,6 +139,20 @@ function ServerPlayerCount({ server }: { server: any }) {
   
   return null;
 }
+
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
 
 export default function DashboardView({ initialData }: DashboardViewProps) {
   const router = useRouter();
@@ -542,7 +558,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
 
   // Helper for game icons
   const getGameIcon = (game: string) => {
-    switch (game.toUpperCase()) {
+    switch(game) {
       case "MINECRAFT": return "⛏️";
       case "VALHEIM": return "⛵";
       case "ENSHROUDED": return "🔥";
@@ -551,6 +567,9 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       case "TERRARIA": return "🌳";
       case "PALWORLD": return "🦊";
       case "RUST": return "⚙️";
+      case "SATISFACTORY": return "🏭";
+      case "VRISING": return "🦇";
+      case "WINDROSE": return "⚔️";
       default: return "🎮";
     }
   };
@@ -588,7 +607,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
           
           <div className="flex gap-8 items-start w-full">
             {/* Center Column: KPI, Servers */}
-            <div className="flex-1 max-w-5xl space-y-8 min-w-0">
+            <div className="flex-1 max-w-7xl space-y-8 min-w-0">
               
               {/* KPI Cards */}
               <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -668,7 +687,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                 </Link>
               </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
                 {data.servers.map((server: any) => (
                   <ServerHeroCard
                     key={server.id}
@@ -719,7 +738,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
           </div>
 
           {/* Vault and Feed Row */}
-          <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-8 h-[420px] items-stretch w-full max-w-[calc(1024px+320px+2rem)]">
+          <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-8 h-[420px] items-stretch w-full max-w-[calc(1280px+320px+2rem)]">
             <VaultSection archives={data.archives} actions={{ handleRestoreArchive, handleDeleteArchive }} actionLoading={actionLoading} />
             <ActivityFeed activityLogs={data.activityLogs} />
           </div>
