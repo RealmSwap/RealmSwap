@@ -1,32 +1,22 @@
 from PIL import Image
 
-def remove_background(input_path, output_path, threshold=25):
+def remove_background(input_path, output_path):
     img = Image.open(input_path).convert("RGBA")
     datas = img.getdata()
 
     newData = []
     for item in datas:
-        # If pixel is close to black, make it transparent
-        # item is (R, G, B, A)
-        if item[0] < threshold and item[1] < threshold and item[2] < threshold:
-            # We can also do alpha blending so edges are smooth, but a simple cut might work,
-            # or better yet, map the lightness to alpha for a perfect screen-blend effect
-            # lightness = max(item[0], item[1], item[2])
-            # newData.append((item[0], item[1], item[2], lightness))
-            newData.append((255, 255, 255, 0))
+        # Use lightness as alpha
+        lightness = max(item[0], item[1], item[2])
+        if lightness == 0:
+            newData.append((0, 0, 0, 0))
         else:
-            # Keep the pixel, but let's do a smooth alpha based on how far from black it is to avoid jagged edges
-            lightness = max(item[0], item[1], item[2])
-            # We want the color to stay intact but the alpha to fade out at the edges
-            # For a pure black background, the color IS the alpha essentially (screen blending)
-            # We'll use the maximum color channel as the alpha, and then divide the RGB by alpha to un-premultiply
-            if lightness == 0:
-                newData.append((0, 0, 0, 0))
-            else:
-                alpha = lightness
-                # To prevent it from looking washed out, we don't un-premultiply entirely, 
-                # but this gives a nice transparent glow effect!
-                newData.append((item[0], item[1], item[2], alpha))
+            alpha = lightness
+            # Un-premultiply
+            r = min(255, int((item[0] / alpha) * 255))
+            g = min(255, int((item[1] / alpha) * 255))
+            b = min(255, int((item[2] / alpha) * 255))
+            newData.append((r, g, b, alpha))
 
     img.putdata(newData)
     img.save(output_path, "PNG")
