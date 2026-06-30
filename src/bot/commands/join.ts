@@ -33,8 +33,10 @@ export default {
         { name: "Port", value: `\`${server.port}\``, inline: true }
       );
 
-    if (server.password) {
+    if (server.password && server.password.trim() !== "") {
       embed.addFields({ name: "Password", value: `||${server.password}||`, inline: false });
+    } else {
+      embed.addFields({ name: "Password", value: `None`, inline: false });
     }
 
     await interaction.reply({ embeds: [embed] });

@@ -35,6 +35,10 @@ export default {
     const server = servers[0];
 
     if (subcommand === "create") {
+      if (server.status === "RUNNING" || server.status === "STARTING") {
+        return interaction.reply({ content: `**${server.name}** must be offline to create a manual backup (to prevent file corruption). Please stop the server first using \`/server stop ${server.game}\`.`, ephemeral: true });
+      }
+
       await interaction.reply({ content: `📦 Creating backup for **${server.name}**...\nEstimated time: ~10 seconds` });
       try {
         const backup = await createBackup(server.id, "MANUAL", `Discord Backup - ${new Date().toLocaleDateString()}`);
