@@ -38,7 +38,7 @@ export function VaultSection({
             <span>Game History Vault</span>
           </h2>
         </div>
-        <div className="p-12 flex flex-col items-center justify-center text-center flex-1">
+        <div className="px-12 pt-8 pb-24 flex flex-col items-center justify-center text-center flex-1">
           <div className="mb-6 relative group flex items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-accentPurple/20 animate-ping opacity-10 blur-xl"></div>
             <img 
