@@ -89,8 +89,8 @@ export function SidebarNavigation({ user }: { user: any }) {
         ))}
       </nav>
 
-      {/* User Profile */}
-      <div className="p-4 border-t border-white/5">
+      {/* User Profile & Legal */}
+      <div className="p-4 border-t border-white/5 flex flex-col gap-3">
         <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-white/5 hover:border-white/10 transition-colors group cursor-pointer">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accentPurple to-blue-500 flex items-center justify-center text-white font-bold shrink-0 shadow-lg shadow-accentPurple/20">
@@ -108,6 +108,12 @@ export function SidebarNavigation({ user }: { user: any }) {
           >
             <LogOut className="w-4 h-4" />
           </button>
+        </div>
+        
+        <div className="flex items-center justify-center gap-4 text-[10px] text-slate-500">
+          <Link href="/terms" className="hover:text-slate-300 transition-colors">Terms of Service</Link>
+          <span>•</span>
+          <Link href="/privacy" className="hover:text-slate-300 transition-colors">Privacy Policy</Link>
         </div>
       </div>
     </aside>
