@@ -1,6 +1,6 @@
 import { Server, GameDefinition } from "@/generated/client";
 import { ServerRunner, ProcessStats } from "./types";
-import { spawn, exec } from "child_process";
+import { spawn, exec, ChildProcessWithoutNullStreams } from "child_process";
 import fs from "fs";
 import path from "path";
 import https from "https";

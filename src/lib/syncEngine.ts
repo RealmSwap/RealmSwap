@@ -51,7 +51,7 @@ export class SyncTask extends EventEmitter {
     this.updateProgress("Locating game installation...", 5);
     
     // 1. Determine Game Directory
-    let gameDir = this.customGamePath;
+    let gameDir: string | null = this.customGamePath || null;
     if (!gameDir) {
       gameDir = this.autoDetectGameDir(this.manifest.game);
       if (!gameDir) {

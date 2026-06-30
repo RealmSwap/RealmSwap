@@ -34,6 +34,14 @@ model User {
   templateVotes      TemplateVote[]
 }
 
+model DiscordLinkCode {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  discordId String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
 model Subscription {
   id          String   @id @default(cuid())
   userId      String   @unique
@@ -79,6 +87,17 @@ model Server {
   hostLink         ServerHostLink?
   inviteCode       String?         @unique // For RealmSync
   plannedSessions  PlannedSession[]
+  discordRoles     DiscordRoleAccess[]
+}
+
+model DiscordRoleAccess {
+  id        String   @id @default(cuid())
+  serverId  String
+  roleId    String
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([serverId, roleId])
 }
 
 model PlannedSession {

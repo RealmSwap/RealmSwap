@@ -50,36 +50,68 @@ export function SettingsView({ user }: { user: any }) {
               </p>
               
               <div className="max-w-md">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
-                  Discord User ID
-                </label>
-                <input
-                  type="text"
-                  value={discordId}
-                  onChange={(e) => setDiscordId(e.target.value)}
-                  placeholder="e.g. 1521483069381542028"
-                  className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-accentPurple focus:ring-1 focus:ring-accentPurple transition-all"
-                />
-                <p className="text-[10px] text-slate-500 mt-1">
-                  You can find this by enabling Developer Mode in Discord and right-clicking your profile.
-                </p>
+                {user?.discordId ? (
+                  <div className="bg-slate-900 border border-emerald-500/30 rounded-lg p-4 flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <div>
+                      <p className="text-sm font-bold text-emerald-400">Account Linked Successfully</p>
+                      <p className="text-xs text-slate-400">Discord ID: {user.discordId}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 block">
+                      6-Digit Linking Code
+                    </label>
+                    <input
+                      type="text"
+                      value={discordId}
+                      onChange={(e) => setDiscordId(e.target.value)}
+                      placeholder="e.g. 123456"
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-accentPurple focus:ring-1 focus:ring-accentPurple transition-all"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Type <strong>/link</strong> in the Discord Bot to generate your secure linking code.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
-            <div className="pt-4 border-t border-white/5 flex justify-end">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex items-center gap-2 bg-accentPurple hover:bg-purple-500 text-white px-5 py-2 rounded-lg font-bold text-sm transition-colors disabled:opacity-50"
-              >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                Save Settings
-              </button>
-            </div>
+            {!user?.discordId && (
+              <div className="pt-4 border-t border-white/5 flex justify-end">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      const res = await fetch("/api/user/discord-link", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ code: discordId }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data.error || "Failed to link Discord account");
+                      toast.success("Account successfully linked! Please refresh the page.");
+                      setTimeout(() => window.location.reload(), 1500);
+                    } catch (err: any) {
+                      toast.error(err.message || "Something went wrong.");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-accentPurple hover:bg-purple-500 text-white px-5 py-2 rounded-lg font-bold text-sm transition-colors disabled:opacity-50"
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  Link Account
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </main>

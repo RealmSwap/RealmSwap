@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
-import { prisma } from "../../lib/db";
+import { findAuthorizedServer } from "../utils/auth";
 import { getServerLogTail } from "../../lib/serverLogs";
 
 export default {
@@ -9,17 +9,13 @@ export default {
     .addStringOption(option => option.setName("game").setDescription("Name of the game/server").setRequired(true)),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    const user = await prisma.user.findUnique({ where: { discordId: interaction.user.id } });
-    if (!user) return interaction.reply({ content: `You don't have permission.`, ephemeral: true });
-
     const gameQuery = interaction.options.getString("game")?.toLowerCase();
 
-    const servers = await prisma.server.findMany({
-      where: { OR: [{ game: { equals: gameQuery } }, { name: { contains: gameQuery } }] }
-    });
-
-    if (servers.length === 0) return interaction.reply({ content: `Could not find server matching \`${gameQuery}\`.`, ephemeral: true });
-    const server = servers[0];
+    const { error, server } = await findAuthorizedServer(interaction, gameQuery);
+    
+    if (error || !server) {
+      return interaction.reply({ content: error, ephemeral: true });
+    }
 
     await interaction.deferReply();
 

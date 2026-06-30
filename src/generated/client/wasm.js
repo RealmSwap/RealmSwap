@@ -130,6 +130,14 @@ exports.Prisma.UserScalarFieldEnum = {
   role: 'role'
 };
 
+exports.Prisma.DiscordLinkCodeScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  discordId: 'discordId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SubscriptionScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -165,6 +173,25 @@ exports.Prisma.ServerScalarFieldEnum = {
   snapshotInterval: 'snapshotInterval',
   lastSnapshotAt: 'lastSnapshotAt',
   inviteCode: 'inviteCode'
+};
+
+exports.Prisma.DiscordRoleAccessScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId',
+  roleId: 'roleId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PlannedSessionScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId',
+  title: 'title',
+  startTime: 'startTime',
+  channelId: 'channelId',
+  messageId: 'messageId',
+  roster: 'roster',
+  notified: 'notified',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.ServerHostLinkScalarFieldEnum = {
@@ -313,8 +340,11 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  DiscordLinkCode: 'DiscordLinkCode',
   Subscription: 'Subscription',
   Server: 'Server',
+  DiscordRoleAccess: 'DiscordRoleAccess',
+  PlannedSession: 'PlannedSession',
   ServerHostLink: 'ServerHostLink',
   Archive: 'Archive',
   ActivityLog: 'ActivityLog',

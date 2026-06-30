@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from "discord.js";
+import { findAuthorizedServer } from "../utils/auth";
 import { prisma } from "../../lib/db";
 import * as chrono from "chrono-node";
 
@@ -11,19 +12,15 @@ export default {
     .addStringOption(option => option.setName("title").setDescription("Event Title (e.g., 'Raid Night', 'Boss Fight')").setRequired(false)),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    const user = await prisma.user.findUnique({ where: { discordId: interaction.user.id } });
-    if (!user) return interaction.reply({ content: `You don't have permission.`, ephemeral: true });
-
     const gameQuery = interaction.options.getString("game")?.toLowerCase();
     const timeQuery = interaction.options.getString("time")!;
     const title = interaction.options.getString("title") || "Game Session";
 
-    const servers = await prisma.server.findMany({
-      where: { OR: [{ game: { equals: gameQuery } }, { name: { contains: gameQuery } }] }
-    });
-
-    if (servers.length === 0) return interaction.reply({ content: `Could not find server matching \`${gameQuery}\`.`, ephemeral: true });
-    const server = servers[0];
+    const { error, server, user } = await findAuthorizedServer(interaction, gameQuery);
+    
+    if (error || !server || !user) {
+      return interaction.reply({ content: error || "Not found.", ephemeral: true });
+    }
 
     const parsedDate = chrono.parseDate(timeQuery);
     if (!parsedDate) {

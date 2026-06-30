@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from "discord.js";
 import { prisma } from "../../lib/db";
-import { getRunner } from "../../lib/runners/factory";
+import { findAuthorizedServer } from "../utils/auth";
 
 export default {
   data: new SlashCommandBuilder()
@@ -15,40 +15,20 @@ export default {
   async execute(interaction: ChatInputCommandInteraction) {
     const gameQuery = interaction.options.getString("game")?.toLowerCase();
 
-    // Find the user by their Discord ID to ensure they are authorized
-    const user = await prisma.user.findUnique({
-      where: { discordId: interaction.user.id },
-    });
-
-    if (!user) {
-      return interaction.reply({
-        content: `You don't have permission to use this command. Link your Discord ID in the GameVault Dashboard Settings.`,
-        ephemeral: true,
-      });
+    const { error, server, user } = await findAuthorizedServer(interaction, gameQuery);
+    
+    if (error || !server) {
+      return interaction.reply({ content: error, ephemeral: true });
     }
-
-    // Search for a server matching the query
-    const servers = await prisma.server.findMany({
-      where: {
-        OR: [
-          { game: { equals: gameQuery } },
-          { name: { contains: gameQuery } }
-        ]
-      }
-    });
-
-    if (servers.length === 0) {
-      return interaction.reply({
-        content: `Could not find any server matching \`${gameQuery}\`.`,
-        ephemeral: true,
-      });
-    }
-
-    const server = servers[0]; // If multiple, just pick the first one
 
     if (server.status === "RUNNING") {
+      let joinInfo = `\`${server.ipAddress}:${server.port}\``;
+      if (server.inviteCode) {
+        joinInfo += `\n**Invite Code:** \`${server.inviteCode}\` *(Use with RealmSync)*`;
+      }
+
       return interaction.reply({
-        content: `🟢 **${server.name}** is already running!\n**Join IP:** \`${server.ipAddress}:${server.port}\``,
+        content: `🟢 **${server.name}** is already running!\n**Join:** ${joinInfo}`,
       });
     }
 
@@ -98,7 +78,16 @@ export default {
           throw new Error("API responded with " + res.status);
         }
 
-        await interaction.followUp(`🟢 **${server.name} Ready**\n\nJoin: \`${server.ipAddress}:${server.port}\``);
+        // RE-FETCH the server from DB so we get the fresh Public IP resolved by the runner!
+        const { prisma } = require("../../lib/db");
+        const updatedServer = await prisma.server.findUnique({ where: { id: server.id } });
+
+        let joinInfo = `\`${updatedServer.ipAddress}:${updatedServer.port}\``;
+        if (updatedServer.inviteCode) {
+          joinInfo += `\n**Invite Code:** \`${updatedServer.inviteCode}\` *(Use with RealmSync)*`;
+        }
+
+        await interaction.followUp(`🟢 **${updatedServer.name} Ready**\n\nJoin: ${joinInfo}`);
       } catch (error) {
         console.error("Failed to start server:", error);
         await prisma.server.update({

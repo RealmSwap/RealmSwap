@@ -21,6 +21,7 @@ model User {
   email              String           @unique
   passwordHash       String
   name               String
+  discordId          String?          @unique
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
   role               String           @default("USER") // "USER" | "ADMIN"
@@ -31,6 +32,14 @@ model User {
   logs               ActivityLog[]
   collaboratorAccess Collaborator[]
   templateVotes      TemplateVote[]
+}
+
+model DiscordLinkCode {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  discordId String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Subscription {
@@ -45,30 +54,30 @@ model Subscription {
 }
 
 model Server {
-  id               String            @id @default(cuid())
+  id               String              @id @default(cuid())
   userId           String
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   name             String
   game             String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
   ramAllocation    Float // GB allocated
   region           String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
   status           String // "RUNNING", "STOPPED", "STARTING"
-  runnerType       String            @default("CLOUD") // "CLOUD" or "LOCAL"
+  runnerType       String              @default("CLOUD") // "CLOUD" or "LOCAL"
   localPath        String? // File path for local server storage
   pid              Int? // Process ID for local runner execution
   password         String? // Unhashed password for Valheim/game server configs
-  enableUpnp       Boolean           @default(false) // Trigger router port mapping
+  enableUpnp       Boolean             @default(false) // Trigger router port mapping
   ipAddress        String
   port             Int
   definitionId     String?
-  definition       GameDefinition?   @relation(fields: [definitionId], references: [id])
+  definition       GameDefinition?     @relation(fields: [definitionId], references: [id])
   paramValues      String? // JSON object of custom param values
-  healthStatus     String            @default("OK") // "OK", "DEGRADED", "FAILING"
-  cpuUsage         Float             @default(0) // Mocked live utilization percentage
-  memoryUsage      Float             @default(0) // Mocked live RAM utilization in GB
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  snapshotInterval Int               @default(0) // 0 = disabled, 1, 6, 12, 24 hours
+  healthStatus     String              @default("OK") // "OK", "DEGRADED", "FAILING"
+  cpuUsage         Float               @default(0) // Mocked live utilization percentage
+  memoryUsage      Float               @default(0) // Mocked live RAM utilization in GB
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  snapshotInterval Int                 @default(0) // 0 = disabled, 1, 6, 12, 24 hours
   lastSnapshotAt   DateTime?
   backups          Backup[]
   collaborators    Collaborator[]
@@ -76,7 +85,33 @@ model Server {
   snapshots        ServerSnapshot[]
   scheduledTasks   ScheduledTask[]
   hostLink         ServerHostLink?
-  inviteCode       String?           @unique // For RealmSync
+  inviteCode       String?             @unique // For RealmSync
+  plannedSessions  PlannedSession[]
+  discordRoles     DiscordRoleAccess[]
+}
+
+model DiscordRoleAccess {
+  id        String   @id @default(cuid())
+  serverId  String
+  roleId    String
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([serverId, roleId])
+}
+
+model PlannedSession {
+  id        String   @id @default(cuid())
+  serverId  String
+  title     String
+  startTime DateTime
+  channelId String // The Discord channel where the event was posted
+  messageId String // The Discord message ID of the embed
+  roster    String // JSON array of Discord User IDs who clicked "I'm In"
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
 }
 
 model ServerHostLink {

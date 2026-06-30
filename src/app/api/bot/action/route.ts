@@ -29,15 +29,15 @@ export async function POST(req: NextRequest) {
 
     if (action === "start") {
       await updateStatus("STARTING");
-      await runner.start(server);
+      await runner.start(server, null as any);
       await updateStatus("RUNNING");
     } else if (action === "stop") {
-      await runner.stop(server.id);
+      await runner.stop(server);
       await updateStatus("STOPPED");
     } else if (action === "restart") {
-      await runner.stop(server.id);
+      await runner.stop(server);
       await updateStatus("STARTING");
-      await runner.start(server);
+      await runner.start(server, null as any);
       await updateStatus("RUNNING");
     } else {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
