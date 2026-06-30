@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Archive, Plus, Trash2, Box } from "lucide-react";
+import { Archive, Plus, Trash2 } from "lucide-react";
 
 export function VaultSection({ 
   archives, 
@@ -39,9 +39,9 @@ export function VaultSection({
           </h2>
         </div>
         <div className="p-12 flex flex-col items-center justify-center text-center flex-1">
-          <div className="w-20 h-20 rounded-full bg-accentPurple/10 flex items-center justify-center mb-6 relative group">
-            <div className="absolute inset-0 rounded-full bg-accentPurple/20 animate-ping opacity-20"></div>
-            <Box className="w-10 h-10 text-accentPurple group-hover:scale-110 transition-transform duration-300" />
+          <div className="mb-6 relative group flex items-center justify-center">
+            <div className="absolute inset-0 rounded-full bg-accentPurple/20 animate-ping opacity-10 blur-xl"></div>
+            <img src="/vault-empty.png" alt="Empty Vault" className="w-32 h-auto drop-shadow-[0_0_15px_rgba(167,139,250,0.5)] group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 relative z-10" />
           </div>
           <h3 className="text-xl font-extrabold text-white mb-2">Vault is empty</h3>
           <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
