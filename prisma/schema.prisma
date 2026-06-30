@@ -21,6 +21,7 @@ model User {
   email        String        @unique
   passwordHash String
   name         String
+  discordId    String?       @unique
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   role         String        @default("USER") // "USER" | "ADMIN"

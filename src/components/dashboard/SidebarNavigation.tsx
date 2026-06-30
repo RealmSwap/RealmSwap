@@ -91,14 +91,17 @@ export function SidebarNavigation({ user }: { user: any }) {
 
       {/* User Profile & Legal */}
       <div className="p-4 border-t border-white/5 flex flex-col gap-3">
-        <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-white/5 hover:border-white/10 transition-colors group cursor-pointer">
+        <div 
+          onClick={() => router.push("/dashboard/settings")}
+          className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-white/5 hover:border-white/10 transition-colors group cursor-pointer"
+        >
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accentPurple to-blue-500 flex items-center justify-center text-white font-bold shrink-0 shadow-lg shadow-accentPurple/20">
               {user?.name?.charAt(0)?.toUpperCase() || "U"}
             </div>
             <div className="min-w-0">
               <div className="text-sm font-bold text-slate-200 truncate group-hover:text-white transition-colors">{user?.name || "User"}</div>
-              <div className="text-[10px] text-accentPurple font-semibold uppercase tracking-wider">Owner</div>
+              <div className="text-[10px] text-accentPurple font-semibold uppercase tracking-wider group-hover:text-white transition-colors">Settings</div>
             </div>
           </div>
           <button 
