@@ -14,9 +14,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid code" }, { status: 400 });
     }
 
+    // Sanitize input in case they pasted the "# " prefix
+    const cleanCode = code.replace(/[^0-9]/g, "");
+
     // Find valid code
     const linkCode = await prisma.discordLinkCode.findUnique({
-      where: { code }
+      where: { code: cleanCode }
     });
 
     if (!linkCode) {
