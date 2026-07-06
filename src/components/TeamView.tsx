@@ -139,7 +139,7 @@ export default function TeamView({ servers, user }: TeamViewProps) {
   };
 
   return (
-    <div className="min-h-screen flex bg-background text-slate-100 font-sans">
+    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
       
       {/* Sidebar Navigation */}
       <SidebarNavigation user={user} />
