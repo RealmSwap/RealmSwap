@@ -56,6 +56,13 @@ export interface ContainerSpec {
   installSubDir?: string;         // defaults to the steamcmd install.installSubDir
 }
 
+export interface PlayerSyncSpec {
+  strategy: "minecraft_json" | "valheim_txt" | "rust_cfg" | "command" | "none";
+  whitelistPath?: string; // relative to server root
+  banlistPath?: string;
+  opsPath?: string;
+}
+
 export interface GameDefinitionSpec {
   install: SteamcmdInstall | DownloadInstall | ScriptInstall;
   launch: LaunchSpec;
@@ -70,6 +77,7 @@ export interface GameDefinitionSpec {
   queryType?: string;
   queryPort?: string;
   container?: ContainerSpec;
+  playerSync?: PlayerSyncSpec;
 }
 
 export interface DefinitionContext {

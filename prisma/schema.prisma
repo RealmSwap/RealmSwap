@@ -36,6 +36,7 @@ model User {
   collaboratorAccess Collaborator[]
   templateVotes      TemplateVote[]
   PushSubscription   PushSubscription[]
+  players            Player[]
 }
 
 model DiscordLinkCode {
@@ -92,6 +93,7 @@ model Server {
   inviteCode       String?             @unique // For RealmSync
   plannedSessions  PlannedSession[]
   discordRoles     DiscordRoleAccess[]
+  playerAccess     PlayerServerAccess[]
 }
 
 model DiscordRoleAccess {
@@ -318,4 +320,52 @@ model PushSubscription {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
+}
+
+model Player {
+  id                 String             @id @default(cuid())
+  userId             String
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name               String
+  steamId            String?
+  xboxId             String?
+  minecraftUuid      String?
+  discordId          String?
+  
+  status             String             @default("TRUSTED") // "TRUSTED", "VIP", "BANNED", "GUEST"
+  roles              String?            // Comma-separated global roles
+  
+  isGloballyBanned   Boolean            @default(false)
+  globalBanReason    String?
+  
+  serverAccess       PlayerServerAccess[]
+  
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model PlayerServerAccess {
+  id                 String             @id @default(cuid())
+  playerId           String
+  serverId           String
+  
+  isWhitelisted      Boolean            @default(false)
+  isBanned           Boolean            @default(false)
+  serverRole         String?            // Override or specific role for this server
+  
+  player             Player             @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  server             Server             @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  
+  @@unique([playerId, serverId])
+}
+
+model PlayerAuditLog {
+  id                 String             @id @default(cuid())
+  playerId           String?            // Null if the action was general, but usually targeted at a player
+  serverId           String?            // Null if action was global
+  action             String             // "GLOBAL_BAN", "WHITELIST_ADD", "ROLE_ASSIGNED"
+  details            String
+  performedBy        String             // User ID of the admin who performed it
+  createdAt          DateTime           @default(now())
 }

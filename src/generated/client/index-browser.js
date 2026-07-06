@@ -363,6 +363,41 @@ exports.Prisma.PushSubscriptionScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.PlayerScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  name: 'name',
+  steamId: 'steamId',
+  xboxId: 'xboxId',
+  minecraftUuid: 'minecraftUuid',
+  discordId: 'discordId',
+  status: 'status',
+  roles: 'roles',
+  isGloballyBanned: 'isGloballyBanned',
+  globalBanReason: 'globalBanReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PlayerServerAccessScalarFieldEnum = {
+  id: 'id',
+  playerId: 'playerId',
+  serverId: 'serverId',
+  isWhitelisted: 'isWhitelisted',
+  isBanned: 'isBanned',
+  serverRole: 'serverRole'
+};
+
+exports.Prisma.PlayerAuditLogScalarFieldEnum = {
+  id: 'id',
+  playerId: 'playerId',
+  serverId: 'serverId',
+  action: 'action',
+  details: 'details',
+  performedBy: 'performedBy',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -395,7 +430,10 @@ exports.Prisma.ModelName = {
   AutomationExecution: 'AutomationExecution',
   MarketplaceTemplate: 'MarketplaceTemplate',
   TemplateVote: 'TemplateVote',
-  PushSubscription: 'PushSubscription'
+  PushSubscription: 'PushSubscription',
+  Player: 'Player',
+  PlayerServerAccess: 'PlayerServerAccess',
+  PlayerAuditLog: 'PlayerAuditLog'
 };
 
 /**

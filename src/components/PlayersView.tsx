@@ -11,6 +11,16 @@ export default function PlayersView({ user }: { user: any }) {
   const [search, setSearch] = useState("");
   const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
 
+  // Modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newPlayerForm, setNewPlayerForm] = useState({ name: "", steamId: "", minecraftUuid: "", xboxId: "", discordId: "" });
+  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editPlayerForm, setEditPlayerForm] = useState({ name: "", steamId: "", minecraftUuid: "", xboxId: "", discordId: "" });
+
+  const [isBanModalOpen, setIsBanModalOpen] = useState(false);
+  const [banReason, setBanReason] = useState("");
+
   useEffect(() => {
     fetchPlayers();
   }, []);
@@ -29,39 +39,105 @@ export default function PlayersView({ user }: { user: any }) {
     }
   };
 
-  const handleGlobalBan = async (playerId: string, isBanned: boolean) => {
-    const reason = isBanned ? prompt("Enter reason for global ban:") : null;
-    if (isBanned && !reason) return;
+  const handleGlobalBanSubmit = async () => {
+    if (!selectedPlayer) return;
+    try {
+      const res = await fetch(`/api/players/${selectedPlayer.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isGloballyBanned: true, globalBanReason: banReason })
+      });
+      if (res.ok) {
+        fetchPlayers();
+        setSelectedPlayer({ ...selectedPlayer, isGloballyBanned: true, globalBanReason: banReason });
+        setIsBanModalOpen(false);
+        setBanReason("");
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to ban player: ${errorData.error}`);
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert(`Error: ${e.message}`);
+    }
+  };
 
+  const handleGlobalBanRevoke = async (playerId: string) => {
     try {
       const res = await fetch(`/api/players/${playerId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isGloballyBanned: isBanned, globalBanReason: reason })
+        body: JSON.stringify({ isGloballyBanned: false, globalBanReason: null })
       });
       if (res.ok) {
         fetchPlayers();
         if (selectedPlayer && selectedPlayer.id === playerId) {
-          setSelectedPlayer({ ...selectedPlayer, isGloballyBanned: isBanned, globalBanReason: reason });
+          setSelectedPlayer({ ...selectedPlayer, isGloballyBanned: false, globalBanReason: null });
         }
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to revoke ban: ${errorData.error}`);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert(`Error: ${e.message}`);
     }
   };
 
-  const handleAddPlayer = async () => {
-    const name = prompt("Enter player name:");
-    if (!name) return;
+  const handleAddPlayerSubmit = async () => {
+    if (!newPlayerForm.name.trim()) return;
     try {
       const res = await fetch("/api/players", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({
+          name: newPlayerForm.name.trim(),
+          steamId: newPlayerForm.steamId.trim() || undefined,
+          minecraftUuid: newPlayerForm.minecraftUuid.trim() || undefined,
+          xboxId: newPlayerForm.xboxId.trim() || undefined,
+          discordId: newPlayerForm.discordId.trim() || undefined
+        })
       });
-      if (res.ok) fetchPlayers();
-    } catch (e) {
+      if (res.ok) {
+        fetchPlayers();
+        setIsAddModalOpen(false);
+        setNewPlayerForm({ name: "", steamId: "", minecraftUuid: "", xboxId: "", discordId: "" });
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to add player: ${errorData.error}`);
+      }
+    } catch (e: any) {
       console.error(e);
+      alert(`Error: ${e.message}`);
+    }
+  };
+
+  const handleEditPlayerSubmit = async () => {
+    if (!selectedPlayer || !editPlayerForm.name.trim()) return;
+    try {
+      const res = await fetch(`/api/players/${selectedPlayer.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editPlayerForm.name.trim(),
+          steamId: editPlayerForm.steamId.trim() || null,
+          minecraftUuid: editPlayerForm.minecraftUuid.trim() || null,
+          xboxId: editPlayerForm.xboxId.trim() || null,
+          discordId: editPlayerForm.discordId.trim() || null
+        })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        fetchPlayers();
+        setSelectedPlayer({ ...selectedPlayer, ...updated });
+        setIsEditModalOpen(false);
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to update player: ${errorData.error}`);
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert(`Error: ${e.message}`);
     }
   };
 
@@ -93,7 +169,7 @@ export default function PlayersView({ user }: { user: any }) {
             <p className="text-slate-400 mt-2">Manage players, whitelists, and bans across all your servers from one place.</p>
           </div>
           <button 
-            onClick={handleAddPlayer}
+            onClick={() => setIsAddModalOpen(true)}
             className="px-5 py-2.5 bg-accentPurple hover:bg-accentPurpleHover text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-accentPurple/20 transition-all"
           >
             <Plus className="w-5 h-5" /> Add Player
@@ -175,21 +251,38 @@ export default function PlayersView({ user }: { user: any }) {
                     </p>
                   </div>
                 </div>
-                {selectedPlayer.isGloballyBanned ? (
+                <div className="flex items-center gap-3">
                   <button 
-                    onClick={() => handleGlobalBan(selectedPlayer.id, false)}
+                    onClick={() => {
+                      setEditPlayerForm({
+                        name: selectedPlayer.name || "",
+                        steamId: selectedPlayer.steamId || "",
+                        minecraftUuid: selectedPlayer.minecraftUuid || "",
+                        xboxId: selectedPlayer.xboxId || "",
+                        discordId: selectedPlayer.discordId || ""
+                      });
+                      setIsEditModalOpen(true);
+                    }}
                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold flex items-center gap-2 transition-colors border border-white/10"
                   >
-                    <Shield className="w-4 h-4 text-emerald-400" /> Revoke Global Ban
+                    <Edit className="w-4 h-4" /> Edit
                   </button>
-                ) : (
-                  <button 
-                    onClick={() => handleGlobalBan(selectedPlayer.id, true)}
-                    className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg font-bold flex items-center gap-2 transition-colors"
-                  >
-                    <ShieldAlert className="w-4 h-4" /> Global Ban
-                  </button>
-                )}
+                  {selectedPlayer.isGloballyBanned ? (
+                    <button 
+                      onClick={() => handleGlobalBanRevoke(selectedPlayer.id)}
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold flex items-center gap-2 transition-colors border border-white/10"
+                    >
+                      <Shield className="w-4 h-4 text-emerald-400" /> Revoke Global Ban
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => setIsBanModalOpen(true)}
+                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg font-bold flex items-center gap-2 transition-colors"
+                    >
+                      <ShieldAlert className="w-4 h-4" /> Global Ban
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-8">
@@ -266,6 +359,198 @@ export default function PlayersView({ user }: { user: any }) {
         </div>
       </div>
       </main>
+
+      {/* Add Player Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onClick={() => setIsAddModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-white mb-4">Add New Player</h2>
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Player Name *</label>
+                <input
+                  type="text"
+                  value={newPlayerForm.name}
+                  onChange={(e) => setNewPlayerForm({ ...newPlayerForm, name: e.target.value })}
+                  placeholder="e.g. Notch"
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accentPurple transition-colors"
+                />
+              </div>
+              <div className="pt-2 border-t border-white/5">
+                <p className="text-xs text-slate-500 mb-4">Link game identifiers to automatically enforce whitelists and bans on synced servers.</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Steam ID</label>
+                    <input
+                      type="text"
+                      value={newPlayerForm.steamId}
+                      onChange={(e) => setNewPlayerForm({ ...newPlayerForm, steamId: e.target.value })}
+                      placeholder="e.g. 7656119..."
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Minecraft UUID</label>
+                    <input
+                      type="text"
+                      value={newPlayerForm.minecraftUuid}
+                      onChange={(e) => setNewPlayerForm({ ...newPlayerForm, minecraftUuid: e.target.value })}
+                      placeholder="e.g. 069a79f4-..."
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Xbox ID</label>
+                    <input
+                      type="text"
+                      value={newPlayerForm.xboxId}
+                      onChange={(e) => setNewPlayerForm({ ...newPlayerForm, xboxId: e.target.value })}
+                      placeholder="e.g. 253542..."
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Discord ID</label>
+                    <input
+                      type="text"
+                      value={newPlayerForm.discordId}
+                      onChange={(e) => setNewPlayerForm({ ...newPlayerForm, discordId: e.target.value })}
+                      placeholder="e.g. 1234567..."
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleAddPlayerSubmit}
+                disabled={!newPlayerForm.name.trim()}
+                className="w-full py-3 bg-accentPurple hover:bg-accentPurpleHover disabled:opacity-50 text-white rounded-xl font-bold transition-all mt-4"
+              >
+                Create Player
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Player Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl shadow-2xl relative">
+            <button onClick={() => setIsEditModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-white mb-4">Edit Player Identity</h2>
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Player Name *</label>
+                <input
+                  type="text"
+                  value={editPlayerForm.name}
+                  onChange={(e) => setEditPlayerForm({ ...editPlayerForm, name: e.target.value })}
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accentPurple transition-colors"
+                />
+              </div>
+              <div className="pt-2 border-t border-white/5">
+                <p className="text-xs text-slate-500 mb-4">Update game identifiers for synchronization.</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Steam ID</label>
+                    <input
+                      type="text"
+                      value={editPlayerForm.steamId}
+                      onChange={(e) => setEditPlayerForm({ ...editPlayerForm, steamId: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Minecraft UUID</label>
+                    <input
+                      type="text"
+                      value={editPlayerForm.minecraftUuid}
+                      onChange={(e) => setEditPlayerForm({ ...editPlayerForm, minecraftUuid: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Xbox ID</label>
+                    <input
+                      type="text"
+                      value={editPlayerForm.xboxId}
+                      onChange={(e) => setEditPlayerForm({ ...editPlayerForm, xboxId: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Discord ID</label>
+                    <input
+                      type="text"
+                      value={editPlayerForm.discordId}
+                      onChange={(e) => setEditPlayerForm({ ...editPlayerForm, discordId: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleEditPlayerSubmit}
+                disabled={!editPlayerForm.name.trim()}
+                className="w-full py-3 bg-accentPurple hover:bg-accentPurpleHover disabled:opacity-50 text-white rounded-xl font-bold transition-all mt-4"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global Ban Modal */}
+      {isBanModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-red-500/30 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onClick={() => setIsBanModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-4">
+              <ShieldAlert className="w-6 h-6 text-red-500" />
+              <h2 className="text-xl font-bold text-white">Issue Global Ban</h2>
+            </div>
+            <p className="text-sm text-slate-400 mb-6">
+              This will ban <strong className="text-white">{selectedPlayer?.name}</strong> across all your synced servers instantly.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Ban Reason</label>
+                <input
+                  type="text"
+                  value={banReason}
+                  onChange={(e) => setBanReason(e.target.value)}
+                  placeholder="e.g. Griefing"
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-colors"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsBanModalOpen(false)}
+                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleGlobalBanSubmit}
+                  disabled={!banReason.trim()}
+                  className="flex-1 py-3 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white rounded-xl font-bold transition-colors shadow-lg shadow-red-500/20"
+                >
+                  Confirm Ban
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

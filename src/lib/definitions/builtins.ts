@@ -34,6 +34,12 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       ],
       editableConfigPath: "server.properties",
       ports: [{ protocol: "TCP", port: "25565" }, { protocol: "UDP", port: "25565" }],
+      playerSync: {
+        strategy: "minecraft_json",
+        whitelistPath: "whitelist.json",
+        banlistPath: "banned-players.json",
+        opsPath: "ops.json"
+      },
     },
   },
   {
@@ -57,6 +63,12 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       },
       defaultPort: 2456, params: [], configFiles: [],
       ports: [{ protocol: "UDP", port: "2456" }, { protocol: "UDP", port: "2457" }, { protocol: "UDP", port: "2458" }],
+      playerSync: {
+        strategy: "valheim_txt",
+        whitelistPath: "valheim-server/permittedlist.txt",
+        banlistPath: "valheim-server/bannedlist.txt",
+        opsPath: "valheim-server/adminlist.txt"
+      }
     },
   },
   {
