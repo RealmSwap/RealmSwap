@@ -72,6 +72,59 @@ export class ModrinthProvider implements ModProvider {
     return [];
   }
 
+  async resolveDependenciesFull(packageId: string, version: string, game: string): Promise<ModSearchResult[]> {
+    if (game.toUpperCase() !== "MINECRAFT") return [];
+
+    const results: ModSearchResult[] = [];
+    const visited = new Set<string>();
+
+    const resolveRecursive = async (currentId: string) => {
+      if (visited.has(currentId)) return;
+      visited.add(currentId);
+
+      try {
+        const response = await fetch(`https://api.modrinth.com/v2/project/${currentId}/dependencies`);
+        if (!response.ok) return;
+        
+        const deps = await response.json();
+        
+        for (const dep of deps) {
+          // Modrinth returns objects with project_id
+          const depProjectId = dep.project_id || dep.id; 
+          if (!depProjectId || visited.has(depProjectId)) continue;
+          
+          // Fetch project details
+          const projRes = await fetch(`https://api.modrinth.com/v2/project/${depProjectId}`);
+          if (!projRes.ok) continue;
+          
+          const proj = await projRes.json();
+          
+          results.push({
+            provider: this.id,
+            packageId: proj.id,
+            name: proj.title,
+            author: proj.team || "Unknown",
+            description: proj.description,
+            version: proj.versions ? proj.versions[0] : "latest",
+            downloadUrl: `https://modrinth.com/mod/${proj.slug}`,
+            iconUrl: proj.icon_url || undefined,
+            rating: proj.followers || 0,
+            categories: proj.categories || [],
+            updatedAt: proj.updated,
+            websiteUrl: `https://modrinth.com/mod/${proj.slug}`,
+          });
+          
+          await resolveRecursive(proj.id);
+        }
+      } catch (err) {
+        console.error(`[Modrinth] Failed to resolve dependencies for ${currentId}`, err);
+      }
+    };
+
+    await resolveRecursive(packageId);
+    return results;
+  }
+
   async downloadAndInstall(packageId: string, version: string, destPath: string): Promise<void> {
     console.log(`[Modrinth] Installing ${packageId}@${version} to ${destPath}`);
     if (!fs.existsSync(destPath)) {

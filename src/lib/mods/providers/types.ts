@@ -30,8 +30,14 @@ export interface ModProvider {
   
   /**
    * Given a package ID and version, return a list of required package IDs.
+   * @deprecated Use resolveDependenciesFull for detailed dependencies.
    */
   resolveDependencies(packageId: string, version: string): Promise<string[]>;
+  
+  /**
+   * Given a package ID, return a fully recursive list of dependencies with full details.
+   */
+  resolveDependenciesFull?(packageId: string, version: string, game: string): Promise<ModSearchResult[]>;
   
   /**
    * Download and extract/install the mod into the specified destination path.
