@@ -77,7 +77,7 @@ export default function SyncClientView({ link, host, inviteCode, manifest, error
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-slate-100 px-4 py-12">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#030712] text-slate-100 px-4 py-12 selection:bg-accentPurple/30">
         <div className="glass-panel-purple p-8 rounded-2xl max-w-md w-full border border-red-500/20 text-center">
           <ShieldAlert className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-white mb-2">Connection Failed</h1>
@@ -93,7 +93,7 @@ export default function SyncClientView({ link, host, inviteCode, manifest, error
   if (!manifest) return null;
 
   return (
-    <div className="min-h-screen bg-background text-slate-100 p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-[#030712] text-slate-100 p-8 flex flex-col items-center selection:bg-accentPurple/30">
       <div className="w-full max-w-3xl">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors mb-6">
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
