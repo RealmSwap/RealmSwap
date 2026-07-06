@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import SchedulesView from "@/components/SchedulesView";
+import AutomationsView from "@/components/AutomationsView";
 
 export const dynamic = "force-dynamic";
 
@@ -18,5 +18,5 @@ export default async function SchedulesPage() {
     orderBy: { createdAt: "desc" }
   });
 
-  return <SchedulesView servers={servers} user={user} />;
+  return <AutomationsView servers={servers} user={user} />;
 }

@@ -84,10 +84,25 @@ export type ModInstallation = $Result.DefaultSelection<Prisma.$ModInstallationPa
  */
 export type ServerSnapshot = $Result.DefaultSelection<Prisma.$ServerSnapshotPayload>
 /**
- * Model ScheduledTask
+ * Model Automation
  * 
  */
-export type ScheduledTask = $Result.DefaultSelection<Prisma.$ScheduledTaskPayload>
+export type Automation = $Result.DefaultSelection<Prisma.$AutomationPayload>
+/**
+ * Model AutomationCondition
+ * 
+ */
+export type AutomationCondition = $Result.DefaultSelection<Prisma.$AutomationConditionPayload>
+/**
+ * Model AutomationAction
+ * 
+ */
+export type AutomationAction = $Result.DefaultSelection<Prisma.$AutomationActionPayload>
+/**
+ * Model AutomationExecution
+ * 
+ */
+export type AutomationExecution = $Result.DefaultSelection<Prisma.$AutomationExecutionPayload>
 /**
  * Model MarketplaceTemplate
  * 
@@ -368,14 +383,44 @@ export class PrismaClient<
   get serverSnapshot(): Prisma.ServerSnapshotDelegate<ExtArgs>;
 
   /**
-   * `prisma.scheduledTask`: Exposes CRUD operations for the **ScheduledTask** model.
+   * `prisma.automation`: Exposes CRUD operations for the **Automation** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more ScheduledTasks
-    * const scheduledTasks = await prisma.scheduledTask.findMany()
+    * // Fetch zero or more Automations
+    * const automations = await prisma.automation.findMany()
     * ```
     */
-  get scheduledTask(): Prisma.ScheduledTaskDelegate<ExtArgs>;
+  get automation(): Prisma.AutomationDelegate<ExtArgs>;
+
+  /**
+   * `prisma.automationCondition`: Exposes CRUD operations for the **AutomationCondition** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AutomationConditions
+    * const automationConditions = await prisma.automationCondition.findMany()
+    * ```
+    */
+  get automationCondition(): Prisma.AutomationConditionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.automationAction`: Exposes CRUD operations for the **AutomationAction** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AutomationActions
+    * const automationActions = await prisma.automationAction.findMany()
+    * ```
+    */
+  get automationAction(): Prisma.AutomationActionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.automationExecution`: Exposes CRUD operations for the **AutomationExecution** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AutomationExecutions
+    * const automationExecutions = await prisma.automationExecution.findMany()
+    * ```
+    */
+  get automationExecution(): Prisma.AutomationExecutionDelegate<ExtArgs>;
 
   /**
    * `prisma.marketplaceTemplate`: Exposes CRUD operations for the **MarketplaceTemplate** model.
@@ -861,7 +906,10 @@ export namespace Prisma {
     GameDefinition: 'GameDefinition',
     ModInstallation: 'ModInstallation',
     ServerSnapshot: 'ServerSnapshot',
-    ScheduledTask: 'ScheduledTask',
+    Automation: 'Automation',
+    AutomationCondition: 'AutomationCondition',
+    AutomationAction: 'AutomationAction',
+    AutomationExecution: 'AutomationExecution',
     MarketplaceTemplate: 'MarketplaceTemplate',
     TemplateVote: 'TemplateVote',
     PushSubscription: 'PushSubscription'
@@ -880,7 +928,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "scheduledTask" | "marketplaceTemplate" | "templateVote" | "pushSubscription"
+      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1864,73 +1912,283 @@ export namespace Prisma {
           }
         }
       }
-      ScheduledTask: {
-        payload: Prisma.$ScheduledTaskPayload<ExtArgs>
-        fields: Prisma.ScheduledTaskFieldRefs
+      Automation: {
+        payload: Prisma.$AutomationPayload<ExtArgs>
+        fields: Prisma.AutomationFieldRefs
         operations: {
           findUnique: {
-            args: Prisma.ScheduledTaskFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload> | null
+            args: Prisma.AutomationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationPayload> | null
           }
           findUniqueOrThrow: {
-            args: Prisma.ScheduledTaskFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+            args: Prisma.AutomationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationPayload>
           }
           findFirst: {
-            args: Prisma.ScheduledTaskFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload> | null
+            args: Prisma.AutomationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationPayload> | null
           }
           findFirstOrThrow: {
-            args: Prisma.ScheduledTaskFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+            args: Prisma.AutomationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationPayload>
           }
           findMany: {
-            args: Prisma.ScheduledTaskFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>[]
+            args: Prisma.AutomationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationPayload>[]
           }
           create: {
-            args: Prisma.ScheduledTaskCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+            args: Prisma.AutomationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationPayload>
           }
           createMany: {
-            args: Prisma.ScheduledTaskCreateManyArgs<ExtArgs>
+            args: Prisma.AutomationCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
           createManyAndReturn: {
-            args: Prisma.ScheduledTaskCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>[]
+            args: Prisma.AutomationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationPayload>[]
           }
           delete: {
-            args: Prisma.ScheduledTaskDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+            args: Prisma.AutomationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationPayload>
           }
           update: {
-            args: Prisma.ScheduledTaskUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+            args: Prisma.AutomationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationPayload>
           }
           deleteMany: {
-            args: Prisma.ScheduledTaskDeleteManyArgs<ExtArgs>
+            args: Prisma.AutomationDeleteManyArgs<ExtArgs>
             result: BatchPayload
           }
           updateMany: {
-            args: Prisma.ScheduledTaskUpdateManyArgs<ExtArgs>
+            args: Prisma.AutomationUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
           upsert: {
-            args: Prisma.ScheduledTaskUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ScheduledTaskPayload>
+            args: Prisma.AutomationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationPayload>
           }
           aggregate: {
-            args: Prisma.ScheduledTaskAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateScheduledTask>
+            args: Prisma.AutomationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAutomation>
           }
           groupBy: {
-            args: Prisma.ScheduledTaskGroupByArgs<ExtArgs>
-            result: $Utils.Optional<ScheduledTaskGroupByOutputType>[]
+            args: Prisma.AutomationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AutomationGroupByOutputType>[]
           }
           count: {
-            args: Prisma.ScheduledTaskCountArgs<ExtArgs>
-            result: $Utils.Optional<ScheduledTaskCountAggregateOutputType> | number
+            args: Prisma.AutomationCountArgs<ExtArgs>
+            result: $Utils.Optional<AutomationCountAggregateOutputType> | number
+          }
+        }
+      }
+      AutomationCondition: {
+        payload: Prisma.$AutomationConditionPayload<ExtArgs>
+        fields: Prisma.AutomationConditionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AutomationConditionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationConditionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AutomationConditionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationConditionPayload>
+          }
+          findFirst: {
+            args: Prisma.AutomationConditionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationConditionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AutomationConditionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationConditionPayload>
+          }
+          findMany: {
+            args: Prisma.AutomationConditionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationConditionPayload>[]
+          }
+          create: {
+            args: Prisma.AutomationConditionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationConditionPayload>
+          }
+          createMany: {
+            args: Prisma.AutomationConditionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AutomationConditionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationConditionPayload>[]
+          }
+          delete: {
+            args: Prisma.AutomationConditionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationConditionPayload>
+          }
+          update: {
+            args: Prisma.AutomationConditionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationConditionPayload>
+          }
+          deleteMany: {
+            args: Prisma.AutomationConditionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AutomationConditionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.AutomationConditionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationConditionPayload>
+          }
+          aggregate: {
+            args: Prisma.AutomationConditionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAutomationCondition>
+          }
+          groupBy: {
+            args: Prisma.AutomationConditionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AutomationConditionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AutomationConditionCountArgs<ExtArgs>
+            result: $Utils.Optional<AutomationConditionCountAggregateOutputType> | number
+          }
+        }
+      }
+      AutomationAction: {
+        payload: Prisma.$AutomationActionPayload<ExtArgs>
+        fields: Prisma.AutomationActionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AutomationActionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationActionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AutomationActionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationActionPayload>
+          }
+          findFirst: {
+            args: Prisma.AutomationActionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationActionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AutomationActionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationActionPayload>
+          }
+          findMany: {
+            args: Prisma.AutomationActionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationActionPayload>[]
+          }
+          create: {
+            args: Prisma.AutomationActionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationActionPayload>
+          }
+          createMany: {
+            args: Prisma.AutomationActionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AutomationActionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationActionPayload>[]
+          }
+          delete: {
+            args: Prisma.AutomationActionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationActionPayload>
+          }
+          update: {
+            args: Prisma.AutomationActionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationActionPayload>
+          }
+          deleteMany: {
+            args: Prisma.AutomationActionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AutomationActionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.AutomationActionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationActionPayload>
+          }
+          aggregate: {
+            args: Prisma.AutomationActionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAutomationAction>
+          }
+          groupBy: {
+            args: Prisma.AutomationActionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AutomationActionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AutomationActionCountArgs<ExtArgs>
+            result: $Utils.Optional<AutomationActionCountAggregateOutputType> | number
+          }
+        }
+      }
+      AutomationExecution: {
+        payload: Prisma.$AutomationExecutionPayload<ExtArgs>
+        fields: Prisma.AutomationExecutionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AutomationExecutionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationExecutionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AutomationExecutionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationExecutionPayload>
+          }
+          findFirst: {
+            args: Prisma.AutomationExecutionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationExecutionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AutomationExecutionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationExecutionPayload>
+          }
+          findMany: {
+            args: Prisma.AutomationExecutionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationExecutionPayload>[]
+          }
+          create: {
+            args: Prisma.AutomationExecutionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationExecutionPayload>
+          }
+          createMany: {
+            args: Prisma.AutomationExecutionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AutomationExecutionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationExecutionPayload>[]
+          }
+          delete: {
+            args: Prisma.AutomationExecutionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationExecutionPayload>
+          }
+          update: {
+            args: Prisma.AutomationExecutionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationExecutionPayload>
+          }
+          deleteMany: {
+            args: Prisma.AutomationExecutionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AutomationExecutionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.AutomationExecutionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AutomationExecutionPayload>
+          }
+          aggregate: {
+            args: Prisma.AutomationExecutionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAutomationExecution>
+          }
+          groupBy: {
+            args: Prisma.AutomationExecutionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AutomationExecutionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AutomationExecutionCountArgs<ExtArgs>
+            result: $Utils.Optional<AutomationExecutionCountAggregateOutputType> | number
           }
         }
       }
@@ -2394,7 +2652,7 @@ export namespace Prisma {
     collaborators: number
     mods: number
     snapshots: number
-    scheduledTasks: number
+    automations: number
     plannedSessions: number
     discordRoles: number
   }
@@ -2404,7 +2662,7 @@ export namespace Prisma {
     collaborators?: boolean | ServerCountOutputTypeCountCollaboratorsArgs
     mods?: boolean | ServerCountOutputTypeCountModsArgs
     snapshots?: boolean | ServerCountOutputTypeCountSnapshotsArgs
-    scheduledTasks?: boolean | ServerCountOutputTypeCountScheduledTasksArgs
+    automations?: boolean | ServerCountOutputTypeCountAutomationsArgs
     plannedSessions?: boolean | ServerCountOutputTypeCountPlannedSessionsArgs
     discordRoles?: boolean | ServerCountOutputTypeCountDiscordRolesArgs
   }
@@ -2451,8 +2709,8 @@ export namespace Prisma {
   /**
    * ServerCountOutputType without action
    */
-  export type ServerCountOutputTypeCountScheduledTasksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ScheduledTaskWhereInput
+  export type ServerCountOutputTypeCountAutomationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AutomationWhereInput
   }
 
   /**
@@ -2498,6 +2756,55 @@ export namespace Prisma {
    */
   export type GameDefinitionCountOutputTypeCountServersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ServerWhereInput
+  }
+
+
+  /**
+   * Count Type AutomationCountOutputType
+   */
+
+  export type AutomationCountOutputType = {
+    conditions: number
+    actions: number
+    executions: number
+  }
+
+  export type AutomationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    conditions?: boolean | AutomationCountOutputTypeCountConditionsArgs
+    actions?: boolean | AutomationCountOutputTypeCountActionsArgs
+    executions?: boolean | AutomationCountOutputTypeCountExecutionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * AutomationCountOutputType without action
+   */
+  export type AutomationCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCountOutputType
+     */
+    select?: AutomationCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * AutomationCountOutputType without action
+   */
+  export type AutomationCountOutputTypeCountConditionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AutomationConditionWhereInput
+  }
+
+  /**
+   * AutomationCountOutputType without action
+   */
+  export type AutomationCountOutputTypeCountActionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AutomationActionWhereInput
+  }
+
+  /**
+   * AutomationCountOutputType without action
+   */
+  export type AutomationCountOutputTypeCountExecutionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AutomationExecutionWhereInput
   }
 
 
@@ -5958,7 +6265,7 @@ export namespace Prisma {
     collaborators?: boolean | Server$collaboratorsArgs<ExtArgs>
     mods?: boolean | Server$modsArgs<ExtArgs>
     snapshots?: boolean | Server$snapshotsArgs<ExtArgs>
-    scheduledTasks?: boolean | Server$scheduledTasksArgs<ExtArgs>
+    automations?: boolean | Server$automationsArgs<ExtArgs>
     hostLink?: boolean | Server$hostLinkArgs<ExtArgs>
     plannedSessions?: boolean | Server$plannedSessionsArgs<ExtArgs>
     discordRoles?: boolean | Server$discordRolesArgs<ExtArgs>
@@ -6028,7 +6335,7 @@ export namespace Prisma {
     collaborators?: boolean | Server$collaboratorsArgs<ExtArgs>
     mods?: boolean | Server$modsArgs<ExtArgs>
     snapshots?: boolean | Server$snapshotsArgs<ExtArgs>
-    scheduledTasks?: boolean | Server$scheduledTasksArgs<ExtArgs>
+    automations?: boolean | Server$automationsArgs<ExtArgs>
     hostLink?: boolean | Server$hostLinkArgs<ExtArgs>
     plannedSessions?: boolean | Server$plannedSessionsArgs<ExtArgs>
     discordRoles?: boolean | Server$discordRolesArgs<ExtArgs>
@@ -6048,7 +6355,7 @@ export namespace Prisma {
       collaborators: Prisma.$CollaboratorPayload<ExtArgs>[]
       mods: Prisma.$ModInstallationPayload<ExtArgs>[]
       snapshots: Prisma.$ServerSnapshotPayload<ExtArgs>[]
-      scheduledTasks: Prisma.$ScheduledTaskPayload<ExtArgs>[]
+      automations: Prisma.$AutomationPayload<ExtArgs>[]
       hostLink: Prisma.$ServerHostLinkPayload<ExtArgs> | null
       plannedSessions: Prisma.$PlannedSessionPayload<ExtArgs>[]
       discordRoles: Prisma.$DiscordRoleAccessPayload<ExtArgs>[]
@@ -6448,7 +6755,7 @@ export namespace Prisma {
     collaborators<T extends Server$collaboratorsArgs<ExtArgs> = {}>(args?: Subset<T, Server$collaboratorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CollaboratorPayload<ExtArgs>, T, "findMany"> | Null>
     mods<T extends Server$modsArgs<ExtArgs> = {}>(args?: Subset<T, Server$modsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "findMany"> | Null>
     snapshots<T extends Server$snapshotsArgs<ExtArgs> = {}>(args?: Subset<T, Server$snapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "findMany"> | Null>
-    scheduledTasks<T extends Server$scheduledTasksArgs<ExtArgs> = {}>(args?: Subset<T, Server$scheduledTasksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findMany"> | Null>
+    automations<T extends Server$automationsArgs<ExtArgs> = {}>(args?: Subset<T, Server$automationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findMany"> | Null>
     hostLink<T extends Server$hostLinkArgs<ExtArgs> = {}>(args?: Subset<T, Server$hostLinkArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     plannedSessions<T extends Server$plannedSessionsArgs<ExtArgs> = {}>(args?: Subset<T, Server$plannedSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlannedSessionPayload<ExtArgs>, T, "findMany"> | Null>
     discordRoles<T extends Server$discordRolesArgs<ExtArgs> = {}>(args?: Subset<T, Server$discordRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DiscordRoleAccessPayload<ExtArgs>, T, "findMany"> | Null>
@@ -6916,23 +7223,23 @@ export namespace Prisma {
   }
 
   /**
-   * Server.scheduledTasks
+   * Server.automations
    */
-  export type Server$scheduledTasksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type Server$automationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
-    where?: ScheduledTaskWhereInput
-    orderBy?: ScheduledTaskOrderByWithRelationInput | ScheduledTaskOrderByWithRelationInput[]
-    cursor?: ScheduledTaskWhereUniqueInput
+    include?: AutomationInclude<ExtArgs> | null
+    where?: AutomationWhereInput
+    orderBy?: AutomationOrderByWithRelationInput | AutomationOrderByWithRelationInput[]
+    cursor?: AutomationWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: ScheduledTaskScalarFieldEnum | ScheduledTaskScalarFieldEnum[]
+    distinct?: AutomationScalarFieldEnum | AutomationScalarFieldEnum[]
   }
 
   /**
@@ -16945,437 +17252,403 @@ export namespace Prisma {
 
 
   /**
-   * Model ScheduledTask
+   * Model Automation
    */
 
-  export type AggregateScheduledTask = {
-    _count: ScheduledTaskCountAggregateOutputType | null
-    _avg: ScheduledTaskAvgAggregateOutputType | null
-    _sum: ScheduledTaskSumAggregateOutputType | null
-    _min: ScheduledTaskMinAggregateOutputType | null
-    _max: ScheduledTaskMaxAggregateOutputType | null
+  export type AggregateAutomation = {
+    _count: AutomationCountAggregateOutputType | null
+    _min: AutomationMinAggregateOutputType | null
+    _max: AutomationMaxAggregateOutputType | null
   }
 
-  export type ScheduledTaskAvgAggregateOutputType = {
-    broadcastMin: number | null
-  }
-
-  export type ScheduledTaskSumAggregateOutputType = {
-    broadcastMin: number | null
-  }
-
-  export type ScheduledTaskMinAggregateOutputType = {
+  export type AutomationMinAggregateOutputType = {
     id: string | null
     serverId: string | null
-    action: string | null
-    cronExpression: string | null
+    name: string | null
     enabled: boolean | null
-    broadcastMsg: string | null
-    broadcastMin: number | null
-    lastRunAt: Date | null
-    lastBroadcastAt: Date | null
+    triggerType: string | null
+    triggerConfig: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    lastRunAt: Date | null
+    nextRunAt: Date | null
   }
 
-  export type ScheduledTaskMaxAggregateOutputType = {
+  export type AutomationMaxAggregateOutputType = {
     id: string | null
     serverId: string | null
-    action: string | null
-    cronExpression: string | null
+    name: string | null
     enabled: boolean | null
-    broadcastMsg: string | null
-    broadcastMin: number | null
-    lastRunAt: Date | null
-    lastBroadcastAt: Date | null
+    triggerType: string | null
+    triggerConfig: string | null
     createdAt: Date | null
     updatedAt: Date | null
+    lastRunAt: Date | null
+    nextRunAt: Date | null
   }
 
-  export type ScheduledTaskCountAggregateOutputType = {
+  export type AutomationCountAggregateOutputType = {
     id: number
     serverId: number
-    action: number
-    cronExpression: number
+    name: number
     enabled: number
-    broadcastMsg: number
-    broadcastMin: number
-    lastRunAt: number
-    lastBroadcastAt: number
+    triggerType: number
+    triggerConfig: number
     createdAt: number
     updatedAt: number
+    lastRunAt: number
+    nextRunAt: number
     _all: number
   }
 
 
-  export type ScheduledTaskAvgAggregateInputType = {
-    broadcastMin?: true
-  }
-
-  export type ScheduledTaskSumAggregateInputType = {
-    broadcastMin?: true
-  }
-
-  export type ScheduledTaskMinAggregateInputType = {
+  export type AutomationMinAggregateInputType = {
     id?: true
     serverId?: true
-    action?: true
-    cronExpression?: true
+    name?: true
     enabled?: true
-    broadcastMsg?: true
-    broadcastMin?: true
-    lastRunAt?: true
-    lastBroadcastAt?: true
+    triggerType?: true
+    triggerConfig?: true
     createdAt?: true
     updatedAt?: true
+    lastRunAt?: true
+    nextRunAt?: true
   }
 
-  export type ScheduledTaskMaxAggregateInputType = {
+  export type AutomationMaxAggregateInputType = {
     id?: true
     serverId?: true
-    action?: true
-    cronExpression?: true
+    name?: true
     enabled?: true
-    broadcastMsg?: true
-    broadcastMin?: true
-    lastRunAt?: true
-    lastBroadcastAt?: true
+    triggerType?: true
+    triggerConfig?: true
     createdAt?: true
     updatedAt?: true
+    lastRunAt?: true
+    nextRunAt?: true
   }
 
-  export type ScheduledTaskCountAggregateInputType = {
+  export type AutomationCountAggregateInputType = {
     id?: true
     serverId?: true
-    action?: true
-    cronExpression?: true
+    name?: true
     enabled?: true
-    broadcastMsg?: true
-    broadcastMin?: true
-    lastRunAt?: true
-    lastBroadcastAt?: true
+    triggerType?: true
+    triggerConfig?: true
     createdAt?: true
     updatedAt?: true
+    lastRunAt?: true
+    nextRunAt?: true
     _all?: true
   }
 
-  export type ScheduledTaskAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ScheduledTask to aggregate.
+     * Filter which Automation to aggregate.
      */
-    where?: ScheduledTaskWhereInput
+    where?: AutomationWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScheduledTasks to fetch.
+     * Determine the order of Automations to fetch.
      */
-    orderBy?: ScheduledTaskOrderByWithRelationInput | ScheduledTaskOrderByWithRelationInput[]
+    orderBy?: AutomationOrderByWithRelationInput | AutomationOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
      * Sets the start position
      */
-    cursor?: ScheduledTaskWhereUniqueInput
+    cursor?: AutomationWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScheduledTasks from the position of the cursor.
+     * Take `±n` Automations from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScheduledTasks.
+     * Skip the first `n` Automations.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
-     * Count returned ScheduledTasks
+     * Count returned Automations
     **/
-    _count?: true | ScheduledTaskCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to average
-    **/
-    _avg?: ScheduledTaskAvgAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to sum
-    **/
-    _sum?: ScheduledTaskSumAggregateInputType
+    _count?: true | AutomationCountAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the minimum value
     **/
-    _min?: ScheduledTaskMinAggregateInputType
+    _min?: AutomationMinAggregateInputType
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
      * Select which fields to find the maximum value
     **/
-    _max?: ScheduledTaskMaxAggregateInputType
+    _max?: AutomationMaxAggregateInputType
   }
 
-  export type GetScheduledTaskAggregateType<T extends ScheduledTaskAggregateArgs> = {
-        [P in keyof T & keyof AggregateScheduledTask]: P extends '_count' | 'count'
+  export type GetAutomationAggregateType<T extends AutomationAggregateArgs> = {
+        [P in keyof T & keyof AggregateAutomation]: P extends '_count' | 'count'
       ? T[P] extends true
         ? number
-        : GetScalarType<T[P], AggregateScheduledTask[P]>
-      : GetScalarType<T[P], AggregateScheduledTask[P]>
+        : GetScalarType<T[P], AggregateAutomation[P]>
+      : GetScalarType<T[P], AggregateAutomation[P]>
   }
 
 
 
 
-  export type ScheduledTaskGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ScheduledTaskWhereInput
-    orderBy?: ScheduledTaskOrderByWithAggregationInput | ScheduledTaskOrderByWithAggregationInput[]
-    by: ScheduledTaskScalarFieldEnum[] | ScheduledTaskScalarFieldEnum
-    having?: ScheduledTaskScalarWhereWithAggregatesInput
+  export type AutomationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AutomationWhereInput
+    orderBy?: AutomationOrderByWithAggregationInput | AutomationOrderByWithAggregationInput[]
+    by: AutomationScalarFieldEnum[] | AutomationScalarFieldEnum
+    having?: AutomationScalarWhereWithAggregatesInput
     take?: number
     skip?: number
-    _count?: ScheduledTaskCountAggregateInputType | true
-    _avg?: ScheduledTaskAvgAggregateInputType
-    _sum?: ScheduledTaskSumAggregateInputType
-    _min?: ScheduledTaskMinAggregateInputType
-    _max?: ScheduledTaskMaxAggregateInputType
+    _count?: AutomationCountAggregateInputType | true
+    _min?: AutomationMinAggregateInputType
+    _max?: AutomationMaxAggregateInputType
   }
 
-  export type ScheduledTaskGroupByOutputType = {
+  export type AutomationGroupByOutputType = {
     id: string
     serverId: string
-    action: string
-    cronExpression: string
+    name: string
     enabled: boolean
-    broadcastMsg: string | null
-    broadcastMin: number | null
-    lastRunAt: Date | null
-    lastBroadcastAt: Date | null
+    triggerType: string
+    triggerConfig: string | null
     createdAt: Date
     updatedAt: Date
-    _count: ScheduledTaskCountAggregateOutputType | null
-    _avg: ScheduledTaskAvgAggregateOutputType | null
-    _sum: ScheduledTaskSumAggregateOutputType | null
-    _min: ScheduledTaskMinAggregateOutputType | null
-    _max: ScheduledTaskMaxAggregateOutputType | null
+    lastRunAt: Date | null
+    nextRunAt: Date | null
+    _count: AutomationCountAggregateOutputType | null
+    _min: AutomationMinAggregateOutputType | null
+    _max: AutomationMaxAggregateOutputType | null
   }
 
-  type GetScheduledTaskGroupByPayload<T extends ScheduledTaskGroupByArgs> = Prisma.PrismaPromise<
+  type GetAutomationGroupByPayload<T extends AutomationGroupByArgs> = Prisma.PrismaPromise<
     Array<
-      PickEnumerable<ScheduledTaskGroupByOutputType, T['by']> &
+      PickEnumerable<AutomationGroupByOutputType, T['by']> &
         {
-          [P in ((keyof T) & (keyof ScheduledTaskGroupByOutputType))]: P extends '_count'
+          [P in ((keyof T) & (keyof AutomationGroupByOutputType))]: P extends '_count'
             ? T[P] extends boolean
               ? number
-              : GetScalarType<T[P], ScheduledTaskGroupByOutputType[P]>
-            : GetScalarType<T[P], ScheduledTaskGroupByOutputType[P]>
+              : GetScalarType<T[P], AutomationGroupByOutputType[P]>
+            : GetScalarType<T[P], AutomationGroupByOutputType[P]>
         }
       >
     >
 
 
-  export type ScheduledTaskSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type AutomationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     serverId?: boolean
-    action?: boolean
-    cronExpression?: boolean
+    name?: boolean
     enabled?: boolean
-    broadcastMsg?: boolean
-    broadcastMin?: boolean
-    lastRunAt?: boolean
-    lastBroadcastAt?: boolean
+    triggerType?: boolean
+    triggerConfig?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    lastRunAt?: boolean
+    nextRunAt?: boolean
     server?: boolean | ServerDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["scheduledTask"]>
+    conditions?: boolean | Automation$conditionsArgs<ExtArgs>
+    actions?: boolean | Automation$actionsArgs<ExtArgs>
+    executions?: boolean | Automation$executionsArgs<ExtArgs>
+    _count?: boolean | AutomationCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["automation"]>
 
-  export type ScheduledTaskSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+  export type AutomationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     serverId?: boolean
-    action?: boolean
-    cronExpression?: boolean
+    name?: boolean
     enabled?: boolean
-    broadcastMsg?: boolean
-    broadcastMin?: boolean
-    lastRunAt?: boolean
-    lastBroadcastAt?: boolean
+    triggerType?: boolean
+    triggerConfig?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    lastRunAt?: boolean
+    nextRunAt?: boolean
     server?: boolean | ServerDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["scheduledTask"]>
+  }, ExtArgs["result"]["automation"]>
 
-  export type ScheduledTaskSelectScalar = {
+  export type AutomationSelectScalar = {
     id?: boolean
     serverId?: boolean
-    action?: boolean
-    cronExpression?: boolean
+    name?: boolean
     enabled?: boolean
-    broadcastMsg?: boolean
-    broadcastMin?: boolean
-    lastRunAt?: boolean
-    lastBroadcastAt?: boolean
+    triggerType?: boolean
+    triggerConfig?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    lastRunAt?: boolean
+    nextRunAt?: boolean
   }
 
-  export type ScheduledTaskInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     server?: boolean | ServerDefaultArgs<ExtArgs>
+    conditions?: boolean | Automation$conditionsArgs<ExtArgs>
+    actions?: boolean | Automation$actionsArgs<ExtArgs>
+    executions?: boolean | Automation$executionsArgs<ExtArgs>
+    _count?: boolean | AutomationCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type ScheduledTaskIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     server?: boolean | ServerDefaultArgs<ExtArgs>
   }
 
-  export type $ScheduledTaskPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "ScheduledTask"
+  export type $AutomationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Automation"
     objects: {
       server: Prisma.$ServerPayload<ExtArgs>
+      conditions: Prisma.$AutomationConditionPayload<ExtArgs>[]
+      actions: Prisma.$AutomationActionPayload<ExtArgs>[]
+      executions: Prisma.$AutomationExecutionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       serverId: string
-      action: string
-      cronExpression: string
+      name: string
       enabled: boolean
-      broadcastMsg: string | null
-      broadcastMin: number | null
-      lastRunAt: Date | null
-      lastBroadcastAt: Date | null
+      triggerType: string
+      triggerConfig: string | null
       createdAt: Date
       updatedAt: Date
-    }, ExtArgs["result"]["scheduledTask"]>
+      lastRunAt: Date | null
+      nextRunAt: Date | null
+    }, ExtArgs["result"]["automation"]>
     composites: {}
   }
 
-  type ScheduledTaskGetPayload<S extends boolean | null | undefined | ScheduledTaskDefaultArgs> = $Result.GetResult<Prisma.$ScheduledTaskPayload, S>
+  type AutomationGetPayload<S extends boolean | null | undefined | AutomationDefaultArgs> = $Result.GetResult<Prisma.$AutomationPayload, S>
 
-  type ScheduledTaskCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
-    Omit<ScheduledTaskFindManyArgs, 'select' | 'include' | 'distinct'> & {
-      select?: ScheduledTaskCountAggregateInputType | true
+  type AutomationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<AutomationFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: AutomationCountAggregateInputType | true
     }
 
-  export interface ScheduledTaskDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ScheduledTask'], meta: { name: 'ScheduledTask' } }
+  export interface AutomationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Automation'], meta: { name: 'Automation' } }
     /**
-     * Find zero or one ScheduledTask that matches the filter.
-     * @param {ScheduledTaskFindUniqueArgs} args - Arguments to find a ScheduledTask
+     * Find zero or one Automation that matches the filter.
+     * @param {AutomationFindUniqueArgs} args - Arguments to find a Automation
      * @example
-     * // Get one ScheduledTask
-     * const scheduledTask = await prisma.scheduledTask.findUnique({
+     * // Get one Automation
+     * const automation = await prisma.automation.findUnique({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUnique<T extends ScheduledTaskFindUniqueArgs>(args: SelectSubset<T, ScheduledTaskFindUniqueArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+    findUnique<T extends AutomationFindUniqueArgs>(args: SelectSubset<T, AutomationFindUniqueArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
 
     /**
-     * Find one ScheduledTask that matches the filter or throw an error with `error.code='P2025'` 
+     * Find one Automation that matches the filter or throw an error with `error.code='P2025'` 
      * if no matches were found.
-     * @param {ScheduledTaskFindUniqueOrThrowArgs} args - Arguments to find a ScheduledTask
+     * @param {AutomationFindUniqueOrThrowArgs} args - Arguments to find a Automation
      * @example
-     * // Get one ScheduledTask
-     * const scheduledTask = await prisma.scheduledTask.findUniqueOrThrow({
+     * // Get one Automation
+     * const automation = await prisma.automation.findUniqueOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findUniqueOrThrow<T extends ScheduledTaskFindUniqueOrThrowArgs>(args: SelectSubset<T, ScheduledTaskFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+    findUniqueOrThrow<T extends AutomationFindUniqueOrThrowArgs>(args: SelectSubset<T, AutomationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
 
     /**
-     * Find the first ScheduledTask that matches the filter.
+     * Find the first Automation that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScheduledTaskFindFirstArgs} args - Arguments to find a ScheduledTask
+     * @param {AutomationFindFirstArgs} args - Arguments to find a Automation
      * @example
-     * // Get one ScheduledTask
-     * const scheduledTask = await prisma.scheduledTask.findFirst({
+     * // Get one Automation
+     * const automation = await prisma.automation.findFirst({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirst<T extends ScheduledTaskFindFirstArgs>(args?: SelectSubset<T, ScheduledTaskFindFirstArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+    findFirst<T extends AutomationFindFirstArgs>(args?: SelectSubset<T, AutomationFindFirstArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
 
     /**
-     * Find the first ScheduledTask that matches the filter or
+     * Find the first Automation that matches the filter or
      * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScheduledTaskFindFirstOrThrowArgs} args - Arguments to find a ScheduledTask
+     * @param {AutomationFindFirstOrThrowArgs} args - Arguments to find a Automation
      * @example
-     * // Get one ScheduledTask
-     * const scheduledTask = await prisma.scheduledTask.findFirstOrThrow({
+     * // Get one Automation
+     * const automation = await prisma.automation.findFirstOrThrow({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      */
-    findFirstOrThrow<T extends ScheduledTaskFindFirstOrThrowArgs>(args?: SelectSubset<T, ScheduledTaskFindFirstOrThrowArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+    findFirstOrThrow<T extends AutomationFindFirstOrThrowArgs>(args?: SelectSubset<T, AutomationFindFirstOrThrowArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
 
     /**
-     * Find zero or more ScheduledTasks that matches the filter.
+     * Find zero or more Automations that matches the filter.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScheduledTaskFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @param {AutomationFindManyArgs} args - Arguments to filter and select certain fields only.
      * @example
-     * // Get all ScheduledTasks
-     * const scheduledTasks = await prisma.scheduledTask.findMany()
+     * // Get all Automations
+     * const automations = await prisma.automation.findMany()
      * 
-     * // Get first 10 ScheduledTasks
-     * const scheduledTasks = await prisma.scheduledTask.findMany({ take: 10 })
+     * // Get first 10 Automations
+     * const automations = await prisma.automation.findMany({ take: 10 })
      * 
      * // Only select the `id`
-     * const scheduledTaskWithIdOnly = await prisma.scheduledTask.findMany({ select: { id: true } })
+     * const automationWithIdOnly = await prisma.automation.findMany({ select: { id: true } })
      * 
      */
-    findMany<T extends ScheduledTaskFindManyArgs>(args?: SelectSubset<T, ScheduledTaskFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "findMany">>
+    findMany<T extends AutomationFindManyArgs>(args?: SelectSubset<T, AutomationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findMany">>
 
     /**
-     * Create a ScheduledTask.
-     * @param {ScheduledTaskCreateArgs} args - Arguments to create a ScheduledTask.
+     * Create a Automation.
+     * @param {AutomationCreateArgs} args - Arguments to create a Automation.
      * @example
-     * // Create one ScheduledTask
-     * const ScheduledTask = await prisma.scheduledTask.create({
+     * // Create one Automation
+     * const Automation = await prisma.automation.create({
      *   data: {
-     *     // ... data to create a ScheduledTask
+     *     // ... data to create a Automation
      *   }
      * })
      * 
      */
-    create<T extends ScheduledTaskCreateArgs>(args: SelectSubset<T, ScheduledTaskCreateArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "create">, never, ExtArgs>
+    create<T extends AutomationCreateArgs>(args: SelectSubset<T, AutomationCreateArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "create">, never, ExtArgs>
 
     /**
-     * Create many ScheduledTasks.
-     * @param {ScheduledTaskCreateManyArgs} args - Arguments to create many ScheduledTasks.
+     * Create many Automations.
+     * @param {AutomationCreateManyArgs} args - Arguments to create many Automations.
      * @example
-     * // Create many ScheduledTasks
-     * const scheduledTask = await prisma.scheduledTask.createMany({
+     * // Create many Automations
+     * const automation = await prisma.automation.createMany({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      *     
      */
-    createMany<T extends ScheduledTaskCreateManyArgs>(args?: SelectSubset<T, ScheduledTaskCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    createMany<T extends AutomationCreateManyArgs>(args?: SelectSubset<T, AutomationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many ScheduledTasks and returns the data saved in the database.
-     * @param {ScheduledTaskCreateManyAndReturnArgs} args - Arguments to create many ScheduledTasks.
+     * Create many Automations and returns the data saved in the database.
+     * @param {AutomationCreateManyAndReturnArgs} args - Arguments to create many Automations.
      * @example
-     * // Create many ScheduledTasks
-     * const scheduledTask = await prisma.scheduledTask.createManyAndReturn({
+     * // Create many Automations
+     * const automation = await prisma.automation.createManyAndReturn({
      *   data: [
      *     // ... provide data here
      *   ]
      * })
      * 
-     * // Create many ScheduledTasks and only return the `id`
-     * const scheduledTaskWithIdOnly = await prisma.scheduledTask.createManyAndReturn({ 
+     * // Create many Automations and only return the `id`
+     * const automationWithIdOnly = await prisma.automation.createManyAndReturn({ 
      *   select: { id: true },
      *   data: [
      *     // ... provide data here
@@ -17385,28 +17658,28 @@ export namespace Prisma {
      * Read more here: https://pris.ly/d/null-undefined
      * 
      */
-    createManyAndReturn<T extends ScheduledTaskCreateManyAndReturnArgs>(args?: SelectSubset<T, ScheduledTaskCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "createManyAndReturn">>
+    createManyAndReturn<T extends AutomationCreateManyAndReturnArgs>(args?: SelectSubset<T, AutomationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "createManyAndReturn">>
 
     /**
-     * Delete a ScheduledTask.
-     * @param {ScheduledTaskDeleteArgs} args - Arguments to delete one ScheduledTask.
+     * Delete a Automation.
+     * @param {AutomationDeleteArgs} args - Arguments to delete one Automation.
      * @example
-     * // Delete one ScheduledTask
-     * const ScheduledTask = await prisma.scheduledTask.delete({
+     * // Delete one Automation
+     * const Automation = await prisma.automation.delete({
      *   where: {
-     *     // ... filter to delete one ScheduledTask
+     *     // ... filter to delete one Automation
      *   }
      * })
      * 
      */
-    delete<T extends ScheduledTaskDeleteArgs>(args: SelectSubset<T, ScheduledTaskDeleteArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+    delete<T extends AutomationDeleteArgs>(args: SelectSubset<T, AutomationDeleteArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "delete">, never, ExtArgs>
 
     /**
-     * Update one ScheduledTask.
-     * @param {ScheduledTaskUpdateArgs} args - Arguments to update one ScheduledTask.
+     * Update one Automation.
+     * @param {AutomationUpdateArgs} args - Arguments to update one Automation.
      * @example
-     * // Update one ScheduledTask
-     * const scheduledTask = await prisma.scheduledTask.update({
+     * // Update one Automation
+     * const automation = await prisma.automation.update({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -17416,30 +17689,30 @@ export namespace Prisma {
      * })
      * 
      */
-    update<T extends ScheduledTaskUpdateArgs>(args: SelectSubset<T, ScheduledTaskUpdateArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "update">, never, ExtArgs>
+    update<T extends AutomationUpdateArgs>(args: SelectSubset<T, AutomationUpdateArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "update">, never, ExtArgs>
 
     /**
-     * Delete zero or more ScheduledTasks.
-     * @param {ScheduledTaskDeleteManyArgs} args - Arguments to filter ScheduledTasks to delete.
+     * Delete zero or more Automations.
+     * @param {AutomationDeleteManyArgs} args - Arguments to filter Automations to delete.
      * @example
-     * // Delete a few ScheduledTasks
-     * const { count } = await prisma.scheduledTask.deleteMany({
+     * // Delete a few Automations
+     * const { count } = await prisma.automation.deleteMany({
      *   where: {
      *     // ... provide filter here
      *   }
      * })
      * 
      */
-    deleteMany<T extends ScheduledTaskDeleteManyArgs>(args?: SelectSubset<T, ScheduledTaskDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    deleteMany<T extends AutomationDeleteManyArgs>(args?: SelectSubset<T, AutomationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more ScheduledTasks.
+     * Update zero or more Automations.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScheduledTaskUpdateManyArgs} args - Arguments to update one or more rows.
+     * @param {AutomationUpdateManyArgs} args - Arguments to update one or more rows.
      * @example
-     * // Update many ScheduledTasks
-     * const scheduledTask = await prisma.scheduledTask.updateMany({
+     * // Update many Automations
+     * const automation = await prisma.automation.updateMany({
      *   where: {
      *     // ... provide filter here
      *   },
@@ -17449,56 +17722,56 @@ export namespace Prisma {
      * })
      * 
      */
-    updateMany<T extends ScheduledTaskUpdateManyArgs>(args: SelectSubset<T, ScheduledTaskUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+    updateMany<T extends AutomationUpdateManyArgs>(args: SelectSubset<T, AutomationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create or update one ScheduledTask.
-     * @param {ScheduledTaskUpsertArgs} args - Arguments to update or create a ScheduledTask.
+     * Create or update one Automation.
+     * @param {AutomationUpsertArgs} args - Arguments to update or create a Automation.
      * @example
-     * // Update or create a ScheduledTask
-     * const scheduledTask = await prisma.scheduledTask.upsert({
+     * // Update or create a Automation
+     * const automation = await prisma.automation.upsert({
      *   create: {
-     *     // ... data to create a ScheduledTask
+     *     // ... data to create a Automation
      *   },
      *   update: {
      *     // ... in case it already exists, update
      *   },
      *   where: {
-     *     // ... the filter for the ScheduledTask we want to update
+     *     // ... the filter for the Automation we want to update
      *   }
      * })
      */
-    upsert<T extends ScheduledTaskUpsertArgs>(args: SelectSubset<T, ScheduledTaskUpsertArgs<ExtArgs>>): Prisma__ScheduledTaskClient<$Result.GetResult<Prisma.$ScheduledTaskPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+    upsert<T extends AutomationUpsertArgs>(args: SelectSubset<T, AutomationUpsertArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
 
 
     /**
-     * Count the number of ScheduledTasks.
+     * Count the number of Automations.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScheduledTaskCountArgs} args - Arguments to filter ScheduledTasks to count.
+     * @param {AutomationCountArgs} args - Arguments to filter Automations to count.
      * @example
-     * // Count the number of ScheduledTasks
-     * const count = await prisma.scheduledTask.count({
+     * // Count the number of Automations
+     * const count = await prisma.automation.count({
      *   where: {
-     *     // ... the filter for the ScheduledTasks we want to count
+     *     // ... the filter for the Automations we want to count
      *   }
      * })
     **/
-    count<T extends ScheduledTaskCountArgs>(
-      args?: Subset<T, ScheduledTaskCountArgs>,
+    count<T extends AutomationCountArgs>(
+      args?: Subset<T, AutomationCountArgs>,
     ): Prisma.PrismaPromise<
       T extends $Utils.Record<'select', any>
         ? T['select'] extends true
           ? number
-          : GetScalarType<T['select'], ScheduledTaskCountAggregateOutputType>
+          : GetScalarType<T['select'], AutomationCountAggregateOutputType>
         : number
     >
 
     /**
-     * Allows you to perform aggregations operations on a ScheduledTask.
+     * Allows you to perform aggregations operations on a Automation.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScheduledTaskAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @param {AutomationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
      * @example
      * // Ordered by age ascending
      * // Where email contains prisma.io
@@ -17518,13 +17791,13 @@ export namespace Prisma {
      *   take: 10,
      * })
     **/
-    aggregate<T extends ScheduledTaskAggregateArgs>(args: Subset<T, ScheduledTaskAggregateArgs>): Prisma.PrismaPromise<GetScheduledTaskAggregateType<T>>
+    aggregate<T extends AutomationAggregateArgs>(args: Subset<T, AutomationAggregateArgs>): Prisma.PrismaPromise<GetAutomationAggregateType<T>>
 
     /**
-     * Group by ScheduledTask.
+     * Group by Automation.
      * Note, that providing `undefined` is treated as the value not being there.
      * Read more here: https://pris.ly/d/null-undefined
-     * @param {ScheduledTaskGroupByArgs} args - Group by arguments.
+     * @param {AutomationGroupByArgs} args - Group by arguments.
      * @example
      * // Group by city, order by createdAt, get count
      * const result = await prisma.user.groupBy({
@@ -17539,14 +17812,14 @@ export namespace Prisma {
      * 
     **/
     groupBy<
-      T extends ScheduledTaskGroupByArgs,
+      T extends AutomationGroupByArgs,
       HasSelectOrTake extends Or<
         Extends<'skip', Keys<T>>,
         Extends<'take', Keys<T>>
       >,
       OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: ScheduledTaskGroupByArgs['orderBy'] }
-        : { orderBy?: ScheduledTaskGroupByArgs['orderBy'] },
+        ? { orderBy: AutomationGroupByArgs['orderBy'] }
+        : { orderBy?: AutomationGroupByArgs['orderBy'] },
       OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
       ByFields extends MaybeTupleToUnion<T['by']>,
       ByValid extends Has<ByFields, OrderFields>,
@@ -17595,22 +17868,25 @@ export namespace Prisma {
             ? never
             : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
         }[OrderFields]
-    >(args: SubsetIntersection<T, ScheduledTaskGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetScheduledTaskGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+    >(args: SubsetIntersection<T, AutomationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAutomationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
   /**
-   * Fields of the ScheduledTask model
+   * Fields of the Automation model
    */
-  readonly fields: ScheduledTaskFieldRefs;
+  readonly fields: AutomationFieldRefs;
   }
 
   /**
-   * The delegate class that acts as a "Promise-like" for ScheduledTask.
+   * The delegate class that acts as a "Promise-like" for Automation.
    * Why is this prefixed with `Prisma__`?
    * Because we want to prevent naming conflicts as mentioned in
    * https://github.com/prisma/prisma-client-js/issues/707
    */
-  export interface Prisma__ScheduledTaskClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+  export interface Prisma__AutomationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     server<T extends ServerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServerDefaultArgs<ExtArgs>>): Prisma__ServerClient<$Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    conditions<T extends Automation$conditionsArgs<ExtArgs> = {}>(args?: Subset<T, Automation$conditionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "findMany"> | Null>
+    actions<T extends Automation$actionsArgs<ExtArgs> = {}>(args?: Subset<T, Automation$actionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "findMany"> | Null>
+    executions<T extends Automation$executionsArgs<ExtArgs> = {}>(args?: Subset<T, Automation$executionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -17637,347 +17913,3245 @@ export namespace Prisma {
 
 
   /**
-   * Fields of the ScheduledTask model
+   * Fields of the Automation model
    */ 
-  interface ScheduledTaskFieldRefs {
-    readonly id: FieldRef<"ScheduledTask", 'String'>
-    readonly serverId: FieldRef<"ScheduledTask", 'String'>
-    readonly action: FieldRef<"ScheduledTask", 'String'>
-    readonly cronExpression: FieldRef<"ScheduledTask", 'String'>
-    readonly enabled: FieldRef<"ScheduledTask", 'Boolean'>
-    readonly broadcastMsg: FieldRef<"ScheduledTask", 'String'>
-    readonly broadcastMin: FieldRef<"ScheduledTask", 'Int'>
-    readonly lastRunAt: FieldRef<"ScheduledTask", 'DateTime'>
-    readonly lastBroadcastAt: FieldRef<"ScheduledTask", 'DateTime'>
-    readonly createdAt: FieldRef<"ScheduledTask", 'DateTime'>
-    readonly updatedAt: FieldRef<"ScheduledTask", 'DateTime'>
+  interface AutomationFieldRefs {
+    readonly id: FieldRef<"Automation", 'String'>
+    readonly serverId: FieldRef<"Automation", 'String'>
+    readonly name: FieldRef<"Automation", 'String'>
+    readonly enabled: FieldRef<"Automation", 'Boolean'>
+    readonly triggerType: FieldRef<"Automation", 'String'>
+    readonly triggerConfig: FieldRef<"Automation", 'String'>
+    readonly createdAt: FieldRef<"Automation", 'DateTime'>
+    readonly updatedAt: FieldRef<"Automation", 'DateTime'>
+    readonly lastRunAt: FieldRef<"Automation", 'DateTime'>
+    readonly nextRunAt: FieldRef<"Automation", 'DateTime'>
   }
     
 
   // Custom InputTypes
   /**
-   * ScheduledTask findUnique
+   * Automation findUnique
    */
-  export type ScheduledTaskFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
+    include?: AutomationInclude<ExtArgs> | null
     /**
-     * Filter, which ScheduledTask to fetch.
+     * Filter, which Automation to fetch.
      */
-    where: ScheduledTaskWhereUniqueInput
+    where: AutomationWhereUniqueInput
   }
 
   /**
-   * ScheduledTask findUniqueOrThrow
+   * Automation findUniqueOrThrow
    */
-  export type ScheduledTaskFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
+    include?: AutomationInclude<ExtArgs> | null
     /**
-     * Filter, which ScheduledTask to fetch.
+     * Filter, which Automation to fetch.
      */
-    where: ScheduledTaskWhereUniqueInput
+    where: AutomationWhereUniqueInput
   }
 
   /**
-   * ScheduledTask findFirst
+   * Automation findFirst
    */
-  export type ScheduledTaskFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
+    include?: AutomationInclude<ExtArgs> | null
     /**
-     * Filter, which ScheduledTask to fetch.
+     * Filter, which Automation to fetch.
      */
-    where?: ScheduledTaskWhereInput
+    where?: AutomationWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScheduledTasks to fetch.
+     * Determine the order of Automations to fetch.
      */
-    orderBy?: ScheduledTaskOrderByWithRelationInput | ScheduledTaskOrderByWithRelationInput[]
+    orderBy?: AutomationOrderByWithRelationInput | AutomationOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ScheduledTasks.
+     * Sets the position for searching for Automations.
      */
-    cursor?: ScheduledTaskWhereUniqueInput
+    cursor?: AutomationWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScheduledTasks from the position of the cursor.
+     * Take `±n` Automations from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScheduledTasks.
+     * Skip the first `n` Automations.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ScheduledTasks.
+     * Filter by unique combinations of Automations.
      */
-    distinct?: ScheduledTaskScalarFieldEnum | ScheduledTaskScalarFieldEnum[]
+    distinct?: AutomationScalarFieldEnum | AutomationScalarFieldEnum[]
   }
 
   /**
-   * ScheduledTask findFirstOrThrow
+   * Automation findFirstOrThrow
    */
-  export type ScheduledTaskFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
+    include?: AutomationInclude<ExtArgs> | null
     /**
-     * Filter, which ScheduledTask to fetch.
+     * Filter, which Automation to fetch.
      */
-    where?: ScheduledTaskWhereInput
+    where?: AutomationWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScheduledTasks to fetch.
+     * Determine the order of Automations to fetch.
      */
-    orderBy?: ScheduledTaskOrderByWithRelationInput | ScheduledTaskOrderByWithRelationInput[]
+    orderBy?: AutomationOrderByWithRelationInput | AutomationOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for searching for ScheduledTasks.
+     * Sets the position for searching for Automations.
      */
-    cursor?: ScheduledTaskWhereUniqueInput
+    cursor?: AutomationWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScheduledTasks from the position of the cursor.
+     * Take `±n` Automations from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScheduledTasks.
+     * Skip the first `n` Automations.
      */
     skip?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
      * 
-     * Filter by unique combinations of ScheduledTasks.
+     * Filter by unique combinations of Automations.
      */
-    distinct?: ScheduledTaskScalarFieldEnum | ScheduledTaskScalarFieldEnum[]
+    distinct?: AutomationScalarFieldEnum | AutomationScalarFieldEnum[]
   }
 
   /**
-   * ScheduledTask findMany
+   * Automation findMany
    */
-  export type ScheduledTaskFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
+    include?: AutomationInclude<ExtArgs> | null
     /**
-     * Filter, which ScheduledTasks to fetch.
+     * Filter, which Automations to fetch.
      */
-    where?: ScheduledTaskWhereInput
+    where?: AutomationWhereInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
      * 
-     * Determine the order of ScheduledTasks to fetch.
+     * Determine the order of Automations to fetch.
      */
-    orderBy?: ScheduledTaskOrderByWithRelationInput | ScheduledTaskOrderByWithRelationInput[]
+    orderBy?: AutomationOrderByWithRelationInput | AutomationOrderByWithRelationInput[]
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
      * 
-     * Sets the position for listing ScheduledTasks.
+     * Sets the position for listing Automations.
      */
-    cursor?: ScheduledTaskWhereUniqueInput
+    cursor?: AutomationWhereUniqueInput
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Take `±n` ScheduledTasks from the position of the cursor.
+     * Take `±n` Automations from the position of the cursor.
      */
     take?: number
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
      * 
-     * Skip the first `n` ScheduledTasks.
+     * Skip the first `n` Automations.
      */
     skip?: number
-    distinct?: ScheduledTaskScalarFieldEnum | ScheduledTaskScalarFieldEnum[]
+    distinct?: AutomationScalarFieldEnum | AutomationScalarFieldEnum[]
   }
 
   /**
-   * ScheduledTask create
+   * Automation create
    */
-  export type ScheduledTaskCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
+    include?: AutomationInclude<ExtArgs> | null
     /**
-     * The data needed to create a ScheduledTask.
+     * The data needed to create a Automation.
      */
-    data: XOR<ScheduledTaskCreateInput, ScheduledTaskUncheckedCreateInput>
+    data: XOR<AutomationCreateInput, AutomationUncheckedCreateInput>
   }
 
   /**
-   * ScheduledTask createMany
+   * Automation createMany
    */
-  export type ScheduledTaskCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to create many ScheduledTasks.
+     * The data used to create many Automations.
      */
-    data: ScheduledTaskCreateManyInput | ScheduledTaskCreateManyInput[]
+    data: AutomationCreateManyInput | AutomationCreateManyInput[]
   }
 
   /**
-   * ScheduledTask createManyAndReturn
+   * Automation createManyAndReturn
    */
-  export type ScheduledTaskCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelectCreateManyAndReturn<ExtArgs> | null
+    select?: AutomationSelectCreateManyAndReturn<ExtArgs> | null
     /**
-     * The data used to create many ScheduledTasks.
+     * The data used to create many Automations.
      */
-    data: ScheduledTaskCreateManyInput | ScheduledTaskCreateManyInput[]
+    data: AutomationCreateManyInput | AutomationCreateManyInput[]
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskIncludeCreateManyAndReturn<ExtArgs> | null
+    include?: AutomationIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
-   * ScheduledTask update
+   * Automation update
    */
-  export type ScheduledTaskUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
+    include?: AutomationInclude<ExtArgs> | null
     /**
-     * The data needed to update a ScheduledTask.
+     * The data needed to update a Automation.
      */
-    data: XOR<ScheduledTaskUpdateInput, ScheduledTaskUncheckedUpdateInput>
+    data: XOR<AutomationUpdateInput, AutomationUncheckedUpdateInput>
     /**
-     * Choose, which ScheduledTask to update.
+     * Choose, which Automation to update.
      */
-    where: ScheduledTaskWhereUniqueInput
+    where: AutomationWhereUniqueInput
   }
 
   /**
-   * ScheduledTask updateMany
+   * Automation updateMany
    */
-  export type ScheduledTaskUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * The data used to update ScheduledTasks.
+     * The data used to update Automations.
      */
-    data: XOR<ScheduledTaskUpdateManyMutationInput, ScheduledTaskUncheckedUpdateManyInput>
+    data: XOR<AutomationUpdateManyMutationInput, AutomationUncheckedUpdateManyInput>
     /**
-     * Filter which ScheduledTasks to update
+     * Filter which Automations to update
      */
-    where?: ScheduledTaskWhereInput
+    where?: AutomationWhereInput
   }
 
   /**
-   * ScheduledTask upsert
+   * Automation upsert
    */
-  export type ScheduledTaskUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
+    include?: AutomationInclude<ExtArgs> | null
     /**
-     * The filter to search for the ScheduledTask to update in case it exists.
+     * The filter to search for the Automation to update in case it exists.
      */
-    where: ScheduledTaskWhereUniqueInput
+    where: AutomationWhereUniqueInput
     /**
-     * In case the ScheduledTask found by the `where` argument doesn't exist, create a new ScheduledTask with this data.
+     * In case the Automation found by the `where` argument doesn't exist, create a new Automation with this data.
      */
-    create: XOR<ScheduledTaskCreateInput, ScheduledTaskUncheckedCreateInput>
+    create: XOR<AutomationCreateInput, AutomationUncheckedCreateInput>
     /**
-     * In case the ScheduledTask was found with the provided `where` argument, update it with this data.
+     * In case the Automation was found with the provided `where` argument, update it with this data.
      */
-    update: XOR<ScheduledTaskUpdateInput, ScheduledTaskUncheckedUpdateInput>
+    update: XOR<AutomationUpdateInput, AutomationUncheckedUpdateInput>
   }
 
   /**
-   * ScheduledTask delete
+   * Automation delete
    */
-  export type ScheduledTaskDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the Automation
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
+    include?: AutomationInclude<ExtArgs> | null
     /**
-     * Filter which ScheduledTask to delete.
+     * Filter which Automation to delete.
      */
-    where: ScheduledTaskWhereUniqueInput
+    where: AutomationWhereUniqueInput
   }
 
   /**
-   * ScheduledTask deleteMany
+   * Automation deleteMany
    */
-  export type ScheduledTaskDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type AutomationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Filter which ScheduledTasks to delete
+     * Filter which Automations to delete
      */
-    where?: ScheduledTaskWhereInput
+    where?: AutomationWhereInput
   }
 
   /**
-   * ScheduledTask without action
+   * Automation.conditions
    */
-  export type ScheduledTaskDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type Automation$conditionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ScheduledTask
+     * Select specific fields to fetch from the AutomationCondition
      */
-    select?: ScheduledTaskSelect<ExtArgs> | null
+    select?: AutomationConditionSelect<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ScheduledTaskInclude<ExtArgs> | null
+    include?: AutomationConditionInclude<ExtArgs> | null
+    where?: AutomationConditionWhereInput
+    orderBy?: AutomationConditionOrderByWithRelationInput | AutomationConditionOrderByWithRelationInput[]
+    cursor?: AutomationConditionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AutomationConditionScalarFieldEnum | AutomationConditionScalarFieldEnum[]
+  }
+
+  /**
+   * Automation.actions
+   */
+  export type Automation$actionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+    where?: AutomationActionWhereInput
+    orderBy?: AutomationActionOrderByWithRelationInput | AutomationActionOrderByWithRelationInput[]
+    cursor?: AutomationActionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AutomationActionScalarFieldEnum | AutomationActionScalarFieldEnum[]
+  }
+
+  /**
+   * Automation.executions
+   */
+  export type Automation$executionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
+    where?: AutomationExecutionWhereInput
+    orderBy?: AutomationExecutionOrderByWithRelationInput | AutomationExecutionOrderByWithRelationInput[]
+    cursor?: AutomationExecutionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: AutomationExecutionScalarFieldEnum | AutomationExecutionScalarFieldEnum[]
+  }
+
+  /**
+   * Automation without action
+   */
+  export type AutomationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Automation
+     */
+    select?: AutomationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AutomationCondition
+   */
+
+  export type AggregateAutomationCondition = {
+    _count: AutomationConditionCountAggregateOutputType | null
+    _min: AutomationConditionMinAggregateOutputType | null
+    _max: AutomationConditionMaxAggregateOutputType | null
+  }
+
+  export type AutomationConditionMinAggregateOutputType = {
+    id: string | null
+    automationId: string | null
+    type: string | null
+    operator: string | null
+    value: string | null
+  }
+
+  export type AutomationConditionMaxAggregateOutputType = {
+    id: string | null
+    automationId: string | null
+    type: string | null
+    operator: string | null
+    value: string | null
+  }
+
+  export type AutomationConditionCountAggregateOutputType = {
+    id: number
+    automationId: number
+    type: number
+    operator: number
+    value: number
+    _all: number
+  }
+
+
+  export type AutomationConditionMinAggregateInputType = {
+    id?: true
+    automationId?: true
+    type?: true
+    operator?: true
+    value?: true
+  }
+
+  export type AutomationConditionMaxAggregateInputType = {
+    id?: true
+    automationId?: true
+    type?: true
+    operator?: true
+    value?: true
+  }
+
+  export type AutomationConditionCountAggregateInputType = {
+    id?: true
+    automationId?: true
+    type?: true
+    operator?: true
+    value?: true
+    _all?: true
+  }
+
+  export type AutomationConditionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AutomationCondition to aggregate.
+     */
+    where?: AutomationConditionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationConditions to fetch.
+     */
+    orderBy?: AutomationConditionOrderByWithRelationInput | AutomationConditionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AutomationConditionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationConditions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationConditions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AutomationConditions
+    **/
+    _count?: true | AutomationConditionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AutomationConditionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AutomationConditionMaxAggregateInputType
+  }
+
+  export type GetAutomationConditionAggregateType<T extends AutomationConditionAggregateArgs> = {
+        [P in keyof T & keyof AggregateAutomationCondition]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAutomationCondition[P]>
+      : GetScalarType<T[P], AggregateAutomationCondition[P]>
+  }
+
+
+
+
+  export type AutomationConditionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AutomationConditionWhereInput
+    orderBy?: AutomationConditionOrderByWithAggregationInput | AutomationConditionOrderByWithAggregationInput[]
+    by: AutomationConditionScalarFieldEnum[] | AutomationConditionScalarFieldEnum
+    having?: AutomationConditionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AutomationConditionCountAggregateInputType | true
+    _min?: AutomationConditionMinAggregateInputType
+    _max?: AutomationConditionMaxAggregateInputType
+  }
+
+  export type AutomationConditionGroupByOutputType = {
+    id: string
+    automationId: string
+    type: string
+    operator: string
+    value: string
+    _count: AutomationConditionCountAggregateOutputType | null
+    _min: AutomationConditionMinAggregateOutputType | null
+    _max: AutomationConditionMaxAggregateOutputType | null
+  }
+
+  type GetAutomationConditionGroupByPayload<T extends AutomationConditionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AutomationConditionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AutomationConditionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AutomationConditionGroupByOutputType[P]>
+            : GetScalarType<T[P], AutomationConditionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AutomationConditionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    automationId?: boolean
+    type?: boolean
+    operator?: boolean
+    value?: boolean
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["automationCondition"]>
+
+  export type AutomationConditionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    automationId?: boolean
+    type?: boolean
+    operator?: boolean
+    value?: boolean
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["automationCondition"]>
+
+  export type AutomationConditionSelectScalar = {
+    id?: boolean
+    automationId?: boolean
+    type?: boolean
+    operator?: boolean
+    value?: boolean
+  }
+
+  export type AutomationConditionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }
+  export type AutomationConditionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }
+
+  export type $AutomationConditionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AutomationCondition"
+    objects: {
+      automation: Prisma.$AutomationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      automationId: string
+      type: string
+      operator: string
+      value: string
+    }, ExtArgs["result"]["automationCondition"]>
+    composites: {}
+  }
+
+  type AutomationConditionGetPayload<S extends boolean | null | undefined | AutomationConditionDefaultArgs> = $Result.GetResult<Prisma.$AutomationConditionPayload, S>
+
+  type AutomationConditionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<AutomationConditionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: AutomationConditionCountAggregateInputType | true
+    }
+
+  export interface AutomationConditionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AutomationCondition'], meta: { name: 'AutomationCondition' } }
+    /**
+     * Find zero or one AutomationCondition that matches the filter.
+     * @param {AutomationConditionFindUniqueArgs} args - Arguments to find a AutomationCondition
+     * @example
+     * // Get one AutomationCondition
+     * const automationCondition = await prisma.automationCondition.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AutomationConditionFindUniqueArgs>(args: SelectSubset<T, AutomationConditionFindUniqueArgs<ExtArgs>>): Prisma__AutomationConditionClient<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one AutomationCondition that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {AutomationConditionFindUniqueOrThrowArgs} args - Arguments to find a AutomationCondition
+     * @example
+     * // Get one AutomationCondition
+     * const automationCondition = await prisma.automationCondition.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AutomationConditionFindUniqueOrThrowArgs>(args: SelectSubset<T, AutomationConditionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AutomationConditionClient<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first AutomationCondition that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationConditionFindFirstArgs} args - Arguments to find a AutomationCondition
+     * @example
+     * // Get one AutomationCondition
+     * const automationCondition = await prisma.automationCondition.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AutomationConditionFindFirstArgs>(args?: SelectSubset<T, AutomationConditionFindFirstArgs<ExtArgs>>): Prisma__AutomationConditionClient<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first AutomationCondition that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationConditionFindFirstOrThrowArgs} args - Arguments to find a AutomationCondition
+     * @example
+     * // Get one AutomationCondition
+     * const automationCondition = await prisma.automationCondition.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AutomationConditionFindFirstOrThrowArgs>(args?: SelectSubset<T, AutomationConditionFindFirstOrThrowArgs<ExtArgs>>): Prisma__AutomationConditionClient<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more AutomationConditions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationConditionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AutomationConditions
+     * const automationConditions = await prisma.automationCondition.findMany()
+     * 
+     * // Get first 10 AutomationConditions
+     * const automationConditions = await prisma.automationCondition.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const automationConditionWithIdOnly = await prisma.automationCondition.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AutomationConditionFindManyArgs>(args?: SelectSubset<T, AutomationConditionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a AutomationCondition.
+     * @param {AutomationConditionCreateArgs} args - Arguments to create a AutomationCondition.
+     * @example
+     * // Create one AutomationCondition
+     * const AutomationCondition = await prisma.automationCondition.create({
+     *   data: {
+     *     // ... data to create a AutomationCondition
+     *   }
+     * })
+     * 
+     */
+    create<T extends AutomationConditionCreateArgs>(args: SelectSubset<T, AutomationConditionCreateArgs<ExtArgs>>): Prisma__AutomationConditionClient<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many AutomationConditions.
+     * @param {AutomationConditionCreateManyArgs} args - Arguments to create many AutomationConditions.
+     * @example
+     * // Create many AutomationConditions
+     * const automationCondition = await prisma.automationCondition.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AutomationConditionCreateManyArgs>(args?: SelectSubset<T, AutomationConditionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AutomationConditions and returns the data saved in the database.
+     * @param {AutomationConditionCreateManyAndReturnArgs} args - Arguments to create many AutomationConditions.
+     * @example
+     * // Create many AutomationConditions
+     * const automationCondition = await prisma.automationCondition.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AutomationConditions and only return the `id`
+     * const automationConditionWithIdOnly = await prisma.automationCondition.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AutomationConditionCreateManyAndReturnArgs>(args?: SelectSubset<T, AutomationConditionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a AutomationCondition.
+     * @param {AutomationConditionDeleteArgs} args - Arguments to delete one AutomationCondition.
+     * @example
+     * // Delete one AutomationCondition
+     * const AutomationCondition = await prisma.automationCondition.delete({
+     *   where: {
+     *     // ... filter to delete one AutomationCondition
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AutomationConditionDeleteArgs>(args: SelectSubset<T, AutomationConditionDeleteArgs<ExtArgs>>): Prisma__AutomationConditionClient<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one AutomationCondition.
+     * @param {AutomationConditionUpdateArgs} args - Arguments to update one AutomationCondition.
+     * @example
+     * // Update one AutomationCondition
+     * const automationCondition = await prisma.automationCondition.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AutomationConditionUpdateArgs>(args: SelectSubset<T, AutomationConditionUpdateArgs<ExtArgs>>): Prisma__AutomationConditionClient<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more AutomationConditions.
+     * @param {AutomationConditionDeleteManyArgs} args - Arguments to filter AutomationConditions to delete.
+     * @example
+     * // Delete a few AutomationConditions
+     * const { count } = await prisma.automationCondition.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AutomationConditionDeleteManyArgs>(args?: SelectSubset<T, AutomationConditionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AutomationConditions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationConditionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AutomationConditions
+     * const automationCondition = await prisma.automationCondition.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AutomationConditionUpdateManyArgs>(args: SelectSubset<T, AutomationConditionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one AutomationCondition.
+     * @param {AutomationConditionUpsertArgs} args - Arguments to update or create a AutomationCondition.
+     * @example
+     * // Update or create a AutomationCondition
+     * const automationCondition = await prisma.automationCondition.upsert({
+     *   create: {
+     *     // ... data to create a AutomationCondition
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AutomationCondition we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AutomationConditionUpsertArgs>(args: SelectSubset<T, AutomationConditionUpsertArgs<ExtArgs>>): Prisma__AutomationConditionClient<$Result.GetResult<Prisma.$AutomationConditionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of AutomationConditions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationConditionCountArgs} args - Arguments to filter AutomationConditions to count.
+     * @example
+     * // Count the number of AutomationConditions
+     * const count = await prisma.automationCondition.count({
+     *   where: {
+     *     // ... the filter for the AutomationConditions we want to count
+     *   }
+     * })
+    **/
+    count<T extends AutomationConditionCountArgs>(
+      args?: Subset<T, AutomationConditionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AutomationConditionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AutomationCondition.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationConditionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AutomationConditionAggregateArgs>(args: Subset<T, AutomationConditionAggregateArgs>): Prisma.PrismaPromise<GetAutomationConditionAggregateType<T>>
+
+    /**
+     * Group by AutomationCondition.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationConditionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AutomationConditionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AutomationConditionGroupByArgs['orderBy'] }
+        : { orderBy?: AutomationConditionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AutomationConditionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAutomationConditionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AutomationCondition model
+   */
+  readonly fields: AutomationConditionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AutomationCondition.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AutomationConditionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    automation<T extends AutomationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, AutomationDefaultArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AutomationCondition model
+   */ 
+  interface AutomationConditionFieldRefs {
+    readonly id: FieldRef<"AutomationCondition", 'String'>
+    readonly automationId: FieldRef<"AutomationCondition", 'String'>
+    readonly type: FieldRef<"AutomationCondition", 'String'>
+    readonly operator: FieldRef<"AutomationCondition", 'String'>
+    readonly value: FieldRef<"AutomationCondition", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AutomationCondition findUnique
+   */
+  export type AutomationConditionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationCondition to fetch.
+     */
+    where: AutomationConditionWhereUniqueInput
+  }
+
+  /**
+   * AutomationCondition findUniqueOrThrow
+   */
+  export type AutomationConditionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationCondition to fetch.
+     */
+    where: AutomationConditionWhereUniqueInput
+  }
+
+  /**
+   * AutomationCondition findFirst
+   */
+  export type AutomationConditionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationCondition to fetch.
+     */
+    where?: AutomationConditionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationConditions to fetch.
+     */
+    orderBy?: AutomationConditionOrderByWithRelationInput | AutomationConditionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AutomationConditions.
+     */
+    cursor?: AutomationConditionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationConditions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationConditions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AutomationConditions.
+     */
+    distinct?: AutomationConditionScalarFieldEnum | AutomationConditionScalarFieldEnum[]
+  }
+
+  /**
+   * AutomationCondition findFirstOrThrow
+   */
+  export type AutomationConditionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationCondition to fetch.
+     */
+    where?: AutomationConditionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationConditions to fetch.
+     */
+    orderBy?: AutomationConditionOrderByWithRelationInput | AutomationConditionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AutomationConditions.
+     */
+    cursor?: AutomationConditionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationConditions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationConditions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AutomationConditions.
+     */
+    distinct?: AutomationConditionScalarFieldEnum | AutomationConditionScalarFieldEnum[]
+  }
+
+  /**
+   * AutomationCondition findMany
+   */
+  export type AutomationConditionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationConditions to fetch.
+     */
+    where?: AutomationConditionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationConditions to fetch.
+     */
+    orderBy?: AutomationConditionOrderByWithRelationInput | AutomationConditionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AutomationConditions.
+     */
+    cursor?: AutomationConditionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationConditions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationConditions.
+     */
+    skip?: number
+    distinct?: AutomationConditionScalarFieldEnum | AutomationConditionScalarFieldEnum[]
+  }
+
+  /**
+   * AutomationCondition create
+   */
+  export type AutomationConditionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AutomationCondition.
+     */
+    data: XOR<AutomationConditionCreateInput, AutomationConditionUncheckedCreateInput>
+  }
+
+  /**
+   * AutomationCondition createMany
+   */
+  export type AutomationConditionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AutomationConditions.
+     */
+    data: AutomationConditionCreateManyInput | AutomationConditionCreateManyInput[]
+  }
+
+  /**
+   * AutomationCondition createManyAndReturn
+   */
+  export type AutomationConditionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many AutomationConditions.
+     */
+    data: AutomationConditionCreateManyInput | AutomationConditionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AutomationCondition update
+   */
+  export type AutomationConditionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AutomationCondition.
+     */
+    data: XOR<AutomationConditionUpdateInput, AutomationConditionUncheckedUpdateInput>
+    /**
+     * Choose, which AutomationCondition to update.
+     */
+    where: AutomationConditionWhereUniqueInput
+  }
+
+  /**
+   * AutomationCondition updateMany
+   */
+  export type AutomationConditionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AutomationConditions.
+     */
+    data: XOR<AutomationConditionUpdateManyMutationInput, AutomationConditionUncheckedUpdateManyInput>
+    /**
+     * Filter which AutomationConditions to update
+     */
+    where?: AutomationConditionWhereInput
+  }
+
+  /**
+   * AutomationCondition upsert
+   */
+  export type AutomationConditionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AutomationCondition to update in case it exists.
+     */
+    where: AutomationConditionWhereUniqueInput
+    /**
+     * In case the AutomationCondition found by the `where` argument doesn't exist, create a new AutomationCondition with this data.
+     */
+    create: XOR<AutomationConditionCreateInput, AutomationConditionUncheckedCreateInput>
+    /**
+     * In case the AutomationCondition was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AutomationConditionUpdateInput, AutomationConditionUncheckedUpdateInput>
+  }
+
+  /**
+   * AutomationCondition delete
+   */
+  export type AutomationConditionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionInclude<ExtArgs> | null
+    /**
+     * Filter which AutomationCondition to delete.
+     */
+    where: AutomationConditionWhereUniqueInput
+  }
+
+  /**
+   * AutomationCondition deleteMany
+   */
+  export type AutomationConditionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AutomationConditions to delete
+     */
+    where?: AutomationConditionWhereInput
+  }
+
+  /**
+   * AutomationCondition without action
+   */
+  export type AutomationConditionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationCondition
+     */
+    select?: AutomationConditionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationConditionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AutomationAction
+   */
+
+  export type AggregateAutomationAction = {
+    _count: AutomationActionCountAggregateOutputType | null
+    _avg: AutomationActionAvgAggregateOutputType | null
+    _sum: AutomationActionSumAggregateOutputType | null
+    _min: AutomationActionMinAggregateOutputType | null
+    _max: AutomationActionMaxAggregateOutputType | null
+  }
+
+  export type AutomationActionAvgAggregateOutputType = {
+    order: number | null
+  }
+
+  export type AutomationActionSumAggregateOutputType = {
+    order: number | null
+  }
+
+  export type AutomationActionMinAggregateOutputType = {
+    id: string | null
+    automationId: string | null
+    order: number | null
+    type: string | null
+    config: string | null
+  }
+
+  export type AutomationActionMaxAggregateOutputType = {
+    id: string | null
+    automationId: string | null
+    order: number | null
+    type: string | null
+    config: string | null
+  }
+
+  export type AutomationActionCountAggregateOutputType = {
+    id: number
+    automationId: number
+    order: number
+    type: number
+    config: number
+    _all: number
+  }
+
+
+  export type AutomationActionAvgAggregateInputType = {
+    order?: true
+  }
+
+  export type AutomationActionSumAggregateInputType = {
+    order?: true
+  }
+
+  export type AutomationActionMinAggregateInputType = {
+    id?: true
+    automationId?: true
+    order?: true
+    type?: true
+    config?: true
+  }
+
+  export type AutomationActionMaxAggregateInputType = {
+    id?: true
+    automationId?: true
+    order?: true
+    type?: true
+    config?: true
+  }
+
+  export type AutomationActionCountAggregateInputType = {
+    id?: true
+    automationId?: true
+    order?: true
+    type?: true
+    config?: true
+    _all?: true
+  }
+
+  export type AutomationActionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AutomationAction to aggregate.
+     */
+    where?: AutomationActionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationActions to fetch.
+     */
+    orderBy?: AutomationActionOrderByWithRelationInput | AutomationActionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AutomationActionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationActions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationActions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AutomationActions
+    **/
+    _count?: true | AutomationActionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AutomationActionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AutomationActionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AutomationActionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AutomationActionMaxAggregateInputType
+  }
+
+  export type GetAutomationActionAggregateType<T extends AutomationActionAggregateArgs> = {
+        [P in keyof T & keyof AggregateAutomationAction]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAutomationAction[P]>
+      : GetScalarType<T[P], AggregateAutomationAction[P]>
+  }
+
+
+
+
+  export type AutomationActionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AutomationActionWhereInput
+    orderBy?: AutomationActionOrderByWithAggregationInput | AutomationActionOrderByWithAggregationInput[]
+    by: AutomationActionScalarFieldEnum[] | AutomationActionScalarFieldEnum
+    having?: AutomationActionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AutomationActionCountAggregateInputType | true
+    _avg?: AutomationActionAvgAggregateInputType
+    _sum?: AutomationActionSumAggregateInputType
+    _min?: AutomationActionMinAggregateInputType
+    _max?: AutomationActionMaxAggregateInputType
+  }
+
+  export type AutomationActionGroupByOutputType = {
+    id: string
+    automationId: string
+    order: number
+    type: string
+    config: string | null
+    _count: AutomationActionCountAggregateOutputType | null
+    _avg: AutomationActionAvgAggregateOutputType | null
+    _sum: AutomationActionSumAggregateOutputType | null
+    _min: AutomationActionMinAggregateOutputType | null
+    _max: AutomationActionMaxAggregateOutputType | null
+  }
+
+  type GetAutomationActionGroupByPayload<T extends AutomationActionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AutomationActionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AutomationActionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AutomationActionGroupByOutputType[P]>
+            : GetScalarType<T[P], AutomationActionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AutomationActionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    automationId?: boolean
+    order?: boolean
+    type?: boolean
+    config?: boolean
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["automationAction"]>
+
+  export type AutomationActionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    automationId?: boolean
+    order?: boolean
+    type?: boolean
+    config?: boolean
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["automationAction"]>
+
+  export type AutomationActionSelectScalar = {
+    id?: boolean
+    automationId?: boolean
+    order?: boolean
+    type?: boolean
+    config?: boolean
+  }
+
+  export type AutomationActionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }
+  export type AutomationActionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }
+
+  export type $AutomationActionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AutomationAction"
+    objects: {
+      automation: Prisma.$AutomationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      automationId: string
+      order: number
+      type: string
+      config: string | null
+    }, ExtArgs["result"]["automationAction"]>
+    composites: {}
+  }
+
+  type AutomationActionGetPayload<S extends boolean | null | undefined | AutomationActionDefaultArgs> = $Result.GetResult<Prisma.$AutomationActionPayload, S>
+
+  type AutomationActionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<AutomationActionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: AutomationActionCountAggregateInputType | true
+    }
+
+  export interface AutomationActionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AutomationAction'], meta: { name: 'AutomationAction' } }
+    /**
+     * Find zero or one AutomationAction that matches the filter.
+     * @param {AutomationActionFindUniqueArgs} args - Arguments to find a AutomationAction
+     * @example
+     * // Get one AutomationAction
+     * const automationAction = await prisma.automationAction.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AutomationActionFindUniqueArgs>(args: SelectSubset<T, AutomationActionFindUniqueArgs<ExtArgs>>): Prisma__AutomationActionClient<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one AutomationAction that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {AutomationActionFindUniqueOrThrowArgs} args - Arguments to find a AutomationAction
+     * @example
+     * // Get one AutomationAction
+     * const automationAction = await prisma.automationAction.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AutomationActionFindUniqueOrThrowArgs>(args: SelectSubset<T, AutomationActionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AutomationActionClient<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first AutomationAction that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationActionFindFirstArgs} args - Arguments to find a AutomationAction
+     * @example
+     * // Get one AutomationAction
+     * const automationAction = await prisma.automationAction.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AutomationActionFindFirstArgs>(args?: SelectSubset<T, AutomationActionFindFirstArgs<ExtArgs>>): Prisma__AutomationActionClient<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first AutomationAction that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationActionFindFirstOrThrowArgs} args - Arguments to find a AutomationAction
+     * @example
+     * // Get one AutomationAction
+     * const automationAction = await prisma.automationAction.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AutomationActionFindFirstOrThrowArgs>(args?: SelectSubset<T, AutomationActionFindFirstOrThrowArgs<ExtArgs>>): Prisma__AutomationActionClient<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more AutomationActions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationActionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AutomationActions
+     * const automationActions = await prisma.automationAction.findMany()
+     * 
+     * // Get first 10 AutomationActions
+     * const automationActions = await prisma.automationAction.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const automationActionWithIdOnly = await prisma.automationAction.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AutomationActionFindManyArgs>(args?: SelectSubset<T, AutomationActionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a AutomationAction.
+     * @param {AutomationActionCreateArgs} args - Arguments to create a AutomationAction.
+     * @example
+     * // Create one AutomationAction
+     * const AutomationAction = await prisma.automationAction.create({
+     *   data: {
+     *     // ... data to create a AutomationAction
+     *   }
+     * })
+     * 
+     */
+    create<T extends AutomationActionCreateArgs>(args: SelectSubset<T, AutomationActionCreateArgs<ExtArgs>>): Prisma__AutomationActionClient<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many AutomationActions.
+     * @param {AutomationActionCreateManyArgs} args - Arguments to create many AutomationActions.
+     * @example
+     * // Create many AutomationActions
+     * const automationAction = await prisma.automationAction.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AutomationActionCreateManyArgs>(args?: SelectSubset<T, AutomationActionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AutomationActions and returns the data saved in the database.
+     * @param {AutomationActionCreateManyAndReturnArgs} args - Arguments to create many AutomationActions.
+     * @example
+     * // Create many AutomationActions
+     * const automationAction = await prisma.automationAction.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AutomationActions and only return the `id`
+     * const automationActionWithIdOnly = await prisma.automationAction.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AutomationActionCreateManyAndReturnArgs>(args?: SelectSubset<T, AutomationActionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a AutomationAction.
+     * @param {AutomationActionDeleteArgs} args - Arguments to delete one AutomationAction.
+     * @example
+     * // Delete one AutomationAction
+     * const AutomationAction = await prisma.automationAction.delete({
+     *   where: {
+     *     // ... filter to delete one AutomationAction
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AutomationActionDeleteArgs>(args: SelectSubset<T, AutomationActionDeleteArgs<ExtArgs>>): Prisma__AutomationActionClient<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one AutomationAction.
+     * @param {AutomationActionUpdateArgs} args - Arguments to update one AutomationAction.
+     * @example
+     * // Update one AutomationAction
+     * const automationAction = await prisma.automationAction.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AutomationActionUpdateArgs>(args: SelectSubset<T, AutomationActionUpdateArgs<ExtArgs>>): Prisma__AutomationActionClient<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more AutomationActions.
+     * @param {AutomationActionDeleteManyArgs} args - Arguments to filter AutomationActions to delete.
+     * @example
+     * // Delete a few AutomationActions
+     * const { count } = await prisma.automationAction.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AutomationActionDeleteManyArgs>(args?: SelectSubset<T, AutomationActionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AutomationActions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationActionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AutomationActions
+     * const automationAction = await prisma.automationAction.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AutomationActionUpdateManyArgs>(args: SelectSubset<T, AutomationActionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one AutomationAction.
+     * @param {AutomationActionUpsertArgs} args - Arguments to update or create a AutomationAction.
+     * @example
+     * // Update or create a AutomationAction
+     * const automationAction = await prisma.automationAction.upsert({
+     *   create: {
+     *     // ... data to create a AutomationAction
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AutomationAction we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AutomationActionUpsertArgs>(args: SelectSubset<T, AutomationActionUpsertArgs<ExtArgs>>): Prisma__AutomationActionClient<$Result.GetResult<Prisma.$AutomationActionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of AutomationActions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationActionCountArgs} args - Arguments to filter AutomationActions to count.
+     * @example
+     * // Count the number of AutomationActions
+     * const count = await prisma.automationAction.count({
+     *   where: {
+     *     // ... the filter for the AutomationActions we want to count
+     *   }
+     * })
+    **/
+    count<T extends AutomationActionCountArgs>(
+      args?: Subset<T, AutomationActionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AutomationActionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AutomationAction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationActionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AutomationActionAggregateArgs>(args: Subset<T, AutomationActionAggregateArgs>): Prisma.PrismaPromise<GetAutomationActionAggregateType<T>>
+
+    /**
+     * Group by AutomationAction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationActionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AutomationActionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AutomationActionGroupByArgs['orderBy'] }
+        : { orderBy?: AutomationActionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AutomationActionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAutomationActionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AutomationAction model
+   */
+  readonly fields: AutomationActionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AutomationAction.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AutomationActionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    automation<T extends AutomationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, AutomationDefaultArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AutomationAction model
+   */ 
+  interface AutomationActionFieldRefs {
+    readonly id: FieldRef<"AutomationAction", 'String'>
+    readonly automationId: FieldRef<"AutomationAction", 'String'>
+    readonly order: FieldRef<"AutomationAction", 'Int'>
+    readonly type: FieldRef<"AutomationAction", 'String'>
+    readonly config: FieldRef<"AutomationAction", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AutomationAction findUnique
+   */
+  export type AutomationActionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationAction to fetch.
+     */
+    where: AutomationActionWhereUniqueInput
+  }
+
+  /**
+   * AutomationAction findUniqueOrThrow
+   */
+  export type AutomationActionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationAction to fetch.
+     */
+    where: AutomationActionWhereUniqueInput
+  }
+
+  /**
+   * AutomationAction findFirst
+   */
+  export type AutomationActionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationAction to fetch.
+     */
+    where?: AutomationActionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationActions to fetch.
+     */
+    orderBy?: AutomationActionOrderByWithRelationInput | AutomationActionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AutomationActions.
+     */
+    cursor?: AutomationActionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationActions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationActions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AutomationActions.
+     */
+    distinct?: AutomationActionScalarFieldEnum | AutomationActionScalarFieldEnum[]
+  }
+
+  /**
+   * AutomationAction findFirstOrThrow
+   */
+  export type AutomationActionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationAction to fetch.
+     */
+    where?: AutomationActionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationActions to fetch.
+     */
+    orderBy?: AutomationActionOrderByWithRelationInput | AutomationActionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AutomationActions.
+     */
+    cursor?: AutomationActionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationActions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationActions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AutomationActions.
+     */
+    distinct?: AutomationActionScalarFieldEnum | AutomationActionScalarFieldEnum[]
+  }
+
+  /**
+   * AutomationAction findMany
+   */
+  export type AutomationActionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationActions to fetch.
+     */
+    where?: AutomationActionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationActions to fetch.
+     */
+    orderBy?: AutomationActionOrderByWithRelationInput | AutomationActionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AutomationActions.
+     */
+    cursor?: AutomationActionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationActions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationActions.
+     */
+    skip?: number
+    distinct?: AutomationActionScalarFieldEnum | AutomationActionScalarFieldEnum[]
+  }
+
+  /**
+   * AutomationAction create
+   */
+  export type AutomationActionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AutomationAction.
+     */
+    data: XOR<AutomationActionCreateInput, AutomationActionUncheckedCreateInput>
+  }
+
+  /**
+   * AutomationAction createMany
+   */
+  export type AutomationActionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AutomationActions.
+     */
+    data: AutomationActionCreateManyInput | AutomationActionCreateManyInput[]
+  }
+
+  /**
+   * AutomationAction createManyAndReturn
+   */
+  export type AutomationActionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many AutomationActions.
+     */
+    data: AutomationActionCreateManyInput | AutomationActionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AutomationAction update
+   */
+  export type AutomationActionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AutomationAction.
+     */
+    data: XOR<AutomationActionUpdateInput, AutomationActionUncheckedUpdateInput>
+    /**
+     * Choose, which AutomationAction to update.
+     */
+    where: AutomationActionWhereUniqueInput
+  }
+
+  /**
+   * AutomationAction updateMany
+   */
+  export type AutomationActionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AutomationActions.
+     */
+    data: XOR<AutomationActionUpdateManyMutationInput, AutomationActionUncheckedUpdateManyInput>
+    /**
+     * Filter which AutomationActions to update
+     */
+    where?: AutomationActionWhereInput
+  }
+
+  /**
+   * AutomationAction upsert
+   */
+  export type AutomationActionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AutomationAction to update in case it exists.
+     */
+    where: AutomationActionWhereUniqueInput
+    /**
+     * In case the AutomationAction found by the `where` argument doesn't exist, create a new AutomationAction with this data.
+     */
+    create: XOR<AutomationActionCreateInput, AutomationActionUncheckedCreateInput>
+    /**
+     * In case the AutomationAction was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AutomationActionUpdateInput, AutomationActionUncheckedUpdateInput>
+  }
+
+  /**
+   * AutomationAction delete
+   */
+  export type AutomationActionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+    /**
+     * Filter which AutomationAction to delete.
+     */
+    where: AutomationActionWhereUniqueInput
+  }
+
+  /**
+   * AutomationAction deleteMany
+   */
+  export type AutomationActionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AutomationActions to delete
+     */
+    where?: AutomationActionWhereInput
+  }
+
+  /**
+   * AutomationAction without action
+   */
+  export type AutomationActionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationAction
+     */
+    select?: AutomationActionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationActionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AutomationExecution
+   */
+
+  export type AggregateAutomationExecution = {
+    _count: AutomationExecutionCountAggregateOutputType | null
+    _min: AutomationExecutionMinAggregateOutputType | null
+    _max: AutomationExecutionMaxAggregateOutputType | null
+  }
+
+  export type AutomationExecutionMinAggregateOutputType = {
+    id: string | null
+    automationId: string | null
+    startedAt: Date | null
+    finishedAt: Date | null
+    status: string | null
+    logs: string | null
+  }
+
+  export type AutomationExecutionMaxAggregateOutputType = {
+    id: string | null
+    automationId: string | null
+    startedAt: Date | null
+    finishedAt: Date | null
+    status: string | null
+    logs: string | null
+  }
+
+  export type AutomationExecutionCountAggregateOutputType = {
+    id: number
+    automationId: number
+    startedAt: number
+    finishedAt: number
+    status: number
+    logs: number
+    _all: number
+  }
+
+
+  export type AutomationExecutionMinAggregateInputType = {
+    id?: true
+    automationId?: true
+    startedAt?: true
+    finishedAt?: true
+    status?: true
+    logs?: true
+  }
+
+  export type AutomationExecutionMaxAggregateInputType = {
+    id?: true
+    automationId?: true
+    startedAt?: true
+    finishedAt?: true
+    status?: true
+    logs?: true
+  }
+
+  export type AutomationExecutionCountAggregateInputType = {
+    id?: true
+    automationId?: true
+    startedAt?: true
+    finishedAt?: true
+    status?: true
+    logs?: true
+    _all?: true
+  }
+
+  export type AutomationExecutionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AutomationExecution to aggregate.
+     */
+    where?: AutomationExecutionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationExecutions to fetch.
+     */
+    orderBy?: AutomationExecutionOrderByWithRelationInput | AutomationExecutionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AutomationExecutionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationExecutions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationExecutions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AutomationExecutions
+    **/
+    _count?: true | AutomationExecutionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AutomationExecutionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AutomationExecutionMaxAggregateInputType
+  }
+
+  export type GetAutomationExecutionAggregateType<T extends AutomationExecutionAggregateArgs> = {
+        [P in keyof T & keyof AggregateAutomationExecution]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAutomationExecution[P]>
+      : GetScalarType<T[P], AggregateAutomationExecution[P]>
+  }
+
+
+
+
+  export type AutomationExecutionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AutomationExecutionWhereInput
+    orderBy?: AutomationExecutionOrderByWithAggregationInput | AutomationExecutionOrderByWithAggregationInput[]
+    by: AutomationExecutionScalarFieldEnum[] | AutomationExecutionScalarFieldEnum
+    having?: AutomationExecutionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AutomationExecutionCountAggregateInputType | true
+    _min?: AutomationExecutionMinAggregateInputType
+    _max?: AutomationExecutionMaxAggregateInputType
+  }
+
+  export type AutomationExecutionGroupByOutputType = {
+    id: string
+    automationId: string
+    startedAt: Date
+    finishedAt: Date | null
+    status: string
+    logs: string | null
+    _count: AutomationExecutionCountAggregateOutputType | null
+    _min: AutomationExecutionMinAggregateOutputType | null
+    _max: AutomationExecutionMaxAggregateOutputType | null
+  }
+
+  type GetAutomationExecutionGroupByPayload<T extends AutomationExecutionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AutomationExecutionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AutomationExecutionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AutomationExecutionGroupByOutputType[P]>
+            : GetScalarType<T[P], AutomationExecutionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AutomationExecutionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    automationId?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    status?: boolean
+    logs?: boolean
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["automationExecution"]>
+
+  export type AutomationExecutionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    automationId?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    status?: boolean
+    logs?: boolean
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["automationExecution"]>
+
+  export type AutomationExecutionSelectScalar = {
+    id?: boolean
+    automationId?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    status?: boolean
+    logs?: boolean
+  }
+
+  export type AutomationExecutionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }
+  export type AutomationExecutionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    automation?: boolean | AutomationDefaultArgs<ExtArgs>
+  }
+
+  export type $AutomationExecutionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AutomationExecution"
+    objects: {
+      automation: Prisma.$AutomationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      automationId: string
+      startedAt: Date
+      finishedAt: Date | null
+      status: string
+      logs: string | null
+    }, ExtArgs["result"]["automationExecution"]>
+    composites: {}
+  }
+
+  type AutomationExecutionGetPayload<S extends boolean | null | undefined | AutomationExecutionDefaultArgs> = $Result.GetResult<Prisma.$AutomationExecutionPayload, S>
+
+  type AutomationExecutionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<AutomationExecutionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: AutomationExecutionCountAggregateInputType | true
+    }
+
+  export interface AutomationExecutionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AutomationExecution'], meta: { name: 'AutomationExecution' } }
+    /**
+     * Find zero or one AutomationExecution that matches the filter.
+     * @param {AutomationExecutionFindUniqueArgs} args - Arguments to find a AutomationExecution
+     * @example
+     * // Get one AutomationExecution
+     * const automationExecution = await prisma.automationExecution.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AutomationExecutionFindUniqueArgs>(args: SelectSubset<T, AutomationExecutionFindUniqueArgs<ExtArgs>>): Prisma__AutomationExecutionClient<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one AutomationExecution that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {AutomationExecutionFindUniqueOrThrowArgs} args - Arguments to find a AutomationExecution
+     * @example
+     * // Get one AutomationExecution
+     * const automationExecution = await prisma.automationExecution.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AutomationExecutionFindUniqueOrThrowArgs>(args: SelectSubset<T, AutomationExecutionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AutomationExecutionClient<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first AutomationExecution that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationExecutionFindFirstArgs} args - Arguments to find a AutomationExecution
+     * @example
+     * // Get one AutomationExecution
+     * const automationExecution = await prisma.automationExecution.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AutomationExecutionFindFirstArgs>(args?: SelectSubset<T, AutomationExecutionFindFirstArgs<ExtArgs>>): Prisma__AutomationExecutionClient<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first AutomationExecution that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationExecutionFindFirstOrThrowArgs} args - Arguments to find a AutomationExecution
+     * @example
+     * // Get one AutomationExecution
+     * const automationExecution = await prisma.automationExecution.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AutomationExecutionFindFirstOrThrowArgs>(args?: SelectSubset<T, AutomationExecutionFindFirstOrThrowArgs<ExtArgs>>): Prisma__AutomationExecutionClient<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more AutomationExecutions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationExecutionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AutomationExecutions
+     * const automationExecutions = await prisma.automationExecution.findMany()
+     * 
+     * // Get first 10 AutomationExecutions
+     * const automationExecutions = await prisma.automationExecution.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const automationExecutionWithIdOnly = await prisma.automationExecution.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AutomationExecutionFindManyArgs>(args?: SelectSubset<T, AutomationExecutionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a AutomationExecution.
+     * @param {AutomationExecutionCreateArgs} args - Arguments to create a AutomationExecution.
+     * @example
+     * // Create one AutomationExecution
+     * const AutomationExecution = await prisma.automationExecution.create({
+     *   data: {
+     *     // ... data to create a AutomationExecution
+     *   }
+     * })
+     * 
+     */
+    create<T extends AutomationExecutionCreateArgs>(args: SelectSubset<T, AutomationExecutionCreateArgs<ExtArgs>>): Prisma__AutomationExecutionClient<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many AutomationExecutions.
+     * @param {AutomationExecutionCreateManyArgs} args - Arguments to create many AutomationExecutions.
+     * @example
+     * // Create many AutomationExecutions
+     * const automationExecution = await prisma.automationExecution.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AutomationExecutionCreateManyArgs>(args?: SelectSubset<T, AutomationExecutionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AutomationExecutions and returns the data saved in the database.
+     * @param {AutomationExecutionCreateManyAndReturnArgs} args - Arguments to create many AutomationExecutions.
+     * @example
+     * // Create many AutomationExecutions
+     * const automationExecution = await prisma.automationExecution.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AutomationExecutions and only return the `id`
+     * const automationExecutionWithIdOnly = await prisma.automationExecution.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AutomationExecutionCreateManyAndReturnArgs>(args?: SelectSubset<T, AutomationExecutionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a AutomationExecution.
+     * @param {AutomationExecutionDeleteArgs} args - Arguments to delete one AutomationExecution.
+     * @example
+     * // Delete one AutomationExecution
+     * const AutomationExecution = await prisma.automationExecution.delete({
+     *   where: {
+     *     // ... filter to delete one AutomationExecution
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AutomationExecutionDeleteArgs>(args: SelectSubset<T, AutomationExecutionDeleteArgs<ExtArgs>>): Prisma__AutomationExecutionClient<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one AutomationExecution.
+     * @param {AutomationExecutionUpdateArgs} args - Arguments to update one AutomationExecution.
+     * @example
+     * // Update one AutomationExecution
+     * const automationExecution = await prisma.automationExecution.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AutomationExecutionUpdateArgs>(args: SelectSubset<T, AutomationExecutionUpdateArgs<ExtArgs>>): Prisma__AutomationExecutionClient<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more AutomationExecutions.
+     * @param {AutomationExecutionDeleteManyArgs} args - Arguments to filter AutomationExecutions to delete.
+     * @example
+     * // Delete a few AutomationExecutions
+     * const { count } = await prisma.automationExecution.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AutomationExecutionDeleteManyArgs>(args?: SelectSubset<T, AutomationExecutionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AutomationExecutions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationExecutionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AutomationExecutions
+     * const automationExecution = await prisma.automationExecution.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AutomationExecutionUpdateManyArgs>(args: SelectSubset<T, AutomationExecutionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one AutomationExecution.
+     * @param {AutomationExecutionUpsertArgs} args - Arguments to update or create a AutomationExecution.
+     * @example
+     * // Update or create a AutomationExecution
+     * const automationExecution = await prisma.automationExecution.upsert({
+     *   create: {
+     *     // ... data to create a AutomationExecution
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AutomationExecution we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AutomationExecutionUpsertArgs>(args: SelectSubset<T, AutomationExecutionUpsertArgs<ExtArgs>>): Prisma__AutomationExecutionClient<$Result.GetResult<Prisma.$AutomationExecutionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of AutomationExecutions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationExecutionCountArgs} args - Arguments to filter AutomationExecutions to count.
+     * @example
+     * // Count the number of AutomationExecutions
+     * const count = await prisma.automationExecution.count({
+     *   where: {
+     *     // ... the filter for the AutomationExecutions we want to count
+     *   }
+     * })
+    **/
+    count<T extends AutomationExecutionCountArgs>(
+      args?: Subset<T, AutomationExecutionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AutomationExecutionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AutomationExecution.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationExecutionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AutomationExecutionAggregateArgs>(args: Subset<T, AutomationExecutionAggregateArgs>): Prisma.PrismaPromise<GetAutomationExecutionAggregateType<T>>
+
+    /**
+     * Group by AutomationExecution.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AutomationExecutionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AutomationExecutionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AutomationExecutionGroupByArgs['orderBy'] }
+        : { orderBy?: AutomationExecutionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AutomationExecutionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAutomationExecutionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AutomationExecution model
+   */
+  readonly fields: AutomationExecutionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AutomationExecution.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AutomationExecutionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    automation<T extends AutomationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, AutomationDefaultArgs<ExtArgs>>): Prisma__AutomationClient<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AutomationExecution model
+   */ 
+  interface AutomationExecutionFieldRefs {
+    readonly id: FieldRef<"AutomationExecution", 'String'>
+    readonly automationId: FieldRef<"AutomationExecution", 'String'>
+    readonly startedAt: FieldRef<"AutomationExecution", 'DateTime'>
+    readonly finishedAt: FieldRef<"AutomationExecution", 'DateTime'>
+    readonly status: FieldRef<"AutomationExecution", 'String'>
+    readonly logs: FieldRef<"AutomationExecution", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AutomationExecution findUnique
+   */
+  export type AutomationExecutionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationExecution to fetch.
+     */
+    where: AutomationExecutionWhereUniqueInput
+  }
+
+  /**
+   * AutomationExecution findUniqueOrThrow
+   */
+  export type AutomationExecutionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationExecution to fetch.
+     */
+    where: AutomationExecutionWhereUniqueInput
+  }
+
+  /**
+   * AutomationExecution findFirst
+   */
+  export type AutomationExecutionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationExecution to fetch.
+     */
+    where?: AutomationExecutionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationExecutions to fetch.
+     */
+    orderBy?: AutomationExecutionOrderByWithRelationInput | AutomationExecutionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AutomationExecutions.
+     */
+    cursor?: AutomationExecutionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationExecutions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationExecutions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AutomationExecutions.
+     */
+    distinct?: AutomationExecutionScalarFieldEnum | AutomationExecutionScalarFieldEnum[]
+  }
+
+  /**
+   * AutomationExecution findFirstOrThrow
+   */
+  export type AutomationExecutionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationExecution to fetch.
+     */
+    where?: AutomationExecutionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationExecutions to fetch.
+     */
+    orderBy?: AutomationExecutionOrderByWithRelationInput | AutomationExecutionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AutomationExecutions.
+     */
+    cursor?: AutomationExecutionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationExecutions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationExecutions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AutomationExecutions.
+     */
+    distinct?: AutomationExecutionScalarFieldEnum | AutomationExecutionScalarFieldEnum[]
+  }
+
+  /**
+   * AutomationExecution findMany
+   */
+  export type AutomationExecutionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
+    /**
+     * Filter, which AutomationExecutions to fetch.
+     */
+    where?: AutomationExecutionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AutomationExecutions to fetch.
+     */
+    orderBy?: AutomationExecutionOrderByWithRelationInput | AutomationExecutionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AutomationExecutions.
+     */
+    cursor?: AutomationExecutionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AutomationExecutions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AutomationExecutions.
+     */
+    skip?: number
+    distinct?: AutomationExecutionScalarFieldEnum | AutomationExecutionScalarFieldEnum[]
+  }
+
+  /**
+   * AutomationExecution create
+   */
+  export type AutomationExecutionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a AutomationExecution.
+     */
+    data: XOR<AutomationExecutionCreateInput, AutomationExecutionUncheckedCreateInput>
+  }
+
+  /**
+   * AutomationExecution createMany
+   */
+  export type AutomationExecutionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AutomationExecutions.
+     */
+    data: AutomationExecutionCreateManyInput | AutomationExecutionCreateManyInput[]
+  }
+
+  /**
+   * AutomationExecution createManyAndReturn
+   */
+  export type AutomationExecutionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many AutomationExecutions.
+     */
+    data: AutomationExecutionCreateManyInput | AutomationExecutionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * AutomationExecution update
+   */
+  export type AutomationExecutionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a AutomationExecution.
+     */
+    data: XOR<AutomationExecutionUpdateInput, AutomationExecutionUncheckedUpdateInput>
+    /**
+     * Choose, which AutomationExecution to update.
+     */
+    where: AutomationExecutionWhereUniqueInput
+  }
+
+  /**
+   * AutomationExecution updateMany
+   */
+  export type AutomationExecutionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AutomationExecutions.
+     */
+    data: XOR<AutomationExecutionUpdateManyMutationInput, AutomationExecutionUncheckedUpdateManyInput>
+    /**
+     * Filter which AutomationExecutions to update
+     */
+    where?: AutomationExecutionWhereInput
+  }
+
+  /**
+   * AutomationExecution upsert
+   */
+  export type AutomationExecutionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the AutomationExecution to update in case it exists.
+     */
+    where: AutomationExecutionWhereUniqueInput
+    /**
+     * In case the AutomationExecution found by the `where` argument doesn't exist, create a new AutomationExecution with this data.
+     */
+    create: XOR<AutomationExecutionCreateInput, AutomationExecutionUncheckedCreateInput>
+    /**
+     * In case the AutomationExecution was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AutomationExecutionUpdateInput, AutomationExecutionUncheckedUpdateInput>
+  }
+
+  /**
+   * AutomationExecution delete
+   */
+  export type AutomationExecutionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
+    /**
+     * Filter which AutomationExecution to delete.
+     */
+    where: AutomationExecutionWhereUniqueInput
+  }
+
+  /**
+   * AutomationExecution deleteMany
+   */
+  export type AutomationExecutionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AutomationExecutions to delete
+     */
+    where?: AutomationExecutionWhereInput
+  }
+
+  /**
+   * AutomationExecution without action
+   */
+  export type AutomationExecutionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AutomationExecution
+     */
+    select?: AutomationExecutionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AutomationExecutionInclude<ExtArgs> | null
   }
 
 
@@ -21171,21 +24345,54 @@ export namespace Prisma {
   export type ServerSnapshotScalarFieldEnum = (typeof ServerSnapshotScalarFieldEnum)[keyof typeof ServerSnapshotScalarFieldEnum]
 
 
-  export const ScheduledTaskScalarFieldEnum: {
+  export const AutomationScalarFieldEnum: {
     id: 'id',
     serverId: 'serverId',
-    action: 'action',
-    cronExpression: 'cronExpression',
+    name: 'name',
     enabled: 'enabled',
-    broadcastMsg: 'broadcastMsg',
-    broadcastMin: 'broadcastMin',
-    lastRunAt: 'lastRunAt',
-    lastBroadcastAt: 'lastBroadcastAt',
+    triggerType: 'triggerType',
+    triggerConfig: 'triggerConfig',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    lastRunAt: 'lastRunAt',
+    nextRunAt: 'nextRunAt'
   };
 
-  export type ScheduledTaskScalarFieldEnum = (typeof ScheduledTaskScalarFieldEnum)[keyof typeof ScheduledTaskScalarFieldEnum]
+  export type AutomationScalarFieldEnum = (typeof AutomationScalarFieldEnum)[keyof typeof AutomationScalarFieldEnum]
+
+
+  export const AutomationConditionScalarFieldEnum: {
+    id: 'id',
+    automationId: 'automationId',
+    type: 'type',
+    operator: 'operator',
+    value: 'value'
+  };
+
+  export type AutomationConditionScalarFieldEnum = (typeof AutomationConditionScalarFieldEnum)[keyof typeof AutomationConditionScalarFieldEnum]
+
+
+  export const AutomationActionScalarFieldEnum: {
+    id: 'id',
+    automationId: 'automationId',
+    order: 'order',
+    type: 'type',
+    config: 'config'
+  };
+
+  export type AutomationActionScalarFieldEnum = (typeof AutomationActionScalarFieldEnum)[keyof typeof AutomationActionScalarFieldEnum]
+
+
+  export const AutomationExecutionScalarFieldEnum: {
+    id: 'id',
+    automationId: 'automationId',
+    startedAt: 'startedAt',
+    finishedAt: 'finishedAt',
+    status: 'status',
+    logs: 'logs'
+  };
+
+  export type AutomationExecutionScalarFieldEnum = (typeof AutomationExecutionScalarFieldEnum)[keyof typeof AutomationExecutionScalarFieldEnum]
 
 
   export const MarketplaceTemplateScalarFieldEnum: {
@@ -21548,7 +24755,7 @@ export namespace Prisma {
     collaborators?: CollaboratorListRelationFilter
     mods?: ModInstallationListRelationFilter
     snapshots?: ServerSnapshotListRelationFilter
-    scheduledTasks?: ScheduledTaskListRelationFilter
+    automations?: AutomationListRelationFilter
     hostLink?: XOR<ServerHostLinkNullableRelationFilter, ServerHostLinkWhereInput> | null
     plannedSessions?: PlannedSessionListRelationFilter
     discordRoles?: DiscordRoleAccessListRelationFilter
@@ -21585,7 +24792,7 @@ export namespace Prisma {
     collaborators?: CollaboratorOrderByRelationAggregateInput
     mods?: ModInstallationOrderByRelationAggregateInput
     snapshots?: ServerSnapshotOrderByRelationAggregateInput
-    scheduledTasks?: ScheduledTaskOrderByRelationAggregateInput
+    automations?: AutomationOrderByRelationAggregateInput
     hostLink?: ServerHostLinkOrderByWithRelationInput
     plannedSessions?: PlannedSessionOrderByRelationAggregateInput
     discordRoles?: DiscordRoleAccessOrderByRelationAggregateInput
@@ -21625,7 +24832,7 @@ export namespace Prisma {
     collaborators?: CollaboratorListRelationFilter
     mods?: ModInstallationListRelationFilter
     snapshots?: ServerSnapshotListRelationFilter
-    scheduledTasks?: ScheduledTaskListRelationFilter
+    automations?: AutomationListRelationFilter
     hostLink?: XOR<ServerHostLinkNullableRelationFilter, ServerHostLinkWhereInput> | null
     plannedSessions?: PlannedSessionListRelationFilter
     discordRoles?: DiscordRoleAccessListRelationFilter
@@ -22433,91 +25640,265 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"ServerSnapshot"> | Date | string
   }
 
-  export type ScheduledTaskWhereInput = {
-    AND?: ScheduledTaskWhereInput | ScheduledTaskWhereInput[]
-    OR?: ScheduledTaskWhereInput[]
-    NOT?: ScheduledTaskWhereInput | ScheduledTaskWhereInput[]
-    id?: StringFilter<"ScheduledTask"> | string
-    serverId?: StringFilter<"ScheduledTask"> | string
-    action?: StringFilter<"ScheduledTask"> | string
-    cronExpression?: StringFilter<"ScheduledTask"> | string
-    enabled?: BoolFilter<"ScheduledTask"> | boolean
-    broadcastMsg?: StringNullableFilter<"ScheduledTask"> | string | null
-    broadcastMin?: IntNullableFilter<"ScheduledTask"> | number | null
-    lastRunAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
-    lastBroadcastAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
-    createdAt?: DateTimeFilter<"ScheduledTask"> | Date | string
-    updatedAt?: DateTimeFilter<"ScheduledTask"> | Date | string
+  export type AutomationWhereInput = {
+    AND?: AutomationWhereInput | AutomationWhereInput[]
+    OR?: AutomationWhereInput[]
+    NOT?: AutomationWhereInput | AutomationWhereInput[]
+    id?: StringFilter<"Automation"> | string
+    serverId?: StringFilter<"Automation"> | string
+    name?: StringFilter<"Automation"> | string
+    enabled?: BoolFilter<"Automation"> | boolean
+    triggerType?: StringFilter<"Automation"> | string
+    triggerConfig?: StringNullableFilter<"Automation"> | string | null
+    createdAt?: DateTimeFilter<"Automation"> | Date | string
+    updatedAt?: DateTimeFilter<"Automation"> | Date | string
+    lastRunAt?: DateTimeNullableFilter<"Automation"> | Date | string | null
+    nextRunAt?: DateTimeNullableFilter<"Automation"> | Date | string | null
     server?: XOR<ServerRelationFilter, ServerWhereInput>
+    conditions?: AutomationConditionListRelationFilter
+    actions?: AutomationActionListRelationFilter
+    executions?: AutomationExecutionListRelationFilter
   }
 
-  export type ScheduledTaskOrderByWithRelationInput = {
+  export type AutomationOrderByWithRelationInput = {
     id?: SortOrder
     serverId?: SortOrder
-    action?: SortOrder
-    cronExpression?: SortOrder
+    name?: SortOrder
     enabled?: SortOrder
-    broadcastMsg?: SortOrderInput | SortOrder
-    broadcastMin?: SortOrderInput | SortOrder
-    lastRunAt?: SortOrderInput | SortOrder
-    lastBroadcastAt?: SortOrderInput | SortOrder
+    triggerType?: SortOrder
+    triggerConfig?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    lastRunAt?: SortOrderInput | SortOrder
+    nextRunAt?: SortOrderInput | SortOrder
     server?: ServerOrderByWithRelationInput
+    conditions?: AutomationConditionOrderByRelationAggregateInput
+    actions?: AutomationActionOrderByRelationAggregateInput
+    executions?: AutomationExecutionOrderByRelationAggregateInput
   }
 
-  export type ScheduledTaskWhereUniqueInput = Prisma.AtLeast<{
+  export type AutomationWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    AND?: ScheduledTaskWhereInput | ScheduledTaskWhereInput[]
-    OR?: ScheduledTaskWhereInput[]
-    NOT?: ScheduledTaskWhereInput | ScheduledTaskWhereInput[]
-    serverId?: StringFilter<"ScheduledTask"> | string
-    action?: StringFilter<"ScheduledTask"> | string
-    cronExpression?: StringFilter<"ScheduledTask"> | string
-    enabled?: BoolFilter<"ScheduledTask"> | boolean
-    broadcastMsg?: StringNullableFilter<"ScheduledTask"> | string | null
-    broadcastMin?: IntNullableFilter<"ScheduledTask"> | number | null
-    lastRunAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
-    lastBroadcastAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
-    createdAt?: DateTimeFilter<"ScheduledTask"> | Date | string
-    updatedAt?: DateTimeFilter<"ScheduledTask"> | Date | string
+    AND?: AutomationWhereInput | AutomationWhereInput[]
+    OR?: AutomationWhereInput[]
+    NOT?: AutomationWhereInput | AutomationWhereInput[]
+    serverId?: StringFilter<"Automation"> | string
+    name?: StringFilter<"Automation"> | string
+    enabled?: BoolFilter<"Automation"> | boolean
+    triggerType?: StringFilter<"Automation"> | string
+    triggerConfig?: StringNullableFilter<"Automation"> | string | null
+    createdAt?: DateTimeFilter<"Automation"> | Date | string
+    updatedAt?: DateTimeFilter<"Automation"> | Date | string
+    lastRunAt?: DateTimeNullableFilter<"Automation"> | Date | string | null
+    nextRunAt?: DateTimeNullableFilter<"Automation"> | Date | string | null
     server?: XOR<ServerRelationFilter, ServerWhereInput>
+    conditions?: AutomationConditionListRelationFilter
+    actions?: AutomationActionListRelationFilter
+    executions?: AutomationExecutionListRelationFilter
   }, "id">
 
-  export type ScheduledTaskOrderByWithAggregationInput = {
+  export type AutomationOrderByWithAggregationInput = {
     id?: SortOrder
     serverId?: SortOrder
-    action?: SortOrder
-    cronExpression?: SortOrder
+    name?: SortOrder
     enabled?: SortOrder
-    broadcastMsg?: SortOrderInput | SortOrder
-    broadcastMin?: SortOrderInput | SortOrder
-    lastRunAt?: SortOrderInput | SortOrder
-    lastBroadcastAt?: SortOrderInput | SortOrder
+    triggerType?: SortOrder
+    triggerConfig?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    _count?: ScheduledTaskCountOrderByAggregateInput
-    _avg?: ScheduledTaskAvgOrderByAggregateInput
-    _max?: ScheduledTaskMaxOrderByAggregateInput
-    _min?: ScheduledTaskMinOrderByAggregateInput
-    _sum?: ScheduledTaskSumOrderByAggregateInput
+    lastRunAt?: SortOrderInput | SortOrder
+    nextRunAt?: SortOrderInput | SortOrder
+    _count?: AutomationCountOrderByAggregateInput
+    _max?: AutomationMaxOrderByAggregateInput
+    _min?: AutomationMinOrderByAggregateInput
   }
 
-  export type ScheduledTaskScalarWhereWithAggregatesInput = {
-    AND?: ScheduledTaskScalarWhereWithAggregatesInput | ScheduledTaskScalarWhereWithAggregatesInput[]
-    OR?: ScheduledTaskScalarWhereWithAggregatesInput[]
-    NOT?: ScheduledTaskScalarWhereWithAggregatesInput | ScheduledTaskScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"ScheduledTask"> | string
-    serverId?: StringWithAggregatesFilter<"ScheduledTask"> | string
-    action?: StringWithAggregatesFilter<"ScheduledTask"> | string
-    cronExpression?: StringWithAggregatesFilter<"ScheduledTask"> | string
-    enabled?: BoolWithAggregatesFilter<"ScheduledTask"> | boolean
-    broadcastMsg?: StringNullableWithAggregatesFilter<"ScheduledTask"> | string | null
-    broadcastMin?: IntNullableWithAggregatesFilter<"ScheduledTask"> | number | null
-    lastRunAt?: DateTimeNullableWithAggregatesFilter<"ScheduledTask"> | Date | string | null
-    lastBroadcastAt?: DateTimeNullableWithAggregatesFilter<"ScheduledTask"> | Date | string | null
-    createdAt?: DateTimeWithAggregatesFilter<"ScheduledTask"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"ScheduledTask"> | Date | string
+  export type AutomationScalarWhereWithAggregatesInput = {
+    AND?: AutomationScalarWhereWithAggregatesInput | AutomationScalarWhereWithAggregatesInput[]
+    OR?: AutomationScalarWhereWithAggregatesInput[]
+    NOT?: AutomationScalarWhereWithAggregatesInput | AutomationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Automation"> | string
+    serverId?: StringWithAggregatesFilter<"Automation"> | string
+    name?: StringWithAggregatesFilter<"Automation"> | string
+    enabled?: BoolWithAggregatesFilter<"Automation"> | boolean
+    triggerType?: StringWithAggregatesFilter<"Automation"> | string
+    triggerConfig?: StringNullableWithAggregatesFilter<"Automation"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Automation"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Automation"> | Date | string
+    lastRunAt?: DateTimeNullableWithAggregatesFilter<"Automation"> | Date | string | null
+    nextRunAt?: DateTimeNullableWithAggregatesFilter<"Automation"> | Date | string | null
+  }
+
+  export type AutomationConditionWhereInput = {
+    AND?: AutomationConditionWhereInput | AutomationConditionWhereInput[]
+    OR?: AutomationConditionWhereInput[]
+    NOT?: AutomationConditionWhereInput | AutomationConditionWhereInput[]
+    id?: StringFilter<"AutomationCondition"> | string
+    automationId?: StringFilter<"AutomationCondition"> | string
+    type?: StringFilter<"AutomationCondition"> | string
+    operator?: StringFilter<"AutomationCondition"> | string
+    value?: StringFilter<"AutomationCondition"> | string
+    automation?: XOR<AutomationRelationFilter, AutomationWhereInput>
+  }
+
+  export type AutomationConditionOrderByWithRelationInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    type?: SortOrder
+    operator?: SortOrder
+    value?: SortOrder
+    automation?: AutomationOrderByWithRelationInput
+  }
+
+  export type AutomationConditionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AutomationConditionWhereInput | AutomationConditionWhereInput[]
+    OR?: AutomationConditionWhereInput[]
+    NOT?: AutomationConditionWhereInput | AutomationConditionWhereInput[]
+    automationId?: StringFilter<"AutomationCondition"> | string
+    type?: StringFilter<"AutomationCondition"> | string
+    operator?: StringFilter<"AutomationCondition"> | string
+    value?: StringFilter<"AutomationCondition"> | string
+    automation?: XOR<AutomationRelationFilter, AutomationWhereInput>
+  }, "id">
+
+  export type AutomationConditionOrderByWithAggregationInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    type?: SortOrder
+    operator?: SortOrder
+    value?: SortOrder
+    _count?: AutomationConditionCountOrderByAggregateInput
+    _max?: AutomationConditionMaxOrderByAggregateInput
+    _min?: AutomationConditionMinOrderByAggregateInput
+  }
+
+  export type AutomationConditionScalarWhereWithAggregatesInput = {
+    AND?: AutomationConditionScalarWhereWithAggregatesInput | AutomationConditionScalarWhereWithAggregatesInput[]
+    OR?: AutomationConditionScalarWhereWithAggregatesInput[]
+    NOT?: AutomationConditionScalarWhereWithAggregatesInput | AutomationConditionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AutomationCondition"> | string
+    automationId?: StringWithAggregatesFilter<"AutomationCondition"> | string
+    type?: StringWithAggregatesFilter<"AutomationCondition"> | string
+    operator?: StringWithAggregatesFilter<"AutomationCondition"> | string
+    value?: StringWithAggregatesFilter<"AutomationCondition"> | string
+  }
+
+  export type AutomationActionWhereInput = {
+    AND?: AutomationActionWhereInput | AutomationActionWhereInput[]
+    OR?: AutomationActionWhereInput[]
+    NOT?: AutomationActionWhereInput | AutomationActionWhereInput[]
+    id?: StringFilter<"AutomationAction"> | string
+    automationId?: StringFilter<"AutomationAction"> | string
+    order?: IntFilter<"AutomationAction"> | number
+    type?: StringFilter<"AutomationAction"> | string
+    config?: StringNullableFilter<"AutomationAction"> | string | null
+    automation?: XOR<AutomationRelationFilter, AutomationWhereInput>
+  }
+
+  export type AutomationActionOrderByWithRelationInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    order?: SortOrder
+    type?: SortOrder
+    config?: SortOrderInput | SortOrder
+    automation?: AutomationOrderByWithRelationInput
+  }
+
+  export type AutomationActionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AutomationActionWhereInput | AutomationActionWhereInput[]
+    OR?: AutomationActionWhereInput[]
+    NOT?: AutomationActionWhereInput | AutomationActionWhereInput[]
+    automationId?: StringFilter<"AutomationAction"> | string
+    order?: IntFilter<"AutomationAction"> | number
+    type?: StringFilter<"AutomationAction"> | string
+    config?: StringNullableFilter<"AutomationAction"> | string | null
+    automation?: XOR<AutomationRelationFilter, AutomationWhereInput>
+  }, "id">
+
+  export type AutomationActionOrderByWithAggregationInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    order?: SortOrder
+    type?: SortOrder
+    config?: SortOrderInput | SortOrder
+    _count?: AutomationActionCountOrderByAggregateInput
+    _avg?: AutomationActionAvgOrderByAggregateInput
+    _max?: AutomationActionMaxOrderByAggregateInput
+    _min?: AutomationActionMinOrderByAggregateInput
+    _sum?: AutomationActionSumOrderByAggregateInput
+  }
+
+  export type AutomationActionScalarWhereWithAggregatesInput = {
+    AND?: AutomationActionScalarWhereWithAggregatesInput | AutomationActionScalarWhereWithAggregatesInput[]
+    OR?: AutomationActionScalarWhereWithAggregatesInput[]
+    NOT?: AutomationActionScalarWhereWithAggregatesInput | AutomationActionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AutomationAction"> | string
+    automationId?: StringWithAggregatesFilter<"AutomationAction"> | string
+    order?: IntWithAggregatesFilter<"AutomationAction"> | number
+    type?: StringWithAggregatesFilter<"AutomationAction"> | string
+    config?: StringNullableWithAggregatesFilter<"AutomationAction"> | string | null
+  }
+
+  export type AutomationExecutionWhereInput = {
+    AND?: AutomationExecutionWhereInput | AutomationExecutionWhereInput[]
+    OR?: AutomationExecutionWhereInput[]
+    NOT?: AutomationExecutionWhereInput | AutomationExecutionWhereInput[]
+    id?: StringFilter<"AutomationExecution"> | string
+    automationId?: StringFilter<"AutomationExecution"> | string
+    startedAt?: DateTimeFilter<"AutomationExecution"> | Date | string
+    finishedAt?: DateTimeNullableFilter<"AutomationExecution"> | Date | string | null
+    status?: StringFilter<"AutomationExecution"> | string
+    logs?: StringNullableFilter<"AutomationExecution"> | string | null
+    automation?: XOR<AutomationRelationFilter, AutomationWhereInput>
+  }
+
+  export type AutomationExecutionOrderByWithRelationInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrderInput | SortOrder
+    status?: SortOrder
+    logs?: SortOrderInput | SortOrder
+    automation?: AutomationOrderByWithRelationInput
+  }
+
+  export type AutomationExecutionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AutomationExecutionWhereInput | AutomationExecutionWhereInput[]
+    OR?: AutomationExecutionWhereInput[]
+    NOT?: AutomationExecutionWhereInput | AutomationExecutionWhereInput[]
+    automationId?: StringFilter<"AutomationExecution"> | string
+    startedAt?: DateTimeFilter<"AutomationExecution"> | Date | string
+    finishedAt?: DateTimeNullableFilter<"AutomationExecution"> | Date | string | null
+    status?: StringFilter<"AutomationExecution"> | string
+    logs?: StringNullableFilter<"AutomationExecution"> | string | null
+    automation?: XOR<AutomationRelationFilter, AutomationWhereInput>
+  }, "id">
+
+  export type AutomationExecutionOrderByWithAggregationInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrderInput | SortOrder
+    status?: SortOrder
+    logs?: SortOrderInput | SortOrder
+    _count?: AutomationExecutionCountOrderByAggregateInput
+    _max?: AutomationExecutionMaxOrderByAggregateInput
+    _min?: AutomationExecutionMinOrderByAggregateInput
+  }
+
+  export type AutomationExecutionScalarWhereWithAggregatesInput = {
+    AND?: AutomationExecutionScalarWhereWithAggregatesInput | AutomationExecutionScalarWhereWithAggregatesInput[]
+    OR?: AutomationExecutionScalarWhereWithAggregatesInput[]
+    NOT?: AutomationExecutionScalarWhereWithAggregatesInput | AutomationExecutionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AutomationExecution"> | string
+    automationId?: StringWithAggregatesFilter<"AutomationExecution"> | string
+    startedAt?: DateTimeWithAggregatesFilter<"AutomationExecution"> | Date | string
+    finishedAt?: DateTimeNullableWithAggregatesFilter<"AutomationExecution"> | Date | string | null
+    status?: StringWithAggregatesFilter<"AutomationExecution"> | string
+    logs?: StringNullableWithAggregatesFilter<"AutomationExecution"> | string | null
   }
 
   export type MarketplaceTemplateWhereInput = {
@@ -23020,7 +26401,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
@@ -23055,7 +26436,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
@@ -23090,7 +26471,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
@@ -23125,7 +26506,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
@@ -24001,101 +27382,278 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type ScheduledTaskCreateInput = {
+  export type AutomationCreateInput = {
     id?: string
-    action: string
-    cronExpression: string
+    name: string
     enabled?: boolean
-    broadcastMsg?: string | null
-    broadcastMin?: number | null
-    lastRunAt?: Date | string | null
-    lastBroadcastAt?: Date | string | null
+    triggerType: string
+    triggerConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
-    server: ServerCreateNestedOneWithoutScheduledTasksInput
-  }
-
-  export type ScheduledTaskUncheckedCreateInput = {
-    id?: string
-    serverId: string
-    action: string
-    cronExpression: string
-    enabled?: boolean
-    broadcastMsg?: string | null
-    broadcastMin?: number | null
     lastRunAt?: Date | string | null
-    lastBroadcastAt?: Date | string | null
-    createdAt?: Date | string
-    updatedAt?: Date | string
+    nextRunAt?: Date | string | null
+    server: ServerCreateNestedOneWithoutAutomationsInput
+    conditions?: AutomationConditionCreateNestedManyWithoutAutomationInput
+    actions?: AutomationActionCreateNestedManyWithoutAutomationInput
+    executions?: AutomationExecutionCreateNestedManyWithoutAutomationInput
   }
 
-  export type ScheduledTaskUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
-    cronExpression?: StringFieldUpdateOperationsInput | string
-    enabled?: BoolFieldUpdateOperationsInput | boolean
-    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
-    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
-    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    server?: ServerUpdateOneRequiredWithoutScheduledTasksNestedInput
-  }
-
-  export type ScheduledTaskUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    serverId?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
-    cronExpression?: StringFieldUpdateOperationsInput | string
-    enabled?: BoolFieldUpdateOperationsInput | boolean
-    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
-    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
-    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ScheduledTaskCreateManyInput = {
+  export type AutomationUncheckedCreateInput = {
     id?: string
     serverId: string
-    action: string
-    cronExpression: string
+    name: string
     enabled?: boolean
-    broadcastMsg?: string | null
-    broadcastMin?: number | null
-    lastRunAt?: Date | string | null
-    lastBroadcastAt?: Date | string | null
+    triggerType: string
+    triggerConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
+    conditions?: AutomationConditionUncheckedCreateNestedManyWithoutAutomationInput
+    actions?: AutomationActionUncheckedCreateNestedManyWithoutAutomationInput
+    executions?: AutomationExecutionUncheckedCreateNestedManyWithoutAutomationInput
   }
 
-  export type ScheduledTaskUpdateManyMutationInput = {
+  export type AutomationUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
-    cronExpression?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
     enabled?: BoolFieldUpdateOperationsInput | boolean
-    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
-    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
-    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    server?: ServerUpdateOneRequiredWithoutAutomationsNestedInput
+    conditions?: AutomationConditionUpdateManyWithoutAutomationNestedInput
+    actions?: AutomationActionUpdateManyWithoutAutomationNestedInput
+    executions?: AutomationExecutionUpdateManyWithoutAutomationNestedInput
   }
 
-  export type ScheduledTaskUncheckedUpdateManyInput = {
+  export type AutomationUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     serverId?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
-    cronExpression?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
     enabled?: BoolFieldUpdateOperationsInput | boolean
-    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
-    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
-    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    conditions?: AutomationConditionUncheckedUpdateManyWithoutAutomationNestedInput
+    actions?: AutomationActionUncheckedUpdateManyWithoutAutomationNestedInput
+    executions?: AutomationExecutionUncheckedUpdateManyWithoutAutomationNestedInput
+  }
+
+  export type AutomationCreateManyInput = {
+    id?: string
+    serverId: string
+    name: string
+    enabled?: boolean
+    triggerType: string
+    triggerConfig?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
+  }
+
+  export type AutomationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AutomationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AutomationConditionCreateInput = {
+    id?: string
+    type: string
+    operator: string
+    value: string
+    automation: AutomationCreateNestedOneWithoutConditionsInput
+  }
+
+  export type AutomationConditionUncheckedCreateInput = {
+    id?: string
+    automationId: string
+    type: string
+    operator: string
+    value: string
+  }
+
+  export type AutomationConditionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+    automation?: AutomationUpdateOneRequiredWithoutConditionsNestedInput
+  }
+
+  export type AutomationConditionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    automationId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type AutomationConditionCreateManyInput = {
+    id?: string
+    automationId: string
+    type: string
+    operator: string
+    value: string
+  }
+
+  export type AutomationConditionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type AutomationConditionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    automationId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type AutomationActionCreateInput = {
+    id?: string
+    order: number
+    type: string
+    config?: string | null
+    automation: AutomationCreateNestedOneWithoutActionsInput
+  }
+
+  export type AutomationActionUncheckedCreateInput = {
+    id?: string
+    automationId: string
+    order: number
+    type: string
+    config?: string | null
+  }
+
+  export type AutomationActionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    config?: NullableStringFieldUpdateOperationsInput | string | null
+    automation?: AutomationUpdateOneRequiredWithoutActionsNestedInput
+  }
+
+  export type AutomationActionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    automationId?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    config?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationActionCreateManyInput = {
+    id?: string
+    automationId: string
+    order: number
+    type: string
+    config?: string | null
+  }
+
+  export type AutomationActionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    config?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationActionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    automationId?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    config?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationExecutionCreateInput = {
+    id?: string
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+    status: string
+    logs?: string | null
+    automation: AutomationCreateNestedOneWithoutExecutionsInput
+  }
+
+  export type AutomationExecutionUncheckedCreateInput = {
+    id?: string
+    automationId: string
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+    status: string
+    logs?: string | null
+  }
+
+  export type AutomationExecutionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    logs?: NullableStringFieldUpdateOperationsInput | string | null
+    automation?: AutomationUpdateOneRequiredWithoutExecutionsNestedInput
+  }
+
+  export type AutomationExecutionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    automationId?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    logs?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationExecutionCreateManyInput = {
+    id?: string
+    automationId: string
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+    status: string
+    logs?: string | null
+  }
+
+  export type AutomationExecutionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    logs?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationExecutionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    automationId?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    logs?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type MarketplaceTemplateCreateInput = {
@@ -24702,10 +28260,10 @@ export namespace Prisma {
     none?: ServerSnapshotWhereInput
   }
 
-  export type ScheduledTaskListRelationFilter = {
-    every?: ScheduledTaskWhereInput
-    some?: ScheduledTaskWhereInput
-    none?: ScheduledTaskWhereInput
+  export type AutomationListRelationFilter = {
+    every?: AutomationWhereInput
+    some?: AutomationWhereInput
+    none?: AutomationWhereInput
   }
 
   export type ServerHostLinkNullableRelationFilter = {
@@ -24737,7 +28295,7 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
-  export type ScheduledTaskOrderByRelationAggregateInput = {
+  export type AutomationOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -25309,54 +28867,161 @@ export namespace Prisma {
     modCount?: SortOrder
   }
 
-  export type ScheduledTaskCountOrderByAggregateInput = {
+  export type AutomationConditionListRelationFilter = {
+    every?: AutomationConditionWhereInput
+    some?: AutomationConditionWhereInput
+    none?: AutomationConditionWhereInput
+  }
+
+  export type AutomationActionListRelationFilter = {
+    every?: AutomationActionWhereInput
+    some?: AutomationActionWhereInput
+    none?: AutomationActionWhereInput
+  }
+
+  export type AutomationExecutionListRelationFilter = {
+    every?: AutomationExecutionWhereInput
+    some?: AutomationExecutionWhereInput
+    none?: AutomationExecutionWhereInput
+  }
+
+  export type AutomationConditionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type AutomationActionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type AutomationExecutionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type AutomationCountOrderByAggregateInput = {
     id?: SortOrder
     serverId?: SortOrder
-    action?: SortOrder
-    cronExpression?: SortOrder
+    name?: SortOrder
     enabled?: SortOrder
-    broadcastMsg?: SortOrder
-    broadcastMin?: SortOrder
-    lastRunAt?: SortOrder
-    lastBroadcastAt?: SortOrder
+    triggerType?: SortOrder
+    triggerConfig?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    lastRunAt?: SortOrder
+    nextRunAt?: SortOrder
   }
 
-  export type ScheduledTaskAvgOrderByAggregateInput = {
-    broadcastMin?: SortOrder
-  }
-
-  export type ScheduledTaskMaxOrderByAggregateInput = {
+  export type AutomationMaxOrderByAggregateInput = {
     id?: SortOrder
     serverId?: SortOrder
-    action?: SortOrder
-    cronExpression?: SortOrder
+    name?: SortOrder
     enabled?: SortOrder
-    broadcastMsg?: SortOrder
-    broadcastMin?: SortOrder
-    lastRunAt?: SortOrder
-    lastBroadcastAt?: SortOrder
+    triggerType?: SortOrder
+    triggerConfig?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    lastRunAt?: SortOrder
+    nextRunAt?: SortOrder
   }
 
-  export type ScheduledTaskMinOrderByAggregateInput = {
+  export type AutomationMinOrderByAggregateInput = {
     id?: SortOrder
     serverId?: SortOrder
-    action?: SortOrder
-    cronExpression?: SortOrder
+    name?: SortOrder
     enabled?: SortOrder
-    broadcastMsg?: SortOrder
-    broadcastMin?: SortOrder
-    lastRunAt?: SortOrder
-    lastBroadcastAt?: SortOrder
+    triggerType?: SortOrder
+    triggerConfig?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    lastRunAt?: SortOrder
+    nextRunAt?: SortOrder
   }
 
-  export type ScheduledTaskSumOrderByAggregateInput = {
-    broadcastMin?: SortOrder
+  export type AutomationRelationFilter = {
+    is?: AutomationWhereInput
+    isNot?: AutomationWhereInput
+  }
+
+  export type AutomationConditionCountOrderByAggregateInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    type?: SortOrder
+    operator?: SortOrder
+    value?: SortOrder
+  }
+
+  export type AutomationConditionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    type?: SortOrder
+    operator?: SortOrder
+    value?: SortOrder
+  }
+
+  export type AutomationConditionMinOrderByAggregateInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    type?: SortOrder
+    operator?: SortOrder
+    value?: SortOrder
+  }
+
+  export type AutomationActionCountOrderByAggregateInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    order?: SortOrder
+    type?: SortOrder
+    config?: SortOrder
+  }
+
+  export type AutomationActionAvgOrderByAggregateInput = {
+    order?: SortOrder
+  }
+
+  export type AutomationActionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    order?: SortOrder
+    type?: SortOrder
+    config?: SortOrder
+  }
+
+  export type AutomationActionMinOrderByAggregateInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    order?: SortOrder
+    type?: SortOrder
+    config?: SortOrder
+  }
+
+  export type AutomationActionSumOrderByAggregateInput = {
+    order?: SortOrder
+  }
+
+  export type AutomationExecutionCountOrderByAggregateInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+    status?: SortOrder
+    logs?: SortOrder
+  }
+
+  export type AutomationExecutionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+    status?: SortOrder
+    logs?: SortOrder
+  }
+
+  export type AutomationExecutionMinOrderByAggregateInput = {
+    id?: SortOrder
+    automationId?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+    status?: SortOrder
+    logs?: SortOrder
   }
 
   export type MarketplaceTemplateCountOrderByAggregateInput = {
@@ -25884,11 +29549,11 @@ export namespace Prisma {
     connect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
   }
 
-  export type ScheduledTaskCreateNestedManyWithoutServerInput = {
-    create?: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput> | ScheduledTaskCreateWithoutServerInput[] | ScheduledTaskUncheckedCreateWithoutServerInput[]
-    connectOrCreate?: ScheduledTaskCreateOrConnectWithoutServerInput | ScheduledTaskCreateOrConnectWithoutServerInput[]
-    createMany?: ScheduledTaskCreateManyServerInputEnvelope
-    connect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+  export type AutomationCreateNestedManyWithoutServerInput = {
+    create?: XOR<AutomationCreateWithoutServerInput, AutomationUncheckedCreateWithoutServerInput> | AutomationCreateWithoutServerInput[] | AutomationUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: AutomationCreateOrConnectWithoutServerInput | AutomationCreateOrConnectWithoutServerInput[]
+    createMany?: AutomationCreateManyServerInputEnvelope
+    connect?: AutomationWhereUniqueInput | AutomationWhereUniqueInput[]
   }
 
   export type ServerHostLinkCreateNestedOneWithoutServerInput = {
@@ -25939,11 +29604,11 @@ export namespace Prisma {
     connect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
   }
 
-  export type ScheduledTaskUncheckedCreateNestedManyWithoutServerInput = {
-    create?: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput> | ScheduledTaskCreateWithoutServerInput[] | ScheduledTaskUncheckedCreateWithoutServerInput[]
-    connectOrCreate?: ScheduledTaskCreateOrConnectWithoutServerInput | ScheduledTaskCreateOrConnectWithoutServerInput[]
-    createMany?: ScheduledTaskCreateManyServerInputEnvelope
-    connect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
+  export type AutomationUncheckedCreateNestedManyWithoutServerInput = {
+    create?: XOR<AutomationCreateWithoutServerInput, AutomationUncheckedCreateWithoutServerInput> | AutomationCreateWithoutServerInput[] | AutomationUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: AutomationCreateOrConnectWithoutServerInput | AutomationCreateOrConnectWithoutServerInput[]
+    createMany?: AutomationCreateManyServerInputEnvelope
+    connect?: AutomationWhereUniqueInput | AutomationWhereUniqueInput[]
   }
 
   export type ServerHostLinkUncheckedCreateNestedOneWithoutServerInput = {
@@ -26060,18 +29725,18 @@ export namespace Prisma {
     deleteMany?: ServerSnapshotScalarWhereInput | ServerSnapshotScalarWhereInput[]
   }
 
-  export type ScheduledTaskUpdateManyWithoutServerNestedInput = {
-    create?: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput> | ScheduledTaskCreateWithoutServerInput[] | ScheduledTaskUncheckedCreateWithoutServerInput[]
-    connectOrCreate?: ScheduledTaskCreateOrConnectWithoutServerInput | ScheduledTaskCreateOrConnectWithoutServerInput[]
-    upsert?: ScheduledTaskUpsertWithWhereUniqueWithoutServerInput | ScheduledTaskUpsertWithWhereUniqueWithoutServerInput[]
-    createMany?: ScheduledTaskCreateManyServerInputEnvelope
-    set?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
-    disconnect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
-    delete?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
-    connect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
-    update?: ScheduledTaskUpdateWithWhereUniqueWithoutServerInput | ScheduledTaskUpdateWithWhereUniqueWithoutServerInput[]
-    updateMany?: ScheduledTaskUpdateManyWithWhereWithoutServerInput | ScheduledTaskUpdateManyWithWhereWithoutServerInput[]
-    deleteMany?: ScheduledTaskScalarWhereInput | ScheduledTaskScalarWhereInput[]
+  export type AutomationUpdateManyWithoutServerNestedInput = {
+    create?: XOR<AutomationCreateWithoutServerInput, AutomationUncheckedCreateWithoutServerInput> | AutomationCreateWithoutServerInput[] | AutomationUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: AutomationCreateOrConnectWithoutServerInput | AutomationCreateOrConnectWithoutServerInput[]
+    upsert?: AutomationUpsertWithWhereUniqueWithoutServerInput | AutomationUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: AutomationCreateManyServerInputEnvelope
+    set?: AutomationWhereUniqueInput | AutomationWhereUniqueInput[]
+    disconnect?: AutomationWhereUniqueInput | AutomationWhereUniqueInput[]
+    delete?: AutomationWhereUniqueInput | AutomationWhereUniqueInput[]
+    connect?: AutomationWhereUniqueInput | AutomationWhereUniqueInput[]
+    update?: AutomationUpdateWithWhereUniqueWithoutServerInput | AutomationUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: AutomationUpdateManyWithWhereWithoutServerInput | AutomationUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: AutomationScalarWhereInput | AutomationScalarWhereInput[]
   }
 
   export type ServerHostLinkUpdateOneWithoutServerNestedInput = {
@@ -26168,18 +29833,18 @@ export namespace Prisma {
     deleteMany?: ServerSnapshotScalarWhereInput | ServerSnapshotScalarWhereInput[]
   }
 
-  export type ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput = {
-    create?: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput> | ScheduledTaskCreateWithoutServerInput[] | ScheduledTaskUncheckedCreateWithoutServerInput[]
-    connectOrCreate?: ScheduledTaskCreateOrConnectWithoutServerInput | ScheduledTaskCreateOrConnectWithoutServerInput[]
-    upsert?: ScheduledTaskUpsertWithWhereUniqueWithoutServerInput | ScheduledTaskUpsertWithWhereUniqueWithoutServerInput[]
-    createMany?: ScheduledTaskCreateManyServerInputEnvelope
-    set?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
-    disconnect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
-    delete?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
-    connect?: ScheduledTaskWhereUniqueInput | ScheduledTaskWhereUniqueInput[]
-    update?: ScheduledTaskUpdateWithWhereUniqueWithoutServerInput | ScheduledTaskUpdateWithWhereUniqueWithoutServerInput[]
-    updateMany?: ScheduledTaskUpdateManyWithWhereWithoutServerInput | ScheduledTaskUpdateManyWithWhereWithoutServerInput[]
-    deleteMany?: ScheduledTaskScalarWhereInput | ScheduledTaskScalarWhereInput[]
+  export type AutomationUncheckedUpdateManyWithoutServerNestedInput = {
+    create?: XOR<AutomationCreateWithoutServerInput, AutomationUncheckedCreateWithoutServerInput> | AutomationCreateWithoutServerInput[] | AutomationUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: AutomationCreateOrConnectWithoutServerInput | AutomationCreateOrConnectWithoutServerInput[]
+    upsert?: AutomationUpsertWithWhereUniqueWithoutServerInput | AutomationUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: AutomationCreateManyServerInputEnvelope
+    set?: AutomationWhereUniqueInput | AutomationWhereUniqueInput[]
+    disconnect?: AutomationWhereUniqueInput | AutomationWhereUniqueInput[]
+    delete?: AutomationWhereUniqueInput | AutomationWhereUniqueInput[]
+    connect?: AutomationWhereUniqueInput | AutomationWhereUniqueInput[]
+    update?: AutomationUpdateWithWhereUniqueWithoutServerInput | AutomationUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: AutomationUpdateManyWithWhereWithoutServerInput | AutomationUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: AutomationScalarWhereInput | AutomationScalarWhereInput[]
   }
 
   export type ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput = {
@@ -26418,18 +30083,186 @@ export namespace Prisma {
     update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutSnapshotsInput, ServerUpdateWithoutSnapshotsInput>, ServerUncheckedUpdateWithoutSnapshotsInput>
   }
 
-  export type ServerCreateNestedOneWithoutScheduledTasksInput = {
-    create?: XOR<ServerCreateWithoutScheduledTasksInput, ServerUncheckedCreateWithoutScheduledTasksInput>
-    connectOrCreate?: ServerCreateOrConnectWithoutScheduledTasksInput
+  export type ServerCreateNestedOneWithoutAutomationsInput = {
+    create?: XOR<ServerCreateWithoutAutomationsInput, ServerUncheckedCreateWithoutAutomationsInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutAutomationsInput
     connect?: ServerWhereUniqueInput
   }
 
-  export type ServerUpdateOneRequiredWithoutScheduledTasksNestedInput = {
-    create?: XOR<ServerCreateWithoutScheduledTasksInput, ServerUncheckedCreateWithoutScheduledTasksInput>
-    connectOrCreate?: ServerCreateOrConnectWithoutScheduledTasksInput
-    upsert?: ServerUpsertWithoutScheduledTasksInput
+  export type AutomationConditionCreateNestedManyWithoutAutomationInput = {
+    create?: XOR<AutomationConditionCreateWithoutAutomationInput, AutomationConditionUncheckedCreateWithoutAutomationInput> | AutomationConditionCreateWithoutAutomationInput[] | AutomationConditionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationConditionCreateOrConnectWithoutAutomationInput | AutomationConditionCreateOrConnectWithoutAutomationInput[]
+    createMany?: AutomationConditionCreateManyAutomationInputEnvelope
+    connect?: AutomationConditionWhereUniqueInput | AutomationConditionWhereUniqueInput[]
+  }
+
+  export type AutomationActionCreateNestedManyWithoutAutomationInput = {
+    create?: XOR<AutomationActionCreateWithoutAutomationInput, AutomationActionUncheckedCreateWithoutAutomationInput> | AutomationActionCreateWithoutAutomationInput[] | AutomationActionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationActionCreateOrConnectWithoutAutomationInput | AutomationActionCreateOrConnectWithoutAutomationInput[]
+    createMany?: AutomationActionCreateManyAutomationInputEnvelope
+    connect?: AutomationActionWhereUniqueInput | AutomationActionWhereUniqueInput[]
+  }
+
+  export type AutomationExecutionCreateNestedManyWithoutAutomationInput = {
+    create?: XOR<AutomationExecutionCreateWithoutAutomationInput, AutomationExecutionUncheckedCreateWithoutAutomationInput> | AutomationExecutionCreateWithoutAutomationInput[] | AutomationExecutionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationExecutionCreateOrConnectWithoutAutomationInput | AutomationExecutionCreateOrConnectWithoutAutomationInput[]
+    createMany?: AutomationExecutionCreateManyAutomationInputEnvelope
+    connect?: AutomationExecutionWhereUniqueInput | AutomationExecutionWhereUniqueInput[]
+  }
+
+  export type AutomationConditionUncheckedCreateNestedManyWithoutAutomationInput = {
+    create?: XOR<AutomationConditionCreateWithoutAutomationInput, AutomationConditionUncheckedCreateWithoutAutomationInput> | AutomationConditionCreateWithoutAutomationInput[] | AutomationConditionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationConditionCreateOrConnectWithoutAutomationInput | AutomationConditionCreateOrConnectWithoutAutomationInput[]
+    createMany?: AutomationConditionCreateManyAutomationInputEnvelope
+    connect?: AutomationConditionWhereUniqueInput | AutomationConditionWhereUniqueInput[]
+  }
+
+  export type AutomationActionUncheckedCreateNestedManyWithoutAutomationInput = {
+    create?: XOR<AutomationActionCreateWithoutAutomationInput, AutomationActionUncheckedCreateWithoutAutomationInput> | AutomationActionCreateWithoutAutomationInput[] | AutomationActionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationActionCreateOrConnectWithoutAutomationInput | AutomationActionCreateOrConnectWithoutAutomationInput[]
+    createMany?: AutomationActionCreateManyAutomationInputEnvelope
+    connect?: AutomationActionWhereUniqueInput | AutomationActionWhereUniqueInput[]
+  }
+
+  export type AutomationExecutionUncheckedCreateNestedManyWithoutAutomationInput = {
+    create?: XOR<AutomationExecutionCreateWithoutAutomationInput, AutomationExecutionUncheckedCreateWithoutAutomationInput> | AutomationExecutionCreateWithoutAutomationInput[] | AutomationExecutionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationExecutionCreateOrConnectWithoutAutomationInput | AutomationExecutionCreateOrConnectWithoutAutomationInput[]
+    createMany?: AutomationExecutionCreateManyAutomationInputEnvelope
+    connect?: AutomationExecutionWhereUniqueInput | AutomationExecutionWhereUniqueInput[]
+  }
+
+  export type ServerUpdateOneRequiredWithoutAutomationsNestedInput = {
+    create?: XOR<ServerCreateWithoutAutomationsInput, ServerUncheckedCreateWithoutAutomationsInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutAutomationsInput
+    upsert?: ServerUpsertWithoutAutomationsInput
     connect?: ServerWhereUniqueInput
-    update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutScheduledTasksInput, ServerUpdateWithoutScheduledTasksInput>, ServerUncheckedUpdateWithoutScheduledTasksInput>
+    update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutAutomationsInput, ServerUpdateWithoutAutomationsInput>, ServerUncheckedUpdateWithoutAutomationsInput>
+  }
+
+  export type AutomationConditionUpdateManyWithoutAutomationNestedInput = {
+    create?: XOR<AutomationConditionCreateWithoutAutomationInput, AutomationConditionUncheckedCreateWithoutAutomationInput> | AutomationConditionCreateWithoutAutomationInput[] | AutomationConditionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationConditionCreateOrConnectWithoutAutomationInput | AutomationConditionCreateOrConnectWithoutAutomationInput[]
+    upsert?: AutomationConditionUpsertWithWhereUniqueWithoutAutomationInput | AutomationConditionUpsertWithWhereUniqueWithoutAutomationInput[]
+    createMany?: AutomationConditionCreateManyAutomationInputEnvelope
+    set?: AutomationConditionWhereUniqueInput | AutomationConditionWhereUniqueInput[]
+    disconnect?: AutomationConditionWhereUniqueInput | AutomationConditionWhereUniqueInput[]
+    delete?: AutomationConditionWhereUniqueInput | AutomationConditionWhereUniqueInput[]
+    connect?: AutomationConditionWhereUniqueInput | AutomationConditionWhereUniqueInput[]
+    update?: AutomationConditionUpdateWithWhereUniqueWithoutAutomationInput | AutomationConditionUpdateWithWhereUniqueWithoutAutomationInput[]
+    updateMany?: AutomationConditionUpdateManyWithWhereWithoutAutomationInput | AutomationConditionUpdateManyWithWhereWithoutAutomationInput[]
+    deleteMany?: AutomationConditionScalarWhereInput | AutomationConditionScalarWhereInput[]
+  }
+
+  export type AutomationActionUpdateManyWithoutAutomationNestedInput = {
+    create?: XOR<AutomationActionCreateWithoutAutomationInput, AutomationActionUncheckedCreateWithoutAutomationInput> | AutomationActionCreateWithoutAutomationInput[] | AutomationActionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationActionCreateOrConnectWithoutAutomationInput | AutomationActionCreateOrConnectWithoutAutomationInput[]
+    upsert?: AutomationActionUpsertWithWhereUniqueWithoutAutomationInput | AutomationActionUpsertWithWhereUniqueWithoutAutomationInput[]
+    createMany?: AutomationActionCreateManyAutomationInputEnvelope
+    set?: AutomationActionWhereUniqueInput | AutomationActionWhereUniqueInput[]
+    disconnect?: AutomationActionWhereUniqueInput | AutomationActionWhereUniqueInput[]
+    delete?: AutomationActionWhereUniqueInput | AutomationActionWhereUniqueInput[]
+    connect?: AutomationActionWhereUniqueInput | AutomationActionWhereUniqueInput[]
+    update?: AutomationActionUpdateWithWhereUniqueWithoutAutomationInput | AutomationActionUpdateWithWhereUniqueWithoutAutomationInput[]
+    updateMany?: AutomationActionUpdateManyWithWhereWithoutAutomationInput | AutomationActionUpdateManyWithWhereWithoutAutomationInput[]
+    deleteMany?: AutomationActionScalarWhereInput | AutomationActionScalarWhereInput[]
+  }
+
+  export type AutomationExecutionUpdateManyWithoutAutomationNestedInput = {
+    create?: XOR<AutomationExecutionCreateWithoutAutomationInput, AutomationExecutionUncheckedCreateWithoutAutomationInput> | AutomationExecutionCreateWithoutAutomationInput[] | AutomationExecutionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationExecutionCreateOrConnectWithoutAutomationInput | AutomationExecutionCreateOrConnectWithoutAutomationInput[]
+    upsert?: AutomationExecutionUpsertWithWhereUniqueWithoutAutomationInput | AutomationExecutionUpsertWithWhereUniqueWithoutAutomationInput[]
+    createMany?: AutomationExecutionCreateManyAutomationInputEnvelope
+    set?: AutomationExecutionWhereUniqueInput | AutomationExecutionWhereUniqueInput[]
+    disconnect?: AutomationExecutionWhereUniqueInput | AutomationExecutionWhereUniqueInput[]
+    delete?: AutomationExecutionWhereUniqueInput | AutomationExecutionWhereUniqueInput[]
+    connect?: AutomationExecutionWhereUniqueInput | AutomationExecutionWhereUniqueInput[]
+    update?: AutomationExecutionUpdateWithWhereUniqueWithoutAutomationInput | AutomationExecutionUpdateWithWhereUniqueWithoutAutomationInput[]
+    updateMany?: AutomationExecutionUpdateManyWithWhereWithoutAutomationInput | AutomationExecutionUpdateManyWithWhereWithoutAutomationInput[]
+    deleteMany?: AutomationExecutionScalarWhereInput | AutomationExecutionScalarWhereInput[]
+  }
+
+  export type AutomationConditionUncheckedUpdateManyWithoutAutomationNestedInput = {
+    create?: XOR<AutomationConditionCreateWithoutAutomationInput, AutomationConditionUncheckedCreateWithoutAutomationInput> | AutomationConditionCreateWithoutAutomationInput[] | AutomationConditionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationConditionCreateOrConnectWithoutAutomationInput | AutomationConditionCreateOrConnectWithoutAutomationInput[]
+    upsert?: AutomationConditionUpsertWithWhereUniqueWithoutAutomationInput | AutomationConditionUpsertWithWhereUniqueWithoutAutomationInput[]
+    createMany?: AutomationConditionCreateManyAutomationInputEnvelope
+    set?: AutomationConditionWhereUniqueInput | AutomationConditionWhereUniqueInput[]
+    disconnect?: AutomationConditionWhereUniqueInput | AutomationConditionWhereUniqueInput[]
+    delete?: AutomationConditionWhereUniqueInput | AutomationConditionWhereUniqueInput[]
+    connect?: AutomationConditionWhereUniqueInput | AutomationConditionWhereUniqueInput[]
+    update?: AutomationConditionUpdateWithWhereUniqueWithoutAutomationInput | AutomationConditionUpdateWithWhereUniqueWithoutAutomationInput[]
+    updateMany?: AutomationConditionUpdateManyWithWhereWithoutAutomationInput | AutomationConditionUpdateManyWithWhereWithoutAutomationInput[]
+    deleteMany?: AutomationConditionScalarWhereInput | AutomationConditionScalarWhereInput[]
+  }
+
+  export type AutomationActionUncheckedUpdateManyWithoutAutomationNestedInput = {
+    create?: XOR<AutomationActionCreateWithoutAutomationInput, AutomationActionUncheckedCreateWithoutAutomationInput> | AutomationActionCreateWithoutAutomationInput[] | AutomationActionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationActionCreateOrConnectWithoutAutomationInput | AutomationActionCreateOrConnectWithoutAutomationInput[]
+    upsert?: AutomationActionUpsertWithWhereUniqueWithoutAutomationInput | AutomationActionUpsertWithWhereUniqueWithoutAutomationInput[]
+    createMany?: AutomationActionCreateManyAutomationInputEnvelope
+    set?: AutomationActionWhereUniqueInput | AutomationActionWhereUniqueInput[]
+    disconnect?: AutomationActionWhereUniqueInput | AutomationActionWhereUniqueInput[]
+    delete?: AutomationActionWhereUniqueInput | AutomationActionWhereUniqueInput[]
+    connect?: AutomationActionWhereUniqueInput | AutomationActionWhereUniqueInput[]
+    update?: AutomationActionUpdateWithWhereUniqueWithoutAutomationInput | AutomationActionUpdateWithWhereUniqueWithoutAutomationInput[]
+    updateMany?: AutomationActionUpdateManyWithWhereWithoutAutomationInput | AutomationActionUpdateManyWithWhereWithoutAutomationInput[]
+    deleteMany?: AutomationActionScalarWhereInput | AutomationActionScalarWhereInput[]
+  }
+
+  export type AutomationExecutionUncheckedUpdateManyWithoutAutomationNestedInput = {
+    create?: XOR<AutomationExecutionCreateWithoutAutomationInput, AutomationExecutionUncheckedCreateWithoutAutomationInput> | AutomationExecutionCreateWithoutAutomationInput[] | AutomationExecutionUncheckedCreateWithoutAutomationInput[]
+    connectOrCreate?: AutomationExecutionCreateOrConnectWithoutAutomationInput | AutomationExecutionCreateOrConnectWithoutAutomationInput[]
+    upsert?: AutomationExecutionUpsertWithWhereUniqueWithoutAutomationInput | AutomationExecutionUpsertWithWhereUniqueWithoutAutomationInput[]
+    createMany?: AutomationExecutionCreateManyAutomationInputEnvelope
+    set?: AutomationExecutionWhereUniqueInput | AutomationExecutionWhereUniqueInput[]
+    disconnect?: AutomationExecutionWhereUniqueInput | AutomationExecutionWhereUniqueInput[]
+    delete?: AutomationExecutionWhereUniqueInput | AutomationExecutionWhereUniqueInput[]
+    connect?: AutomationExecutionWhereUniqueInput | AutomationExecutionWhereUniqueInput[]
+    update?: AutomationExecutionUpdateWithWhereUniqueWithoutAutomationInput | AutomationExecutionUpdateWithWhereUniqueWithoutAutomationInput[]
+    updateMany?: AutomationExecutionUpdateManyWithWhereWithoutAutomationInput | AutomationExecutionUpdateManyWithWhereWithoutAutomationInput[]
+    deleteMany?: AutomationExecutionScalarWhereInput | AutomationExecutionScalarWhereInput[]
+  }
+
+  export type AutomationCreateNestedOneWithoutConditionsInput = {
+    create?: XOR<AutomationCreateWithoutConditionsInput, AutomationUncheckedCreateWithoutConditionsInput>
+    connectOrCreate?: AutomationCreateOrConnectWithoutConditionsInput
+    connect?: AutomationWhereUniqueInput
+  }
+
+  export type AutomationUpdateOneRequiredWithoutConditionsNestedInput = {
+    create?: XOR<AutomationCreateWithoutConditionsInput, AutomationUncheckedCreateWithoutConditionsInput>
+    connectOrCreate?: AutomationCreateOrConnectWithoutConditionsInput
+    upsert?: AutomationUpsertWithoutConditionsInput
+    connect?: AutomationWhereUniqueInput
+    update?: XOR<XOR<AutomationUpdateToOneWithWhereWithoutConditionsInput, AutomationUpdateWithoutConditionsInput>, AutomationUncheckedUpdateWithoutConditionsInput>
+  }
+
+  export type AutomationCreateNestedOneWithoutActionsInput = {
+    create?: XOR<AutomationCreateWithoutActionsInput, AutomationUncheckedCreateWithoutActionsInput>
+    connectOrCreate?: AutomationCreateOrConnectWithoutActionsInput
+    connect?: AutomationWhereUniqueInput
+  }
+
+  export type AutomationUpdateOneRequiredWithoutActionsNestedInput = {
+    create?: XOR<AutomationCreateWithoutActionsInput, AutomationUncheckedCreateWithoutActionsInput>
+    connectOrCreate?: AutomationCreateOrConnectWithoutActionsInput
+    upsert?: AutomationUpsertWithoutActionsInput
+    connect?: AutomationWhereUniqueInput
+    update?: XOR<XOR<AutomationUpdateToOneWithWhereWithoutActionsInput, AutomationUpdateWithoutActionsInput>, AutomationUncheckedUpdateWithoutActionsInput>
+  }
+
+  export type AutomationCreateNestedOneWithoutExecutionsInput = {
+    create?: XOR<AutomationCreateWithoutExecutionsInput, AutomationUncheckedCreateWithoutExecutionsInput>
+    connectOrCreate?: AutomationCreateOrConnectWithoutExecutionsInput
+    connect?: AutomationWhereUniqueInput
+  }
+
+  export type AutomationUpdateOneRequiredWithoutExecutionsNestedInput = {
+    create?: XOR<AutomationCreateWithoutExecutionsInput, AutomationUncheckedCreateWithoutExecutionsInput>
+    connectOrCreate?: AutomationCreateOrConnectWithoutExecutionsInput
+    upsert?: AutomationUpsertWithoutExecutionsInput
+    connect?: AutomationWhereUniqueInput
+    update?: XOR<XOR<AutomationUpdateToOneWithWhereWithoutExecutionsInput, AutomationUpdateWithoutExecutionsInput>, AutomationUncheckedUpdateWithoutExecutionsInput>
   }
 
   export type TemplateVoteCreateNestedManyWithoutTemplateInput = {
@@ -26827,7 +30660,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
@@ -26861,7 +30694,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
@@ -27546,39 +31379,43 @@ export namespace Prisma {
     data: ServerSnapshotCreateManyServerInput | ServerSnapshotCreateManyServerInput[]
   }
 
-  export type ScheduledTaskCreateWithoutServerInput = {
+  export type AutomationCreateWithoutServerInput = {
     id?: string
-    action: string
-    cronExpression: string
+    name: string
     enabled?: boolean
-    broadcastMsg?: string | null
-    broadcastMin?: number | null
-    lastRunAt?: Date | string | null
-    lastBroadcastAt?: Date | string | null
+    triggerType: string
+    triggerConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
+    conditions?: AutomationConditionCreateNestedManyWithoutAutomationInput
+    actions?: AutomationActionCreateNestedManyWithoutAutomationInput
+    executions?: AutomationExecutionCreateNestedManyWithoutAutomationInput
   }
 
-  export type ScheduledTaskUncheckedCreateWithoutServerInput = {
+  export type AutomationUncheckedCreateWithoutServerInput = {
     id?: string
-    action: string
-    cronExpression: string
+    name: string
     enabled?: boolean
-    broadcastMsg?: string | null
-    broadcastMin?: number | null
-    lastRunAt?: Date | string | null
-    lastBroadcastAt?: Date | string | null
+    triggerType: string
+    triggerConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
+    conditions?: AutomationConditionUncheckedCreateNestedManyWithoutAutomationInput
+    actions?: AutomationActionUncheckedCreateNestedManyWithoutAutomationInput
+    executions?: AutomationExecutionUncheckedCreateNestedManyWithoutAutomationInput
   }
 
-  export type ScheduledTaskCreateOrConnectWithoutServerInput = {
-    where: ScheduledTaskWhereUniqueInput
-    create: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput>
+  export type AutomationCreateOrConnectWithoutServerInput = {
+    where: AutomationWhereUniqueInput
+    create: XOR<AutomationCreateWithoutServerInput, AutomationUncheckedCreateWithoutServerInput>
   }
 
-  export type ScheduledTaskCreateManyServerInputEnvelope = {
-    data: ScheduledTaskCreateManyServerInput | ScheduledTaskCreateManyServerInput[]
+  export type AutomationCreateManyServerInputEnvelope = {
+    data: AutomationCreateManyServerInput | AutomationCreateManyServerInput[]
   }
 
   export type ServerHostLinkCreateWithoutServerInput = {
@@ -27876,37 +31713,36 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ServerSnapshot"> | Date | string
   }
 
-  export type ScheduledTaskUpsertWithWhereUniqueWithoutServerInput = {
-    where: ScheduledTaskWhereUniqueInput
-    update: XOR<ScheduledTaskUpdateWithoutServerInput, ScheduledTaskUncheckedUpdateWithoutServerInput>
-    create: XOR<ScheduledTaskCreateWithoutServerInput, ScheduledTaskUncheckedCreateWithoutServerInput>
+  export type AutomationUpsertWithWhereUniqueWithoutServerInput = {
+    where: AutomationWhereUniqueInput
+    update: XOR<AutomationUpdateWithoutServerInput, AutomationUncheckedUpdateWithoutServerInput>
+    create: XOR<AutomationCreateWithoutServerInput, AutomationUncheckedCreateWithoutServerInput>
   }
 
-  export type ScheduledTaskUpdateWithWhereUniqueWithoutServerInput = {
-    where: ScheduledTaskWhereUniqueInput
-    data: XOR<ScheduledTaskUpdateWithoutServerInput, ScheduledTaskUncheckedUpdateWithoutServerInput>
+  export type AutomationUpdateWithWhereUniqueWithoutServerInput = {
+    where: AutomationWhereUniqueInput
+    data: XOR<AutomationUpdateWithoutServerInput, AutomationUncheckedUpdateWithoutServerInput>
   }
 
-  export type ScheduledTaskUpdateManyWithWhereWithoutServerInput = {
-    where: ScheduledTaskScalarWhereInput
-    data: XOR<ScheduledTaskUpdateManyMutationInput, ScheduledTaskUncheckedUpdateManyWithoutServerInput>
+  export type AutomationUpdateManyWithWhereWithoutServerInput = {
+    where: AutomationScalarWhereInput
+    data: XOR<AutomationUpdateManyMutationInput, AutomationUncheckedUpdateManyWithoutServerInput>
   }
 
-  export type ScheduledTaskScalarWhereInput = {
-    AND?: ScheduledTaskScalarWhereInput | ScheduledTaskScalarWhereInput[]
-    OR?: ScheduledTaskScalarWhereInput[]
-    NOT?: ScheduledTaskScalarWhereInput | ScheduledTaskScalarWhereInput[]
-    id?: StringFilter<"ScheduledTask"> | string
-    serverId?: StringFilter<"ScheduledTask"> | string
-    action?: StringFilter<"ScheduledTask"> | string
-    cronExpression?: StringFilter<"ScheduledTask"> | string
-    enabled?: BoolFilter<"ScheduledTask"> | boolean
-    broadcastMsg?: StringNullableFilter<"ScheduledTask"> | string | null
-    broadcastMin?: IntNullableFilter<"ScheduledTask"> | number | null
-    lastRunAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
-    lastBroadcastAt?: DateTimeNullableFilter<"ScheduledTask"> | Date | string | null
-    createdAt?: DateTimeFilter<"ScheduledTask"> | Date | string
-    updatedAt?: DateTimeFilter<"ScheduledTask"> | Date | string
+  export type AutomationScalarWhereInput = {
+    AND?: AutomationScalarWhereInput | AutomationScalarWhereInput[]
+    OR?: AutomationScalarWhereInput[]
+    NOT?: AutomationScalarWhereInput | AutomationScalarWhereInput[]
+    id?: StringFilter<"Automation"> | string
+    serverId?: StringFilter<"Automation"> | string
+    name?: StringFilter<"Automation"> | string
+    enabled?: BoolFilter<"Automation"> | boolean
+    triggerType?: StringFilter<"Automation"> | string
+    triggerConfig?: StringNullableFilter<"Automation"> | string | null
+    createdAt?: DateTimeFilter<"Automation"> | Date | string
+    updatedAt?: DateTimeFilter<"Automation"> | Date | string
+    lastRunAt?: DateTimeNullableFilter<"Automation"> | Date | string | null
+    nextRunAt?: DateTimeNullableFilter<"Automation"> | Date | string | null
   }
 
   export type ServerHostLinkUpsertWithoutServerInput = {
@@ -28038,7 +31874,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
   }
@@ -28072,7 +31908,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
   }
@@ -28122,7 +31958,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
   }
@@ -28156,7 +31992,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
   }
@@ -28190,7 +32026,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
   }
@@ -28224,7 +32060,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
   }
@@ -28274,7 +32110,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
   }
@@ -28308,7 +32144,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
   }
@@ -28342,7 +32178,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
   }
@@ -28376,7 +32212,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
   }
@@ -28426,7 +32262,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
   }
@@ -28460,7 +32296,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
   }
@@ -28693,7 +32529,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
@@ -28727,7 +32563,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
@@ -28777,7 +32613,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
@@ -28811,7 +32647,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
@@ -28845,7 +32681,7 @@ export namespace Prisma {
     backups?: BackupCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
@@ -28879,7 +32715,7 @@ export namespace Prisma {
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
@@ -28976,7 +32812,7 @@ export namespace Prisma {
     backups?: BackupUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
@@ -29010,7 +32846,7 @@ export namespace Prisma {
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
@@ -29144,7 +32980,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
@@ -29178,7 +33014,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
@@ -29290,7 +33126,7 @@ export namespace Prisma {
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
@@ -29324,7 +33160,7 @@ export namespace Prisma {
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
@@ -29374,7 +33210,7 @@ export namespace Prisma {
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
@@ -29408,7 +33244,7 @@ export namespace Prisma {
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
@@ -29442,7 +33278,7 @@ export namespace Prisma {
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
@@ -29476,7 +33312,7 @@ export namespace Prisma {
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
-    scheduledTasks?: ScheduledTaskUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
@@ -29526,7 +33362,7 @@ export namespace Prisma {
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
@@ -29560,13 +33396,13 @@ export namespace Prisma {
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
-  export type ServerCreateWithoutScheduledTasksInput = {
+  export type ServerCreateWithoutAutomationsInput = {
     id?: string
     name: string
     game: string
@@ -29600,7 +33436,7 @@ export namespace Prisma {
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
   }
 
-  export type ServerUncheckedCreateWithoutScheduledTasksInput = {
+  export type ServerUncheckedCreateWithoutAutomationsInput = {
     id?: string
     userId: string
     name: string
@@ -29634,23 +33470,94 @@ export namespace Prisma {
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
-  export type ServerCreateOrConnectWithoutScheduledTasksInput = {
+  export type ServerCreateOrConnectWithoutAutomationsInput = {
     where: ServerWhereUniqueInput
-    create: XOR<ServerCreateWithoutScheduledTasksInput, ServerUncheckedCreateWithoutScheduledTasksInput>
+    create: XOR<ServerCreateWithoutAutomationsInput, ServerUncheckedCreateWithoutAutomationsInput>
   }
 
-  export type ServerUpsertWithoutScheduledTasksInput = {
-    update: XOR<ServerUpdateWithoutScheduledTasksInput, ServerUncheckedUpdateWithoutScheduledTasksInput>
-    create: XOR<ServerCreateWithoutScheduledTasksInput, ServerUncheckedCreateWithoutScheduledTasksInput>
+  export type AutomationConditionCreateWithoutAutomationInput = {
+    id?: string
+    type: string
+    operator: string
+    value: string
+  }
+
+  export type AutomationConditionUncheckedCreateWithoutAutomationInput = {
+    id?: string
+    type: string
+    operator: string
+    value: string
+  }
+
+  export type AutomationConditionCreateOrConnectWithoutAutomationInput = {
+    where: AutomationConditionWhereUniqueInput
+    create: XOR<AutomationConditionCreateWithoutAutomationInput, AutomationConditionUncheckedCreateWithoutAutomationInput>
+  }
+
+  export type AutomationConditionCreateManyAutomationInputEnvelope = {
+    data: AutomationConditionCreateManyAutomationInput | AutomationConditionCreateManyAutomationInput[]
+  }
+
+  export type AutomationActionCreateWithoutAutomationInput = {
+    id?: string
+    order: number
+    type: string
+    config?: string | null
+  }
+
+  export type AutomationActionUncheckedCreateWithoutAutomationInput = {
+    id?: string
+    order: number
+    type: string
+    config?: string | null
+  }
+
+  export type AutomationActionCreateOrConnectWithoutAutomationInput = {
+    where: AutomationActionWhereUniqueInput
+    create: XOR<AutomationActionCreateWithoutAutomationInput, AutomationActionUncheckedCreateWithoutAutomationInput>
+  }
+
+  export type AutomationActionCreateManyAutomationInputEnvelope = {
+    data: AutomationActionCreateManyAutomationInput | AutomationActionCreateManyAutomationInput[]
+  }
+
+  export type AutomationExecutionCreateWithoutAutomationInput = {
+    id?: string
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+    status: string
+    logs?: string | null
+  }
+
+  export type AutomationExecutionUncheckedCreateWithoutAutomationInput = {
+    id?: string
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+    status: string
+    logs?: string | null
+  }
+
+  export type AutomationExecutionCreateOrConnectWithoutAutomationInput = {
+    where: AutomationExecutionWhereUniqueInput
+    create: XOR<AutomationExecutionCreateWithoutAutomationInput, AutomationExecutionUncheckedCreateWithoutAutomationInput>
+  }
+
+  export type AutomationExecutionCreateManyAutomationInputEnvelope = {
+    data: AutomationExecutionCreateManyAutomationInput | AutomationExecutionCreateManyAutomationInput[]
+  }
+
+  export type ServerUpsertWithoutAutomationsInput = {
+    update: XOR<ServerUpdateWithoutAutomationsInput, ServerUncheckedUpdateWithoutAutomationsInput>
+    create: XOR<ServerCreateWithoutAutomationsInput, ServerUncheckedCreateWithoutAutomationsInput>
     where?: ServerWhereInput
   }
 
-  export type ServerUpdateToOneWithWhereWithoutScheduledTasksInput = {
+  export type ServerUpdateToOneWithWhereWithoutAutomationsInput = {
     where?: ServerWhereInput
-    data: XOR<ServerUpdateWithoutScheduledTasksInput, ServerUncheckedUpdateWithoutScheduledTasksInput>
+    data: XOR<ServerUpdateWithoutAutomationsInput, ServerUncheckedUpdateWithoutAutomationsInput>
   }
 
-  export type ServerUpdateWithoutScheduledTasksInput = {
+  export type ServerUpdateWithoutAutomationsInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     game?: StringFieldUpdateOperationsInput | string
@@ -29684,7 +33591,7 @@ export namespace Prisma {
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
   }
 
-  export type ServerUncheckedUpdateWithoutScheduledTasksInput = {
+  export type ServerUncheckedUpdateWithoutAutomationsInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -29716,6 +33623,316 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+  }
+
+  export type AutomationConditionUpsertWithWhereUniqueWithoutAutomationInput = {
+    where: AutomationConditionWhereUniqueInput
+    update: XOR<AutomationConditionUpdateWithoutAutomationInput, AutomationConditionUncheckedUpdateWithoutAutomationInput>
+    create: XOR<AutomationConditionCreateWithoutAutomationInput, AutomationConditionUncheckedCreateWithoutAutomationInput>
+  }
+
+  export type AutomationConditionUpdateWithWhereUniqueWithoutAutomationInput = {
+    where: AutomationConditionWhereUniqueInput
+    data: XOR<AutomationConditionUpdateWithoutAutomationInput, AutomationConditionUncheckedUpdateWithoutAutomationInput>
+  }
+
+  export type AutomationConditionUpdateManyWithWhereWithoutAutomationInput = {
+    where: AutomationConditionScalarWhereInput
+    data: XOR<AutomationConditionUpdateManyMutationInput, AutomationConditionUncheckedUpdateManyWithoutAutomationInput>
+  }
+
+  export type AutomationConditionScalarWhereInput = {
+    AND?: AutomationConditionScalarWhereInput | AutomationConditionScalarWhereInput[]
+    OR?: AutomationConditionScalarWhereInput[]
+    NOT?: AutomationConditionScalarWhereInput | AutomationConditionScalarWhereInput[]
+    id?: StringFilter<"AutomationCondition"> | string
+    automationId?: StringFilter<"AutomationCondition"> | string
+    type?: StringFilter<"AutomationCondition"> | string
+    operator?: StringFilter<"AutomationCondition"> | string
+    value?: StringFilter<"AutomationCondition"> | string
+  }
+
+  export type AutomationActionUpsertWithWhereUniqueWithoutAutomationInput = {
+    where: AutomationActionWhereUniqueInput
+    update: XOR<AutomationActionUpdateWithoutAutomationInput, AutomationActionUncheckedUpdateWithoutAutomationInput>
+    create: XOR<AutomationActionCreateWithoutAutomationInput, AutomationActionUncheckedCreateWithoutAutomationInput>
+  }
+
+  export type AutomationActionUpdateWithWhereUniqueWithoutAutomationInput = {
+    where: AutomationActionWhereUniqueInput
+    data: XOR<AutomationActionUpdateWithoutAutomationInput, AutomationActionUncheckedUpdateWithoutAutomationInput>
+  }
+
+  export type AutomationActionUpdateManyWithWhereWithoutAutomationInput = {
+    where: AutomationActionScalarWhereInput
+    data: XOR<AutomationActionUpdateManyMutationInput, AutomationActionUncheckedUpdateManyWithoutAutomationInput>
+  }
+
+  export type AutomationActionScalarWhereInput = {
+    AND?: AutomationActionScalarWhereInput | AutomationActionScalarWhereInput[]
+    OR?: AutomationActionScalarWhereInput[]
+    NOT?: AutomationActionScalarWhereInput | AutomationActionScalarWhereInput[]
+    id?: StringFilter<"AutomationAction"> | string
+    automationId?: StringFilter<"AutomationAction"> | string
+    order?: IntFilter<"AutomationAction"> | number
+    type?: StringFilter<"AutomationAction"> | string
+    config?: StringNullableFilter<"AutomationAction"> | string | null
+  }
+
+  export type AutomationExecutionUpsertWithWhereUniqueWithoutAutomationInput = {
+    where: AutomationExecutionWhereUniqueInput
+    update: XOR<AutomationExecutionUpdateWithoutAutomationInput, AutomationExecutionUncheckedUpdateWithoutAutomationInput>
+    create: XOR<AutomationExecutionCreateWithoutAutomationInput, AutomationExecutionUncheckedCreateWithoutAutomationInput>
+  }
+
+  export type AutomationExecutionUpdateWithWhereUniqueWithoutAutomationInput = {
+    where: AutomationExecutionWhereUniqueInput
+    data: XOR<AutomationExecutionUpdateWithoutAutomationInput, AutomationExecutionUncheckedUpdateWithoutAutomationInput>
+  }
+
+  export type AutomationExecutionUpdateManyWithWhereWithoutAutomationInput = {
+    where: AutomationExecutionScalarWhereInput
+    data: XOR<AutomationExecutionUpdateManyMutationInput, AutomationExecutionUncheckedUpdateManyWithoutAutomationInput>
+  }
+
+  export type AutomationExecutionScalarWhereInput = {
+    AND?: AutomationExecutionScalarWhereInput | AutomationExecutionScalarWhereInput[]
+    OR?: AutomationExecutionScalarWhereInput[]
+    NOT?: AutomationExecutionScalarWhereInput | AutomationExecutionScalarWhereInput[]
+    id?: StringFilter<"AutomationExecution"> | string
+    automationId?: StringFilter<"AutomationExecution"> | string
+    startedAt?: DateTimeFilter<"AutomationExecution"> | Date | string
+    finishedAt?: DateTimeNullableFilter<"AutomationExecution"> | Date | string | null
+    status?: StringFilter<"AutomationExecution"> | string
+    logs?: StringNullableFilter<"AutomationExecution"> | string | null
+  }
+
+  export type AutomationCreateWithoutConditionsInput = {
+    id?: string
+    name: string
+    enabled?: boolean
+    triggerType: string
+    triggerConfig?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
+    server: ServerCreateNestedOneWithoutAutomationsInput
+    actions?: AutomationActionCreateNestedManyWithoutAutomationInput
+    executions?: AutomationExecutionCreateNestedManyWithoutAutomationInput
+  }
+
+  export type AutomationUncheckedCreateWithoutConditionsInput = {
+    id?: string
+    serverId: string
+    name: string
+    enabled?: boolean
+    triggerType: string
+    triggerConfig?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
+    actions?: AutomationActionUncheckedCreateNestedManyWithoutAutomationInput
+    executions?: AutomationExecutionUncheckedCreateNestedManyWithoutAutomationInput
+  }
+
+  export type AutomationCreateOrConnectWithoutConditionsInput = {
+    where: AutomationWhereUniqueInput
+    create: XOR<AutomationCreateWithoutConditionsInput, AutomationUncheckedCreateWithoutConditionsInput>
+  }
+
+  export type AutomationUpsertWithoutConditionsInput = {
+    update: XOR<AutomationUpdateWithoutConditionsInput, AutomationUncheckedUpdateWithoutConditionsInput>
+    create: XOR<AutomationCreateWithoutConditionsInput, AutomationUncheckedCreateWithoutConditionsInput>
+    where?: AutomationWhereInput
+  }
+
+  export type AutomationUpdateToOneWithWhereWithoutConditionsInput = {
+    where?: AutomationWhereInput
+    data: XOR<AutomationUpdateWithoutConditionsInput, AutomationUncheckedUpdateWithoutConditionsInput>
+  }
+
+  export type AutomationUpdateWithoutConditionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    server?: ServerUpdateOneRequiredWithoutAutomationsNestedInput
+    actions?: AutomationActionUpdateManyWithoutAutomationNestedInput
+    executions?: AutomationExecutionUpdateManyWithoutAutomationNestedInput
+  }
+
+  export type AutomationUncheckedUpdateWithoutConditionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    actions?: AutomationActionUncheckedUpdateManyWithoutAutomationNestedInput
+    executions?: AutomationExecutionUncheckedUpdateManyWithoutAutomationNestedInput
+  }
+
+  export type AutomationCreateWithoutActionsInput = {
+    id?: string
+    name: string
+    enabled?: boolean
+    triggerType: string
+    triggerConfig?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
+    server: ServerCreateNestedOneWithoutAutomationsInput
+    conditions?: AutomationConditionCreateNestedManyWithoutAutomationInput
+    executions?: AutomationExecutionCreateNestedManyWithoutAutomationInput
+  }
+
+  export type AutomationUncheckedCreateWithoutActionsInput = {
+    id?: string
+    serverId: string
+    name: string
+    enabled?: boolean
+    triggerType: string
+    triggerConfig?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
+    conditions?: AutomationConditionUncheckedCreateNestedManyWithoutAutomationInput
+    executions?: AutomationExecutionUncheckedCreateNestedManyWithoutAutomationInput
+  }
+
+  export type AutomationCreateOrConnectWithoutActionsInput = {
+    where: AutomationWhereUniqueInput
+    create: XOR<AutomationCreateWithoutActionsInput, AutomationUncheckedCreateWithoutActionsInput>
+  }
+
+  export type AutomationUpsertWithoutActionsInput = {
+    update: XOR<AutomationUpdateWithoutActionsInput, AutomationUncheckedUpdateWithoutActionsInput>
+    create: XOR<AutomationCreateWithoutActionsInput, AutomationUncheckedCreateWithoutActionsInput>
+    where?: AutomationWhereInput
+  }
+
+  export type AutomationUpdateToOneWithWhereWithoutActionsInput = {
+    where?: AutomationWhereInput
+    data: XOR<AutomationUpdateWithoutActionsInput, AutomationUncheckedUpdateWithoutActionsInput>
+  }
+
+  export type AutomationUpdateWithoutActionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    server?: ServerUpdateOneRequiredWithoutAutomationsNestedInput
+    conditions?: AutomationConditionUpdateManyWithoutAutomationNestedInput
+    executions?: AutomationExecutionUpdateManyWithoutAutomationNestedInput
+  }
+
+  export type AutomationUncheckedUpdateWithoutActionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    conditions?: AutomationConditionUncheckedUpdateManyWithoutAutomationNestedInput
+    executions?: AutomationExecutionUncheckedUpdateManyWithoutAutomationNestedInput
+  }
+
+  export type AutomationCreateWithoutExecutionsInput = {
+    id?: string
+    name: string
+    enabled?: boolean
+    triggerType: string
+    triggerConfig?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
+    server: ServerCreateNestedOneWithoutAutomationsInput
+    conditions?: AutomationConditionCreateNestedManyWithoutAutomationInput
+    actions?: AutomationActionCreateNestedManyWithoutAutomationInput
+  }
+
+  export type AutomationUncheckedCreateWithoutExecutionsInput = {
+    id?: string
+    serverId: string
+    name: string
+    enabled?: boolean
+    triggerType: string
+    triggerConfig?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
+    conditions?: AutomationConditionUncheckedCreateNestedManyWithoutAutomationInput
+    actions?: AutomationActionUncheckedCreateNestedManyWithoutAutomationInput
+  }
+
+  export type AutomationCreateOrConnectWithoutExecutionsInput = {
+    where: AutomationWhereUniqueInput
+    create: XOR<AutomationCreateWithoutExecutionsInput, AutomationUncheckedCreateWithoutExecutionsInput>
+  }
+
+  export type AutomationUpsertWithoutExecutionsInput = {
+    update: XOR<AutomationUpdateWithoutExecutionsInput, AutomationUncheckedUpdateWithoutExecutionsInput>
+    create: XOR<AutomationCreateWithoutExecutionsInput, AutomationUncheckedCreateWithoutExecutionsInput>
+    where?: AutomationWhereInput
+  }
+
+  export type AutomationUpdateToOneWithWhereWithoutExecutionsInput = {
+    where?: AutomationWhereInput
+    data: XOR<AutomationUpdateWithoutExecutionsInput, AutomationUncheckedUpdateWithoutExecutionsInput>
+  }
+
+  export type AutomationUpdateWithoutExecutionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    server?: ServerUpdateOneRequiredWithoutAutomationsNestedInput
+    conditions?: AutomationConditionUpdateManyWithoutAutomationNestedInput
+    actions?: AutomationActionUpdateManyWithoutAutomationNestedInput
+  }
+
+  export type AutomationUncheckedUpdateWithoutExecutionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    conditions?: AutomationConditionUncheckedUpdateManyWithoutAutomationNestedInput
+    actions?: AutomationActionUncheckedUpdateManyWithoutAutomationNestedInput
   }
 
   export type TemplateVoteCreateWithoutTemplateInput = {
@@ -30195,7 +34412,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
@@ -30229,7 +34446,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
@@ -30414,17 +34631,16 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
-  export type ScheduledTaskCreateManyServerInput = {
+  export type AutomationCreateManyServerInput = {
     id?: string
-    action: string
-    cronExpression: string
+    name: string
     enabled?: boolean
-    broadcastMsg?: string | null
-    broadcastMin?: number | null
-    lastRunAt?: Date | string | null
-    lastBroadcastAt?: Date | string | null
+    triggerType: string
+    triggerConfig?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    lastRunAt?: Date | string | null
+    nextRunAt?: Date | string | null
   }
 
   export type PlannedSessionCreateManyServerInput = {
@@ -30561,43 +34777,46 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type ScheduledTaskUpdateWithoutServerInput = {
+  export type AutomationUpdateWithoutServerInput = {
     id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
-    cronExpression?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
     enabled?: BoolFieldUpdateOperationsInput | boolean
-    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
-    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
-    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    conditions?: AutomationConditionUpdateManyWithoutAutomationNestedInput
+    actions?: AutomationActionUpdateManyWithoutAutomationNestedInput
+    executions?: AutomationExecutionUpdateManyWithoutAutomationNestedInput
   }
 
-  export type ScheduledTaskUncheckedUpdateWithoutServerInput = {
+  export type AutomationUncheckedUpdateWithoutServerInput = {
     id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
-    cronExpression?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
     enabled?: BoolFieldUpdateOperationsInput | boolean
-    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
-    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
-    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    conditions?: AutomationConditionUncheckedUpdateManyWithoutAutomationNestedInput
+    actions?: AutomationActionUncheckedUpdateManyWithoutAutomationNestedInput
+    executions?: AutomationExecutionUncheckedUpdateManyWithoutAutomationNestedInput
   }
 
-  export type ScheduledTaskUncheckedUpdateManyWithoutServerInput = {
+  export type AutomationUncheckedUpdateManyWithoutServerInput = {
     id?: StringFieldUpdateOperationsInput | string
-    action?: StringFieldUpdateOperationsInput | string
-    cronExpression?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
     enabled?: BoolFieldUpdateOperationsInput | boolean
-    broadcastMsg?: NullableStringFieldUpdateOperationsInput | string | null
-    broadcastMin?: NullableIntFieldUpdateOperationsInput | number | null
-    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    lastBroadcastAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    triggerType?: StringFieldUpdateOperationsInput | string
+    triggerConfig?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    nextRunAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type PlannedSessionUpdateWithoutServerInput = {
@@ -30705,7 +34924,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
@@ -30739,7 +34958,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
-    scheduledTasks?: ScheduledTaskUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
@@ -30769,6 +34988,94 @@ export namespace Prisma {
     snapshotInterval?: IntFieldUpdateOperationsInput | number
     lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationConditionCreateManyAutomationInput = {
+    id?: string
+    type: string
+    operator: string
+    value: string
+  }
+
+  export type AutomationActionCreateManyAutomationInput = {
+    id?: string
+    order: number
+    type: string
+    config?: string | null
+  }
+
+  export type AutomationExecutionCreateManyAutomationInput = {
+    id?: string
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+    status: string
+    logs?: string | null
+  }
+
+  export type AutomationConditionUpdateWithoutAutomationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type AutomationConditionUncheckedUpdateWithoutAutomationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type AutomationConditionUncheckedUpdateManyWithoutAutomationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    operator?: StringFieldUpdateOperationsInput | string
+    value?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type AutomationActionUpdateWithoutAutomationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    config?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationActionUncheckedUpdateWithoutAutomationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    config?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationActionUncheckedUpdateManyWithoutAutomationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    type?: StringFieldUpdateOperationsInput | string
+    config?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationExecutionUpdateWithoutAutomationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    logs?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationExecutionUncheckedUpdateWithoutAutomationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    logs?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type AutomationExecutionUncheckedUpdateManyWithoutAutomationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    logs?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TemplateVoteCreateManyTemplateInput = {
@@ -30816,6 +35123,10 @@ export namespace Prisma {
      * @deprecated Use GameDefinitionCountOutputTypeDefaultArgs instead
      */
     export type GameDefinitionCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = GameDefinitionCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use AutomationCountOutputTypeDefaultArgs instead
+     */
+    export type AutomationCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AutomationCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use MarketplaceTemplateCountOutputTypeDefaultArgs instead
      */
@@ -30877,9 +35188,21 @@ export namespace Prisma {
      */
     export type ServerSnapshotArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ServerSnapshotDefaultArgs<ExtArgs>
     /**
-     * @deprecated Use ScheduledTaskDefaultArgs instead
+     * @deprecated Use AutomationDefaultArgs instead
      */
-    export type ScheduledTaskArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ScheduledTaskDefaultArgs<ExtArgs>
+    export type AutomationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AutomationDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use AutomationConditionDefaultArgs instead
+     */
+    export type AutomationConditionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AutomationConditionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use AutomationActionDefaultArgs instead
+     */
+    export type AutomationActionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AutomationActionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use AutomationExecutionDefaultArgs instead
+     */
+    export type AutomationExecutionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AutomationExecutionDefaultArgs<ExtArgs>
     /**
      * @deprecated Use MarketplaceTemplateDefaultArgs instead
      */

@@ -292,18 +292,42 @@ exports.Prisma.ServerSnapshotScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
-exports.Prisma.ScheduledTaskScalarFieldEnum = {
+exports.Prisma.AutomationScalarFieldEnum = {
   id: 'id',
   serverId: 'serverId',
-  action: 'action',
-  cronExpression: 'cronExpression',
+  name: 'name',
   enabled: 'enabled',
-  broadcastMsg: 'broadcastMsg',
-  broadcastMin: 'broadcastMin',
-  lastRunAt: 'lastRunAt',
-  lastBroadcastAt: 'lastBroadcastAt',
+  triggerType: 'triggerType',
+  triggerConfig: 'triggerConfig',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  lastRunAt: 'lastRunAt',
+  nextRunAt: 'nextRunAt'
+};
+
+exports.Prisma.AutomationConditionScalarFieldEnum = {
+  id: 'id',
+  automationId: 'automationId',
+  type: 'type',
+  operator: 'operator',
+  value: 'value'
+};
+
+exports.Prisma.AutomationActionScalarFieldEnum = {
+  id: 'id',
+  automationId: 'automationId',
+  order: 'order',
+  type: 'type',
+  config: 'config'
+};
+
+exports.Prisma.AutomationExecutionScalarFieldEnum = {
+  id: 'id',
+  automationId: 'automationId',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  status: 'status',
+  logs: 'logs'
 };
 
 exports.Prisma.MarketplaceTemplateScalarFieldEnum = {
@@ -365,7 +389,10 @@ exports.Prisma.ModelName = {
   GameDefinition: 'GameDefinition',
   ModInstallation: 'ModInstallation',
   ServerSnapshot: 'ServerSnapshot',
-  ScheduledTask: 'ScheduledTask',
+  Automation: 'Automation',
+  AutomationCondition: 'AutomationCondition',
+  AutomationAction: 'AutomationAction',
+  AutomationExecution: 'AutomationExecution',
   MarketplaceTemplate: 'MarketplaceTemplate',
   TemplateVote: 'TemplateVote',
   PushSubscription: 'PushSubscription'
