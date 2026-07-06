@@ -343,7 +343,6 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   /* Search / Browse state */
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [popularMods, setPopularMods] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [sortBy, setSortBy] = useState("relevance");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -416,28 +415,13 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     } else {
       setInstalledMods([]);
       setSearchResults([]);
-      setPopularMods([]);
       setSearchQuery("");
     }
   }, [selectedServer]);
 
-  /** Fetch popular / trending mods on mount (for Discover tab) */
-  React.useEffect(() => {
-    if (!selectedServer || !supportsSearch) return;
-
-    setIsSearching(true);
-    fetch(`/api/servers/${selectedServer.id}/mods/search?q=&sort=rating`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.results) setPopularMods(data.results);
-      })
-      .catch((err) => console.error("Popular mods fetch failed:", err))
-      .finally(() => setIsSearching(false));
-  }, [selectedServer]);
-
   /** Debounced search (Browse tab) */
   React.useEffect(() => {
-    if (!selectedServer || searchQuery.trim() === "") {
+    if (!selectedServer) {
       setSearchResults([]);
       setHasMore(true);
       return;
@@ -776,7 +760,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
 
   /* ── Display mods for Browse tab ─────────────────────────────── */
 
-  const displayMods = searchQuery.trim() ? searchResults : popularMods;
+  const displayMods = searchResults;
 
   return (
     <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
