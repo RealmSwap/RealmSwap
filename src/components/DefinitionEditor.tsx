@@ -1,5 +1,6 @@
 "use client";
 
+import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -768,29 +769,9 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className="min-h-screen flex bg-background text-slate-100">
+    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-borderDark bg-[#0a0c12] hidden md:flex flex-col justify-between">
-        <div>
-          <div className="p-6 border-b border-borderDark flex items-center gap-2">
-            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
-          </div>
-          <nav className="p-4 space-y-1">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-300 hover:text-white transition-all"
-            >
-              <span>Dashboard</span>
-            </Link>
-            <Link
-              href="/dashboard/servers/new"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-300 hover:text-white transition-all"
-            >
-              <span>Create Server</span>
-            </Link>
-          </nav>
-        </div>
-      </aside>
+      <SidebarNavigation user={null} />
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto px-6 py-8">

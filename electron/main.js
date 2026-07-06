@@ -21,6 +21,14 @@ const internalToken = crypto.randomBytes(16).toString("hex");
 // the data directory resolves to %APPDATA%/RealmSwap.
 app.setName("RealmSwap");
 
+if (process.defaultApp) {
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient("realmsync", process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient("realmsync");
+}
+
 let mainWindow = null;
 let tray = null;
 let isQuitting = false;
@@ -175,9 +183,16 @@ async function createWindow(port) {
   // Open to the desktop entry route, which redirects to dashboard (valid
   // session), login (users exist), or register (fresh install) — not the
   // marketing landing page at /.
-  const url = isDev
+  // Also pass any deep link query parameters to /start.
+  const deepLinkArg = process.argv.find(arg => arg.startsWith("realmsync://"));
+  let url = isDev
     ? "http://localhost:3000/start"
     : `http://127.0.0.1:${port}/start`;
+    
+  if (deepLinkArg) {
+    url += `?link=${encodeURIComponent(deepLinkArg)}`;
+  }
+  
   await mainWindow.loadURL(url);
   mainWindow.show();
   buildTray();
@@ -187,11 +202,19 @@ const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
 } else {
-  app.on("second-instance", () => {
+  app.on("second-instance", (event, commandLine, workingDirectory) => {
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
       mainWindow.focus();
+      
+      const deepLinkArg = commandLine.find(arg => arg.startsWith("realmsync://"));
+      if (deepLinkArg) {
+        const url = isDev 
+          ? `http://localhost:3000/start?link=${encodeURIComponent(deepLinkArg)}` 
+          : `http://127.0.0.1:${serverPort}/start?link=${encodeURIComponent(deepLinkArg)}`;
+        mainWindow.loadURL(url);
+      }
     }
   });
 }

@@ -57,3 +57,7 @@ publish:
   provider: github
   owner: RealmSwap
   repo: RealmSwap
+protocols:
+  - name: "RealmSync"
+    schemes:
+      - "realmsync"

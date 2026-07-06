@@ -124,9 +124,21 @@ exports.Prisma.UserScalarFieldEnum = {
   email: 'email',
   passwordHash: 'passwordHash',
   name: 'name',
+  discordId: 'discordId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
-  role: 'role'
+  role: 'role',
+  notifyDiscord: 'notifyDiscord',
+  notifyEmail: 'notifyEmail',
+  notifyWebPush: 'notifyWebPush'
+};
+
+exports.Prisma.DiscordLinkCodeScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  discordId: 'discordId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.SubscriptionScalarFieldEnum = {
@@ -162,7 +174,27 @@ exports.Prisma.ServerScalarFieldEnum = {
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   snapshotInterval: 'snapshotInterval',
-  lastSnapshotAt: 'lastSnapshotAt'
+  lastSnapshotAt: 'lastSnapshotAt',
+  inviteCode: 'inviteCode'
+};
+
+exports.Prisma.DiscordRoleAccessScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId',
+  roleId: 'roleId',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PlannedSessionScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId',
+  title: 'title',
+  startTime: 'startTime',
+  channelId: 'channelId',
+  messageId: 'messageId',
+  roster: 'roster',
+  notified: 'notified',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.ServerHostLinkScalarFieldEnum = {
@@ -298,6 +330,15 @@ exports.Prisma.TemplateVoteScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.PushSubscriptionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  p256dh: 'p256dh',
+  auth: 'auth',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -311,8 +352,11 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  DiscordLinkCode: 'DiscordLinkCode',
   Subscription: 'Subscription',
   Server: 'Server',
+  DiscordRoleAccess: 'DiscordRoleAccess',
+  PlannedSession: 'PlannedSession',
   ServerHostLink: 'ServerHostLink',
   Archive: 'Archive',
   ActivityLog: 'ActivityLog',
@@ -323,7 +367,8 @@ exports.Prisma.ModelName = {
   ServerSnapshot: 'ServerSnapshot',
   ScheduledTask: 'ScheduledTask',
   MarketplaceTemplate: 'MarketplaceTemplate',
-  TemplateVote: 'TemplateVote'
+  TemplateVote: 'TemplateVote',
+  PushSubscription: 'PushSubscription'
 };
 
 /**

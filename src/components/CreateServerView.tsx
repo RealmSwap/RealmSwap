@@ -1,5 +1,6 @@
 "use client";
 
+import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -267,6 +268,23 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
     return classes.join(" ") || "from-slate-600 to-slate-800";
   };
 
+  const getGameArt = (game: string) => {
+    switch(game) {
+      case "MINECRAFT": return "/games/minecraft.jpg";
+      case "VALHEIM": return "/games/valheim.jpg";
+      case "ENSHROUDED": return "/games/enshrouded.jpg";
+      case "ZOMBOID": return "/games/zomboid.jpg";
+      case "ARK": return "/games/ark.jpg";
+      case "TERRARIA": return "/games/terraria.jpg";
+      case "PALWORLD": return "/games/palworld.jpg";
+      case "RUST": return "/games/rust.jpg";
+      case "SATISFACTORY": return "/games/satisfactory.jpg";
+      case "VRISING": return "/games/vrising.jpg";
+      case "WINDROSE": return "/games/windrose.jpg";
+      default: return "/games/generic.jpg";
+    }
+  };
+
   const minLen = selectedGame?.spec?.passwordPolicy?.minLength as number | undefined;
   const hasPasswordPolicy = typeof minLen === "number";
   // Show password field when there's a policy or when no spec indicates it's optional
@@ -274,83 +292,13 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
   const showPasswordField = selectedGame != null;
 
   return (
-    <div className="min-h-screen flex bg-background text-slate-100">
+    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
 
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-borderDark bg-[#0a0c12] flex flex-col justify-between hidden md:flex">
-        <div>
-          {/* Logo */}
-          <div className="p-6 border-b border-borderDark flex items-center gap-2">
-            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="p-4 space-y-1">
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-300 hover:text-white transition-all"
-            >
-              <LayoutDashboard className="w-4 h-4 text-slate-500" />
-              <span>Dashboard</span>
-            </Link>
-
-            <Link
-              href="/dashboard/servers/new"
-              className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold bg-accentPurple/10 text-white border border-accentPurple/20"
-            >
-              <div className="flex items-center gap-3">
-                <Plus className="w-4 h-4 text-accentPurple" />
-                <span>Create Server</span>
-              </div>
-            </Link>
-
-            <Link 
-              href="/dashboard/marketplace" 
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
-            >
-              <Store className="w-4 h-4 text-mutedText group-hover:text-white transition-colors" />
-              <span>Marketplace</span>
-            </Link>
-
-            <div className="pt-4 pb-2 px-3">
-              <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider">Features</span>
-            </div>
-
-            {DASHBOARD_NAV_LINKS.map((link, i) => (
-              <Link
-                key={i}
-                href={link.href}
-                className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-400 hover:text-white transition-all"
-              >
-                <div className="flex items-center gap-3">
-                  <link.icon className="w-4 h-4 text-slate-500" />
-                  <span>{link.label}</span>
-                </div>
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        {/* Profile Card */}
-        <div className="p-4 border-t border-borderDark bg-slate-950/40">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1 pr-2">
-              <span className="font-bold text-sm block truncate text-slate-200">{user.name}</span>
-              <span className="text-xs text-mutedText block truncate">{user.email}</span>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="p-2 hover:bg-white/5 text-slate-400 hover:text-red-400 rounded-lg transition-colors flex-shrink-0"
-              title="Sign Out"
-            >
-              <LogOut className="w-4.5 h-4.5" />
-            </button>
-          </div>
-        </div>
-      </aside>
+      <SidebarNavigation user={user} />
 
       {/* Main Form Area */}
-      <main className="flex-1 overflow-y-auto px-6 py-8">
+      <main className="flex-1 overflow-y-auto px-6 py-8 pb-24 md:pb-8">
 
         {/* Navigation back helper */}
         <div className="mb-6">
@@ -431,7 +379,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                     <div
                       key={game.id}
                       onClick={() => !isLocked && handleGameSelect(game)}
-                      className={`p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between h-40 relative ${
+                      className={`p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between h-40 relative overflow-hidden group ${
                         isLocked
                           ? "opacity-30 cursor-not-allowed border-white/5 bg-slate-950/10"
                           : selectedGame?.id === game.id
@@ -439,14 +387,14 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                             : "border-white/5 bg-slate-950/20 hover:bg-white/5 hover:border-white/10 cursor-pointer"
                       }`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gradient-to-br ${getIconGradient(game.color)} shadow`}>
-                          {game.icon}
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
+                      <div className={`absolute inset-0 bg-cover bg-center transition-all duration-500 ${selectedGame?.id === game.id ? 'opacity-60 scale-105' : 'opacity-30 group-hover:opacity-50 group-hover:scale-105'}`} style={{ backgroundImage: `url('${getGameArt(game.slug)}')` }}></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950/20 pointer-events-none"></div>
+                      
+                      <div className="relative z-10 flex justify-between items-start">
+                        <div className="flex flex-col items-start gap-1">
                           {selectedGame?.id === game.id && !isLocked && (
-                            <span className="text-[10px] bg-accentPurple/25 text-accentPurple px-2 py-0.5 rounded-full font-bold">
-                              Active
+                            <span className="text-[10px] bg-accentPurple/30 border border-accentPurple/50 text-white px-2 py-0.5 rounded-full font-bold shadow-[0_0_10px_rgba(167,139,250,0.5)]">
+                              Selected
                             </span>
                           )}
                           {isLocked && (
@@ -461,9 +409,9 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                           )}
                         </div>
                       </div>
-                      <div>
+                      <div className="relative z-10">
                         <h4 className="font-extrabold text-sm text-slate-100">{game.displayName}</h4>
-                        <p className="text-[11px] text-mutedText leading-snug mt-0.5">{game.description}</p>
+                        <p className="text-[11px] text-slate-300 leading-snug mt-0.5 drop-shadow-md">{game.description}</p>
                       </div>
                     </div>
                   );

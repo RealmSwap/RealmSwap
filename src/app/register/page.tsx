@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, Mail, Lock, ShieldAlert } from "lucide-react";
 
-function RegisterForm() {
+function RegisterForm({ searchParams }: { searchParams?: { link?: string } }) {
   const router = useRouter();
   
   const [name, setName] = useState("");
@@ -37,7 +37,11 @@ function RegisterForm() {
         throw new Error(data.error || "Failed to register");
       }
 
-      router.push("/dashboard");
+      let dest = "/dashboard";
+      if (searchParams?.link) {
+        dest += `?link=${encodeURIComponent(searchParams.link)}`;
+      }
+      router.push(dest);
       router.refresh();
     } catch (err: any) {
       setError(err.message || "Registration failed. Try again.");
@@ -146,12 +150,12 @@ function RegisterForm() {
   );
 }
 
-export default function RegisterPage() {
+export default function RegisterPage({ searchParams }: { searchParams?: { link?: string } }) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden bg-background">
       {/* Background Glows */}
-      <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-accentPurple/5 rounded-full blur-[100px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accentBlue/5 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-accentPurple/5 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 left-1/4 w-[500px] h-[500px] bg-accentBlue/5 rounded-full blur-[120px] pointer-events-none"></div>
 
       <Suspense fallback={
         <div className="text-center p-8 bg-card rounded-2xl border border-white/5">
@@ -159,7 +163,7 @@ export default function RegisterPage() {
           <span className="text-xs text-mutedText">Loading registration portal...</span>
         </div>
       }>
-        <RegisterForm />
+        <RegisterForm searchParams={searchParams} />
       </Suspense>
     </div>
   );

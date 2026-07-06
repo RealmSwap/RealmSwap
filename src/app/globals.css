@@ -16,16 +16,18 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #08090c;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f2937;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #8b5cf6;
+  background-color: rgba(139, 92, 246, 0.4);
 }
 
 /* Custom animations & design systems */

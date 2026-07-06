@@ -104,6 +104,12 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
       }
     });
 
+    // Update server's lastSnapshotAt
+    await prisma.server.update({
+      where: { id: serverId },
+      data: { lastSnapshotAt: new Date() }
+    });
+
     // Write Activity Log
     await prisma.activityLog.create({
       data: {
@@ -117,6 +123,9 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
   } catch (err: any) {
     // Clean up DB record if zip creation failed
     await prisma.backup.delete({ where: { id: backup.id } }).catch(() => {});
+    import("./notifications").then(({ sendNotification }) => {
+      sendNotification(server.userId, "❌ Backup Failed", `Failed to generate snapshot for '${server.name}': ${err.message}`);
+    }).catch(e => console.error("Failed to load notifications module:", e));
     throw new Error(`Failed to generate snapshot: ${err.message}`);
   }
 }

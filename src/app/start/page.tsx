@@ -12,8 +12,14 @@ export const dynamic = "force-dynamic";
  * marketing landing page, and we send the user to the right place:
  * dashboard (valid session), login (users exist), or register (fresh install).
  */
-export default async function StartPage() {
+export default async function StartPage({ searchParams }: { searchParams: { link?: string } }) {
   const user = await getAuthenticatedUser();
   const userCount = user ? 0 : await prisma.user.count();
-  redirect(pickEntryPath({ isAuthenticated: !!user, userCount }));
+  let dest = pickEntryPath({ isAuthenticated: !!user, userCount });
+  
+  if (searchParams?.link) {
+    dest += `?link=${encodeURIComponent(searchParams.link)}`;
+  }
+  
+  redirect(dest);
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -656,17 +656,15 @@ export default function ModsView({ servers, user }: ModsViewProps) {
 
   /* ── Display mods for Browse tab ─────────────────────────────── */
 
-  const displayMods = searchQuery.trim() ? searchResults : popularMods;
-
-  /* ─── Render ──────────────────────────────────────────────────── */
-
   return (
     <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+      
       {/* Sidebar Navigation */}
       <SidebarNavigation user={user} />
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto px-6 py-8 pb-24 md:pb-8">
+        
         {/* Navigation back */}
         <div className="mb-6">
           <Link

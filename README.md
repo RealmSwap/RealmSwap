@@ -28,11 +28,13 @@ RealmSwap currently supports single-click deployment for the following dedicated
 - **Backup & Restore**: Easily take snapshot backups of your world data and restore them with a single click.
 - **Mod Manager**: Built-in support for searching, installing, and managing mods for supported games.
 - **Collaborators**: Invite friends to have Co-Host or Admin permissions to help manage the server while you are away.
+- **RealmSync Integration**: Generate deep links (`realmsync://`) for your friends to use with the RealmSync companion app. RealmSync automatically downloads required mods and configurations to the player's client and connects them directly to your server in one click!
 - **Audit Logs**: Keep track of every action performed on your servers with detailed security audit logs.
 
 ## Technology & Architecture
 - **Frontend**: Next.js 14 (App Router), React, Tailwind CSS, Lucide Icons
 - **Backend API**: Next.js API Routes, Node.js (`child_process`), Prisma ORM
+- **RealmSync Engine**: Standalone Node.js WebSocket server (`realmSyncHost.ts`) for real-time mod synchronization, file hashing, and UPnP-powered public IP discovery.
 - **Desktop Wrapper**: Electron builder with embedded standalone Node server
 - **Database**: SQLite (Local file-based, zero configuration)
 - **Runner Abstraction Layer**: RealmSwap abstracts server execution behind a `ServerRunner` interface. Currently powered by `LocalWindowsRunner` for native execution, with `DockerRunner` and containerized deployments in the works!

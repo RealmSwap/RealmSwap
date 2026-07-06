@@ -5,11 +5,19 @@ import DashboardView from "@/components/DashboardView";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: { link?: string } }) {
   const user = await getAuthenticatedUser();
 
   if (!user) {
-    redirect("/login");
+    let dest = "/login";
+    if (searchParams?.link) {
+      dest += `?link=${encodeURIComponent(searchParams.link)}`;
+    }
+    redirect(dest);
+  }
+
+  if (searchParams?.link) {
+    redirect(`/dashboard/sync?link=${encodeURIComponent(searchParams.link)}`);
   }
 
   // Pre-fetch initial data directly from Prisma on the server

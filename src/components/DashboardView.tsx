@@ -1,5 +1,13 @@
 "use client";
 
+import { motion } from "framer-motion";
+
+import { SidebarNavigation } from "./dashboard/SidebarNavigation";
+import { ServerHeroCard } from "./dashboard/ServerHeroCard";
+import { HealthSidebar } from "./dashboard/HealthSidebar";
+import { ActivityFeed } from "./dashboard/ActivityFeed";
+import { VaultSection } from "./dashboard/VaultSection";
+
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -132,6 +140,20 @@ function ServerPlayerCount({ server }: { server: any }) {
   return null;
 }
 
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
+
 export default function DashboardView({ initialData }: DashboardViewProps) {
   const router = useRouter();
   const { showModal } = useModal();
@@ -153,6 +175,16 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   // Stats history for sparklines
   const [serverStats, setServerStats] = useState<Record<string, { cpu: number[]; memory: number[] }>>({});
 
+  // Selected server for Health Sidebar
+  const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
+
+  // Initialize selected server on first load
+  useEffect(() => {
+    if (!selectedServerId && data.servers.length > 0) {
+      setSelectedServerId(data.servers[0].id);
+    }
+  }, [data.servers, selectedServerId]);
+
   // Live install/download progress for STARTING/UPDATING servers
   const [progressMap, setProgressMap] = useState<
     Record<string, { phase: string; percent: number | null; label: string } | null>
@@ -165,7 +197,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   useEffect(() => {
     const fetchUpdates = async () => {
       try {
-        const res = await fetch("/api/servers");
+        const res = await fetch("/api/servers", { cache: "no-store" });
         if (res.ok) {
           const updated = await res.json();
           setData(updated);
@@ -347,7 +379,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       }));
 
       // Force refresh logs shortly after
-      const logRes = await fetch("/api/servers");
+      const logRes = await fetch("/api/servers", { cache: "no-store" });
       if (logRes.ok) {
         const fresh = await logRes.json();
         setData(fresh);
@@ -371,7 +403,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       if (!res.ok) throw new Error(archive.error || "Failed to vault server");
 
       // Refetch whole state because a server was deleted and an archive created
-      const stateRes = await fetch("/api/servers");
+      const stateRes = await fetch("/api/servers", { cache: "no-store" });
       if (stateRes.ok) {
         const fresh = await stateRes.json();
         setData(fresh);
@@ -395,7 +427,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       if (!res.ok) throw new Error(restored.error || "Failed to restore server");
 
       // Refetch whole state
-      const stateRes = await fetch("/api/servers");
+      const stateRes = await fetch("/api/servers", { cache: "no-store" });
       if (stateRes.ok) {
         const fresh = await stateRes.json();
         setData(fresh);
@@ -475,9 +507,58 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
     }
   };
 
+  // RealmSync Invite
+  const handleGenerateInvite = async (serverId: string) => {
+    setActionLoading(`${serverId}-invite`);
+    setErrorMessage(null);
+    try {
+      const res = await fetch(`/api/servers/${serverId}/invite`, { method: "POST" });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Failed to generate invite code");
+      
+      setData((prev: any) => ({
+        ...prev,
+        servers: prev.servers.map((s: any) => 
+          s.id === serverId ? { ...s, inviteCode: resData.inviteCode } : s
+        )
+      }));
+      addToast("success", "Invite link generated!");
+    } catch (err: any) {
+      setErrorMessage(err.message);
+      addToast("error", err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRevokeInvite = async (serverId: string) => {
+    setActionLoading(`${serverId}-invite-revoke`);
+    setErrorMessage(null);
+    try {
+      const res = await fetch(`/api/servers/${serverId}/invite`, { method: "DELETE" });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to revoke invite code");
+      }
+      
+      setData((prev: any) => ({
+        ...prev,
+        servers: prev.servers.map((s: any) => 
+          s.id === serverId ? { ...s, inviteCode: null } : s
+        )
+      }));
+      addToast("success", "Invite link revoked.");
+    } catch (err: any) {
+      setErrorMessage(err.message);
+      addToast("error", err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Helper for game icons
   const getGameIcon = (game: string) => {
-    switch (game.toUpperCase()) {
+    switch(game) {
       case "MINECRAFT": return "⛏️";
       case "VALHEIM": return "⛵";
       case "ENSHROUDED": return "🔥";
@@ -486,6 +567,9 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       case "TERRARIA": return "🌳";
       case "PALWORLD": return "🦊";
       case "RUST": return "⚙️";
+      case "SATISFACTORY": return "🏭";
+      case "VRISING": return "🦇";
+      case "WINDROSE": return "⚔️";
       default: return "🎮";
     }
   };
@@ -510,653 +594,177 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   const totalVaultSize = data.archives.reduce((acc, cur) => acc + cur.saveSizeGB, 0).toFixed(2);
 
   return (
-    <div className="min-h-screen flex bg-background text-slate-100 font-sans">
+    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
       
       {/* Sidebar Navigation */}
-      <aside className="w-64 border-r border-borderDark bg-[#0a0c12] flex flex-col justify-between hidden md:flex">
-        <div>
-          {/* Logo */}
-          <div className="p-6 border-b border-borderDark flex items-center gap-2">
-            <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
-          </div>
+      <SidebarNavigation user={data.user} />
 
-          {/* Local Status Card */}
-          <div className="p-4 border-b border-borderDark bg-slate-950/20">
-            <div className="flex justify-between text-xs mb-1.5 font-bold">
-              <span className="text-mutedText">Local Server Runner</span>
-              <span className="text-emerald-400 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                ACTIVE
-              </span>
-            </div>
-            <span className="text-[10px] text-mutedText block leading-normal">
-              Hosting from your PC is completely free and unlimited. Make sure to keep the runner app running while friends are playing.
-            </span>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="p-4 space-y-1">
-            <Link 
-              href="/dashboard" 
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold bg-accentPurple/10 text-white border border-accentPurple/20"
-            >
-              <LayoutDashboard className="w-4 h-4 text-accentPurple" />
-              <span>Dashboard</span>
-            </Link>
-            
-            <Link 
-              href="/dashboard/servers/new" 
-              className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <Plus className="w-4 h-4 text-mutedText group-hover:text-white transition-colors" />
-                <span>Create Server</span>
-              </div>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">Unlimited</span>
-            </Link>
-
-            <Link 
-              href="/dashboard/marketplace" 
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-300 hover:text-white transition-all group"
-            >
-              <Store className="w-4 h-4 text-mutedText group-hover:text-white transition-colors" />
-              <span>Marketplace</span>
-            </Link>
-
-            <div className="pt-4 pb-2 px-3">
-              <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider">Features</span>
-            </div>
-
-            {DASHBOARD_NAV_LINKS.map((link, i) => (
-              <Link
-                key={i}
-                href={link.href}
-                className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-400 hover:text-white transition-all group"
-              >
-                <div className="flex items-center gap-3">
-                  <link.icon className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
-                  <span>{link.label}</span>
-                </div>
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        {/* Profile Card */}
-        <div className="p-4 border-t border-borderDark bg-slate-950/40">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1 pr-2">
-              <span className="font-bold text-sm block truncate text-slate-200">{data.user.name}</span>
-              <span className="text-xs text-mutedText block truncate">{data.user.email}</span>
-            </div>
-            <button 
-              onClick={handleLogout}
-              className="p-2 hover:bg-white/5 text-slate-400 hover:text-red-400 rounded-lg transition-colors flex-shrink-0"
-              title="Sign Out"
-            >
-              <LogOut className="w-4.5 h-4.5" />
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Dashboard Area */}
-      <main className="flex-1 overflow-y-auto px-6 py-8">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
         
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Welcome back, {data.user.name.split(" ")[0]}</h1>
-            <p className="text-sm text-mutedText mt-1">Manage your local game servers and swap world archives effortlessly.</p>
-          </div>
+        {/* Dashboard Content */}
+        <main className="flex-1 overflow-y-auto p-8 pb-24 md:pb-8 flex flex-col gap-8">
           
-          <Link 
-            href="/dashboard/servers/new" 
-            className="inline-flex items-center gap-2 bg-accentPurple hover:bg-accentPurpleHover text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md shadow-accentPurple/10 border border-accentPurple/30"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Deploy Server</span>
-          </Link>
-        </div>
-
-        {/* Global Error Banner */}
-        {errorMessage && (
-          <div className="p-4 mb-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3 animate-slide-down">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
-            <div className="flex-1">
-              <span className="font-bold block">Operation Failed</span>
-              <span>{errorMessage}</span>
-            </div>
-            <button 
-              onClick={() => setErrorMessage(null)} 
-              className="text-xs hover:underline text-mutedText hover:text-white"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-
-        {/* Aggregate Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: "Local Running Servers", val: `${data.servers.filter(s => s.status === 'RUNNING').length}`, desc: "Free & unlimited hosting", icon: ServerIcon },
-            { label: "Vaulted Worlds", val: `${data.archives.length}`, desc: "Unlimited storage capacity", icon: Archive },
-            { label: "Vault Size", val: `${totalVaultSize} GB`, desc: "Securely compressed maps", icon: Database },
-            { label: "Global Ping", val: "12 ms", desc: "Optimal routing active", icon: Cpu }
-          ].map((stat, i) => (
-            <div key={i} className="glass-panel p-5 rounded-xl border border-white/5 flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-mutedText block mb-1 uppercase tracking-wider">{stat.label}</span>
-                <span className="text-2xl font-extrabold text-white block">{stat.val}</span>
-                <span className="text-[10px] text-mutedText block mt-0.5">{stat.desc}</span>
-              </div>
-              <div className="p-3 bg-white/5 rounded-xl border border-white/5">
-                <stat.icon className="w-5 h-5 text-accentPurple" />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Slot Bay Tracker (visualizing active slot status) */}
-        <section className="mb-8">
-          <h2 className="text-xs font-bold text-mutedText uppercase tracking-wider mb-3">Active Server Bay</h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* Active Servers Loop */}
-            {data.servers.map((server) => {
-              const loadingKey = actionLoading?.split("-")[0];
-              const isServerLoading = loadingKey === server.id;
-              const isRunning = server.status === "RUNNING";
-              const isLocal = server.runnerType === "LOCAL";
-
-              return (
-                <div 
-                  key={server.id} 
-                  className={`glass-panel rounded-xl border p-5 transition-all duration-300 hover:border-accentPurple/30 group relative overflow-hidden ${
-                    isRunning ? "border-emerald-500/20 box-glow-purple" : "border-slate-800"
-                  }`}
-                >
-                  {/* Game Accent Strip */}
-                  <div className={`absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b ${
-                    server.game === "MINECRAFT" ? "from-green-500 to-emerald-600" :
-                    server.game === "VALHEIM" ? "from-amber-500 to-amber-600" :
-                    server.game === "ZOMBOID" ? "from-red-500 to-rose-600" :
-                    server.game === "ENSHROUDED" ? "from-blue-500 to-indigo-600" :
-                    server.game === "ARK" ? "from-cyan-500 to-blue-600" :
-                    server.game === "TERRARIA" ? "from-lime-500 to-green-600" :
-                    server.game === "PALWORLD" ? "from-orange-500 to-rose-600" :
-                    server.game === "RUST" ? "from-stone-500 to-red-600" :
-                    "from-slate-500 to-slate-600"
-                  }`}></div>
-
-                  <div className="pl-3.5">
-                    {/* Server Header */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl bg-gradient-to-br ${
-                          server.game === "MINECRAFT" ? "from-green-600 to-emerald-800" :
-                          server.game === "VALHEIM" ? "from-amber-600 to-amber-800" :
-                          server.game === "ZOMBOID" ? "from-red-600 to-rose-800" :
-                          server.game === "ENSHROUDED" ? "from-blue-600 to-indigo-800" :
-                          server.game === "ARK" ? "from-cyan-600 to-blue-800" :
-                          server.game === "TERRARIA" ? "from-lime-600 to-green-800" :
-                          server.game === "PALWORLD" ? "from-orange-600 to-rose-800" :
-                          server.game === "RUST" ? "from-stone-600 to-red-800" :
-                          "from-slate-600 to-slate-800"
-                        } shadow-md`}>
-                          {getGameIcon(server.game)}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-extrabold text-base text-white">{server.name}</h3>
-                            <span className={`text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase ${
-                              isRunning ? "bg-emerald-500/10 text-emerald-400" :
-                              server.status === "STARTING" ? "bg-purple-500/10 text-purple-400 animate-pulse" :
-                              server.status === "UPDATING" ? "bg-blue-500/10 text-blue-400 animate-pulse" :
-                              server.status === "CRASHED" ? "bg-red-500/10 text-red-400 animate-pulse" :
-                              "bg-amber-500/10 text-amber-400"
-                            }`}>
-                              {server.status}
-                            </span>
-                            {isLocal && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-accentPurple/10 text-accentPurple border border-accentPurple/25">
-                                LOCAL
-                              </span>
-                            )}
-                            {isRunning && server.healthStatus === "DEGRADED" && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-amber-500/10 text-amber-400 border border-amber-500/25 flex items-center gap-1" title="Monitoring degraded">
-                                <Activity className="w-2.5 h-2.5" /> DEGRADED
-                              </span>
-                            )}
-                            {isRunning && server.healthStatus === "FAILING" && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-red-500/10 text-red-400 border border-red-500/25 flex items-center gap-1" title="Server failing">
-                                <AlertCircle className="w-2.5 h-2.5" /> FAILING
-                              </span>
-                            )}
-                            {isRunning && <ServerPlayerCount server={server} />}
-                          </div>
-                          <span className="text-xs text-mutedText block mt-0.5">{server.game} Server</span>
-                        </div>
-                      </div>
-
-                      {/* IP and Port */}
-                      <div className="text-right">
-                        <span className="text-[10px] text-mutedText block">IP Address</span>
-                        {!isLocal ? (
-                          <div 
-                            onClick={() => handleCopyIp(`${server.ipAddress}:${server.port}`)}
-                            className="flex items-center gap-1.5 cursor-pointer bg-slate-950/60 px-2 py-1 rounded border border-white/5 hover:border-accentPurple/40 transition-colors mt-0.5 group"
-                          >
-                            <span className="font-mono text-xs text-slate-300">
-                              {server.ipAddress}:{server.port}
-                            </span>
-                            {copiedIp === `${server.ipAddress}:${server.port}` ? (
-                              <Check className="w-3 h-3 text-emerald-400" />
-                            ) : (
-                              <Copy className="w-3 h-3 text-slate-500 group-hover:text-accentPurple transition-colors" />
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-end gap-1.5 mt-0.5">
-                            {/* Loopback Address */}
-                            <div 
-                              onClick={() => handleCopyIp(`127.0.0.1:${server.port}`)}
-                              className="flex items-center gap-1.5 cursor-pointer bg-slate-950/60 px-2 py-1 rounded border border-white/5 hover:border-accentPurple/40 transition-colors group"
-                              title="Connect locally on this PC"
-                            >
-                              <span className="font-mono text-[11px] text-slate-300">
-                                127.0.0.1:{server.port}
-                              </span>
-                              {copiedIp === `127.0.0.1:${server.port}` ? (
-                                <Check className="w-3 h-3 text-emerald-400" />
-                              ) : (
-                                <Copy className="w-3 h-3 text-slate-500 group-hover:text-accentPurple transition-colors" />
-                              )}
-                            </div>
-
-                            {/* Public WAN address or Join Code if UPnP / crossplay active */}
-                            {isRunning && (server.enableUpnp || server.runnerType === "LOCAL") && server.ipAddress && server.ipAddress !== "127.0.0.1" && (
-                              server.ipAddress.includes("Join Code:") ? (
-                                <div 
-                                  onClick={() => handleCopyIp(server.ipAddress.replace("Join Code: ", ""))}
-                                  className="flex items-center gap-1.5 cursor-pointer bg-accentPurple/15 px-2 py-1 rounded border border-accentPurple/30 hover:border-accentPurple/55 transition-colors group animate-slide-down"
-                                  title="Copy Join Code to share with friends"
-                                >
-                                  <span className="text-[9px] bg-accentPurple/25 text-accentPurple px-1.5 py-0.25 rounded font-extrabold mr-0.5 uppercase tracking-wide">Join Code</span>
-                                  <span className="font-mono text-[11px] text-accentPurple font-bold">
-                                    {server.ipAddress.replace("Join Code: ", "")}
-                                  </span>
-                                  {copiedIp === server.ipAddress.replace("Join Code: ", "") ? (
-                                    <Check className="w-3 h-3 text-emerald-400" />
-                                  ) : (
-                                    <Copy className="w-3.5 h-3.5 text-accentPurple/60 group-hover:text-accentPurple transition-colors" />
-                                  )}
-                                </div>
-                              ) : (
-                                <div 
-                                  onClick={() => handleCopyIp(`${server.ipAddress}:${server.port}`)}
-                                  className="flex items-center gap-1.5 cursor-pointer bg-accentPurple/15 px-2 py-1 rounded border border-accentPurple/30 hover:border-accentPurple/55 transition-colors group animate-slide-down"
-                                  title="Copy public address to share with friends"
-                                >
-                                  <span className="text-[9px] bg-accentPurple/25 text-accentPurple px-1.5 py-0.25 rounded font-extrabold mr-0.5 uppercase tracking-wide">Share</span>
-                                  <span className="font-mono text-[11px] text-accentPurple font-bold">
-                                    {server.ipAddress}:{server.port}
-                                  </span>
-                                  {copiedIp === `${server.ipAddress}:${server.port}` ? (
-                                    <Check className="w-3 h-3 text-emerald-400" />
-                                  ) : (
-                                    <Copy className="w-3.5 h-3.5 text-accentPurple/60 group-hover:text-accentPurple transition-colors" />
-                                  )}
-                                </div>
-                              )
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Live install/download progress */}
-                    {(server.status === "STARTING" || server.status === "UPDATING") &&
-                      progressMap[server.id] && (
-                        <div className="mt-4">
-                          <div className="flex items-center gap-1.5 mb-1.5 text-xs text-accentPurple font-medium">
-                            <Download className="w-3.5 h-3.5" />
-                            <span>{progressMap[server.id]!.label}</span>
-                          </div>
-                          <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-                            {progressMap[server.id]!.percent !== null ? (
-                              <div
-                                className="h-full rounded-full bg-gradient-to-r from-accentPurple to-blue-500 transition-all duration-500"
-                                style={{ width: `${progressMap[server.id]!.percent}%` }}
-                              ></div>
-                            ) : (
-                              <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-accentPurple to-blue-500 animate-pulse"></div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                    {/* Hardware meters with sparklines */}
-                    <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-white/5">
-                      <div>
-                        <div className="flex justify-between text-xs mb-1.5">
-                          <span className="text-mutedText flex items-center gap-1">
-                            CPU Usage
-                            {isRunning && <span className="w-1 h-1 rounded-full bg-accentPurple animate-pulse"></span>}
-                          </span>
-                          <span className="font-mono font-semibold text-slate-200">{server.cpuUsage}%</span>
-                        </div>
-                        <Sparkline data={serverStats[server.id]?.cpu || []} color="#a78bfa" />
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-xs mb-1.5">
-                          <span className="text-mutedText flex items-center gap-1">
-                            Memory ({server.ramAllocation}GB)
-                            {isRunning && <span className="w-1 h-1 rounded-full bg-blue-400 animate-pulse"></span>}
-                          </span>
-                          <span className="font-mono font-semibold text-slate-200">{server.memoryUsage} GB</span>
-                        </div>
-                        <Sparkline data={serverStats[server.id]?.memory || []} color="#60a5fa" />
-                      </div>
-                    </div>
-
-                    {/* Metadata & Controls */}
-                    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 mt-6 pt-4 border-t border-white/5">
-                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-mutedText">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-accentPurple" />
-                          <span>{isLocal ? "LOCALHOST" : server.region}</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-accentBlue" />
-                          <span>{isLocal ? "PC Hardware" : "24/7 Node"}</span>
-                        </span>
-                        {server.password && (
-                          <span className="flex items-center gap-1" title={`Server Password: ${server.password}`}>
-                            <span className="text-[11px]">🔑</span>
-                            <span className="font-mono bg-white/5 border border-white/10 px-1.5 py-0.25 rounded text-[10px] text-slate-300">
-                              {server.password}
-                            </span>
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Action buttons */}
-                      <div className="flex flex-wrap justify-end gap-2">
-                        {/* Start */}
-                        <button
-                          onClick={() => handlePowerAction(server.id, "start")}
-                          disabled={isRunning || server.status === "STARTING" || isServerLoading}
-                          className="p-2 rounded-lg bg-slate-900 border border-white/5 hover:border-emerald-500/40 text-slate-400 hover:text-emerald-400 disabled:opacity-40 disabled:hover:text-slate-400 transition-colors"
-                          title="Start Server"
-                        >
-                          <Play className="w-4 h-4 fill-current" />
-                        </button>
-                        
-                        {/* Stop */}
-                        <button
-                          onClick={() => handlePowerAction(server.id, "stop")}
-                          disabled={!isRunning || isServerLoading}
-                          className="p-2 rounded-lg bg-slate-900 border border-white/5 hover:border-red-500/40 text-slate-400 hover:text-red-400 disabled:opacity-40 disabled:hover:text-slate-400 transition-colors"
-                          title="Stop Server"
-                        >
-                          <Square className="w-4 h-4 fill-current" />
-                        </button>
-
-                        {/* Restart */}
-                        <button
-                          onClick={() => handlePowerAction(server.id, "restart")}
-                          disabled={!isRunning || isServerLoading}
-                          className="p-2 rounded-lg bg-slate-900 border border-white/5 hover:border-accentBlue/40 text-slate-400 hover:text-accentBlue transition-colors"
-                          title="Restart Server"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                        </button>
-
-                        {/* Update (SteamCMD games only, when stopped) */}
-                        {!isRunning && server.status !== "STARTING" && server.status !== "UPDATING" && server.game !== "MINECRAFT" && (
-                          <button
-                            onClick={() => handleUpdateServer(server.id)}
-                            disabled={isServerLoading}
-                            className="p-2 rounded-lg bg-slate-900 border border-white/5 hover:border-blue-500/40 text-slate-400 hover:text-blue-400 transition-colors"
-                            title="Update Game Server via SteamCMD"
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-                        )}
-
-                        {/* Console logs toggle */}
-                        <Link
-                          href={`/dashboard/console?server=${server.id}`}
-                          className="p-2 rounded-lg bg-slate-900 border border-white/5 hover:border-accentPurple/40 text-slate-400 hover:text-accentPurple transition-colors"
-                          title="View Console Output"
-                        >
-                          <Terminal className="w-4 h-4" />
-                        </Link>
-
-                        {/* Archive / Vault */}
-                        <button
-                          onClick={() => handleArchiveServer(server.id)}
-                          disabled={isServerLoading || server.status === "STARTING"}
-                          className="px-3.5 py-2 rounded-lg bg-accentPurple/10 border border-accentPurple/20 hover:bg-accentPurple/20 text-accentPurple font-bold text-xs flex items-center gap-1.5 transition-all"
-                          title="Vault Server (Archive State)"
-                        >
-                          <Archive className="w-3.5 h-3.5" />
-                          <span>Vault</span>
-                        </button>
-
-                        {/* Open Folder */}
-                        {isLocal && (
-                          <button
-                            onClick={() => handleOpenServerFolder(server.id)}
-                            disabled={isServerLoading || server.status === "STARTING"}
-                            className={`px-3.5 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center gap-1.5 transition-all ${isServerLoading || server.status === "STARTING" ? "opacity-50 pointer-events-none" : ""}`}
-                            title="Open this server's files on disk"
-                          >
-                            <FolderOpen className="w-3.5 h-3.5" />
-                            <span>Files</span>
-                          </button>
-                        )}
-
-                        {/* Transfer to Host */}
-                        <button
-                          onClick={() => setHostModalServer({ id: server.id, name: server.name })}
-                          className={`px-3.5 py-2 rounded-lg bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 text-sky-400 font-bold text-xs flex items-center gap-1.5 transition-all ${isServerLoading || server.status === "STARTING" ? "opacity-50 pointer-events-none" : ""}`}
-                          title="Transfer to hosting provider"
-                          aria-label="Transfer to hosting provider"
-                        >
-                          <UploadCloud className="w-4 h-4" />
-                        </button>
-
-                        {/* Export Realm */}
-                        <a
-                          href={`/api/servers/${server.id}/export`}
-                          download
-                          className={`px-3.5 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 text-blue-400 font-bold text-xs flex items-center gap-1.5 transition-all ${isServerLoading || server.status === "STARTING" ? "opacity-50 pointer-events-none" : ""}`}
-                          title="Export Portable .realm Package"
-                        >
-                          <Package className="w-3.5 h-3.5" />
-                          <span>Export</span>
-                        </a>
-
-                        {/* Import Map */}
-                        {!isRunning && (
-                          <button
-                            onClick={() => {
-                              setImportMapServer(server);
-                              setImportWorldPath("");
-                              setImportError(null);
-                              setImportSuccess(null);
-                            }}
-                            disabled={isServerLoading || server.status === "STARTING"}
-                            className="px-3.5 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 text-emerald-400 font-bold text-xs flex items-center gap-1.5 transition-all"
-                            title="Import existing local save maps"
-                          >
-                            <span>Import Map</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
+          <div className="flex gap-8 items-start w-full">
+            {/* Center Column: KPI, Servers */}
+            <div className="flex-1 max-w-7xl space-y-8 min-w-0">
+              
+              {/* KPI Cards */}
+              <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] p-5 shadow-xl hover:-translate-y-1 transition-transform group">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 mb-1">Local Servers</div>
+                    <div className="text-2xl font-black text-white">{data.servers.filter((s:any) => s.runnerType === "LOCAL").length}</div>
+                    <div className="text-xs text-emerald-400 font-bold mt-2 flex items-center gap-1"><Check className="w-3 h-3"/> Running Smooth</div>
+                  </div>
+                  <div className="p-2 bg-accentPurple/10 text-accentPurple rounded-xl group-hover:scale-110 transition-transform">
+                    <ServerIcon className="w-5 h-5" />
                   </div>
                 </div>
-              );
-            })}
-
-            {/* Empty Servers Fallback */}
-            {data.servers.length === 0 && (
-              <div className="col-span-full rounded-xl border border-dashed border-white/5 bg-slate-950/20 p-8 text-center flex flex-col items-center justify-center min-h-[225px]">
-                <div className="p-3 bg-white/5 rounded-full border border-white/5 mb-3">
-                  <ServerIcon className="w-6 h-6 text-slate-500" />
+              </div>
+              <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] p-5 shadow-xl hover:-translate-y-1 transition-transform group">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 mb-1">Vaulted Worlds</div>
+                    <div className="text-2xl font-black text-white">{data.archives.length}</div>
+                    <div className="text-xs text-blue-400 font-bold mt-2 flex items-center gap-1"><Archive className="w-3 h-3"/> Safely Archived</div>
+                  </div>
+                  <div className="p-2 bg-blue-500/10 text-blue-400 rounded-xl group-hover:scale-110 transition-transform">
+                    <Layers className="w-5 h-5" />
+                  </div>
                 </div>
-                <span className="font-extrabold text-sm text-slate-300">No active servers</span>
-                <span className="text-xs text-mutedText mt-1 max-w-sm">Create your first local dedicated game server to play multiplayer with friends for free.</span>
-                <Link 
-                  href="/dashboard/servers/new" 
-                  className="mt-4 inline-flex items-center gap-1.5 bg-accentPurple hover:bg-accentPurpleHover text-white px-4 py-2 rounded-lg text-xs font-bold transition-all border border-accentPurple/30"
+              </div>
+              <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] p-5 shadow-xl hover:-translate-y-1 transition-transform group">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 mb-1">Vault Size</div>
+                    <div className="text-2xl font-black text-white">{totalVaultSize} GB</div>
+                    <div className="text-xs text-slate-400 font-bold mt-2 flex items-center gap-1"><Database className="w-3 h-3"/> Local Storage</div>
+                  </div>
+                  <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl group-hover:scale-110 transition-transform">
+                    <Database className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] p-5 shadow-xl hover:-translate-y-1 transition-transform group">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 mb-1">Global Ping</div>
+                    <div className="text-2xl font-black text-white">12ms</div>
+                    <div className="text-xs text-emerald-400 font-bold mt-2 flex items-center gap-1"><Activity className="w-3 h-3"/> Excellent</div>
+                  </div>
+                  <div className="p-2 bg-orange-500/10 text-orange-400 rounded-xl group-hover:scale-110 transition-transform">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-medium text-sm flex justify-between items-center shadow-lg shadow-red-500/5">
+                <span>{errorMessage}</span>
+                <button onClick={() => setErrorMessage(null)} className="p-1 hover:bg-white/10 rounded-lg transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Active Servers Hero Grid */}
+            <section>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
+                  <ServerIcon className="w-5 h-5 text-accentPurple" />
+                  <span>Active Servers</span>
+                </h2>
+                <Link
+                  href="/dashboard/servers/new"
+                  className="px-4 py-2 rounded-xl bg-accentPurple hover:bg-accentPurple/90 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-accentPurple/25 hover:-translate-y-0.5"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Create Server</span>
+                  <Plus className="w-4 h-4" />
+                  Deploy New Server
                 </Link>
               </div>
-            )}
-
-          </div>
-        </section>
-
-        {/* The Game History Vault Archives */}
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-3.5">
-            <h2 className="text-xs font-bold text-mutedText uppercase tracking-wider flex items-center gap-1.5">
-              <Archive className="w-4 h-4 text-accentPurple" />
-              <span>The Game History Vault</span>
-            </h2>
-            <span className="text-[10px] text-mutedText">Unlimited archive slots</span>
-          </div>
-
-          <div className="glass-panel rounded-xl border border-white/5 overflow-hidden">
-            {data.archives.length === 0 ? (
-              <div className="p-8 text-center bg-slate-950/20">
-                <Archive className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                <span className="font-bold text-sm block text-slate-400">Vault is empty</span>
-                <span className="text-xs text-mutedText block mt-1">Once you archive a server slot, it will appear here.</span>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+                {data.servers.map((server: any) => (
+                  <ServerHeroCard
+                    key={server.id}
+                    server={server}
+                    serverStats={serverStats[server.id]}
+                    progressMap={progressMap}
+                    isServerLoading={actionLoading?.split("-")[0] === server.id}
+                    copiedIp={copiedIp}
+                    isSelected={selectedServerId === server.id}
+                    onSelect={() => setSelectedServerId(server.id)}
+                    actions={{
+                      handlePowerAction,
+                      handleArchiveServer,
+                      handleOpenServerFolder,
+                      setHostModalServer,
+                      setImportMapServer,
+                      setImportWorldPath,
+                      setImportError,
+                      setImportSuccess,
+                      setCopiedIp,
+                      handleGenerateInvite
+                    }}
+                  />
+                ))}
+                {data.servers.length === 0 && (
+                  <div className="col-span-full py-16 flex flex-col items-center justify-center border border-white/5 border-dashed rounded-[18px] bg-slate-900/20">
+                    <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
+                      <ServerIcon className="w-8 h-8 text-slate-500" />
+                    </div>
+                    <h3 className="font-extrabold text-lg text-white mb-2">No Active Servers</h3>
+                    <p className="text-slate-400 text-sm mb-6 max-w-sm text-center">Deploy a new dedicated server to get started. RealmSwap handles the installation and port forwarding automatically.</p>
+                    <Link
+                      href="/dashboard/servers/new"
+                      className="px-6 py-2.5 rounded-xl bg-accentPurple hover:bg-accentPurple/90 text-white font-bold text-sm transition-all shadow-lg shadow-accentPurple/25"
+                    >
+                      Deploy First Server
+                    </Link>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-white/5 bg-slate-950/30 text-mutedText text-xs uppercase tracking-wider">
-                      <th className="p-4 font-bold">Game</th>
-                      <th className="p-4 font-bold">World Name</th>
-                      <th className="p-4 font-bold text-center">Save Footprint</th>
-                      <th className="p-4 font-bold">Date Vaulted</th>
-                      <th className="p-4 font-bold text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {data.archives.map((archive) => {
-                      const isArchiveLoading = actionLoading?.split("-")[0] === archive.id;
-
-                      return (
-                        <tr key={archive.id} className="hover:bg-white/5 transition-colors group">
-                          {/* Game */}
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{getGameIcon(archive.game)}</span>
-                              <span className="font-bold text-xs bg-slate-950 px-2 py-0.5 rounded border border-white/5">{archive.game}</span>
-                            </div>
-                          </td>
-
-                          {/* World Name */}
-                          <td className="p-4">
-                            <span className="font-bold text-slate-200 group-hover:text-accentPurple transition-colors">{archive.serverName}</span>
-                          </td>
-
-                          {/* Save Footprint */}
-                          <td className="p-4 text-center">
-                            <span className="font-mono text-xs text-slate-300">{archive.saveSizeGB} {archive.saveSizeGB < 1 ? "MB" : "GB"}</span>
-                          </td>
-
-                          {/* Date Vaulted */}
-                          <td className="p-4 text-xs text-mutedText">
-                            {new Date(archive.archivedAt).toLocaleDateString(undefined, { 
-                              year: 'numeric', 
-                              month: 'short', 
-                              day: 'numeric' 
-                            })}
-                          </td>
-
-                          {/* Actions */}
-                          <td className="p-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={() => handleRestoreArchive(archive.id)}
-                                disabled={isArchiveLoading}
-                                className="px-3 py-1.5 rounded-lg bg-accentBlue/10 border border-accentBlue/20 hover:bg-accentBlue/20 text-accentBlue font-bold text-xs flex items-center gap-1 transition-all disabled:opacity-40"
-                              >
-                                <Plus className="w-3.5 h-3.5" />
-                                <span>Restore</span>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteArchive(archive.id)}
-                                disabled={isArchiveLoading}
-                                className="p-2 rounded-lg bg-slate-900 border border-white/5 hover:border-red-500/40 text-slate-400 hover:text-red-400 transition-colors disabled:opacity-40"
-                                title="Delete Archive permanently"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            </section>
+            </div>
+            
+            {/* Right Column: Server Health */}
+            <HealthSidebar 
+              server={data.servers.find((s: any) => s.id === selectedServerId) || data.servers[0]} 
+            />
           </div>
-        </section>
 
-        {/* Console / Audit Log Feed */}
-        <section>
-          <h2 className="text-xs font-bold text-mutedText uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <Terminal className="w-4 h-4 text-slate-500" />
-            <span>Server Audit & Console logs</span>
-          </h2>
+          {/* Vault and Feed Row */}
+          <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-8 h-[420px] items-stretch w-full max-w-[calc(1280px+320px+2rem)]">
+            <VaultSection archives={data.archives} actions={{ handleRestoreArchive, handleDeleteArchive }} actionLoading={actionLoading} />
+            <ActivityFeed activityLogs={data.activityLogs} />
+          </div>
           
-          <div className="glass-panel p-5 rounded-xl border border-white/5 font-mono text-[11px] text-slate-300 max-h-60 overflow-y-auto space-y-2.5 bg-slate-950/40">
-            {data.activityLogs.length === 0 ? (
-              <span className="text-mutedText">No recent system logs available.</span>
-            ) : (
-              data.activityLogs.map((log) => (
-                <div key={log.id} className="flex items-start gap-3">
-                  <span className="text-mutedText flex-shrink-0">
-                    [{new Date(log.createdAt).toLocaleTimeString()}]
-                  </span>
-                  <span className="text-accentPurple font-bold flex-shrink-0">
-                    [{log.action}]
-                  </span>
-                  <span className="text-slate-200">
-                    {log.details}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
+        </main>
+      </div>
 
-      </main>
+      {/* Host Transfer Modal */}
+      {hostModalServer && (
+        <HostTransferModal
+          onClose={() => setHostModalServer(null)}
+          serverId={hostModalServer.id}
+          serverName={hostModalServer.name}
+        />
+      )}
 
       {/* Import Map Dialog Overlay */}
       {importMapServer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-lg glass-panel border border-emerald-500/30 rounded-2xl p-6 shadow-2xl flex flex-col box-glow-emerald">
+          <div className="w-full max-w-lg bg-slate-900 border border-emerald-500/30 rounded-2xl p-6 shadow-2xl flex flex-col shadow-[0_0_40px_rgba(16,185,129,0.15)]">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
               <div>
                 <h3 className="font-extrabold text-white text-base">Import Existing Map</h3>
-                <p className="text-xs text-mutedText">
+                <p className="text-xs text-slate-400">
                   Copy world save data into {importMapServer.name} ({importMapServer.game})
                 </p>
               </div>
@@ -1171,105 +779,55 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
             {/* Help guidelines */}
             <div className="p-3.5 rounded-lg bg-emerald-500/5 border border-emerald-500/10 text-xs text-slate-300 leading-normal space-y-2 mb-4">
               <span className="font-bold text-white block">Instructions:</span>
-              {importMapServer.game === "MINECRAFT" && (
-                <p>
-                  Minecraft requires a world folder path. Select the folder on your host PC that contains the **`level.dat`** file.<br/>
-                  *Example:* `C:\Users\YourName\AppData\Roaming\.minecraft\saves\MyWorld`
-                </p>
-              )}
-              {importMapServer.game === "VALHEIM" && (
-                <p>
-                  Valheim requires a path to a **`.db`** or **`.fwl`** file (the paired file is auto-imported if present), or a directory containing them.<br/>
-                  *Example:* `C:\Users\YourName\AppData\LocalLow\IronGate\Valheim\worlds_local\MyWorld.db`
-                </p>
-              )}
-              {importMapServer.game === "ENSHROUDED" && (
-                <p>
-                  Enshrouded savegames can be imported as files or save folders containing your game files.<br/>
-                  *Example:* `C:\Users\YourName\AppData\Roaming\Enshrouded\savegame`
-                </p>
-              )}
-              {importMapServer.game === "ZOMBOID" && (
-                <p>
-                  Project Zomboid world saves must be folders containing sandbox configurations and map database structures.<br/>
-                  *Example:* `C:\Users\YourName\Zomboid\Saves\Multiplayer\servertest`
-                </p>
-              )}
-              {importMapServer.game === "ARK" && (
-                <p>
-                  ARK save paths should be folders containing your active island save databases.<br/>
-                  *Example:* `D:\Steam\steamapps\common\ARK\ShooterGame\Saved\SavedArks`
-                </p>
-              )}
-              {importMapServer.game === "TERRARIA" && (
-                <p>Terraria requires a world file (`.wld`) or a folder containing `.wld` files.<br/>*Example:* `C:\Users\YourName\Documents\My Games\Terraria\Worlds\MyWorld.wld`</p>
-              )}
-              {importMapServer.game === "PALWORLD" && (
-                <p>Palworld saves should be a folder containing SaveGames data.<br/>*Example:* `C:\Users\YourName\AppData\Local\Pal\Saved\SaveGames`</p>
-              )}
-              {importMapServer.game === "RUST" && (
-                <p>Rust save data should be a folder containing your server identity folder.<br/>*Example:* `D:\Steam\steamapps\common\RustDedicated\server\servertest`</p>
-              )}
+              <p>Enter the absolute path to your existing world save folder or file.</p>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleImportWorld} className="space-y-4">
+            <form onSubmit={handleImportWorld} className="flex flex-col gap-4">
               {importError && (
-                <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs leading-normal">
+                <div className="p-3 rounded bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold">
                   {importError}
                 </div>
               )}
-
               {importSuccess && (
-                <div className="p-3.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs leading-normal">
+                <div className="p-3 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
                   {importSuccess}
                 </div>
               )}
-
-              <div>
-                <label className="text-xs font-bold text-mutedText uppercase tracking-wider block mb-2">
-                  Source Save Path on Host PC
+              
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-300 uppercase tracking-wide">
+                  Source Path on Host PC
                 </label>
                 <input
                   type="text"
+                  required
+                  placeholder="C:\Users\Name\AppData\..."
                   value={importWorldPath}
                   onChange={(e) => setImportWorldPath(e.target.value)}
-                  placeholder="Paste the absolute path to your file or directory..."
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950/60 border border-white/5 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all duration-200 text-xs text-slate-200"
-                  required
+                  className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-mono text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+              <div className="flex justify-end gap-3 mt-2">
                 <button
                   type="button"
                   onClick={() => setImportMapServer(null)}
-                  className="px-4 py-2.5 rounded-lg bg-slate-900 border border-white/5 hover:border-white/10 text-xs font-bold text-slate-300 transition-colors"
+                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold text-sm transition-colors"
                 >
-                  Close
+                  Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={importLoading}
-                  className="px-6 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors border border-emerald-500/30"
+                  disabled={importLoading || !importWorldPath}
+                  className="px-6 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm flex items-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40"
                 >
-                  {importLoading ? "Copying Saves..." : "Import Saves"}
+                  {importLoading ? "Importing..." : "Start Import"}
                 </button>
               </div>
             </form>
-
           </div>
         </div>
       )}
-
-      {hostModalServer && (
-        <HostTransferModal
-          serverId={hostModalServer.id}
-          serverName={hostModalServer.name}
-          onClose={() => setHostModalServer(null)}
-        />
-      )}
-
     </div>
   );
 }

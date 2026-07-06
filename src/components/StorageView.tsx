@@ -1,5 +1,6 @@
 "use client";
 
+import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -60,47 +61,7 @@ export default function StorageView({ user }: { user: any }) {
   return (
     <div className="flex min-h-screen bg-[#06070b] text-white">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-borderDark bg-[#0a0c12] flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-borderDark flex items-center gap-2">
-          <img src="/logo.png" alt="RealmSwap" className="h-8 w-auto scale-[7] origin-left -translate-x-16 translate-y-2 pointer-events-none select-none" />
-        </div>
-        <nav className="p-4 space-y-1">
-          <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-300 hover:text-white transition-all group">
-            <LayoutDashboard className="w-4 h-4 text-mutedText group-hover:text-white" />
-            <span>Dashboard</span>
-          </Link>
-          <Link href="/dashboard/servers/new" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-300 hover:text-white transition-all group">
-            <Plus className="w-4 h-4 text-mutedText group-hover:text-white" />
-            <span>Create Server</span>
-          </Link>
-          <Link href="/dashboard/marketplace" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold hover:bg-white/5 text-slate-300 hover:text-white transition-all group">
-            <Store className="w-4 h-4 text-mutedText group-hover:text-white" />
-            <span>Marketplace</span>
-          </Link>
-          <div className="pt-4 pb-2 px-3">
-            <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider">Features</span>
-          </div>
-          {DASHBOARD_NAV_LINKS.map((link, i) => {
-            const active = link.href === "/dashboard/storage";
-            return (
-              <Link
-                key={i}
-                href={link.href}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
-                  active
-                    ? "bg-accentPurple/10 text-white border border-accentPurple/20"
-                    : "hover:bg-white/5 text-slate-400 hover:text-white"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <link.icon className={`w-4 h-4 ${active ? "text-accentPurple" : "text-slate-500 group-hover:text-white"} transition-colors`} />
-                  <span>{link.label}</span>
-                </div>
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
+      <SidebarNavigation user={user} />
 
       {/* Main */}
       <main className="flex-1 p-8 max-w-4xl">
