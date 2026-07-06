@@ -394,12 +394,12 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   /** Dynamic category list from current results */
   const availableCategories = useMemo(() => {
     const cats = new Set<string>();
-    const pool = searchQuery.trim() ? searchResults : popularMods;
+    const pool = searchResults;
     pool.forEach((m: any) =>
       m.categories?.forEach((c: string) => cats.add(c))
     );
     return Array.from(cats).sort();
-  }, [searchResults, popularMods, searchQuery]);
+  }, [searchResults]);
 
   /* ── Effects ─────────────────────────────────────────────────── */
 
