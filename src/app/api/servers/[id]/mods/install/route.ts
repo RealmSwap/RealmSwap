@@ -143,6 +143,26 @@ export async function POST(
                 if (err) reject(new Error(`Failed to extract BepInEx: ${err.message}`));
                 else resolve();
               });
+              });
+            });
+
+            // Log BepInEx core as installed so it shows in the UI
+            await prisma.modInstallation.upsert({
+              where: {
+                serverId_provider_packageId: {
+                  serverId,
+                  provider: "thunderstore",
+                  packageId: "denikson-BepInExPack_Valheim"
+                }
+              },
+              update: { version: "5.4.2202" },
+              create: {
+                serverId,
+                provider: "thunderstore",
+                packageId: "denikson-BepInExPack_Valheim",
+                version: "5.4.2202",
+                name: "BepInExPack Valheim"
+              }
             });
           }
 
