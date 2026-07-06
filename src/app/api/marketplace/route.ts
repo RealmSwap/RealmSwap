@@ -12,15 +12,36 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const gameSlug = searchParams.get("game");
     const tag = searchParams.get("tag");
+    const verifiedLevel = searchParams.get("verifiedLevel");
+    const q = searchParams.get("q") || "";
+    
+    // Pagination parameters
+    const offset = parseInt(searchParams.get("offset") || "0");
+    const limitParam = parseInt(searchParams.get("limit") || "20");
+    const limit = Math.min(limitParam, 50);
 
     let whereClause: any = {};
+    
     if (gameSlug) {
       whereClause.gameSlug = gameSlug;
     }
+    
     if (tag) {
       whereClause.tags = {
         contains: tag,
       };
+    }
+    
+    if (verifiedLevel) {
+      whereClause.verifiedLevel = verifiedLevel;
+    }
+    
+    if (q.trim() !== "") {
+      whereClause.OR = [
+        { name: { contains: q } },
+        { gameSlug: { contains: q } },
+        { description: { contains: q } }
+      ];
     }
 
     const sort = searchParams.get("sort") || "newest"; // "likes", "downloads", "newest"
@@ -34,7 +55,8 @@ export async function GET(request: Request) {
     const templates = await prisma.marketplaceTemplate.findMany({
       where: whereClause,
       orderBy,
-      take: 50,
+      skip: offset,
+      take: limit + 1, // Fetch one extra to determine if there are more
       include: {
         votes: {
           where: { userId: user.id },
@@ -43,12 +65,17 @@ export async function GET(request: Request) {
       }
     });
 
+    const hasMore = templates.length > limit;
+    if (hasMore) {
+      templates.pop(); // Remove the extra item
+    }
+
     const enrichedTemplates = templates.map(t => ({
       ...t,
       userVote: t.votes[0]?.type || null
     }));
 
-    return NextResponse.json(enrichedTemplates);
+    return NextResponse.json({ results: enrichedTemplates, hasMore });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
