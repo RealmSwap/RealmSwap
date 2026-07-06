@@ -30,6 +30,7 @@ import {
   Globe,
   Tag,
   Layers,
+  Trash,
 } from "lucide-react";
 
 /* ─── Types ────────────────────────────────────────────────────── */
@@ -551,6 +552,34 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       setDepModalMod(null);
       setDepModalDeps([]);
       setDepModalSelected(new Set());
+    }
+  };
+
+  const handleDeleteMod = async (mod: any) => {
+    if (!selectedServer) return;
+    if (!confirm(`Are you sure you want to uninstall ${mod.name}?`)) return;
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/mods/${mod.packageId || mod.modId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to uninstall mod");
+
+      setSuccess(`Successfully uninstalled ${mod.name}`);
+      
+      // Refresh
+      const modsRes = await fetch(`/api/servers/${selectedServer.id}/mods`);
+      const modsData = await modsRes.json();
+      if (modsData.mods) setInstalledMods(modsData.mods);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1492,13 +1521,23 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                             )}
                           </div>
 
-                          <button
-                            onClick={() => handleConfigureClick(mod)}
-                            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-colors flex items-center gap-1.5"
-                          >
-                            <Settings className="w-3 h-3" />
-                            Configure
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleDeleteMod(mod)}
+                              disabled={loading || selectedServer.status === "RUNNING"}
+                              className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-500 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                            >
+                              <Trash className="w-3 h-3" />
+                              Uninstall
+                            </button>
+                            <button
+                              onClick={() => handleConfigureClick(mod)}
+                              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-colors flex items-center gap-1.5"
+                            >
+                              <Settings className="w-3 h-3" />
+                              Configure
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
