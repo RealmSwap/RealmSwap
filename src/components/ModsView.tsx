@@ -1508,7 +1508,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                        <div className="flex flex-wrap items-center justify-between gap-3 mt-3 pt-3 border-t border-white/5">
                           <div className="flex items-center gap-2">
                             <span className="text-[9px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-extrabold uppercase tracking-wide">
                               {mod.provider}
