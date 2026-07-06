@@ -143,7 +143,6 @@ export async function POST(
                 if (err) reject(new Error(`Failed to extract BepInEx: ${err.message}`));
                 else resolve();
               });
-              });
             });
 
             // Log BepInEx core as installed so it shows in the UI
