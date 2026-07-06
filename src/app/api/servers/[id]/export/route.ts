@@ -16,7 +16,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       where: { id: params.id, userId: session.id },
       include: {
         mods: true,
-        scheduledTasks: true,
+        automations: {
+          include: {
+            actions: true,
+            conditions: true
+          }
+        },
       }
     });
 
@@ -55,12 +60,21 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         name: m.name,
         dependencies: m.dependencies
       })),
-      tasks: server.scheduledTasks.map((t: any) => ({
-        action: t.action,
-        cronExpression: t.cronExpression,
-        enabled: t.enabled,
-        broadcastMsg: t.broadcastMsg,
-        broadcastMin: t.broadcastMin
+      automations: server.automations.map((a: any) => ({
+        name: a.name,
+        enabled: a.enabled,
+        triggerType: a.triggerType,
+        triggerConfig: a.triggerConfig,
+        actions: a.actions.map((act: any) => ({
+          type: act.type,
+          order: act.order,
+          config: act.config
+        })),
+        conditions: a.conditions.map((cond: any) => ({
+          type: cond.type,
+          operator: cond.operator,
+          value: cond.value
+        }))
       }))
     };
 

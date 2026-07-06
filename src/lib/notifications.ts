@@ -26,7 +26,7 @@ export async function sendNotification(userId: string, title: string, message: s
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { pushSubs: true }
+      include: { PushSubscription: true }
     });
 
     if (!user) return;
@@ -81,10 +81,10 @@ export async function sendNotification(userId: string, title: string, message: s
     }
 
     // 3. Web Push
-    if (user.notifyWebPush && user.pushSubs.length > 0 && process.env.VAPID_PUBLIC_KEY) {
+    if (user.notifyWebPush && user.PushSubscription && user.PushSubscription.length > 0 && process.env.VAPID_PUBLIC_KEY) {
       const payload = JSON.stringify({ title, body: message });
       
-      for (const sub of user.pushSubs) {
+      for (const sub of user.PushSubscription) {
         try {
           await webpush.sendNotification({
             endpoint: sub.endpoint,

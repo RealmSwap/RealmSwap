@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
 
       // Cleanup existing mods and tasks
       await prisma.modInstallation.deleteMany({ where: { serverId: targetServerId } });
-      await prisma.scheduledTask.deleteMany({ where: { serverId: targetServerId } });
+      await prisma.automation.deleteMany({ where: { serverId: targetServerId } });
     } else {
       // NEW mode
       serverRecord = await prisma.server.create({
@@ -100,17 +100,30 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Reconstruct scheduled tasks
-    if (manifest.tasks && Array.isArray(manifest.tasks)) {
-      for (const t of manifest.tasks) {
-        await prisma.scheduledTask.create({
+    // Reconstruct automations
+    if (manifest.automations && Array.isArray(manifest.automations)) {
+      for (const a of manifest.automations) {
+        await prisma.automation.create({
           data: {
             serverId: targetServerId,
-            action: t.action,
-            cronExpression: t.cronExpression,
-            enabled: t.enabled,
-            broadcastMsg: t.broadcastMsg,
-            broadcastMin: t.broadcastMin
+            name: a.name,
+            enabled: a.enabled,
+            triggerType: a.triggerType,
+            triggerConfig: a.triggerConfig,
+            actions: {
+              create: a.actions?.map((act: any) => ({
+                type: act.type,
+                order: act.order,
+                config: act.config
+              })) || []
+            },
+            conditions: {
+              create: a.conditions?.map((cond: any) => ({
+                type: cond.type,
+                operator: cond.operator,
+                value: cond.value
+              })) || []
+            }
           }
         });
       }
