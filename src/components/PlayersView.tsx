@@ -13,7 +13,11 @@ export default function PlayersView({ user }: { user: any }) {
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newPlayerName, setNewPlayerName] = useState("");
+  const [newPlayerForm, setNewPlayerForm] = useState({ name: "", steamId: "", minecraftUuid: "", xboxId: "", discordId: "" });
+  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editPlayerForm, setEditPlayerForm] = useState({ name: "", steamId: "", minecraftUuid: "", xboxId: "", discordId: "" });
+
   const [isBanModalOpen, setIsBanModalOpen] = useState(false);
   const [banReason, setBanReason] = useState("");
 
@@ -81,20 +85,55 @@ export default function PlayersView({ user }: { user: any }) {
   };
 
   const handleAddPlayerSubmit = async () => {
-    if (!newPlayerName.trim()) return;
+    if (!newPlayerForm.name.trim()) return;
     try {
       const res = await fetch("/api/players", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newPlayerName.trim() })
+        body: JSON.stringify({
+          name: newPlayerForm.name.trim(),
+          steamId: newPlayerForm.steamId.trim() || undefined,
+          minecraftUuid: newPlayerForm.minecraftUuid.trim() || undefined,
+          xboxId: newPlayerForm.xboxId.trim() || undefined,
+          discordId: newPlayerForm.discordId.trim() || undefined
+        })
       });
       if (res.ok) {
         fetchPlayers();
         setIsAddModalOpen(false);
-        setNewPlayerName("");
+        setNewPlayerForm({ name: "", steamId: "", minecraftUuid: "", xboxId: "", discordId: "" });
       } else {
         const errorData = await res.json();
         alert(`Failed to add player: ${errorData.error}`);
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert(`Error: ${e.message}`);
+    }
+  };
+
+  const handleEditPlayerSubmit = async () => {
+    if (!selectedPlayer || !editPlayerForm.name.trim()) return;
+    try {
+      const res = await fetch(`/api/players/${selectedPlayer.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editPlayerForm.name.trim(),
+          steamId: editPlayerForm.steamId.trim() || null,
+          minecraftUuid: editPlayerForm.minecraftUuid.trim() || null,
+          xboxId: editPlayerForm.xboxId.trim() || null,
+          discordId: editPlayerForm.discordId.trim() || null
+        })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        fetchPlayers();
+        setSelectedPlayer({ ...selectedPlayer, ...updated });
+        setIsEditModalOpen(false);
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to update player: ${errorData.error}`);
       }
     } catch (e: any) {
       console.error(e);
@@ -212,21 +251,38 @@ export default function PlayersView({ user }: { user: any }) {
                     </p>
                   </div>
                 </div>
-                {selectedPlayer.isGloballyBanned ? (
+                <div className="flex items-center gap-3">
                   <button 
-                    onClick={() => handleGlobalBanRevoke(selectedPlayer.id)}
+                    onClick={() => {
+                      setEditPlayerForm({
+                        name: selectedPlayer.name || "",
+                        steamId: selectedPlayer.steamId || "",
+                        minecraftUuid: selectedPlayer.minecraftUuid || "",
+                        xboxId: selectedPlayer.xboxId || "",
+                        discordId: selectedPlayer.discordId || ""
+                      });
+                      setIsEditModalOpen(true);
+                    }}
                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold flex items-center gap-2 transition-colors border border-white/10"
                   >
-                    <Shield className="w-4 h-4 text-emerald-400" /> Revoke Global Ban
+                    <Edit className="w-4 h-4" /> Edit
                   </button>
-                ) : (
-                  <button 
-                    onClick={() => setIsBanModalOpen(true)}
-                    className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg font-bold flex items-center gap-2 transition-colors"
-                  >
-                    <ShieldAlert className="w-4 h-4" /> Global Ban
-                  </button>
-                )}
+                  {selectedPlayer.isGloballyBanned ? (
+                    <button 
+                      onClick={() => handleGlobalBanRevoke(selectedPlayer.id)}
+                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold flex items-center gap-2 transition-colors border border-white/10"
+                    >
+                      <Shield className="w-4 h-4 text-emerald-400" /> Revoke Global Ban
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => setIsBanModalOpen(true)}
+                      className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg font-bold flex items-center gap-2 transition-colors"
+                    >
+                      <ShieldAlert className="w-4 h-4" /> Global Ban
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-8">
@@ -312,23 +368,139 @@ export default function PlayersView({ user }: { user: any }) {
               <X className="w-5 h-5" />
             </button>
             <h2 className="text-xl font-bold text-white mb-4">Add New Player</h2>
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Player Name</label>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Player Name *</label>
                 <input
                   type="text"
-                  value={newPlayerName}
-                  onChange={(e) => setNewPlayerName(e.target.value)}
+                  value={newPlayerForm.name}
+                  onChange={(e) => setNewPlayerForm({ ...newPlayerForm, name: e.target.value })}
                   placeholder="e.g. Notch"
                   className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accentPurple transition-colors"
                 />
               </div>
+              <div className="pt-2 border-t border-white/5">
+                <p className="text-xs text-slate-500 mb-4">Link game identifiers to automatically enforce whitelists and bans on synced servers.</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Steam ID</label>
+                    <input
+                      type="text"
+                      value={newPlayerForm.steamId}
+                      onChange={(e) => setNewPlayerForm({ ...newPlayerForm, steamId: e.target.value })}
+                      placeholder="e.g. 7656119..."
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Minecraft UUID</label>
+                    <input
+                      type="text"
+                      value={newPlayerForm.minecraftUuid}
+                      onChange={(e) => setNewPlayerForm({ ...newPlayerForm, minecraftUuid: e.target.value })}
+                      placeholder="e.g. 069a79f4-..."
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Xbox ID</label>
+                    <input
+                      type="text"
+                      value={newPlayerForm.xboxId}
+                      onChange={(e) => setNewPlayerForm({ ...newPlayerForm, xboxId: e.target.value })}
+                      placeholder="e.g. 253542..."
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Discord ID</label>
+                    <input
+                      type="text"
+                      value={newPlayerForm.discordId}
+                      onChange={(e) => setNewPlayerForm({ ...newPlayerForm, discordId: e.target.value })}
+                      placeholder="e.g. 1234567..."
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
               <button
                 onClick={handleAddPlayerSubmit}
-                disabled={!newPlayerName.trim()}
-                className="w-full py-3 bg-accentPurple hover:bg-accentPurpleHover disabled:opacity-50 text-white rounded-xl font-bold transition-all"
+                disabled={!newPlayerForm.name.trim()}
+                className="w-full py-3 bg-accentPurple hover:bg-accentPurpleHover disabled:opacity-50 text-white rounded-xl font-bold transition-all mt-4"
               >
                 Create Player
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Player Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl shadow-2xl relative">
+            <button onClick={() => setIsEditModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-white mb-4">Edit Player Identity</h2>
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Player Name *</label>
+                <input
+                  type="text"
+                  value={editPlayerForm.name}
+                  onChange={(e) => setEditPlayerForm({ ...editPlayerForm, name: e.target.value })}
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accentPurple transition-colors"
+                />
+              </div>
+              <div className="pt-2 border-t border-white/5">
+                <p className="text-xs text-slate-500 mb-4">Update game identifiers for synchronization.</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Steam ID</label>
+                    <input
+                      type="text"
+                      value={editPlayerForm.steamId}
+                      onChange={(e) => setEditPlayerForm({ ...editPlayerForm, steamId: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Minecraft UUID</label>
+                    <input
+                      type="text"
+                      value={editPlayerForm.minecraftUuid}
+                      onChange={(e) => setEditPlayerForm({ ...editPlayerForm, minecraftUuid: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Xbox ID</label>
+                    <input
+                      type="text"
+                      value={editPlayerForm.xboxId}
+                      onChange={(e) => setEditPlayerForm({ ...editPlayerForm, xboxId: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Discord ID</label>
+                    <input
+                      type="text"
+                      value={editPlayerForm.discordId}
+                      onChange={(e) => setEditPlayerForm({ ...editPlayerForm, discordId: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                    />
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleEditPlayerSubmit}
+                disabled={!editPlayerForm.name.trim()}
+                className="w-full py-3 bg-accentPurple hover:bg-accentPurpleHover disabled:opacity-50 text-white rounded-xl font-bold transition-all mt-4"
+              >
+                Save Changes
               </button>
             </div>
           </div>
