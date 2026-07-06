@@ -1,62 +1,125 @@
-import { ModProvider, ModSearchResult } from "./types";
+import { ModProvider, ModSearchResult, SearchOptions } from "./types";
 import path from "path";
 import fs from "fs";
+
+/**
+ * Maps game slugs to Thunderstore community identifiers.
+ * Thunderstore hosts mod communities for many games — each with a public
+ * package index API at https://{community}.thunderstore.io/api/v1/package/.
+ */
+const THUNDERSTORE_COMMUNITIES: Record<string, string> = {
+  VALHEIM: "valheim",
+  VRISING: "v-rising",
+  PALWORLD: "palworld",
+};
 
 export class ThunderstoreProvider implements ModProvider {
   id = "thunderstore";
 
-  private cachedPackages: any[] = [];
-  private lastFetchTime: number = 0;
+  /** Per-community package cache to avoid refetching the full index */
+  private cache: Record<string, { packages: any[]; fetchedAt: number }> = {};
   private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-  async search(query: string, game: string): Promise<ModSearchResult[]> {
-    if (game.toUpperCase() !== "VALHEIM") return [];
-    
-    // Fetch and cache the massive package list if needed
-    if (this.cachedPackages.length === 0 || Date.now() - this.lastFetchTime > this.CACHE_TTL) {
-      console.log("[Thunderstore] Fetching package index...");
+  /**
+   * Returns true if the given game has a known Thunderstore community.
+   */
+  static supportsGame(game: string): boolean {
+    return game.toUpperCase() in THUNDERSTORE_COMMUNITIES;
+  }
+
+  async search(query: string, game: string, options?: SearchOptions): Promise<ModSearchResult[]> {
+    const community = THUNDERSTORE_COMMUNITIES[game.toUpperCase()];
+    if (!community) return [];
+
+    const offset = options?.offset || 0;
+    const sort = options?.sort || "relevance";
+    const categoryFilter = options?.category || "";
+    const limit = 20;
+
+    // Fetch and cache the full package index for this community
+    const cached = this.cache[community];
+    if (!cached || Date.now() - cached.fetchedAt > this.CACHE_TTL) {
+      console.log(`[Thunderstore] Fetching package index for ${community}...`);
       try {
-        const response = await fetch("https://valheim.thunderstore.io/api/v1/package/");
+        const response = await fetch(
+          `https://${community}.thunderstore.io/api/v1/package/`
+        );
         if (response.ok) {
-          this.cachedPackages = await response.json();
-          this.lastFetchTime = Date.now();
+          this.cache[community] = {
+            packages: await response.json(),
+            fetchedAt: Date.now(),
+          };
         }
       } catch (err) {
-        console.error("[Thunderstore] Failed to fetch packages", err);
+        console.error(`[Thunderstore] Failed to fetch packages for ${community}`, err);
       }
     }
 
+    const packages = this.cache[community]?.packages || [];
+    let filtered = [...packages];
+
+    // Text search filter
     const q = query.toLowerCase();
-    
-    // If no query, return top 20 by rating score
-    let filtered = this.cachedPackages;
     if (q.length > 0) {
-      filtered = this.cachedPackages.filter((pkg: any) => 
-        pkg.name.toLowerCase().includes(q) || 
-        pkg.owner.toLowerCase().includes(q) ||
-        pkg.full_name.toLowerCase().includes(q)
+      filtered = filtered.filter(
+        (pkg: any) =>
+          pkg.name.toLowerCase().includes(q) ||
+          pkg.owner.toLowerCase().includes(q) ||
+          pkg.full_name.toLowerCase().includes(q)
       );
-    } else {
-      // Sort by rating_score desc
-      filtered.sort((a, b) => (b.rating_score || 0) - (a.rating_score || 0));
     }
 
-    // Map and return
-    const results = filtered
-      .slice(0, 20) // top 20
-      .map((pkg: any) => {
-        // The latest version is the first in the versions array
-        const latestVersion = pkg.versions[0];
-        return {
-          provider: this.id,
-          packageId: pkg.full_name,
-          name: pkg.name,
-          author: pkg.owner,
-          description: latestVersion.description,
-          version: latestVersion.version_number,
-          downloadUrl: latestVersion.download_url
-        };
-      });
+    // Category filter
+    if (categoryFilter) {
+      filtered = filtered.filter((pkg: any) =>
+        pkg.categories?.some(
+          (c: string) => c.toLowerCase() === categoryFilter.toLowerCase()
+        )
+      );
+    }
+
+    // Filter out deprecated
+    filtered = filtered.filter((pkg: any) => !pkg.is_deprecated);
+
+    // Sorting
+    switch (sort) {
+      case "downloads":
+      case "rating":
+        filtered.sort((a, b) => (b.rating_score || 0) - (a.rating_score || 0));
+        break;
+      case "updated":
+        filtered.sort(
+          (a, b) =>
+            new Date(b.date_updated).getTime() -
+            new Date(a.date_updated).getTime()
+        );
+        break;
+      default:
+        // relevance — if there's a query keep the natural filter order,
+        // otherwise fall back to rating score
+        if (q.length === 0) {
+          filtered.sort((a, b) => (b.rating_score || 0) - (a.rating_score || 0));
+        }
+    }
+
+    // Paginate and map
+    const results = filtered.slice(offset, offset + limit).map((pkg: any) => {
+      const latestVersion = pkg.versions[0];
+      return {
+        provider: this.id,
+        packageId: pkg.full_name,
+        name: pkg.name,
+        author: pkg.owner,
+        description: latestVersion.description,
+        version: latestVersion.version_number,
+        downloadUrl: latestVersion.download_url,
+        iconUrl: latestVersion.icon || undefined,
+        rating: pkg.rating_score || 0,
+        categories: pkg.categories || [],
+        updatedAt: pkg.date_updated,
+        websiteUrl: `https://thunderstore.io/c/${community}/p/${pkg.owner}/${pkg.name}/`,
+      };
+    });
 
     return results;
   }

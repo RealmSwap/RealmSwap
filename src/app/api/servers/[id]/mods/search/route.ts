@@ -24,18 +24,25 @@ export async function GET(
 
     const searchParams = req.nextUrl.searchParams;
     const query = searchParams.get("q") || "";
+    const offset = parseInt(searchParams.get("offset") || "0");
+    const sort = searchParams.get("sort") || "relevance";
+    const category = searchParams.get("category") || "";
 
     const game = access.server.game.toUpperCase();
+    const options = { offset, sort, category };
     let results: any[] = [];
 
-    if (game === "VALHEIM") {
-      results = await thunderstore.search(query, game);
+    // Route to the appropriate provider based on game
+    if (ThunderstoreProvider.supportsGame(game)) {
+      results = await thunderstore.search(query, game, options);
     } else if (game === "MINECRAFT") {
-      results = await modrinth.search(query, game);
+      results = await modrinth.search(query, game, options);
     } else if (game === "ZOMBOID") {
-      results = await workshop.search(query, game);
+      results = await workshop.search(query, game, options);
     } else {
-      return NextResponse.json({ error: "Mod searching is not supported for this game yet." }, { status: 400 });
+      // Return empty results with a flag instead of a hard error —
+      // the frontend shows a friendly "not supported yet" state
+      return NextResponse.json({ results: [], unsupported: true });
     }
 
     return NextResponse.json({ results });
