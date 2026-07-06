@@ -125,11 +125,94 @@ export class ThunderstoreProvider implements ModProvider {
   }
 
   async resolveDependencies(packageId: string, version: string): Promise<string[]> {
-    // Mock dependency resolution
-    if (packageId === "ValheimPlus-ValheimPlus") {
-      return ["denikson-BepInExPack_Valheim"];
-    }
     return [];
+  }
+
+  async resolveDependenciesFull(packageId: string, version: string, game: string): Promise<ModSearchResult[]> {
+    const community = THUNDERSTORE_COMMUNITIES[game.toUpperCase()];
+    if (!community) return [];
+
+    // Ensure cache is loaded
+    const cached = this.cache[community];
+    if (!cached || Date.now() - cached.fetchedAt > this.CACHE_TTL) {
+      // Trigger a search just to warm the cache, we can just fetch the index directly
+      try {
+        const response = await fetch(`https://${community}.thunderstore.io/api/v1/package/`);
+        if (response.ok) {
+          this.cache[community] = {
+            packages: await response.json(),
+            fetchedAt: Date.now(),
+          };
+        }
+      } catch (err) {
+        console.error(`[Thunderstore] Failed to fetch packages for ${community}`, err);
+        return [];
+      }
+    }
+
+    const packages = this.cache[community]?.packages || [];
+    const packageMap = new Map(packages.map((p: any) => [p.full_name, p]));
+    
+    const results: ModSearchResult[] = [];
+    const visited = new Set<string>();
+
+    const resolveRecursive = (currentId: string) => {
+      console.log("[Thunderstore] resolveRecursive called with:", currentId);
+      if (visited.has(currentId)) return;
+      visited.add(currentId);
+
+      const pkg = packageMap.get(currentId);
+      if (!pkg) {
+        console.log(`[Thunderstore] packageMap.get(${currentId}) returned undefined!`);
+        return;
+      }
+      if (!pkg.versions || pkg.versions.length === 0) {
+        console.log(`[Thunderstore] pkg.versions is empty for ${currentId}!`);
+        return;
+      }
+
+      const latestVersion = pkg.versions[0];
+      const deps: string[] = latestVersion.dependencies || [];
+      console.log(`[Thunderstore] ${currentId} has deps:`, deps);
+
+      for (const depString of deps) {
+        const lastDash = depString.lastIndexOf("-");
+        if (lastDash === -1) continue;
+        const depId = depString.substring(0, lastDash);
+        console.log(`[Thunderstore] parsed depId:`, depId);
+
+        if (depId.includes("BepInExPack")) continue;
+
+        if (!visited.has(depId)) {
+          const depPkg = packageMap.get(depId);
+          if (depPkg) {
+            const depLatest = depPkg.versions[0];
+            results.push({
+              provider: this.id,
+              packageId: depPkg.full_name,
+              name: depPkg.name,
+              author: depPkg.owner,
+              description: depLatest.description,
+              version: depLatest.version_number,
+              downloadUrl: depLatest.download_url,
+              iconUrl: depLatest.icon || undefined,
+              rating: depPkg.rating_score || 0,
+              categories: depPkg.categories || [],
+              updatedAt: depPkg.date_updated,
+              websiteUrl: `https://thunderstore.io/c/${community}/p/${depPkg.owner}/${depPkg.name}/`,
+            });
+            resolveRecursive(depId);
+          } else {
+            console.log(`[Thunderstore] dependency ${depId} NOT FOUND in packageMap!`);
+          }
+        }
+      }
+    };
+
+    console.log(`[Thunderstore] Starting resolution for packageId: ${packageId}, packageMap size: ${packageMap.size}`);
+    resolveRecursive(packageId);
+    console.log("[Thunderstore] resolveDependenciesFull returning deps:", results.map(r => r.packageId));
+    return results;
   }
 
   async downloadAndInstall(packageId: string, version: string, destPath: string): Promise<void> {

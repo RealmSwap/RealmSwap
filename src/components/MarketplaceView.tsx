@@ -446,66 +446,72 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
       <div
         key={t.id}
         onClick={() => setSelectedTemplate(t)}
-        className="p-5 rounded-xl border border-white/5 bg-slate-950/40 hover:border-white/10 hover:bg-slate-900/40 transition-all cursor-pointer group animate-fade-in flex flex-col h-full"
+        className="relative p-6 rounded-2xl border border-white/5 bg-slate-950/40 hover:border-white/10 transition-all duration-500 cursor-pointer group animate-fade-in flex flex-col h-full overflow-hidden"
         style={{ animationDelay: `${idx * 40}ms`, animationFillMode: "backwards" }}
       >
-        <div className="flex items-start gap-3">
-          <div className={`w-12 h-12 rounded-lg ${theme.bg} ${theme.border} border flex items-center justify-center flex-shrink-0 text-xl group-hover:scale-105 transition-transform`}>
+        {/* Hover Gradient Aura */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
+        
+        <div className="relative z-10 flex items-start gap-4">
+          <div className={`w-14 h-14 rounded-xl ${theme.bg} ${theme.border} border flex items-center justify-center flex-shrink-0 text-2xl shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}>
             {theme.icon}
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pt-0.5">
             <div className="flex items-center justify-between gap-2">
-              <h4 className="font-extrabold text-base text-slate-100 truncate group-hover:text-white transition-colors" title={t.name}>
+              <h4 className="font-extrabold text-base text-slate-100 truncate group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-300 transition-all duration-300" title={t.name}>
                 {t.name}
               </h4>
-              {t.verifiedLevel === 'VERIFIED' && (
-                <span title="Verified Publisher"><ShieldCheck className="w-4 h-4 text-blue-400 flex-shrink-0" /></span>
-              )}
-              {t.verifiedLevel === 'OFFICIAL' && (
-                <span title="Official Template"><ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" /></span>
-              )}
+              <div className="flex gap-1 flex-shrink-0">
+                {t.verifiedLevel === 'VERIFIED' && (
+                  <span title="Verified Publisher"><ShieldCheck className="w-4 h-4 text-blue-400" /></span>
+                )}
+                {t.verifiedLevel === 'OFFICIAL' && (
+                  <span title="Official Template"><ShieldCheck className="w-4 h-4 text-emerald-400" /></span>
+                )}
+              </div>
             </div>
-            <p className="text-[10px] text-mutedText truncate uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
-              <span className={theme.text}>{t.gameSlug}</span> • by {t.author}
+            <p className="text-[10px] text-mutedText truncate uppercase tracking-widest font-bold flex items-center gap-1.5 mt-1">
+              <span className={theme.text}>{t.gameSlug}</span>
+              <span className="text-white/20">•</span>
+              <span className="text-slate-500">by</span> <span className="text-slate-400">{t.author}</span>
             </p>
           </div>
         </div>
 
-        <p className="text-[12px] text-slate-400 mt-3 line-clamp-2 leading-relaxed flex-1" title={t.description}>
+        <p className="relative z-10 text-[13px] text-slate-400 mt-4 line-clamp-2 leading-relaxed flex-1 group-hover:text-slate-300 transition-colors" title={t.description}>
           {t.description}
         </p>
 
         {t.tags && (
-          <div className="flex flex-wrap gap-1 mt-3">
+          <div className="relative z-10 flex flex-wrap gap-1.5 mt-4">
             {t.tags.split(",").slice(0, 3).map((tag, i) => (
-              <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-medium capitalize border border-white/5">
+              <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-400 font-bold capitalize border border-white/5 group-hover:border-white/10 transition-colors">
                 {tag.trim()}
               </span>
             ))}
             {t.tags.split(",").length > 3 && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-500 font-medium border border-white/5">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-transparent text-slate-500 font-bold border border-transparent">
                 +{t.tags.split(",").length - 3}
               </span>
             )}
           </div>
         )}
 
-        <div className="pt-3 border-t border-white/5 mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-[11px] text-mutedText font-medium">
-            <span className="flex items-center gap-1">
+        <div className="relative z-10 pt-4 border-t border-white/5 mt-5 flex items-center justify-between group-hover:border-white/10 transition-colors">
+          <div className="flex items-center gap-4 text-xs font-bold text-slate-500">
+            <span className="flex items-center gap-1.5 group-hover:text-emerald-400/80 transition-colors">
               <Download className="w-3.5 h-3.5" />
               {formatCount(t.downloads)}
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1.5 group-hover:text-blue-400/80 transition-colors">
               <ThumbsUp className="w-3.5 h-3.5" />
               {formatCount(t.likes)}
             </span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" />
-              {timeAgo(t.createdAt)}
-            </span>
           </div>
+          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider group-hover:text-slate-400 transition-colors">
+            {timeAgo(t.createdAt)}
+          </span>
         </div>
       </div>
     );
@@ -571,19 +577,85 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
               </div>
             ) : (
               <>
-                {/* Staff Picks */}
-                {staffPicks.length > 0 && (
-                  <section>
-                    <div className="flex items-center gap-2 mb-4">
-                      <Crown className="w-5 h-5 text-amber-400" />
-                      <h3 className="font-extrabold text-lg text-white">Staff Picks</h3>
-                      <span className="text-xs text-emerald-400 font-bold px-2 py-0.5 rounded bg-emerald-400/10 border border-emerald-400/20 uppercase tracking-wider">
-                        Official
-                      </span>
+                {/* Hero Banner for first Staff Pick */}
+                {staffPicks.length > 0 && (() => {
+                  const hero = staffPicks[0];
+                  const theme = GAME_THEMES[hero.gameSlug.toUpperCase()] || GAME_THEMES.MINECRAFT;
+                  
+                  return (
+                    <div 
+                      className="relative rounded-3xl overflow-hidden mb-12 border border-white/10 group cursor-pointer animate-fade-in shadow-2xl"
+                      onClick={() => setSelectedTemplate(hero)}
+                    >
+                      {/* Background Effects */}
+                      <div className="absolute inset-0 bg-[#060a14]" />
+                      <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-20 group-hover:opacity-30 transition-opacity duration-700`} />
+                      <div className="absolute -top-32 -right-32 w-96 h-96 bg-white/5 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+                      
+                      <div className="relative z-10 flex flex-col md:flex-row items-center p-8 md:p-12 gap-8 md:gap-12">
+                        {/* Icon */}
+                        <div className={`w-32 h-32 rounded-3xl ${theme.bg} ${theme.border} border-2 flex items-center justify-center text-7xl flex-shrink-0 shadow-[0_0_40px_rgba(0,0,0,0.5)] group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500`}>
+                          {theme.icon}
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1 text-center md:text-left">
+                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
+                            <span className="px-3 py-1 rounded-full bg-accentPurple/20 text-accentPurple text-xs font-extrabold uppercase tracking-widest border border-accentPurple/20 flex items-center gap-1.5 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                              <Sparkles className="w-3.5 h-3.5" /> Featured Template
+                            </span>
+                            <span className={`text-xs font-bold uppercase tracking-wider ${theme.text}`}>
+                              {hero.gameSlug}
+                            </span>
+                            {hero.verifiedLevel === 'OFFICIAL' && (
+                              <span title="Official" className="flex items-center gap-1 text-xs text-emerald-400 font-bold bg-emerald-400/10 px-2.5 py-1 rounded-full border border-emerald-400/20">
+                                <ShieldCheck className="w-3.5 h-3.5" /> Official
+                              </span>
+                            )}
+                          </div>
+                          
+                          <h2 className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-400 transition-all">
+                            {hero.name}
+                          </h2>
+                          
+                          <p className="text-sm md:text-base text-slate-300 leading-relaxed mb-6 max-w-2xl line-clamp-2">
+                            {hero.description}
+                          </p>
+                          
+                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                            <button className="px-8 py-3.5 rounded-xl bg-white text-black hover:bg-slate-200 text-sm font-extrabold transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                              View Details
+                            </button>
+                            <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+                              <span className="flex items-center gap-1.5 bg-black/30 px-3 py-1.5 rounded-lg border border-white/5">
+                                <Download className="w-4 h-4 text-emerald-400" /> {formatCount(hero.downloads)}
+                              </span>
+                              <span className="flex items-center gap-1.5 bg-black/30 px-3 py-1.5 rounded-lg border border-white/5">
+                                <ThumbsUp className="w-4 h-4 text-blue-400" /> {formatCount(hero.likes)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Staff Picks Carousel */}
+                {staffPicks.length > 1 && (
+                  <section className="mb-12">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="p-2 bg-amber-500/20 rounded-xl border border-amber-500/30">
+                        <Crown className="w-5 h-5 text-amber-400" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-xl text-white">Staff Picks</h3>
+                        <p className="text-xs text-mutedText mt-0.5">Curated templates for immediate deployment</p>
+                      </div>
                     </div>
 
-                    <div className="flex gap-4 overflow-x-auto pb-4 -mx-1 px-1 snap-x snap-mandatory">
-                      {staffPicks.map((t, i) => renderTemplateCard(t, i, true))}
+                    <div className="flex gap-5 overflow-x-auto pb-6 -mx-2 px-2 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                      {staffPicks.slice(1).map((t, i) => renderTemplateCard(t, i, true))}
                     </div>
                   </section>
                 )}
@@ -615,9 +687,9 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
         {activeTab === "browse" && (
           <div className="animate-fade-in flex gap-6">
             {/* Filter Sidebar */}
-            <aside className="hidden lg:block w-56 flex-shrink-0 space-y-4">
+            <aside className="hidden lg:flex w-64 flex-shrink-0 flex-col gap-6 sticky top-8 h-fit">
               {/* Sort */}
-              <div className="glass-panel rounded-xl border border-white/5 p-4">
+              <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-md shadow-lg">
                 <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-2.5">
                   Sort By
                 </span>
@@ -634,11 +706,11 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
 
               {/* Games */}
               {availableGames.length > 0 && (
-                <div className="glass-panel rounded-xl border border-white/5 p-4">
-                  <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-2.5">
-                    <Globe className="w-3 h-3 inline mr-1" /> Games
+                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-md shadow-lg">
+                  <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-4 flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5" /> Games
                   </span>
-                  <div className="space-y-0.5 max-h-48 overflow-y-auto pr-1">
+                  <div className="space-y-1 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                     <button
                       onClick={() => setSelectedGame("")}
                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
@@ -664,11 +736,11 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
 
               {/* Tags */}
               {availableTags.length > 0 && (
-                <div className="glass-panel rounded-xl border border-white/5 p-4">
-                  <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-2.5">
-                    <Tag className="w-3 h-3 inline mr-1" /> Tags
+                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-md shadow-lg">
+                  <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-4 flex items-center gap-2">
+                    <Tag className="w-3.5 h-3.5" /> Tags
                   </span>
-                  <div className="space-y-0.5 max-h-64 overflow-y-auto pr-1">
+                  <div className="space-y-1 max-h-64 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                     <button
                       onClick={() => setSelectedCategory("")}
                       className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
@@ -694,21 +766,22 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
             </aside>
 
             {/* Results Area */}
-            <div className="flex-1 min-w-0 space-y-4">
+            <div className="flex-1 min-w-0 space-y-6">
               {/* Search Bar */}
-              <div className="glass-panel rounded-xl border border-white/5 p-4">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="relative flex-1">
-                    <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <div className="relative group">
+                <div className="absolute inset-0 bg-accentPurple/20 rounded-2xl blur-xl group-focus-within:bg-accentPurple/30 transition-all duration-500" />
+                <div className="relative flex flex-col sm:flex-row gap-3 bg-slate-950/80 border border-white/10 p-2 rounded-2xl backdrop-blur-md">
+                  <div className="relative flex-1 flex items-center">
+                    <Search className="w-5 h-5 text-accentPurple absolute left-4" />
                     <input
                       type="text"
                       placeholder="Search templates, authors, or games..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 pr-4 py-2.5 text-sm rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors w-full"
+                      className="pl-12 pr-4 py-3.5 text-base rounded-xl bg-transparent text-slate-100 outline-none w-full font-medium placeholder-slate-500"
                     />
                     {isSearching && (
-                      <Loader2 className="w-4 h-4 text-accentPurple absolute right-3 top-1/2 -translate-y-1/2 animate-spin" />
+                      <Loader2 className="w-5 h-5 text-accentPurple absolute right-4 animate-spin" />
                     )}
                   </div>
 
@@ -726,16 +799,16 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
 
                 {/* Active Filters */}
                 {(selectedGame || selectedCategory) && (
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
-                    <Filter className="w-3 h-3 text-mutedText" />
-                    <span className="text-[10px] text-mutedText font-bold uppercase">Filtered:</span>
+                  <div className="flex items-center gap-2 mt-4 px-4 pb-2">
+                    <Filter className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Filtered by:</span>
                     {selectedGame && (
-                      <button onClick={() => setSelectedGame("")} className="flex items-center gap-1 px-2 py-0.5 rounded bg-accentPurple/20 text-accentPurple text-[10px] font-bold hover:bg-accentPurple/30 transition-colors uppercase">
+                      <button onClick={() => setSelectedGame("")} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accentPurple/20 border border-accentPurple/30 text-accentPurple text-[10px] font-bold hover:bg-accentPurple/30 transition-colors uppercase">
                         {selectedGame} <X className="w-3 h-3" />
                       </button>
                     )}
                     {selectedCategory && (
-                      <button onClick={() => setSelectedCategory("")} className="flex items-center gap-1 px-2 py-0.5 rounded bg-accentPurple/20 text-accentPurple text-[10px] font-bold hover:bg-accentPurple/30 transition-colors capitalize">
+                      <button onClick={() => setSelectedCategory("")} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-[10px] font-bold hover:bg-blue-500/30 transition-colors capitalize">
                         {selectedCategory} <X className="w-3 h-3" />
                       </button>
                     )}
@@ -783,25 +856,30 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
           <div className="bg-[#0f111a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-slide-down overflow-hidden" onClick={e => e.stopPropagation()}>
             
             {/* Modal Header */}
-            <div className="p-6 border-b border-white/10 flex justify-between items-start bg-slate-900/30">
-              <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-xl ${GAME_THEMES[selectedTemplate.gameSlug.toUpperCase()]?.bg || 'bg-white/5'} ${GAME_THEMES[selectedTemplate.gameSlug.toUpperCase()]?.border || 'border-white/10'} border flex items-center justify-center text-3xl flex-shrink-0`}>
+            <div className="relative p-8 flex justify-between items-start border-b border-white/10 overflow-hidden">
+              <div className={`absolute inset-0 bg-gradient-to-br ${GAME_THEMES[selectedTemplate.gameSlug.toUpperCase()]?.gradient || 'from-slate-600 to-slate-900'} opacity-20`} />
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+              
+              <div className="relative z-10 flex items-center gap-6">
+                <div className={`w-20 h-20 rounded-2xl ${GAME_THEMES[selectedTemplate.gameSlug.toUpperCase()]?.bg || 'bg-white/5'} ${GAME_THEMES[selectedTemplate.gameSlug.toUpperCase()]?.border || 'border-white/10'} border-2 flex items-center justify-center text-4xl flex-shrink-0 shadow-xl`}>
                   {GAME_THEMES[selectedTemplate.gameSlug.toUpperCase()]?.icon || '🎮'}
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-extrabold text-white">{selectedTemplate.name}</h2>
-                    {selectedTemplate.verifiedLevel === 'OFFICIAL' && <span className="bg-emerald-400/20 text-emerald-400 text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wider uppercase border border-emerald-400/20">Official</span>}
-                    {selectedTemplate.verifiedLevel === 'VERIFIED' && <span className="bg-blue-400/20 text-blue-400 text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wider uppercase border border-blue-400/20">Verified</span>}
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-3xl font-black text-white tracking-tight">{selectedTemplate.name}</h2>
+                    <div className="flex gap-2">
+                      {selectedTemplate.verifiedLevel === 'OFFICIAL' && <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2.5 py-1 rounded-full font-extrabold tracking-widest uppercase border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]">Official</span>}
+                      {selectedTemplate.verifiedLevel === 'VERIFIED' && <span className="bg-blue-500/20 text-blue-400 text-[10px] px-2.5 py-1 rounded-full font-extrabold tracking-widest uppercase border border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]">Verified</span>}
+                    </div>
                   </div>
-                  <p className="text-xs text-mutedText mt-1 flex items-center gap-1.5">
+                  <p className="text-sm text-slate-300 mt-2 flex items-center gap-2 font-medium">
                     <span className={GAME_THEMES[selectedTemplate.gameSlug.toUpperCase()]?.text || 'text-slate-400 font-bold'}>{selectedTemplate.gameSlug}</span>
                     <span className="text-white/20">•</span>
-                    by <span className="text-slate-300 font-medium">{selectedTemplate.author}</span>
+                    by <span className="text-white font-bold">{selectedTemplate.author}</span>
                   </p>
                 </div>
               </div>
-              <button onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); }} className="text-slate-400 hover:text-white transition-colors p-1 bg-white/5 hover:bg-white/10 rounded-lg">
+              <button onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); }} className="relative z-10 text-slate-400 hover:text-white transition-all p-2 bg-black/40 hover:bg-black/60 rounded-xl backdrop-blur-md border border-white/10">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -864,37 +942,37 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
               );
             })() : (
               /* Normal Detail View */
-              <div className="p-6 overflow-y-auto flex-1 space-y-6">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                  <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 flex flex-col items-center justify-center">
-                    <Download className="w-5 h-5 text-emerald-400 mb-1.5" />
-                    <span className="font-extrabold text-sm text-white">{formatCount(selectedTemplate.downloads)}</span>
-                    <span className="text-[10px] text-mutedText uppercase tracking-wider font-semibold">Deploys</span>
+              <div className="p-8 overflow-y-auto flex-1 space-y-8 bg-[#0b0e14]">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center justify-center shadow-lg backdrop-blur-sm">
+                    <Download className="w-6 h-6 text-emerald-400 mb-2" />
+                    <span className="font-black text-lg text-white">{formatCount(selectedTemplate.downloads)}</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Deploys</span>
                   </div>
                   <div 
-                    className={`p-3.5 rounded-xl border flex flex-col items-center justify-center cursor-pointer transition-all ${
-                      selectedTemplate.userVote === 'LIKE' ? 'bg-accentPurple/10 border-accentPurple/30 text-accentPurple' : 'bg-slate-950/40 border-white/5 hover:border-white/10 hover:bg-slate-900/50'
+                    className={`p-4 rounded-2xl border flex flex-col items-center justify-center cursor-pointer transition-all shadow-lg backdrop-blur-sm ${
+                      selectedTemplate.userVote === 'LIKE' ? 'bg-accentPurple/10 border-accentPurple/30 text-accentPurple shadow-[0_0_15px_rgba(168,85,247,0.15)]' : 'bg-slate-900/50 border-white/5 hover:border-white/10 hover:bg-slate-800/50'
                     }`}
                     onClick={() => handleVote(selectedTemplate.id, selectedTemplate.userVote === 'LIKE' ? 'NONE' : 'LIKE')}
                   >
-                    <ThumbsUp className={`w-5 h-5 mb-1.5 ${selectedTemplate.userVote === 'LIKE' ? 'text-accentPurple' : 'text-blue-400'}`} />
-                    <span className="font-extrabold text-sm text-white">{formatCount(selectedTemplate.likes)}</span>
-                    <span className="text-[10px] text-mutedText uppercase tracking-wider font-semibold">Likes</span>
+                    <ThumbsUp className={`w-6 h-6 mb-2 ${selectedTemplate.userVote === 'LIKE' ? 'text-accentPurple' : 'text-blue-400'}`} />
+                    <span className="font-black text-lg text-white">{formatCount(selectedTemplate.likes)}</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Likes</span>
                   </div>
                   <div 
-                    className={`p-3.5 rounded-xl border flex flex-col items-center justify-center cursor-pointer transition-all ${
-                      selectedTemplate.userVote === 'DISLIKE' ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-slate-950/40 border-white/5 hover:border-white/10 hover:bg-slate-900/50'
+                    className={`p-4 rounded-2xl border flex flex-col items-center justify-center cursor-pointer transition-all shadow-lg backdrop-blur-sm ${
+                      selectedTemplate.userVote === 'DISLIKE' ? 'bg-red-500/10 border-red-500/30 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)]' : 'bg-slate-900/50 border-white/5 hover:border-white/10 hover:bg-slate-800/50'
                     }`}
                     onClick={() => handleVote(selectedTemplate.id, selectedTemplate.userVote === 'DISLIKE' ? 'NONE' : 'DISLIKE')}
                   >
-                    <ThumbsDown className={`w-5 h-5 mb-1.5 ${selectedTemplate.userVote === 'DISLIKE' ? 'text-red-400' : 'text-rose-400'}`} />
-                    <span className="font-extrabold text-sm text-white">{formatCount(selectedTemplate.dislikes)}</span>
-                    <span className="text-[10px] text-mutedText uppercase tracking-wider font-semibold">Dislikes</span>
+                    <ThumbsDown className={`w-6 h-6 mb-2 ${selectedTemplate.userVote === 'DISLIKE' ? 'text-red-400' : 'text-rose-400'}`} />
+                    <span className="font-black text-lg text-white">{formatCount(selectedTemplate.dislikes)}</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Dislikes</span>
                   </div>
-                  <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 flex flex-col items-center justify-center">
-                    <Clock className="w-5 h-5 text-slate-400 mb-1.5" />
-                    <span className="font-extrabold text-sm text-white">{timeAgo(selectedTemplate.createdAt)}</span>
-                    <span className="text-[10px] text-mutedText uppercase tracking-wider font-semibold">Added</span>
+                  <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center justify-center shadow-lg backdrop-blur-sm">
+                    <Clock className="w-6 h-6 text-slate-400 mb-2" />
+                    <span className="font-black text-lg text-white">{timeAgo(selectedTemplate.createdAt)}</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Added</span>
                   </div>
                 </div>
 
@@ -928,26 +1006,31 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                 )}
 
                 <div>
-                  <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-2">What's Included</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest block mb-3 flex items-center gap-2">
+                    <Layers className="w-3.5 h-3.5" /> What's Included
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {(() => {
                       const payload = JSON.parse(selectedTemplate.payload);
                       return (
                         <>
-                          <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
-                            <Package className="w-4 h-4 text-accentPurple mb-2" />
-                            <p className="text-xs font-bold text-white mb-0.5">Mods & Plugins</p>
-                            <p className="text-[11px] text-mutedText">{payload.mods?.length || 0} packages</p>
+                          <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 shadow-lg backdrop-blur-sm relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-accentPurple/5 group-hover:bg-accentPurple/10 transition-colors" />
+                            <Package className="w-5 h-5 text-accentPurple mb-2 relative z-10" />
+                            <p className="text-xs font-bold text-white mb-0.5 relative z-10">Mods & Plugins</p>
+                            <p className="text-[11px] text-slate-400 font-medium relative z-10">{payload.mods?.length || 0} packages</p>
                           </div>
-                          <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
-                            <Settings className="w-4 h-4 text-accentBlue mb-2" />
-                            <p className="text-xs font-bold text-white mb-0.5">Config Overrides</p>
-                            <p className="text-[11px] text-mutedText">{payload.configOverrides?.length || 0} files modified</p>
+                          <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 shadow-lg backdrop-blur-sm relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors" />
+                            <Settings className="w-5 h-5 text-blue-400 mb-2 relative z-10" />
+                            <p className="text-xs font-bold text-white mb-0.5 relative z-10">Config Overrides</p>
+                            <p className="text-[11px] text-slate-400 font-medium relative z-10">{payload.configOverrides?.length || 0} files modified</p>
                           </div>
-                          <div className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
-                            <Terminal className="w-4 h-4 text-emerald-400 mb-2" />
-                            <p className="text-xs font-bold text-white mb-0.5">Startup Params</p>
-                            <p className="text-[11px] text-mutedText">{Object.keys(payload.startupParams || {}).length} variables</p>
+                          <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 shadow-lg backdrop-blur-sm relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-emerald-500/5 group-hover:bg-emerald-500/10 transition-colors" />
+                            <Terminal className="w-5 h-5 text-emerald-400 mb-2 relative z-10" />
+                            <p className="text-xs font-bold text-white mb-0.5 relative z-10">Startup Params</p>
+                            <p className="text-[11px] text-slate-400 font-medium relative z-10">{Object.keys(payload.startupParams || {}).length} variables</p>
                           </div>
                         </>
                       );
@@ -958,10 +1041,10 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
             )}
 
             {/* Modal Footer */}
-            <div className="p-5 border-t border-white/10 bg-slate-900/50 flex justify-end gap-3 rounded-b-2xl mt-auto">
+            <div className="p-6 border-t border-white/10 bg-slate-900 flex justify-end gap-3 rounded-b-2xl mt-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-20">
               <button 
                 onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); }}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm text-slate-300 hover:bg-white/5 transition-colors"
+                className="px-6 py-3 rounded-xl font-bold text-sm text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
                 disabled={deploying}
               >
                 Cancel
@@ -969,12 +1052,13 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
               <button 
                 onClick={() => handleDeploy(selectedTemplate)}
                 disabled={deploying}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm bg-accentPurple hover:bg-accentPurpleHover text-white shadow-lg shadow-accentPurple/20 transition-all disabled:opacity-50"
+                className="relative overflow-hidden group flex items-center gap-2 px-8 py-3 rounded-xl font-extrabold text-sm bg-accentPurple hover:bg-accentPurpleHover text-white shadow-lg shadow-accentPurple/25 transition-all disabled:opacity-50"
               >
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
                 {deploying ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Deploying...</>
+                  <><Loader2 className="w-5 h-5 animate-spin relative z-10" /> <span className="relative z-10">Deploying...</span></>
                 ) : (
-                  <><Download className="w-4 h-4" /> {showSecurityReport ? "Approve & Deploy" : "One-Click Deploy"}</>
+                  <><Download className="w-5 h-5 relative z-10" /> <span className="relative z-10">{showSecurityReport ? "Approve & Deploy" : "One-Click Deploy"}</span></>
                 )}
               </button>
             </div>

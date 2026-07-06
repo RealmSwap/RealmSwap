@@ -123,12 +123,73 @@ export async function POST(
           if (!downloadUrl) {
             throw new Error("Download URL is required for Valheim plugins.");
           }
-          const pluginsDir = path.join(dataRoot(), "local-servers", serverId, "valheim-server", "BepInEx", "plugins");
+          const valheimDir = path.join(dataRoot(), "local-servers", serverId, "valheim-server");
+          const bepinexCheckFile = path.join(valheimDir, "doorstop_config.ini");
+          
+          if (!fs.existsSync(bepinexCheckFile)) {
+            console.log(`[Sandbox] BepInEx not found for server ${serverId}. Auto-installing core framework first...`);
+            const zipPath = path.join(dataRoot(), "local-servers", serverId, "bepinex.zip");
+            const defaultBepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
+            
+            if (!fs.existsSync(valheimDir)) {
+              fs.mkdirSync(valheimDir, { recursive: true });
+            }
+            
+            await downloadFile(defaultBepInExUrl, zipPath);
+            await new Promise<void>((resolve, reject) => {
+              const extractCmd = `powershell -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${valheimDir}' -Force"`;
+              exec(extractCmd, (err) => {
+                try { fs.unlinkSync(zipPath); } catch (_) {}
+                if (err) reject(new Error(`Failed to extract BepInEx: ${err.message}`));
+                else resolve();
+              });
+            });
+
+            // Log BepInEx core as installed so it shows in the UI
+            await prisma.modInstallation.upsert({
+              where: {
+                serverId_provider_packageId: {
+                  serverId,
+                  provider: "thunderstore",
+                  packageId: "denikson-BepInExPack_Valheim"
+                }
+              },
+              update: { version: "5.4.2202" },
+              create: {
+                serverId,
+                provider: "thunderstore",
+                packageId: "denikson-BepInExPack_Valheim",
+                version: "5.4.2202",
+                name: "BepInExPack Valheim"
+              }
+            });
+          }
+
+          const pluginsDir = path.join(valheimDir, "BepInEx", "plugins");
           if (!fs.existsSync(pluginsDir)) {
             fs.mkdirSync(pluginsDir, { recursive: true });
           }
-          const filename = modId ? `${modId}.dll` : path.basename(downloadUrl) || "plugin.dll";
-          await downloadFile(downloadUrl, path.join(pluginsDir, filename));
+          
+          // Note: Thunderstore download URLs are actually .zip files. If the original implementation
+          // downloaded them as .dll, it's saving a zip as a dll. We'll extract it properly.
+          if (downloadUrl.endsWith(".zip")) {
+            const tempZip = path.join(pluginsDir, `${modId}.zip`);
+            await downloadFile(downloadUrl, tempZip);
+            await new Promise<void>((resolve, reject) => {
+              // Extract contents to a subfolder named after the mod to prevent clutter
+              const modDestDir = path.join(pluginsDir, modId || "plugin");
+              if (!fs.existsSync(modDestDir)) fs.mkdirSync(modDestDir, { recursive: true });
+              const extractCmd = `powershell -Command "Expand-Archive -Path '${tempZip}' -DestinationPath '${modDestDir}' -Force"`;
+              exec(extractCmd, (err) => {
+                try { fs.unlinkSync(tempZip); } catch (_) {}
+                if (err) reject(new Error(`Failed to extract plugin zip: ${err.message}`));
+                else resolve();
+              });
+            });
+          } else {
+            const filename = modId ? `${modId}.dll` : path.basename(downloadUrl) || "plugin.dll";
+            await downloadFile(downloadUrl, path.join(pluginsDir, filename));
+          }
         }
 
       } else if (game === "ZOMBOID") {
