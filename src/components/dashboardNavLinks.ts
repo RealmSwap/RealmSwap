@@ -26,6 +26,7 @@ export const DASHBOARD_NAV_LINKS: DashboardNavLink[] = [
   { label: "Server Config", icon: Settings, href: "/dashboard/config" },
   { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
   { label: "Schedules", icon: Clock, href: "/dashboard/schedules" },
+  { label: "Players", icon: Users, href: "/dashboard/players" },
   { label: "Team Members", icon: Users, href: "/dashboard/team" },
   { label: "Audit Logs", icon: History, href: "/dashboard/logs" },
   { label: "File Locations", icon: HardDrive, href: "/dashboard/storage" },
