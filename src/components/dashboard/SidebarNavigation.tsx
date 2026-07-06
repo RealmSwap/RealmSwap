@@ -44,6 +44,7 @@ export function SidebarNavigation({ user }: { user: any }) {
       links: [
         { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
         { label: "Audit Logs", icon: History, href: "/dashboard/logs" },
+        { label: "Players", icon: Users, href: "/dashboard/players" },
         { label: "Team Members", icon: Users, href: "/dashboard/team" },
         { label: "File Locations", icon: HardDrive, href: "/dashboard/storage" },
       ]
