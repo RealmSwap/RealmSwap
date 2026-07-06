@@ -118,6 +118,21 @@ export type TemplateVote = $Result.DefaultSelection<Prisma.$TemplateVotePayload>
  * 
  */
 export type PushSubscription = $Result.DefaultSelection<Prisma.$PushSubscriptionPayload>
+/**
+ * Model Player
+ * 
+ */
+export type Player = $Result.DefaultSelection<Prisma.$PlayerPayload>
+/**
+ * Model PlayerServerAccess
+ * 
+ */
+export type PlayerServerAccess = $Result.DefaultSelection<Prisma.$PlayerServerAccessPayload>
+/**
+ * Model PlayerAuditLog
+ * 
+ */
+export type PlayerAuditLog = $Result.DefaultSelection<Prisma.$PlayerAuditLogPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -451,6 +466,36 @@ export class PrismaClient<
     * ```
     */
   get pushSubscription(): Prisma.PushSubscriptionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.player`: Exposes CRUD operations for the **Player** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Players
+    * const players = await prisma.player.findMany()
+    * ```
+    */
+  get player(): Prisma.PlayerDelegate<ExtArgs>;
+
+  /**
+   * `prisma.playerServerAccess`: Exposes CRUD operations for the **PlayerServerAccess** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PlayerServerAccesses
+    * const playerServerAccesses = await prisma.playerServerAccess.findMany()
+    * ```
+    */
+  get playerServerAccess(): Prisma.PlayerServerAccessDelegate<ExtArgs>;
+
+  /**
+   * `prisma.playerAuditLog`: Exposes CRUD operations for the **PlayerAuditLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PlayerAuditLogs
+    * const playerAuditLogs = await prisma.playerAuditLog.findMany()
+    * ```
+    */
+  get playerAuditLog(): Prisma.PlayerAuditLogDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -912,7 +957,10 @@ export namespace Prisma {
     AutomationExecution: 'AutomationExecution',
     MarketplaceTemplate: 'MarketplaceTemplate',
     TemplateVote: 'TemplateVote',
-    PushSubscription: 'PushSubscription'
+    PushSubscription: 'PushSubscription',
+    Player: 'Player',
+    PlayerServerAccess: 'PlayerServerAccess',
+    PlayerAuditLog: 'PlayerAuditLog'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -928,7 +976,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription"
+      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription" | "player" | "playerServerAccess" | "playerAuditLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2402,6 +2450,216 @@ export namespace Prisma {
           }
         }
       }
+      Player: {
+        payload: Prisma.$PlayerPayload<ExtArgs>
+        fields: Prisma.PlayerFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlayerFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlayerFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          findFirst: {
+            args: Prisma.PlayerFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlayerFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          findMany: {
+            args: Prisma.PlayerFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>[]
+          }
+          create: {
+            args: Prisma.PlayerCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          createMany: {
+            args: Prisma.PlayerCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlayerCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>[]
+          }
+          delete: {
+            args: Prisma.PlayerDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          update: {
+            args: Prisma.PlayerUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlayerDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlayerUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PlayerUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerPayload>
+          }
+          aggregate: {
+            args: Prisma.PlayerAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlayer>
+          }
+          groupBy: {
+            args: Prisma.PlayerGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlayerGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlayerCountArgs<ExtArgs>
+            result: $Utils.Optional<PlayerCountAggregateOutputType> | number
+          }
+        }
+      }
+      PlayerServerAccess: {
+        payload: Prisma.$PlayerServerAccessPayload<ExtArgs>
+        fields: Prisma.PlayerServerAccessFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlayerServerAccessFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerServerAccessPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlayerServerAccessFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerServerAccessPayload>
+          }
+          findFirst: {
+            args: Prisma.PlayerServerAccessFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerServerAccessPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlayerServerAccessFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerServerAccessPayload>
+          }
+          findMany: {
+            args: Prisma.PlayerServerAccessFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerServerAccessPayload>[]
+          }
+          create: {
+            args: Prisma.PlayerServerAccessCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerServerAccessPayload>
+          }
+          createMany: {
+            args: Prisma.PlayerServerAccessCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlayerServerAccessCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerServerAccessPayload>[]
+          }
+          delete: {
+            args: Prisma.PlayerServerAccessDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerServerAccessPayload>
+          }
+          update: {
+            args: Prisma.PlayerServerAccessUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerServerAccessPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlayerServerAccessDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlayerServerAccessUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PlayerServerAccessUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerServerAccessPayload>
+          }
+          aggregate: {
+            args: Prisma.PlayerServerAccessAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlayerServerAccess>
+          }
+          groupBy: {
+            args: Prisma.PlayerServerAccessGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlayerServerAccessGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlayerServerAccessCountArgs<ExtArgs>
+            result: $Utils.Optional<PlayerServerAccessCountAggregateOutputType> | number
+          }
+        }
+      }
+      PlayerAuditLog: {
+        payload: Prisma.$PlayerAuditLogPayload<ExtArgs>
+        fields: Prisma.PlayerAuditLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PlayerAuditLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerAuditLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PlayerAuditLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerAuditLogPayload>
+          }
+          findFirst: {
+            args: Prisma.PlayerAuditLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerAuditLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PlayerAuditLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerAuditLogPayload>
+          }
+          findMany: {
+            args: Prisma.PlayerAuditLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerAuditLogPayload>[]
+          }
+          create: {
+            args: Prisma.PlayerAuditLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerAuditLogPayload>
+          }
+          createMany: {
+            args: Prisma.PlayerAuditLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PlayerAuditLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerAuditLogPayload>[]
+          }
+          delete: {
+            args: Prisma.PlayerAuditLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerAuditLogPayload>
+          }
+          update: {
+            args: Prisma.PlayerAuditLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerAuditLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.PlayerAuditLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PlayerAuditLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PlayerAuditLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PlayerAuditLogPayload>
+          }
+          aggregate: {
+            args: Prisma.PlayerAuditLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePlayerAuditLog>
+          }
+          groupBy: {
+            args: Prisma.PlayerAuditLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PlayerAuditLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PlayerAuditLogCountArgs<ExtArgs>
+            result: $Utils.Optional<PlayerAuditLogCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2570,6 +2828,7 @@ export namespace Prisma {
     collaboratorAccess: number
     templateVotes: number
     PushSubscription: number
+    players: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2580,6 +2839,7 @@ export namespace Prisma {
     collaboratorAccess?: boolean | UserCountOutputTypeCountCollaboratorAccessArgs
     templateVotes?: boolean | UserCountOutputTypeCountTemplateVotesArgs
     PushSubscription?: boolean | UserCountOutputTypeCountPushSubscriptionArgs
+    players?: boolean | UserCountOutputTypeCountPlayersArgs
   }
 
   // Custom InputTypes
@@ -2642,6 +2902,13 @@ export namespace Prisma {
     where?: PushSubscriptionWhereInput
   }
 
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountPlayersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerWhereInput
+  }
+
 
   /**
    * Count Type ServerCountOutputType
@@ -2655,6 +2922,7 @@ export namespace Prisma {
     automations: number
     plannedSessions: number
     discordRoles: number
+    playerAccess: number
   }
 
   export type ServerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2665,6 +2933,7 @@ export namespace Prisma {
     automations?: boolean | ServerCountOutputTypeCountAutomationsArgs
     plannedSessions?: boolean | ServerCountOutputTypeCountPlannedSessionsArgs
     discordRoles?: boolean | ServerCountOutputTypeCountDiscordRolesArgs
+    playerAccess?: boolean | ServerCountOutputTypeCountPlayerAccessArgs
   }
 
   // Custom InputTypes
@@ -2725,6 +2994,13 @@ export namespace Prisma {
    */
   export type ServerCountOutputTypeCountDiscordRolesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DiscordRoleAccessWhereInput
+  }
+
+  /**
+   * ServerCountOutputType without action
+   */
+  export type ServerCountOutputTypeCountPlayerAccessArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerServerAccessWhereInput
   }
 
 
@@ -2836,6 +3112,37 @@ export namespace Prisma {
    */
   export type MarketplaceTemplateCountOutputTypeCountVotesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TemplateVoteWhereInput
+  }
+
+
+  /**
+   * Count Type PlayerCountOutputType
+   */
+
+  export type PlayerCountOutputType = {
+    serverAccess: number
+  }
+
+  export type PlayerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    serverAccess?: boolean | PlayerCountOutputTypeCountServerAccessArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * PlayerCountOutputType without action
+   */
+  export type PlayerCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerCountOutputType
+     */
+    select?: PlayerCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * PlayerCountOutputType without action
+   */
+  export type PlayerCountOutputTypeCountServerAccessArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerServerAccessWhereInput
   }
 
 
@@ -3063,6 +3370,7 @@ export namespace Prisma {
     collaboratorAccess?: boolean | User$collaboratorAccessArgs<ExtArgs>
     templateVotes?: boolean | User$templateVotesArgs<ExtArgs>
     PushSubscription?: boolean | User$PushSubscriptionArgs<ExtArgs>
+    players?: boolean | User$playersArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -3103,6 +3411,7 @@ export namespace Prisma {
     collaboratorAccess?: boolean | User$collaboratorAccessArgs<ExtArgs>
     templateVotes?: boolean | User$templateVotesArgs<ExtArgs>
     PushSubscription?: boolean | User$PushSubscriptionArgs<ExtArgs>
+    players?: boolean | User$playersArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -3118,6 +3427,7 @@ export namespace Prisma {
       collaboratorAccess: Prisma.$CollaboratorPayload<ExtArgs>[]
       templateVotes: Prisma.$TemplateVotePayload<ExtArgs>[]
       PushSubscription: Prisma.$PushSubscriptionPayload<ExtArgs>[]
+      players: Prisma.$PlayerPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -3503,6 +3813,7 @@ export namespace Prisma {
     collaboratorAccess<T extends User$collaboratorAccessArgs<ExtArgs> = {}>(args?: Subset<T, User$collaboratorAccessArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CollaboratorPayload<ExtArgs>, T, "findMany"> | Null>
     templateVotes<T extends User$templateVotesArgs<ExtArgs> = {}>(args?: Subset<T, User$templateVotesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TemplateVotePayload<ExtArgs>, T, "findMany"> | Null>
     PushSubscription<T extends User$PushSubscriptionArgs<ExtArgs> = {}>(args?: Subset<T, User$PushSubscriptionArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PushSubscriptionPayload<ExtArgs>, T, "findMany"> | Null>
+    players<T extends User$playersArgs<ExtArgs> = {}>(args?: Subset<T, User$playersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4007,6 +4318,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: PushSubscriptionScalarFieldEnum | PushSubscriptionScalarFieldEnum[]
+  }
+
+  /**
+   * User.players
+   */
+  export type User$playersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    where?: PlayerWhereInput
+    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    cursor?: PlayerWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
   }
 
   /**
@@ -6269,6 +6600,7 @@ export namespace Prisma {
     hostLink?: boolean | Server$hostLinkArgs<ExtArgs>
     plannedSessions?: boolean | Server$plannedSessionsArgs<ExtArgs>
     discordRoles?: boolean | Server$discordRolesArgs<ExtArgs>
+    playerAccess?: boolean | Server$playerAccessArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["server"]>
 
@@ -6339,6 +6671,7 @@ export namespace Prisma {
     hostLink?: boolean | Server$hostLinkArgs<ExtArgs>
     plannedSessions?: boolean | Server$plannedSessionsArgs<ExtArgs>
     discordRoles?: boolean | Server$discordRolesArgs<ExtArgs>
+    playerAccess?: boolean | Server$playerAccessArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ServerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6359,6 +6692,7 @@ export namespace Prisma {
       hostLink: Prisma.$ServerHostLinkPayload<ExtArgs> | null
       plannedSessions: Prisma.$PlannedSessionPayload<ExtArgs>[]
       discordRoles: Prisma.$DiscordRoleAccessPayload<ExtArgs>[]
+      playerAccess: Prisma.$PlayerServerAccessPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6759,6 +7093,7 @@ export namespace Prisma {
     hostLink<T extends Server$hostLinkArgs<ExtArgs> = {}>(args?: Subset<T, Server$hostLinkArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     plannedSessions<T extends Server$plannedSessionsArgs<ExtArgs> = {}>(args?: Subset<T, Server$plannedSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlannedSessionPayload<ExtArgs>, T, "findMany"> | Null>
     discordRoles<T extends Server$discordRolesArgs<ExtArgs> = {}>(args?: Subset<T, Server$discordRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DiscordRoleAccessPayload<ExtArgs>, T, "findMany"> | Null>
+    playerAccess<T extends Server$playerAccessArgs<ExtArgs> = {}>(args?: Subset<T, Server$playerAccessArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7295,6 +7630,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: DiscordRoleAccessScalarFieldEnum | DiscordRoleAccessScalarFieldEnum[]
+  }
+
+  /**
+   * Server.playerAccess
+   */
+  export type Server$playerAccessArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    where?: PlayerServerAccessWhereInput
+    orderBy?: PlayerServerAccessOrderByWithRelationInput | PlayerServerAccessOrderByWithRelationInput[]
+    cursor?: PlayerServerAccessWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PlayerServerAccessScalarFieldEnum | PlayerServerAccessScalarFieldEnum[]
   }
 
   /**
@@ -24120,6 +24475,2908 @@ export namespace Prisma {
 
 
   /**
+   * Model Player
+   */
+
+  export type AggregatePlayer = {
+    _count: PlayerCountAggregateOutputType | null
+    _min: PlayerMinAggregateOutputType | null
+    _max: PlayerMaxAggregateOutputType | null
+  }
+
+  export type PlayerMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    name: string | null
+    steamId: string | null
+    xboxId: string | null
+    minecraftUuid: string | null
+    discordId: string | null
+    status: string | null
+    roles: string | null
+    isGloballyBanned: boolean | null
+    globalBanReason: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PlayerMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    name: string | null
+    steamId: string | null
+    xboxId: string | null
+    minecraftUuid: string | null
+    discordId: string | null
+    status: string | null
+    roles: string | null
+    isGloballyBanned: boolean | null
+    globalBanReason: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PlayerCountAggregateOutputType = {
+    id: number
+    userId: number
+    name: number
+    steamId: number
+    xboxId: number
+    minecraftUuid: number
+    discordId: number
+    status: number
+    roles: number
+    isGloballyBanned: number
+    globalBanReason: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type PlayerMinAggregateInputType = {
+    id?: true
+    userId?: true
+    name?: true
+    steamId?: true
+    xboxId?: true
+    minecraftUuid?: true
+    discordId?: true
+    status?: true
+    roles?: true
+    isGloballyBanned?: true
+    globalBanReason?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PlayerMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    name?: true
+    steamId?: true
+    xboxId?: true
+    minecraftUuid?: true
+    discordId?: true
+    status?: true
+    roles?: true
+    isGloballyBanned?: true
+    globalBanReason?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PlayerCountAggregateInputType = {
+    id?: true
+    userId?: true
+    name?: true
+    steamId?: true
+    xboxId?: true
+    minecraftUuid?: true
+    discordId?: true
+    status?: true
+    roles?: true
+    isGloballyBanned?: true
+    globalBanReason?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type PlayerAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Player to aggregate.
+     */
+    where?: PlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Players to fetch.
+     */
+    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Players from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Players.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Players
+    **/
+    _count?: true | PlayerCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlayerMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlayerMaxAggregateInputType
+  }
+
+  export type GetPlayerAggregateType<T extends PlayerAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlayer]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlayer[P]>
+      : GetScalarType<T[P], AggregatePlayer[P]>
+  }
+
+
+
+
+  export type PlayerGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerWhereInput
+    orderBy?: PlayerOrderByWithAggregationInput | PlayerOrderByWithAggregationInput[]
+    by: PlayerScalarFieldEnum[] | PlayerScalarFieldEnum
+    having?: PlayerScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlayerCountAggregateInputType | true
+    _min?: PlayerMinAggregateInputType
+    _max?: PlayerMaxAggregateInputType
+  }
+
+  export type PlayerGroupByOutputType = {
+    id: string
+    userId: string
+    name: string
+    steamId: string | null
+    xboxId: string | null
+    minecraftUuid: string | null
+    discordId: string | null
+    status: string
+    roles: string | null
+    isGloballyBanned: boolean
+    globalBanReason: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: PlayerCountAggregateOutputType | null
+    _min: PlayerMinAggregateOutputType | null
+    _max: PlayerMaxAggregateOutputType | null
+  }
+
+  type GetPlayerGroupByPayload<T extends PlayerGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlayerGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlayerGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlayerGroupByOutputType[P]>
+            : GetScalarType<T[P], PlayerGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlayerSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    name?: boolean
+    steamId?: boolean
+    xboxId?: boolean
+    minecraftUuid?: boolean
+    discordId?: boolean
+    status?: boolean
+    roles?: boolean
+    isGloballyBanned?: boolean
+    globalBanReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    serverAccess?: boolean | Player$serverAccessArgs<ExtArgs>
+    _count?: boolean | PlayerCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["player"]>
+
+  export type PlayerSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    name?: boolean
+    steamId?: boolean
+    xboxId?: boolean
+    minecraftUuid?: boolean
+    discordId?: boolean
+    status?: boolean
+    roles?: boolean
+    isGloballyBanned?: boolean
+    globalBanReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["player"]>
+
+  export type PlayerSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    name?: boolean
+    steamId?: boolean
+    xboxId?: boolean
+    minecraftUuid?: boolean
+    discordId?: boolean
+    status?: boolean
+    roles?: boolean
+    isGloballyBanned?: boolean
+    globalBanReason?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type PlayerInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    serverAccess?: boolean | Player$serverAccessArgs<ExtArgs>
+    _count?: boolean | PlayerCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type PlayerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $PlayerPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Player"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      serverAccess: Prisma.$PlayerServerAccessPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      name: string
+      steamId: string | null
+      xboxId: string | null
+      minecraftUuid: string | null
+      discordId: string | null
+      status: string
+      roles: string | null
+      isGloballyBanned: boolean
+      globalBanReason: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["player"]>
+    composites: {}
+  }
+
+  type PlayerGetPayload<S extends boolean | null | undefined | PlayerDefaultArgs> = $Result.GetResult<Prisma.$PlayerPayload, S>
+
+  type PlayerCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PlayerFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PlayerCountAggregateInputType | true
+    }
+
+  export interface PlayerDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Player'], meta: { name: 'Player' } }
+    /**
+     * Find zero or one Player that matches the filter.
+     * @param {PlayerFindUniqueArgs} args - Arguments to find a Player
+     * @example
+     * // Get one Player
+     * const player = await prisma.player.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlayerFindUniqueArgs>(args: SelectSubset<T, PlayerFindUniqueArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Player that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PlayerFindUniqueOrThrowArgs} args - Arguments to find a Player
+     * @example
+     * // Get one Player
+     * const player = await prisma.player.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlayerFindUniqueOrThrowArgs>(args: SelectSubset<T, PlayerFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Player that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerFindFirstArgs} args - Arguments to find a Player
+     * @example
+     * // Get one Player
+     * const player = await prisma.player.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlayerFindFirstArgs>(args?: SelectSubset<T, PlayerFindFirstArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Player that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerFindFirstOrThrowArgs} args - Arguments to find a Player
+     * @example
+     * // Get one Player
+     * const player = await prisma.player.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlayerFindFirstOrThrowArgs>(args?: SelectSubset<T, PlayerFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Players that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Players
+     * const players = await prisma.player.findMany()
+     * 
+     * // Get first 10 Players
+     * const players = await prisma.player.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const playerWithIdOnly = await prisma.player.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PlayerFindManyArgs>(args?: SelectSubset<T, PlayerFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Player.
+     * @param {PlayerCreateArgs} args - Arguments to create a Player.
+     * @example
+     * // Create one Player
+     * const Player = await prisma.player.create({
+     *   data: {
+     *     // ... data to create a Player
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlayerCreateArgs>(args: SelectSubset<T, PlayerCreateArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Players.
+     * @param {PlayerCreateManyArgs} args - Arguments to create many Players.
+     * @example
+     * // Create many Players
+     * const player = await prisma.player.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlayerCreateManyArgs>(args?: SelectSubset<T, PlayerCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Players and returns the data saved in the database.
+     * @param {PlayerCreateManyAndReturnArgs} args - Arguments to create many Players.
+     * @example
+     * // Create many Players
+     * const player = await prisma.player.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Players and only return the `id`
+     * const playerWithIdOnly = await prisma.player.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlayerCreateManyAndReturnArgs>(args?: SelectSubset<T, PlayerCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a Player.
+     * @param {PlayerDeleteArgs} args - Arguments to delete one Player.
+     * @example
+     * // Delete one Player
+     * const Player = await prisma.player.delete({
+     *   where: {
+     *     // ... filter to delete one Player
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlayerDeleteArgs>(args: SelectSubset<T, PlayerDeleteArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Player.
+     * @param {PlayerUpdateArgs} args - Arguments to update one Player.
+     * @example
+     * // Update one Player
+     * const player = await prisma.player.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlayerUpdateArgs>(args: SelectSubset<T, PlayerUpdateArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Players.
+     * @param {PlayerDeleteManyArgs} args - Arguments to filter Players to delete.
+     * @example
+     * // Delete a few Players
+     * const { count } = await prisma.player.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlayerDeleteManyArgs>(args?: SelectSubset<T, PlayerDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Players.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Players
+     * const player = await prisma.player.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlayerUpdateManyArgs>(args: SelectSubset<T, PlayerUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Player.
+     * @param {PlayerUpsertArgs} args - Arguments to update or create a Player.
+     * @example
+     * // Update or create a Player
+     * const player = await prisma.player.upsert({
+     *   create: {
+     *     // ... data to create a Player
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Player we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlayerUpsertArgs>(args: SelectSubset<T, PlayerUpsertArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Players.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerCountArgs} args - Arguments to filter Players to count.
+     * @example
+     * // Count the number of Players
+     * const count = await prisma.player.count({
+     *   where: {
+     *     // ... the filter for the Players we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlayerCountArgs>(
+      args?: Subset<T, PlayerCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlayerCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Player.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlayerAggregateArgs>(args: Subset<T, PlayerAggregateArgs>): Prisma.PrismaPromise<GetPlayerAggregateType<T>>
+
+    /**
+     * Group by Player.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlayerGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlayerGroupByArgs['orderBy'] }
+        : { orderBy?: PlayerGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlayerGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlayerGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Player model
+   */
+  readonly fields: PlayerFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Player.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlayerClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    serverAccess<T extends Player$serverAccessArgs<ExtArgs> = {}>(args?: Subset<T, Player$serverAccessArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Player model
+   */ 
+  interface PlayerFieldRefs {
+    readonly id: FieldRef<"Player", 'String'>
+    readonly userId: FieldRef<"Player", 'String'>
+    readonly name: FieldRef<"Player", 'String'>
+    readonly steamId: FieldRef<"Player", 'String'>
+    readonly xboxId: FieldRef<"Player", 'String'>
+    readonly minecraftUuid: FieldRef<"Player", 'String'>
+    readonly discordId: FieldRef<"Player", 'String'>
+    readonly status: FieldRef<"Player", 'String'>
+    readonly roles: FieldRef<"Player", 'String'>
+    readonly isGloballyBanned: FieldRef<"Player", 'Boolean'>
+    readonly globalBanReason: FieldRef<"Player", 'String'>
+    readonly createdAt: FieldRef<"Player", 'DateTime'>
+    readonly updatedAt: FieldRef<"Player", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Player findUnique
+   */
+  export type PlayerFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which Player to fetch.
+     */
+    where: PlayerWhereUniqueInput
+  }
+
+  /**
+   * Player findUniqueOrThrow
+   */
+  export type PlayerFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which Player to fetch.
+     */
+    where: PlayerWhereUniqueInput
+  }
+
+  /**
+   * Player findFirst
+   */
+  export type PlayerFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which Player to fetch.
+     */
+    where?: PlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Players to fetch.
+     */
+    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Players.
+     */
+    cursor?: PlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Players from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Players.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Players.
+     */
+    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
+  }
+
+  /**
+   * Player findFirstOrThrow
+   */
+  export type PlayerFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which Player to fetch.
+     */
+    where?: PlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Players to fetch.
+     */
+    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Players.
+     */
+    cursor?: PlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Players from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Players.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Players.
+     */
+    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
+  }
+
+  /**
+   * Player findMany
+   */
+  export type PlayerFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter, which Players to fetch.
+     */
+    where?: PlayerWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Players to fetch.
+     */
+    orderBy?: PlayerOrderByWithRelationInput | PlayerOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Players.
+     */
+    cursor?: PlayerWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Players from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Players.
+     */
+    skip?: number
+    distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
+  }
+
+  /**
+   * Player create
+   */
+  export type PlayerCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Player.
+     */
+    data: XOR<PlayerCreateInput, PlayerUncheckedCreateInput>
+  }
+
+  /**
+   * Player createMany
+   */
+  export type PlayerCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Players.
+     */
+    data: PlayerCreateManyInput | PlayerCreateManyInput[]
+  }
+
+  /**
+   * Player createManyAndReturn
+   */
+  export type PlayerCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many Players.
+     */
+    data: PlayerCreateManyInput | PlayerCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Player update
+   */
+  export type PlayerUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Player.
+     */
+    data: XOR<PlayerUpdateInput, PlayerUncheckedUpdateInput>
+    /**
+     * Choose, which Player to update.
+     */
+    where: PlayerWhereUniqueInput
+  }
+
+  /**
+   * Player updateMany
+   */
+  export type PlayerUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Players.
+     */
+    data: XOR<PlayerUpdateManyMutationInput, PlayerUncheckedUpdateManyInput>
+    /**
+     * Filter which Players to update
+     */
+    where?: PlayerWhereInput
+  }
+
+  /**
+   * Player upsert
+   */
+  export type PlayerUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Player to update in case it exists.
+     */
+    where: PlayerWhereUniqueInput
+    /**
+     * In case the Player found by the `where` argument doesn't exist, create a new Player with this data.
+     */
+    create: XOR<PlayerCreateInput, PlayerUncheckedCreateInput>
+    /**
+     * In case the Player was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlayerUpdateInput, PlayerUncheckedUpdateInput>
+  }
+
+  /**
+   * Player delete
+   */
+  export type PlayerDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+    /**
+     * Filter which Player to delete.
+     */
+    where: PlayerWhereUniqueInput
+  }
+
+  /**
+   * Player deleteMany
+   */
+  export type PlayerDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Players to delete
+     */
+    where?: PlayerWhereInput
+  }
+
+  /**
+   * Player.serverAccess
+   */
+  export type Player$serverAccessArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    where?: PlayerServerAccessWhereInput
+    orderBy?: PlayerServerAccessOrderByWithRelationInput | PlayerServerAccessOrderByWithRelationInput[]
+    cursor?: PlayerServerAccessWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PlayerServerAccessScalarFieldEnum | PlayerServerAccessScalarFieldEnum[]
+  }
+
+  /**
+   * Player without action
+   */
+  export type PlayerDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Player
+     */
+    select?: PlayerSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PlayerServerAccess
+   */
+
+  export type AggregatePlayerServerAccess = {
+    _count: PlayerServerAccessCountAggregateOutputType | null
+    _min: PlayerServerAccessMinAggregateOutputType | null
+    _max: PlayerServerAccessMaxAggregateOutputType | null
+  }
+
+  export type PlayerServerAccessMinAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    serverId: string | null
+    isWhitelisted: boolean | null
+    isBanned: boolean | null
+    serverRole: string | null
+  }
+
+  export type PlayerServerAccessMaxAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    serverId: string | null
+    isWhitelisted: boolean | null
+    isBanned: boolean | null
+    serverRole: string | null
+  }
+
+  export type PlayerServerAccessCountAggregateOutputType = {
+    id: number
+    playerId: number
+    serverId: number
+    isWhitelisted: number
+    isBanned: number
+    serverRole: number
+    _all: number
+  }
+
+
+  export type PlayerServerAccessMinAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    isWhitelisted?: true
+    isBanned?: true
+    serverRole?: true
+  }
+
+  export type PlayerServerAccessMaxAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    isWhitelisted?: true
+    isBanned?: true
+    serverRole?: true
+  }
+
+  export type PlayerServerAccessCountAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    isWhitelisted?: true
+    isBanned?: true
+    serverRole?: true
+    _all?: true
+  }
+
+  export type PlayerServerAccessAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerServerAccess to aggregate.
+     */
+    where?: PlayerServerAccessWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerServerAccesses to fetch.
+     */
+    orderBy?: PlayerServerAccessOrderByWithRelationInput | PlayerServerAccessOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlayerServerAccessWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerServerAccesses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerServerAccesses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PlayerServerAccesses
+    **/
+    _count?: true | PlayerServerAccessCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlayerServerAccessMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlayerServerAccessMaxAggregateInputType
+  }
+
+  export type GetPlayerServerAccessAggregateType<T extends PlayerServerAccessAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlayerServerAccess]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlayerServerAccess[P]>
+      : GetScalarType<T[P], AggregatePlayerServerAccess[P]>
+  }
+
+
+
+
+  export type PlayerServerAccessGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerServerAccessWhereInput
+    orderBy?: PlayerServerAccessOrderByWithAggregationInput | PlayerServerAccessOrderByWithAggregationInput[]
+    by: PlayerServerAccessScalarFieldEnum[] | PlayerServerAccessScalarFieldEnum
+    having?: PlayerServerAccessScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlayerServerAccessCountAggregateInputType | true
+    _min?: PlayerServerAccessMinAggregateInputType
+    _max?: PlayerServerAccessMaxAggregateInputType
+  }
+
+  export type PlayerServerAccessGroupByOutputType = {
+    id: string
+    playerId: string
+    serverId: string
+    isWhitelisted: boolean
+    isBanned: boolean
+    serverRole: string | null
+    _count: PlayerServerAccessCountAggregateOutputType | null
+    _min: PlayerServerAccessMinAggregateOutputType | null
+    _max: PlayerServerAccessMaxAggregateOutputType | null
+  }
+
+  type GetPlayerServerAccessGroupByPayload<T extends PlayerServerAccessGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlayerServerAccessGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlayerServerAccessGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlayerServerAccessGroupByOutputType[P]>
+            : GetScalarType<T[P], PlayerServerAccessGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlayerServerAccessSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: boolean
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["playerServerAccess"]>
+
+  export type PlayerServerAccessSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: boolean
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["playerServerAccess"]>
+
+  export type PlayerServerAccessSelectScalar = {
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: boolean
+  }
+
+  export type PlayerServerAccessInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+  export type PlayerServerAccessIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    player?: boolean | PlayerDefaultArgs<ExtArgs>
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+
+  export type $PlayerServerAccessPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PlayerServerAccess"
+    objects: {
+      player: Prisma.$PlayerPayload<ExtArgs>
+      server: Prisma.$ServerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      playerId: string
+      serverId: string
+      isWhitelisted: boolean
+      isBanned: boolean
+      serverRole: string | null
+    }, ExtArgs["result"]["playerServerAccess"]>
+    composites: {}
+  }
+
+  type PlayerServerAccessGetPayload<S extends boolean | null | undefined | PlayerServerAccessDefaultArgs> = $Result.GetResult<Prisma.$PlayerServerAccessPayload, S>
+
+  type PlayerServerAccessCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PlayerServerAccessFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PlayerServerAccessCountAggregateInputType | true
+    }
+
+  export interface PlayerServerAccessDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PlayerServerAccess'], meta: { name: 'PlayerServerAccess' } }
+    /**
+     * Find zero or one PlayerServerAccess that matches the filter.
+     * @param {PlayerServerAccessFindUniqueArgs} args - Arguments to find a PlayerServerAccess
+     * @example
+     * // Get one PlayerServerAccess
+     * const playerServerAccess = await prisma.playerServerAccess.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlayerServerAccessFindUniqueArgs>(args: SelectSubset<T, PlayerServerAccessFindUniqueArgs<ExtArgs>>): Prisma__PlayerServerAccessClient<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PlayerServerAccess that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PlayerServerAccessFindUniqueOrThrowArgs} args - Arguments to find a PlayerServerAccess
+     * @example
+     * // Get one PlayerServerAccess
+     * const playerServerAccess = await prisma.playerServerAccess.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlayerServerAccessFindUniqueOrThrowArgs>(args: SelectSubset<T, PlayerServerAccessFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlayerServerAccessClient<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PlayerServerAccess that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerServerAccessFindFirstArgs} args - Arguments to find a PlayerServerAccess
+     * @example
+     * // Get one PlayerServerAccess
+     * const playerServerAccess = await prisma.playerServerAccess.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlayerServerAccessFindFirstArgs>(args?: SelectSubset<T, PlayerServerAccessFindFirstArgs<ExtArgs>>): Prisma__PlayerServerAccessClient<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PlayerServerAccess that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerServerAccessFindFirstOrThrowArgs} args - Arguments to find a PlayerServerAccess
+     * @example
+     * // Get one PlayerServerAccess
+     * const playerServerAccess = await prisma.playerServerAccess.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlayerServerAccessFindFirstOrThrowArgs>(args?: SelectSubset<T, PlayerServerAccessFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlayerServerAccessClient<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PlayerServerAccesses that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerServerAccessFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PlayerServerAccesses
+     * const playerServerAccesses = await prisma.playerServerAccess.findMany()
+     * 
+     * // Get first 10 PlayerServerAccesses
+     * const playerServerAccesses = await prisma.playerServerAccess.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const playerServerAccessWithIdOnly = await prisma.playerServerAccess.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PlayerServerAccessFindManyArgs>(args?: SelectSubset<T, PlayerServerAccessFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PlayerServerAccess.
+     * @param {PlayerServerAccessCreateArgs} args - Arguments to create a PlayerServerAccess.
+     * @example
+     * // Create one PlayerServerAccess
+     * const PlayerServerAccess = await prisma.playerServerAccess.create({
+     *   data: {
+     *     // ... data to create a PlayerServerAccess
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlayerServerAccessCreateArgs>(args: SelectSubset<T, PlayerServerAccessCreateArgs<ExtArgs>>): Prisma__PlayerServerAccessClient<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PlayerServerAccesses.
+     * @param {PlayerServerAccessCreateManyArgs} args - Arguments to create many PlayerServerAccesses.
+     * @example
+     * // Create many PlayerServerAccesses
+     * const playerServerAccess = await prisma.playerServerAccess.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlayerServerAccessCreateManyArgs>(args?: SelectSubset<T, PlayerServerAccessCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PlayerServerAccesses and returns the data saved in the database.
+     * @param {PlayerServerAccessCreateManyAndReturnArgs} args - Arguments to create many PlayerServerAccesses.
+     * @example
+     * // Create many PlayerServerAccesses
+     * const playerServerAccess = await prisma.playerServerAccess.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PlayerServerAccesses and only return the `id`
+     * const playerServerAccessWithIdOnly = await prisma.playerServerAccess.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlayerServerAccessCreateManyAndReturnArgs>(args?: SelectSubset<T, PlayerServerAccessCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PlayerServerAccess.
+     * @param {PlayerServerAccessDeleteArgs} args - Arguments to delete one PlayerServerAccess.
+     * @example
+     * // Delete one PlayerServerAccess
+     * const PlayerServerAccess = await prisma.playerServerAccess.delete({
+     *   where: {
+     *     // ... filter to delete one PlayerServerAccess
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlayerServerAccessDeleteArgs>(args: SelectSubset<T, PlayerServerAccessDeleteArgs<ExtArgs>>): Prisma__PlayerServerAccessClient<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PlayerServerAccess.
+     * @param {PlayerServerAccessUpdateArgs} args - Arguments to update one PlayerServerAccess.
+     * @example
+     * // Update one PlayerServerAccess
+     * const playerServerAccess = await prisma.playerServerAccess.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlayerServerAccessUpdateArgs>(args: SelectSubset<T, PlayerServerAccessUpdateArgs<ExtArgs>>): Prisma__PlayerServerAccessClient<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PlayerServerAccesses.
+     * @param {PlayerServerAccessDeleteManyArgs} args - Arguments to filter PlayerServerAccesses to delete.
+     * @example
+     * // Delete a few PlayerServerAccesses
+     * const { count } = await prisma.playerServerAccess.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlayerServerAccessDeleteManyArgs>(args?: SelectSubset<T, PlayerServerAccessDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PlayerServerAccesses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerServerAccessUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PlayerServerAccesses
+     * const playerServerAccess = await prisma.playerServerAccess.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlayerServerAccessUpdateManyArgs>(args: SelectSubset<T, PlayerServerAccessUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PlayerServerAccess.
+     * @param {PlayerServerAccessUpsertArgs} args - Arguments to update or create a PlayerServerAccess.
+     * @example
+     * // Update or create a PlayerServerAccess
+     * const playerServerAccess = await prisma.playerServerAccess.upsert({
+     *   create: {
+     *     // ... data to create a PlayerServerAccess
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PlayerServerAccess we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlayerServerAccessUpsertArgs>(args: SelectSubset<T, PlayerServerAccessUpsertArgs<ExtArgs>>): Prisma__PlayerServerAccessClient<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PlayerServerAccesses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerServerAccessCountArgs} args - Arguments to filter PlayerServerAccesses to count.
+     * @example
+     * // Count the number of PlayerServerAccesses
+     * const count = await prisma.playerServerAccess.count({
+     *   where: {
+     *     // ... the filter for the PlayerServerAccesses we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlayerServerAccessCountArgs>(
+      args?: Subset<T, PlayerServerAccessCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlayerServerAccessCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PlayerServerAccess.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerServerAccessAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlayerServerAccessAggregateArgs>(args: Subset<T, PlayerServerAccessAggregateArgs>): Prisma.PrismaPromise<GetPlayerServerAccessAggregateType<T>>
+
+    /**
+     * Group by PlayerServerAccess.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerServerAccessGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlayerServerAccessGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlayerServerAccessGroupByArgs['orderBy'] }
+        : { orderBy?: PlayerServerAccessGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlayerServerAccessGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlayerServerAccessGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PlayerServerAccess model
+   */
+  readonly fields: PlayerServerAccessFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PlayerServerAccess.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlayerServerAccessClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    player<T extends PlayerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PlayerDefaultArgs<ExtArgs>>): Prisma__PlayerClient<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    server<T extends ServerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServerDefaultArgs<ExtArgs>>): Prisma__ServerClient<$Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PlayerServerAccess model
+   */ 
+  interface PlayerServerAccessFieldRefs {
+    readonly id: FieldRef<"PlayerServerAccess", 'String'>
+    readonly playerId: FieldRef<"PlayerServerAccess", 'String'>
+    readonly serverId: FieldRef<"PlayerServerAccess", 'String'>
+    readonly isWhitelisted: FieldRef<"PlayerServerAccess", 'Boolean'>
+    readonly isBanned: FieldRef<"PlayerServerAccess", 'Boolean'>
+    readonly serverRole: FieldRef<"PlayerServerAccess", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PlayerServerAccess findUnique
+   */
+  export type PlayerServerAccessFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerServerAccess to fetch.
+     */
+    where: PlayerServerAccessWhereUniqueInput
+  }
+
+  /**
+   * PlayerServerAccess findUniqueOrThrow
+   */
+  export type PlayerServerAccessFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerServerAccess to fetch.
+     */
+    where: PlayerServerAccessWhereUniqueInput
+  }
+
+  /**
+   * PlayerServerAccess findFirst
+   */
+  export type PlayerServerAccessFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerServerAccess to fetch.
+     */
+    where?: PlayerServerAccessWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerServerAccesses to fetch.
+     */
+    orderBy?: PlayerServerAccessOrderByWithRelationInput | PlayerServerAccessOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerServerAccesses.
+     */
+    cursor?: PlayerServerAccessWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerServerAccesses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerServerAccesses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerServerAccesses.
+     */
+    distinct?: PlayerServerAccessScalarFieldEnum | PlayerServerAccessScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerServerAccess findFirstOrThrow
+   */
+  export type PlayerServerAccessFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerServerAccess to fetch.
+     */
+    where?: PlayerServerAccessWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerServerAccesses to fetch.
+     */
+    orderBy?: PlayerServerAccessOrderByWithRelationInput | PlayerServerAccessOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerServerAccesses.
+     */
+    cursor?: PlayerServerAccessWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerServerAccesses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerServerAccesses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerServerAccesses.
+     */
+    distinct?: PlayerServerAccessScalarFieldEnum | PlayerServerAccessScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerServerAccess findMany
+   */
+  export type PlayerServerAccessFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    /**
+     * Filter, which PlayerServerAccesses to fetch.
+     */
+    where?: PlayerServerAccessWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerServerAccesses to fetch.
+     */
+    orderBy?: PlayerServerAccessOrderByWithRelationInput | PlayerServerAccessOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PlayerServerAccesses.
+     */
+    cursor?: PlayerServerAccessWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerServerAccesses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerServerAccesses.
+     */
+    skip?: number
+    distinct?: PlayerServerAccessScalarFieldEnum | PlayerServerAccessScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerServerAccess create
+   */
+  export type PlayerServerAccessCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PlayerServerAccess.
+     */
+    data: XOR<PlayerServerAccessCreateInput, PlayerServerAccessUncheckedCreateInput>
+  }
+
+  /**
+   * PlayerServerAccess createMany
+   */
+  export type PlayerServerAccessCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PlayerServerAccesses.
+     */
+    data: PlayerServerAccessCreateManyInput | PlayerServerAccessCreateManyInput[]
+  }
+
+  /**
+   * PlayerServerAccess createManyAndReturn
+   */
+  export type PlayerServerAccessCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PlayerServerAccesses.
+     */
+    data: PlayerServerAccessCreateManyInput | PlayerServerAccessCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PlayerServerAccess update
+   */
+  export type PlayerServerAccessUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PlayerServerAccess.
+     */
+    data: XOR<PlayerServerAccessUpdateInput, PlayerServerAccessUncheckedUpdateInput>
+    /**
+     * Choose, which PlayerServerAccess to update.
+     */
+    where: PlayerServerAccessWhereUniqueInput
+  }
+
+  /**
+   * PlayerServerAccess updateMany
+   */
+  export type PlayerServerAccessUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PlayerServerAccesses.
+     */
+    data: XOR<PlayerServerAccessUpdateManyMutationInput, PlayerServerAccessUncheckedUpdateManyInput>
+    /**
+     * Filter which PlayerServerAccesses to update
+     */
+    where?: PlayerServerAccessWhereInput
+  }
+
+  /**
+   * PlayerServerAccess upsert
+   */
+  export type PlayerServerAccessUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PlayerServerAccess to update in case it exists.
+     */
+    where: PlayerServerAccessWhereUniqueInput
+    /**
+     * In case the PlayerServerAccess found by the `where` argument doesn't exist, create a new PlayerServerAccess with this data.
+     */
+    create: XOR<PlayerServerAccessCreateInput, PlayerServerAccessUncheckedCreateInput>
+    /**
+     * In case the PlayerServerAccess was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlayerServerAccessUpdateInput, PlayerServerAccessUncheckedUpdateInput>
+  }
+
+  /**
+   * PlayerServerAccess delete
+   */
+  export type PlayerServerAccessDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+    /**
+     * Filter which PlayerServerAccess to delete.
+     */
+    where: PlayerServerAccessWhereUniqueInput
+  }
+
+  /**
+   * PlayerServerAccess deleteMany
+   */
+  export type PlayerServerAccessDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerServerAccesses to delete
+     */
+    where?: PlayerServerAccessWhereInput
+  }
+
+  /**
+   * PlayerServerAccess without action
+   */
+  export type PlayerServerAccessDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerServerAccess
+     */
+    select?: PlayerServerAccessSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PlayerServerAccessInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PlayerAuditLog
+   */
+
+  export type AggregatePlayerAuditLog = {
+    _count: PlayerAuditLogCountAggregateOutputType | null
+    _min: PlayerAuditLogMinAggregateOutputType | null
+    _max: PlayerAuditLogMaxAggregateOutputType | null
+  }
+
+  export type PlayerAuditLogMinAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    serverId: string | null
+    action: string | null
+    details: string | null
+    performedBy: string | null
+    createdAt: Date | null
+  }
+
+  export type PlayerAuditLogMaxAggregateOutputType = {
+    id: string | null
+    playerId: string | null
+    serverId: string | null
+    action: string | null
+    details: string | null
+    performedBy: string | null
+    createdAt: Date | null
+  }
+
+  export type PlayerAuditLogCountAggregateOutputType = {
+    id: number
+    playerId: number
+    serverId: number
+    action: number
+    details: number
+    performedBy: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type PlayerAuditLogMinAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    action?: true
+    details?: true
+    performedBy?: true
+    createdAt?: true
+  }
+
+  export type PlayerAuditLogMaxAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    action?: true
+    details?: true
+    performedBy?: true
+    createdAt?: true
+  }
+
+  export type PlayerAuditLogCountAggregateInputType = {
+    id?: true
+    playerId?: true
+    serverId?: true
+    action?: true
+    details?: true
+    performedBy?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type PlayerAuditLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerAuditLog to aggregate.
+     */
+    where?: PlayerAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerAuditLogs to fetch.
+     */
+    orderBy?: PlayerAuditLogOrderByWithRelationInput | PlayerAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PlayerAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerAuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PlayerAuditLogs
+    **/
+    _count?: true | PlayerAuditLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PlayerAuditLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PlayerAuditLogMaxAggregateInputType
+  }
+
+  export type GetPlayerAuditLogAggregateType<T extends PlayerAuditLogAggregateArgs> = {
+        [P in keyof T & keyof AggregatePlayerAuditLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePlayerAuditLog[P]>
+      : GetScalarType<T[P], AggregatePlayerAuditLog[P]>
+  }
+
+
+
+
+  export type PlayerAuditLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PlayerAuditLogWhereInput
+    orderBy?: PlayerAuditLogOrderByWithAggregationInput | PlayerAuditLogOrderByWithAggregationInput[]
+    by: PlayerAuditLogScalarFieldEnum[] | PlayerAuditLogScalarFieldEnum
+    having?: PlayerAuditLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PlayerAuditLogCountAggregateInputType | true
+    _min?: PlayerAuditLogMinAggregateInputType
+    _max?: PlayerAuditLogMaxAggregateInputType
+  }
+
+  export type PlayerAuditLogGroupByOutputType = {
+    id: string
+    playerId: string | null
+    serverId: string | null
+    action: string
+    details: string
+    performedBy: string
+    createdAt: Date
+    _count: PlayerAuditLogCountAggregateOutputType | null
+    _min: PlayerAuditLogMinAggregateOutputType | null
+    _max: PlayerAuditLogMaxAggregateOutputType | null
+  }
+
+  type GetPlayerAuditLogGroupByPayload<T extends PlayerAuditLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PlayerAuditLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PlayerAuditLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PlayerAuditLogGroupByOutputType[P]>
+            : GetScalarType<T[P], PlayerAuditLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PlayerAuditLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    action?: boolean
+    details?: boolean
+    performedBy?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["playerAuditLog"]>
+
+  export type PlayerAuditLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    action?: boolean
+    details?: boolean
+    performedBy?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["playerAuditLog"]>
+
+  export type PlayerAuditLogSelectScalar = {
+    id?: boolean
+    playerId?: boolean
+    serverId?: boolean
+    action?: boolean
+    details?: boolean
+    performedBy?: boolean
+    createdAt?: boolean
+  }
+
+
+  export type $PlayerAuditLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PlayerAuditLog"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      playerId: string | null
+      serverId: string | null
+      action: string
+      details: string
+      performedBy: string
+      createdAt: Date
+    }, ExtArgs["result"]["playerAuditLog"]>
+    composites: {}
+  }
+
+  type PlayerAuditLogGetPayload<S extends boolean | null | undefined | PlayerAuditLogDefaultArgs> = $Result.GetResult<Prisma.$PlayerAuditLogPayload, S>
+
+  type PlayerAuditLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PlayerAuditLogFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PlayerAuditLogCountAggregateInputType | true
+    }
+
+  export interface PlayerAuditLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PlayerAuditLog'], meta: { name: 'PlayerAuditLog' } }
+    /**
+     * Find zero or one PlayerAuditLog that matches the filter.
+     * @param {PlayerAuditLogFindUniqueArgs} args - Arguments to find a PlayerAuditLog
+     * @example
+     * // Get one PlayerAuditLog
+     * const playerAuditLog = await prisma.playerAuditLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PlayerAuditLogFindUniqueArgs>(args: SelectSubset<T, PlayerAuditLogFindUniqueArgs<ExtArgs>>): Prisma__PlayerAuditLogClient<$Result.GetResult<Prisma.$PlayerAuditLogPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PlayerAuditLog that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PlayerAuditLogFindUniqueOrThrowArgs} args - Arguments to find a PlayerAuditLog
+     * @example
+     * // Get one PlayerAuditLog
+     * const playerAuditLog = await prisma.playerAuditLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PlayerAuditLogFindUniqueOrThrowArgs>(args: SelectSubset<T, PlayerAuditLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PlayerAuditLogClient<$Result.GetResult<Prisma.$PlayerAuditLogPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PlayerAuditLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerAuditLogFindFirstArgs} args - Arguments to find a PlayerAuditLog
+     * @example
+     * // Get one PlayerAuditLog
+     * const playerAuditLog = await prisma.playerAuditLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PlayerAuditLogFindFirstArgs>(args?: SelectSubset<T, PlayerAuditLogFindFirstArgs<ExtArgs>>): Prisma__PlayerAuditLogClient<$Result.GetResult<Prisma.$PlayerAuditLogPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PlayerAuditLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerAuditLogFindFirstOrThrowArgs} args - Arguments to find a PlayerAuditLog
+     * @example
+     * // Get one PlayerAuditLog
+     * const playerAuditLog = await prisma.playerAuditLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PlayerAuditLogFindFirstOrThrowArgs>(args?: SelectSubset<T, PlayerAuditLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__PlayerAuditLogClient<$Result.GetResult<Prisma.$PlayerAuditLogPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PlayerAuditLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerAuditLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PlayerAuditLogs
+     * const playerAuditLogs = await prisma.playerAuditLog.findMany()
+     * 
+     * // Get first 10 PlayerAuditLogs
+     * const playerAuditLogs = await prisma.playerAuditLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const playerAuditLogWithIdOnly = await prisma.playerAuditLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PlayerAuditLogFindManyArgs>(args?: SelectSubset<T, PlayerAuditLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerAuditLogPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PlayerAuditLog.
+     * @param {PlayerAuditLogCreateArgs} args - Arguments to create a PlayerAuditLog.
+     * @example
+     * // Create one PlayerAuditLog
+     * const PlayerAuditLog = await prisma.playerAuditLog.create({
+     *   data: {
+     *     // ... data to create a PlayerAuditLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends PlayerAuditLogCreateArgs>(args: SelectSubset<T, PlayerAuditLogCreateArgs<ExtArgs>>): Prisma__PlayerAuditLogClient<$Result.GetResult<Prisma.$PlayerAuditLogPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PlayerAuditLogs.
+     * @param {PlayerAuditLogCreateManyArgs} args - Arguments to create many PlayerAuditLogs.
+     * @example
+     * // Create many PlayerAuditLogs
+     * const playerAuditLog = await prisma.playerAuditLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PlayerAuditLogCreateManyArgs>(args?: SelectSubset<T, PlayerAuditLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PlayerAuditLogs and returns the data saved in the database.
+     * @param {PlayerAuditLogCreateManyAndReturnArgs} args - Arguments to create many PlayerAuditLogs.
+     * @example
+     * // Create many PlayerAuditLogs
+     * const playerAuditLog = await prisma.playerAuditLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PlayerAuditLogs and only return the `id`
+     * const playerAuditLogWithIdOnly = await prisma.playerAuditLog.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PlayerAuditLogCreateManyAndReturnArgs>(args?: SelectSubset<T, PlayerAuditLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerAuditLogPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PlayerAuditLog.
+     * @param {PlayerAuditLogDeleteArgs} args - Arguments to delete one PlayerAuditLog.
+     * @example
+     * // Delete one PlayerAuditLog
+     * const PlayerAuditLog = await prisma.playerAuditLog.delete({
+     *   where: {
+     *     // ... filter to delete one PlayerAuditLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PlayerAuditLogDeleteArgs>(args: SelectSubset<T, PlayerAuditLogDeleteArgs<ExtArgs>>): Prisma__PlayerAuditLogClient<$Result.GetResult<Prisma.$PlayerAuditLogPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PlayerAuditLog.
+     * @param {PlayerAuditLogUpdateArgs} args - Arguments to update one PlayerAuditLog.
+     * @example
+     * // Update one PlayerAuditLog
+     * const playerAuditLog = await prisma.playerAuditLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PlayerAuditLogUpdateArgs>(args: SelectSubset<T, PlayerAuditLogUpdateArgs<ExtArgs>>): Prisma__PlayerAuditLogClient<$Result.GetResult<Prisma.$PlayerAuditLogPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PlayerAuditLogs.
+     * @param {PlayerAuditLogDeleteManyArgs} args - Arguments to filter PlayerAuditLogs to delete.
+     * @example
+     * // Delete a few PlayerAuditLogs
+     * const { count } = await prisma.playerAuditLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PlayerAuditLogDeleteManyArgs>(args?: SelectSubset<T, PlayerAuditLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PlayerAuditLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerAuditLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PlayerAuditLogs
+     * const playerAuditLog = await prisma.playerAuditLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PlayerAuditLogUpdateManyArgs>(args: SelectSubset<T, PlayerAuditLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PlayerAuditLog.
+     * @param {PlayerAuditLogUpsertArgs} args - Arguments to update or create a PlayerAuditLog.
+     * @example
+     * // Update or create a PlayerAuditLog
+     * const playerAuditLog = await prisma.playerAuditLog.upsert({
+     *   create: {
+     *     // ... data to create a PlayerAuditLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PlayerAuditLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PlayerAuditLogUpsertArgs>(args: SelectSubset<T, PlayerAuditLogUpsertArgs<ExtArgs>>): Prisma__PlayerAuditLogClient<$Result.GetResult<Prisma.$PlayerAuditLogPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PlayerAuditLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerAuditLogCountArgs} args - Arguments to filter PlayerAuditLogs to count.
+     * @example
+     * // Count the number of PlayerAuditLogs
+     * const count = await prisma.playerAuditLog.count({
+     *   where: {
+     *     // ... the filter for the PlayerAuditLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends PlayerAuditLogCountArgs>(
+      args?: Subset<T, PlayerAuditLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PlayerAuditLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PlayerAuditLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerAuditLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PlayerAuditLogAggregateArgs>(args: Subset<T, PlayerAuditLogAggregateArgs>): Prisma.PrismaPromise<GetPlayerAuditLogAggregateType<T>>
+
+    /**
+     * Group by PlayerAuditLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PlayerAuditLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PlayerAuditLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PlayerAuditLogGroupByArgs['orderBy'] }
+        : { orderBy?: PlayerAuditLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PlayerAuditLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPlayerAuditLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PlayerAuditLog model
+   */
+  readonly fields: PlayerAuditLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PlayerAuditLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PlayerAuditLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PlayerAuditLog model
+   */ 
+  interface PlayerAuditLogFieldRefs {
+    readonly id: FieldRef<"PlayerAuditLog", 'String'>
+    readonly playerId: FieldRef<"PlayerAuditLog", 'String'>
+    readonly serverId: FieldRef<"PlayerAuditLog", 'String'>
+    readonly action: FieldRef<"PlayerAuditLog", 'String'>
+    readonly details: FieldRef<"PlayerAuditLog", 'String'>
+    readonly performedBy: FieldRef<"PlayerAuditLog", 'String'>
+    readonly createdAt: FieldRef<"PlayerAuditLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PlayerAuditLog findUnique
+   */
+  export type PlayerAuditLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelect<ExtArgs> | null
+    /**
+     * Filter, which PlayerAuditLog to fetch.
+     */
+    where: PlayerAuditLogWhereUniqueInput
+  }
+
+  /**
+   * PlayerAuditLog findUniqueOrThrow
+   */
+  export type PlayerAuditLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelect<ExtArgs> | null
+    /**
+     * Filter, which PlayerAuditLog to fetch.
+     */
+    where: PlayerAuditLogWhereUniqueInput
+  }
+
+  /**
+   * PlayerAuditLog findFirst
+   */
+  export type PlayerAuditLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelect<ExtArgs> | null
+    /**
+     * Filter, which PlayerAuditLog to fetch.
+     */
+    where?: PlayerAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerAuditLogs to fetch.
+     */
+    orderBy?: PlayerAuditLogOrderByWithRelationInput | PlayerAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerAuditLogs.
+     */
+    cursor?: PlayerAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerAuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerAuditLogs.
+     */
+    distinct?: PlayerAuditLogScalarFieldEnum | PlayerAuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerAuditLog findFirstOrThrow
+   */
+  export type PlayerAuditLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelect<ExtArgs> | null
+    /**
+     * Filter, which PlayerAuditLog to fetch.
+     */
+    where?: PlayerAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerAuditLogs to fetch.
+     */
+    orderBy?: PlayerAuditLogOrderByWithRelationInput | PlayerAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PlayerAuditLogs.
+     */
+    cursor?: PlayerAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerAuditLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PlayerAuditLogs.
+     */
+    distinct?: PlayerAuditLogScalarFieldEnum | PlayerAuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerAuditLog findMany
+   */
+  export type PlayerAuditLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelect<ExtArgs> | null
+    /**
+     * Filter, which PlayerAuditLogs to fetch.
+     */
+    where?: PlayerAuditLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PlayerAuditLogs to fetch.
+     */
+    orderBy?: PlayerAuditLogOrderByWithRelationInput | PlayerAuditLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PlayerAuditLogs.
+     */
+    cursor?: PlayerAuditLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PlayerAuditLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PlayerAuditLogs.
+     */
+    skip?: number
+    distinct?: PlayerAuditLogScalarFieldEnum | PlayerAuditLogScalarFieldEnum[]
+  }
+
+  /**
+   * PlayerAuditLog create
+   */
+  export type PlayerAuditLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelect<ExtArgs> | null
+    /**
+     * The data needed to create a PlayerAuditLog.
+     */
+    data: XOR<PlayerAuditLogCreateInput, PlayerAuditLogUncheckedCreateInput>
+  }
+
+  /**
+   * PlayerAuditLog createMany
+   */
+  export type PlayerAuditLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PlayerAuditLogs.
+     */
+    data: PlayerAuditLogCreateManyInput | PlayerAuditLogCreateManyInput[]
+  }
+
+  /**
+   * PlayerAuditLog createManyAndReturn
+   */
+  export type PlayerAuditLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PlayerAuditLogs.
+     */
+    data: PlayerAuditLogCreateManyInput | PlayerAuditLogCreateManyInput[]
+  }
+
+  /**
+   * PlayerAuditLog update
+   */
+  export type PlayerAuditLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelect<ExtArgs> | null
+    /**
+     * The data needed to update a PlayerAuditLog.
+     */
+    data: XOR<PlayerAuditLogUpdateInput, PlayerAuditLogUncheckedUpdateInput>
+    /**
+     * Choose, which PlayerAuditLog to update.
+     */
+    where: PlayerAuditLogWhereUniqueInput
+  }
+
+  /**
+   * PlayerAuditLog updateMany
+   */
+  export type PlayerAuditLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PlayerAuditLogs.
+     */
+    data: XOR<PlayerAuditLogUpdateManyMutationInput, PlayerAuditLogUncheckedUpdateManyInput>
+    /**
+     * Filter which PlayerAuditLogs to update
+     */
+    where?: PlayerAuditLogWhereInput
+  }
+
+  /**
+   * PlayerAuditLog upsert
+   */
+  export type PlayerAuditLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelect<ExtArgs> | null
+    /**
+     * The filter to search for the PlayerAuditLog to update in case it exists.
+     */
+    where: PlayerAuditLogWhereUniqueInput
+    /**
+     * In case the PlayerAuditLog found by the `where` argument doesn't exist, create a new PlayerAuditLog with this data.
+     */
+    create: XOR<PlayerAuditLogCreateInput, PlayerAuditLogUncheckedCreateInput>
+    /**
+     * In case the PlayerAuditLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PlayerAuditLogUpdateInput, PlayerAuditLogUncheckedUpdateInput>
+  }
+
+  /**
+   * PlayerAuditLog delete
+   */
+  export type PlayerAuditLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelect<ExtArgs> | null
+    /**
+     * Filter which PlayerAuditLog to delete.
+     */
+    where: PlayerAuditLogWhereUniqueInput
+  }
+
+  /**
+   * PlayerAuditLog deleteMany
+   */
+  export type PlayerAuditLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PlayerAuditLogs to delete
+     */
+    where?: PlayerAuditLogWhereInput
+  }
+
+  /**
+   * PlayerAuditLog without action
+   */
+  export type PlayerAuditLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PlayerAuditLog
+     */
+    select?: PlayerAuditLogSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -24437,6 +27694,50 @@ export namespace Prisma {
   export type PushSubscriptionScalarFieldEnum = (typeof PushSubscriptionScalarFieldEnum)[keyof typeof PushSubscriptionScalarFieldEnum]
 
 
+  export const PlayerScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    name: 'name',
+    steamId: 'steamId',
+    xboxId: 'xboxId',
+    minecraftUuid: 'minecraftUuid',
+    discordId: 'discordId',
+    status: 'status',
+    roles: 'roles',
+    isGloballyBanned: 'isGloballyBanned',
+    globalBanReason: 'globalBanReason',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type PlayerScalarFieldEnum = (typeof PlayerScalarFieldEnum)[keyof typeof PlayerScalarFieldEnum]
+
+
+  export const PlayerServerAccessScalarFieldEnum: {
+    id: 'id',
+    playerId: 'playerId',
+    serverId: 'serverId',
+    isWhitelisted: 'isWhitelisted',
+    isBanned: 'isBanned',
+    serverRole: 'serverRole'
+  };
+
+  export type PlayerServerAccessScalarFieldEnum = (typeof PlayerServerAccessScalarFieldEnum)[keyof typeof PlayerServerAccessScalarFieldEnum]
+
+
+  export const PlayerAuditLogScalarFieldEnum: {
+    id: 'id',
+    playerId: 'playerId',
+    serverId: 'serverId',
+    action: 'action',
+    details: 'details',
+    performedBy: 'performedBy',
+    createdAt: 'createdAt'
+  };
+
+  export type PlayerAuditLogScalarFieldEnum = (typeof PlayerAuditLogScalarFieldEnum)[keyof typeof PlayerAuditLogScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -24519,6 +27820,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorListRelationFilter
     templateVotes?: TemplateVoteListRelationFilter
     PushSubscription?: PushSubscriptionListRelationFilter
+    players?: PlayerListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -24541,6 +27843,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorOrderByRelationAggregateInput
     templateVotes?: TemplateVoteOrderByRelationAggregateInput
     PushSubscription?: PushSubscriptionOrderByRelationAggregateInput
+    players?: PlayerOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -24566,6 +27869,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorListRelationFilter
     templateVotes?: TemplateVoteListRelationFilter
     PushSubscription?: PushSubscriptionListRelationFilter
+    players?: PlayerListRelationFilter
   }, "id" | "email" | "discordId">
 
   export type UserOrderByWithAggregationInput = {
@@ -24759,6 +28063,7 @@ export namespace Prisma {
     hostLink?: XOR<ServerHostLinkNullableRelationFilter, ServerHostLinkWhereInput> | null
     plannedSessions?: PlannedSessionListRelationFilter
     discordRoles?: DiscordRoleAccessListRelationFilter
+    playerAccess?: PlayerServerAccessListRelationFilter
   }
 
   export type ServerOrderByWithRelationInput = {
@@ -24796,6 +28101,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkOrderByWithRelationInput
     plannedSessions?: PlannedSessionOrderByRelationAggregateInput
     discordRoles?: DiscordRoleAccessOrderByRelationAggregateInput
+    playerAccess?: PlayerServerAccessOrderByRelationAggregateInput
   }
 
   export type ServerWhereUniqueInput = Prisma.AtLeast<{
@@ -24836,6 +28142,7 @@ export namespace Prisma {
     hostLink?: XOR<ServerHostLinkNullableRelationFilter, ServerHostLinkWhereInput> | null
     plannedSessions?: PlannedSessionListRelationFilter
     discordRoles?: DiscordRoleAccessListRelationFilter
+    playerAccess?: PlayerServerAccessListRelationFilter
   }, "id" | "inviteCode">
 
   export type ServerOrderByWithAggregationInput = {
@@ -26117,6 +29424,230 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"PushSubscription"> | Date | string
   }
 
+  export type PlayerWhereInput = {
+    AND?: PlayerWhereInput | PlayerWhereInput[]
+    OR?: PlayerWhereInput[]
+    NOT?: PlayerWhereInput | PlayerWhereInput[]
+    id?: StringFilter<"Player"> | string
+    userId?: StringFilter<"Player"> | string
+    name?: StringFilter<"Player"> | string
+    steamId?: StringNullableFilter<"Player"> | string | null
+    xboxId?: StringNullableFilter<"Player"> | string | null
+    minecraftUuid?: StringNullableFilter<"Player"> | string | null
+    discordId?: StringNullableFilter<"Player"> | string | null
+    status?: StringFilter<"Player"> | string
+    roles?: StringNullableFilter<"Player"> | string | null
+    isGloballyBanned?: BoolFilter<"Player"> | boolean
+    globalBanReason?: StringNullableFilter<"Player"> | string | null
+    createdAt?: DateTimeFilter<"Player"> | Date | string
+    updatedAt?: DateTimeFilter<"Player"> | Date | string
+    user?: XOR<UserRelationFilter, UserWhereInput>
+    serverAccess?: PlayerServerAccessListRelationFilter
+  }
+
+  export type PlayerOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    name?: SortOrder
+    steamId?: SortOrderInput | SortOrder
+    xboxId?: SortOrderInput | SortOrder
+    minecraftUuid?: SortOrderInput | SortOrder
+    discordId?: SortOrderInput | SortOrder
+    status?: SortOrder
+    roles?: SortOrderInput | SortOrder
+    isGloballyBanned?: SortOrder
+    globalBanReason?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+    serverAccess?: PlayerServerAccessOrderByRelationAggregateInput
+  }
+
+  export type PlayerWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PlayerWhereInput | PlayerWhereInput[]
+    OR?: PlayerWhereInput[]
+    NOT?: PlayerWhereInput | PlayerWhereInput[]
+    userId?: StringFilter<"Player"> | string
+    name?: StringFilter<"Player"> | string
+    steamId?: StringNullableFilter<"Player"> | string | null
+    xboxId?: StringNullableFilter<"Player"> | string | null
+    minecraftUuid?: StringNullableFilter<"Player"> | string | null
+    discordId?: StringNullableFilter<"Player"> | string | null
+    status?: StringFilter<"Player"> | string
+    roles?: StringNullableFilter<"Player"> | string | null
+    isGloballyBanned?: BoolFilter<"Player"> | boolean
+    globalBanReason?: StringNullableFilter<"Player"> | string | null
+    createdAt?: DateTimeFilter<"Player"> | Date | string
+    updatedAt?: DateTimeFilter<"Player"> | Date | string
+    user?: XOR<UserRelationFilter, UserWhereInput>
+    serverAccess?: PlayerServerAccessListRelationFilter
+  }, "id">
+
+  export type PlayerOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    name?: SortOrder
+    steamId?: SortOrderInput | SortOrder
+    xboxId?: SortOrderInput | SortOrder
+    minecraftUuid?: SortOrderInput | SortOrder
+    discordId?: SortOrderInput | SortOrder
+    status?: SortOrder
+    roles?: SortOrderInput | SortOrder
+    isGloballyBanned?: SortOrder
+    globalBanReason?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: PlayerCountOrderByAggregateInput
+    _max?: PlayerMaxOrderByAggregateInput
+    _min?: PlayerMinOrderByAggregateInput
+  }
+
+  export type PlayerScalarWhereWithAggregatesInput = {
+    AND?: PlayerScalarWhereWithAggregatesInput | PlayerScalarWhereWithAggregatesInput[]
+    OR?: PlayerScalarWhereWithAggregatesInput[]
+    NOT?: PlayerScalarWhereWithAggregatesInput | PlayerScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Player"> | string
+    userId?: StringWithAggregatesFilter<"Player"> | string
+    name?: StringWithAggregatesFilter<"Player"> | string
+    steamId?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    xboxId?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    minecraftUuid?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    discordId?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    status?: StringWithAggregatesFilter<"Player"> | string
+    roles?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    isGloballyBanned?: BoolWithAggregatesFilter<"Player"> | boolean
+    globalBanReason?: StringNullableWithAggregatesFilter<"Player"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"Player"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Player"> | Date | string
+  }
+
+  export type PlayerServerAccessWhereInput = {
+    AND?: PlayerServerAccessWhereInput | PlayerServerAccessWhereInput[]
+    OR?: PlayerServerAccessWhereInput[]
+    NOT?: PlayerServerAccessWhereInput | PlayerServerAccessWhereInput[]
+    id?: StringFilter<"PlayerServerAccess"> | string
+    playerId?: StringFilter<"PlayerServerAccess"> | string
+    serverId?: StringFilter<"PlayerServerAccess"> | string
+    isWhitelisted?: BoolFilter<"PlayerServerAccess"> | boolean
+    isBanned?: BoolFilter<"PlayerServerAccess"> | boolean
+    serverRole?: StringNullableFilter<"PlayerServerAccess"> | string | null
+    player?: XOR<PlayerRelationFilter, PlayerWhereInput>
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }
+
+  export type PlayerServerAccessOrderByWithRelationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    isWhitelisted?: SortOrder
+    isBanned?: SortOrder
+    serverRole?: SortOrderInput | SortOrder
+    player?: PlayerOrderByWithRelationInput
+    server?: ServerOrderByWithRelationInput
+  }
+
+  export type PlayerServerAccessWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    playerId_serverId?: PlayerServerAccessPlayerIdServerIdCompoundUniqueInput
+    AND?: PlayerServerAccessWhereInput | PlayerServerAccessWhereInput[]
+    OR?: PlayerServerAccessWhereInput[]
+    NOT?: PlayerServerAccessWhereInput | PlayerServerAccessWhereInput[]
+    playerId?: StringFilter<"PlayerServerAccess"> | string
+    serverId?: StringFilter<"PlayerServerAccess"> | string
+    isWhitelisted?: BoolFilter<"PlayerServerAccess"> | boolean
+    isBanned?: BoolFilter<"PlayerServerAccess"> | boolean
+    serverRole?: StringNullableFilter<"PlayerServerAccess"> | string | null
+    player?: XOR<PlayerRelationFilter, PlayerWhereInput>
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }, "id" | "playerId_serverId">
+
+  export type PlayerServerAccessOrderByWithAggregationInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    isWhitelisted?: SortOrder
+    isBanned?: SortOrder
+    serverRole?: SortOrderInput | SortOrder
+    _count?: PlayerServerAccessCountOrderByAggregateInput
+    _max?: PlayerServerAccessMaxOrderByAggregateInput
+    _min?: PlayerServerAccessMinOrderByAggregateInput
+  }
+
+  export type PlayerServerAccessScalarWhereWithAggregatesInput = {
+    AND?: PlayerServerAccessScalarWhereWithAggregatesInput | PlayerServerAccessScalarWhereWithAggregatesInput[]
+    OR?: PlayerServerAccessScalarWhereWithAggregatesInput[]
+    NOT?: PlayerServerAccessScalarWhereWithAggregatesInput | PlayerServerAccessScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PlayerServerAccess"> | string
+    playerId?: StringWithAggregatesFilter<"PlayerServerAccess"> | string
+    serverId?: StringWithAggregatesFilter<"PlayerServerAccess"> | string
+    isWhitelisted?: BoolWithAggregatesFilter<"PlayerServerAccess"> | boolean
+    isBanned?: BoolWithAggregatesFilter<"PlayerServerAccess"> | boolean
+    serverRole?: StringNullableWithAggregatesFilter<"PlayerServerAccess"> | string | null
+  }
+
+  export type PlayerAuditLogWhereInput = {
+    AND?: PlayerAuditLogWhereInput | PlayerAuditLogWhereInput[]
+    OR?: PlayerAuditLogWhereInput[]
+    NOT?: PlayerAuditLogWhereInput | PlayerAuditLogWhereInput[]
+    id?: StringFilter<"PlayerAuditLog"> | string
+    playerId?: StringNullableFilter<"PlayerAuditLog"> | string | null
+    serverId?: StringNullableFilter<"PlayerAuditLog"> | string | null
+    action?: StringFilter<"PlayerAuditLog"> | string
+    details?: StringFilter<"PlayerAuditLog"> | string
+    performedBy?: StringFilter<"PlayerAuditLog"> | string
+    createdAt?: DateTimeFilter<"PlayerAuditLog"> | Date | string
+  }
+
+  export type PlayerAuditLogOrderByWithRelationInput = {
+    id?: SortOrder
+    playerId?: SortOrderInput | SortOrder
+    serverId?: SortOrderInput | SortOrder
+    action?: SortOrder
+    details?: SortOrder
+    performedBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerAuditLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PlayerAuditLogWhereInput | PlayerAuditLogWhereInput[]
+    OR?: PlayerAuditLogWhereInput[]
+    NOT?: PlayerAuditLogWhereInput | PlayerAuditLogWhereInput[]
+    playerId?: StringNullableFilter<"PlayerAuditLog"> | string | null
+    serverId?: StringNullableFilter<"PlayerAuditLog"> | string | null
+    action?: StringFilter<"PlayerAuditLog"> | string
+    details?: StringFilter<"PlayerAuditLog"> | string
+    performedBy?: StringFilter<"PlayerAuditLog"> | string
+    createdAt?: DateTimeFilter<"PlayerAuditLog"> | Date | string
+  }, "id">
+
+  export type PlayerAuditLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    playerId?: SortOrderInput | SortOrder
+    serverId?: SortOrderInput | SortOrder
+    action?: SortOrder
+    details?: SortOrder
+    performedBy?: SortOrder
+    createdAt?: SortOrder
+    _count?: PlayerAuditLogCountOrderByAggregateInput
+    _max?: PlayerAuditLogMaxOrderByAggregateInput
+    _min?: PlayerAuditLogMinOrderByAggregateInput
+  }
+
+  export type PlayerAuditLogScalarWhereWithAggregatesInput = {
+    AND?: PlayerAuditLogScalarWhereWithAggregatesInput | PlayerAuditLogScalarWhereWithAggregatesInput[]
+    OR?: PlayerAuditLogScalarWhereWithAggregatesInput[]
+    NOT?: PlayerAuditLogScalarWhereWithAggregatesInput | PlayerAuditLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PlayerAuditLog"> | string
+    playerId?: StringNullableWithAggregatesFilter<"PlayerAuditLog"> | string | null
+    serverId?: StringNullableWithAggregatesFilter<"PlayerAuditLog"> | string | null
+    action?: StringWithAggregatesFilter<"PlayerAuditLog"> | string
+    details?: StringWithAggregatesFilter<"PlayerAuditLog"> | string
+    performedBy?: StringWithAggregatesFilter<"PlayerAuditLog"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"PlayerAuditLog"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -26137,6 +29668,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -26159,6 +29691,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -26181,6 +29714,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -26203,6 +29737,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -26405,6 +29940,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateInput = {
@@ -26440,6 +29976,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerUpdateInput = {
@@ -26475,6 +30012,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateInput = {
@@ -26510,6 +30048,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateManyInput = {
@@ -27888,6 +31427,252 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type PlayerCreateInput = {
+    id?: string
+    name: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    discordId?: string | null
+    status?: string
+    roles?: string | null
+    isGloballyBanned?: boolean
+    globalBanReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutPlayersInput
+    serverAccess?: PlayerServerAccessCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerUncheckedCreateInput = {
+    id?: string
+    userId: string
+    name: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    discordId?: string | null
+    status?: string
+    roles?: string | null
+    isGloballyBanned?: boolean
+    globalBanReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    serverAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    roles?: NullableStringFieldUpdateOperationsInput | string | null
+    isGloballyBanned?: BoolFieldUpdateOperationsInput | boolean
+    globalBanReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutPlayersNestedInput
+    serverAccess?: PlayerServerAccessUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    roles?: NullableStringFieldUpdateOperationsInput | string | null
+    isGloballyBanned?: BoolFieldUpdateOperationsInput | boolean
+    globalBanReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    serverAccess?: PlayerServerAccessUncheckedUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerCreateManyInput = {
+    id?: string
+    userId: string
+    name: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    discordId?: string | null
+    status?: string
+    roles?: string | null
+    isGloballyBanned?: boolean
+    globalBanReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PlayerUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    roles?: NullableStringFieldUpdateOperationsInput | string | null
+    isGloballyBanned?: BoolFieldUpdateOperationsInput | boolean
+    globalBanReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    roles?: NullableStringFieldUpdateOperationsInput | string | null
+    isGloballyBanned?: BoolFieldUpdateOperationsInput | boolean
+    globalBanReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerServerAccessCreateInput = {
+    id?: string
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: string | null
+    player: PlayerCreateNestedOneWithoutServerAccessInput
+    server: ServerCreateNestedOneWithoutPlayerAccessInput
+  }
+
+  export type PlayerServerAccessUncheckedCreateInput = {
+    id?: string
+    playerId: string
+    serverId: string
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: string | null
+  }
+
+  export type PlayerServerAccessUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    isWhitelisted?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    serverRole?: NullableStringFieldUpdateOperationsInput | string | null
+    player?: PlayerUpdateOneRequiredWithoutServerAccessNestedInput
+    server?: ServerUpdateOneRequiredWithoutPlayerAccessNestedInput
+  }
+
+  export type PlayerServerAccessUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    isWhitelisted?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    serverRole?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlayerServerAccessCreateManyInput = {
+    id?: string
+    playerId: string
+    serverId: string
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: string | null
+  }
+
+  export type PlayerServerAccessUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    isWhitelisted?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    serverRole?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlayerServerAccessUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    isWhitelisted?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    serverRole?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlayerAuditLogCreateInput = {
+    id?: string
+    playerId?: string | null
+    serverId?: string | null
+    action: string
+    details: string
+    performedBy: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerAuditLogUncheckedCreateInput = {
+    id?: string
+    playerId?: string | null
+    serverId?: string | null
+    action: string
+    details: string
+    performedBy: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerAuditLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: NullableStringFieldUpdateOperationsInput | string | null
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    details?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerAuditLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: NullableStringFieldUpdateOperationsInput | string | null
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    details?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerAuditLogCreateManyInput = {
+    id?: string
+    playerId?: string | null
+    serverId?: string | null
+    action: string
+    details: string
+    performedBy: string
+    createdAt?: Date | string
+  }
+
+  export type PlayerAuditLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: NullableStringFieldUpdateOperationsInput | string | null
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    details?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PlayerAuditLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: NullableStringFieldUpdateOperationsInput | string | null
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
+    action?: StringFieldUpdateOperationsInput | string
+    details?: StringFieldUpdateOperationsInput | string
+    performedBy?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -27979,6 +31764,12 @@ export namespace Prisma {
     none?: PushSubscriptionWhereInput
   }
 
+  export type PlayerListRelationFilter = {
+    every?: PlayerWhereInput
+    some?: PlayerWhereInput
+    none?: PlayerWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -28009,6 +31800,10 @@ export namespace Prisma {
   }
 
   export type PushSubscriptionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PlayerOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -28283,6 +32078,12 @@ export namespace Prisma {
     none?: DiscordRoleAccessWhereInput
   }
 
+  export type PlayerServerAccessListRelationFilter = {
+    every?: PlayerServerAccessWhereInput
+    some?: PlayerServerAccessWhereInput
+    none?: PlayerServerAccessWhereInput
+  }
+
   export type BackupOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -28304,6 +32105,10 @@ export namespace Prisma {
   }
 
   export type DiscordRoleAccessOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PlayerServerAccessOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -29145,6 +32950,121 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type PlayerCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    name?: SortOrder
+    steamId?: SortOrder
+    xboxId?: SortOrder
+    minecraftUuid?: SortOrder
+    discordId?: SortOrder
+    status?: SortOrder
+    roles?: SortOrder
+    isGloballyBanned?: SortOrder
+    globalBanReason?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PlayerMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    name?: SortOrder
+    steamId?: SortOrder
+    xboxId?: SortOrder
+    minecraftUuid?: SortOrder
+    discordId?: SortOrder
+    status?: SortOrder
+    roles?: SortOrder
+    isGloballyBanned?: SortOrder
+    globalBanReason?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PlayerMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    name?: SortOrder
+    steamId?: SortOrder
+    xboxId?: SortOrder
+    minecraftUuid?: SortOrder
+    discordId?: SortOrder
+    status?: SortOrder
+    roles?: SortOrder
+    isGloballyBanned?: SortOrder
+    globalBanReason?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PlayerRelationFilter = {
+    is?: PlayerWhereInput
+    isNot?: PlayerWhereInput
+  }
+
+  export type PlayerServerAccessPlayerIdServerIdCompoundUniqueInput = {
+    playerId: string
+    serverId: string
+  }
+
+  export type PlayerServerAccessCountOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    isWhitelisted?: SortOrder
+    isBanned?: SortOrder
+    serverRole?: SortOrder
+  }
+
+  export type PlayerServerAccessMaxOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    isWhitelisted?: SortOrder
+    isBanned?: SortOrder
+    serverRole?: SortOrder
+  }
+
+  export type PlayerServerAccessMinOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    isWhitelisted?: SortOrder
+    isBanned?: SortOrder
+    serverRole?: SortOrder
+  }
+
+  export type PlayerAuditLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    action?: SortOrder
+    details?: SortOrder
+    performedBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerAuditLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    action?: SortOrder
+    details?: SortOrder
+    performedBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PlayerAuditLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    playerId?: SortOrder
+    serverId?: SortOrder
+    action?: SortOrder
+    details?: SortOrder
+    performedBy?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type GameDefinitionCreateNestedManyWithoutOwnerInput = {
     create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
@@ -29200,6 +33120,13 @@ export namespace Prisma {
     connect?: PushSubscriptionWhereUniqueInput | PushSubscriptionWhereUniqueInput[]
   }
 
+  export type PlayerCreateNestedManyWithoutUserInput = {
+    create?: XOR<PlayerCreateWithoutUserInput, PlayerUncheckedCreateWithoutUserInput> | PlayerCreateWithoutUserInput[] | PlayerUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PlayerCreateOrConnectWithoutUserInput | PlayerCreateOrConnectWithoutUserInput[]
+    createMany?: PlayerCreateManyUserInputEnvelope
+    connect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+  }
+
   export type GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput = {
     create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
@@ -29253,6 +33180,13 @@ export namespace Prisma {
     connectOrCreate?: PushSubscriptionCreateOrConnectWithoutUserInput | PushSubscriptionCreateOrConnectWithoutUserInput[]
     createMany?: PushSubscriptionCreateManyUserInputEnvelope
     connect?: PushSubscriptionWhereUniqueInput | PushSubscriptionWhereUniqueInput[]
+  }
+
+  export type PlayerUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<PlayerCreateWithoutUserInput, PlayerUncheckedCreateWithoutUserInput> | PlayerCreateWithoutUserInput[] | PlayerUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PlayerCreateOrConnectWithoutUserInput | PlayerCreateOrConnectWithoutUserInput[]
+    createMany?: PlayerCreateManyUserInputEnvelope
+    connect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -29379,6 +33313,20 @@ export namespace Prisma {
     deleteMany?: PushSubscriptionScalarWhereInput | PushSubscriptionScalarWhereInput[]
   }
 
+  export type PlayerUpdateManyWithoutUserNestedInput = {
+    create?: XOR<PlayerCreateWithoutUserInput, PlayerUncheckedCreateWithoutUserInput> | PlayerCreateWithoutUserInput[] | PlayerUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PlayerCreateOrConnectWithoutUserInput | PlayerCreateOrConnectWithoutUserInput[]
+    upsert?: PlayerUpsertWithWhereUniqueWithoutUserInput | PlayerUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: PlayerCreateManyUserInputEnvelope
+    set?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    disconnect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    delete?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    connect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    update?: PlayerUpdateWithWhereUniqueWithoutUserInput | PlayerUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: PlayerUpdateManyWithWhereWithoutUserInput | PlayerUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: PlayerScalarWhereInput | PlayerScalarWhereInput[]
+  }
+
   export type GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput = {
     create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
@@ -29487,6 +33435,20 @@ export namespace Prisma {
     deleteMany?: PushSubscriptionScalarWhereInput | PushSubscriptionScalarWhereInput[]
   }
 
+  export type PlayerUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<PlayerCreateWithoutUserInput, PlayerUncheckedCreateWithoutUserInput> | PlayerCreateWithoutUserInput[] | PlayerUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: PlayerCreateOrConnectWithoutUserInput | PlayerCreateOrConnectWithoutUserInput[]
+    upsert?: PlayerUpsertWithWhereUniqueWithoutUserInput | PlayerUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: PlayerCreateManyUserInputEnvelope
+    set?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    disconnect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    delete?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    connect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+    update?: PlayerUpdateWithWhereUniqueWithoutUserInput | PlayerUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: PlayerUpdateManyWithWhereWithoutUserInput | PlayerUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: PlayerScalarWhereInput | PlayerScalarWhereInput[]
+  }
+
   export type UserCreateNestedOneWithoutSubscriptionInput = {
     create?: XOR<UserCreateWithoutSubscriptionInput, UserUncheckedCreateWithoutSubscriptionInput>
     connectOrCreate?: UserCreateOrConnectWithoutSubscriptionInput
@@ -29576,6 +33538,13 @@ export namespace Prisma {
     connect?: DiscordRoleAccessWhereUniqueInput | DiscordRoleAccessWhereUniqueInput[]
   }
 
+  export type PlayerServerAccessCreateNestedManyWithoutServerInput = {
+    create?: XOR<PlayerServerAccessCreateWithoutServerInput, PlayerServerAccessUncheckedCreateWithoutServerInput> | PlayerServerAccessCreateWithoutServerInput[] | PlayerServerAccessUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: PlayerServerAccessCreateOrConnectWithoutServerInput | PlayerServerAccessCreateOrConnectWithoutServerInput[]
+    createMany?: PlayerServerAccessCreateManyServerInputEnvelope
+    connect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+  }
+
   export type BackupUncheckedCreateNestedManyWithoutServerInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -29629,6 +33598,13 @@ export namespace Prisma {
     connectOrCreate?: DiscordRoleAccessCreateOrConnectWithoutServerInput | DiscordRoleAccessCreateOrConnectWithoutServerInput[]
     createMany?: DiscordRoleAccessCreateManyServerInputEnvelope
     connect?: DiscordRoleAccessWhereUniqueInput | DiscordRoleAccessWhereUniqueInput[]
+  }
+
+  export type PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput = {
+    create?: XOR<PlayerServerAccessCreateWithoutServerInput, PlayerServerAccessUncheckedCreateWithoutServerInput> | PlayerServerAccessCreateWithoutServerInput[] | PlayerServerAccessUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: PlayerServerAccessCreateOrConnectWithoutServerInput | PlayerServerAccessCreateOrConnectWithoutServerInput[]
+    createMany?: PlayerServerAccessCreateManyServerInputEnvelope
+    connect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -29777,6 +33753,20 @@ export namespace Prisma {
     deleteMany?: DiscordRoleAccessScalarWhereInput | DiscordRoleAccessScalarWhereInput[]
   }
 
+  export type PlayerServerAccessUpdateManyWithoutServerNestedInput = {
+    create?: XOR<PlayerServerAccessCreateWithoutServerInput, PlayerServerAccessUncheckedCreateWithoutServerInput> | PlayerServerAccessCreateWithoutServerInput[] | PlayerServerAccessUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: PlayerServerAccessCreateOrConnectWithoutServerInput | PlayerServerAccessCreateOrConnectWithoutServerInput[]
+    upsert?: PlayerServerAccessUpsertWithWhereUniqueWithoutServerInput | PlayerServerAccessUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: PlayerServerAccessCreateManyServerInputEnvelope
+    set?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    disconnect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    delete?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    connect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    update?: PlayerServerAccessUpdateWithWhereUniqueWithoutServerInput | PlayerServerAccessUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: PlayerServerAccessUpdateManyWithWhereWithoutServerInput | PlayerServerAccessUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: PlayerServerAccessScalarWhereInput | PlayerServerAccessScalarWhereInput[]
+  }
+
   export type BackupUncheckedUpdateManyWithoutServerNestedInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -29883,6 +33873,20 @@ export namespace Prisma {
     update?: DiscordRoleAccessUpdateWithWhereUniqueWithoutServerInput | DiscordRoleAccessUpdateWithWhereUniqueWithoutServerInput[]
     updateMany?: DiscordRoleAccessUpdateManyWithWhereWithoutServerInput | DiscordRoleAccessUpdateManyWithWhereWithoutServerInput[]
     deleteMany?: DiscordRoleAccessScalarWhereInput | DiscordRoleAccessScalarWhereInput[]
+  }
+
+  export type PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput = {
+    create?: XOR<PlayerServerAccessCreateWithoutServerInput, PlayerServerAccessUncheckedCreateWithoutServerInput> | PlayerServerAccessCreateWithoutServerInput[] | PlayerServerAccessUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: PlayerServerAccessCreateOrConnectWithoutServerInput | PlayerServerAccessCreateOrConnectWithoutServerInput[]
+    upsert?: PlayerServerAccessUpsertWithWhereUniqueWithoutServerInput | PlayerServerAccessUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: PlayerServerAccessCreateManyServerInputEnvelope
+    set?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    disconnect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    delete?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    connect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    update?: PlayerServerAccessUpdateWithWhereUniqueWithoutServerInput | PlayerServerAccessUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: PlayerServerAccessUpdateManyWithWhereWithoutServerInput | PlayerServerAccessUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: PlayerServerAccessScalarWhereInput | PlayerServerAccessScalarWhereInput[]
   }
 
   export type ServerCreateNestedOneWithoutDiscordRolesInput = {
@@ -30349,6 +34353,90 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutPushSubscriptionInput, UserUpdateWithoutPushSubscriptionInput>, UserUncheckedUpdateWithoutPushSubscriptionInput>
   }
 
+  export type UserCreateNestedOneWithoutPlayersInput = {
+    create?: XOR<UserCreateWithoutPlayersInput, UserUncheckedCreateWithoutPlayersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutPlayersInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type PlayerServerAccessCreateNestedManyWithoutPlayerInput = {
+    create?: XOR<PlayerServerAccessCreateWithoutPlayerInput, PlayerServerAccessUncheckedCreateWithoutPlayerInput> | PlayerServerAccessCreateWithoutPlayerInput[] | PlayerServerAccessUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerServerAccessCreateOrConnectWithoutPlayerInput | PlayerServerAccessCreateOrConnectWithoutPlayerInput[]
+    createMany?: PlayerServerAccessCreateManyPlayerInputEnvelope
+    connect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+  }
+
+  export type PlayerServerAccessUncheckedCreateNestedManyWithoutPlayerInput = {
+    create?: XOR<PlayerServerAccessCreateWithoutPlayerInput, PlayerServerAccessUncheckedCreateWithoutPlayerInput> | PlayerServerAccessCreateWithoutPlayerInput[] | PlayerServerAccessUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerServerAccessCreateOrConnectWithoutPlayerInput | PlayerServerAccessCreateOrConnectWithoutPlayerInput[]
+    createMany?: PlayerServerAccessCreateManyPlayerInputEnvelope
+    connect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+  }
+
+  export type UserUpdateOneRequiredWithoutPlayersNestedInput = {
+    create?: XOR<UserCreateWithoutPlayersInput, UserUncheckedCreateWithoutPlayersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutPlayersInput
+    upsert?: UserUpsertWithoutPlayersInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutPlayersInput, UserUpdateWithoutPlayersInput>, UserUncheckedUpdateWithoutPlayersInput>
+  }
+
+  export type PlayerServerAccessUpdateManyWithoutPlayerNestedInput = {
+    create?: XOR<PlayerServerAccessCreateWithoutPlayerInput, PlayerServerAccessUncheckedCreateWithoutPlayerInput> | PlayerServerAccessCreateWithoutPlayerInput[] | PlayerServerAccessUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerServerAccessCreateOrConnectWithoutPlayerInput | PlayerServerAccessCreateOrConnectWithoutPlayerInput[]
+    upsert?: PlayerServerAccessUpsertWithWhereUniqueWithoutPlayerInput | PlayerServerAccessUpsertWithWhereUniqueWithoutPlayerInput[]
+    createMany?: PlayerServerAccessCreateManyPlayerInputEnvelope
+    set?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    disconnect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    delete?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    connect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    update?: PlayerServerAccessUpdateWithWhereUniqueWithoutPlayerInput | PlayerServerAccessUpdateWithWhereUniqueWithoutPlayerInput[]
+    updateMany?: PlayerServerAccessUpdateManyWithWhereWithoutPlayerInput | PlayerServerAccessUpdateManyWithWhereWithoutPlayerInput[]
+    deleteMany?: PlayerServerAccessScalarWhereInput | PlayerServerAccessScalarWhereInput[]
+  }
+
+  export type PlayerServerAccessUncheckedUpdateManyWithoutPlayerNestedInput = {
+    create?: XOR<PlayerServerAccessCreateWithoutPlayerInput, PlayerServerAccessUncheckedCreateWithoutPlayerInput> | PlayerServerAccessCreateWithoutPlayerInput[] | PlayerServerAccessUncheckedCreateWithoutPlayerInput[]
+    connectOrCreate?: PlayerServerAccessCreateOrConnectWithoutPlayerInput | PlayerServerAccessCreateOrConnectWithoutPlayerInput[]
+    upsert?: PlayerServerAccessUpsertWithWhereUniqueWithoutPlayerInput | PlayerServerAccessUpsertWithWhereUniqueWithoutPlayerInput[]
+    createMany?: PlayerServerAccessCreateManyPlayerInputEnvelope
+    set?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    disconnect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    delete?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    connect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+    update?: PlayerServerAccessUpdateWithWhereUniqueWithoutPlayerInput | PlayerServerAccessUpdateWithWhereUniqueWithoutPlayerInput[]
+    updateMany?: PlayerServerAccessUpdateManyWithWhereWithoutPlayerInput | PlayerServerAccessUpdateManyWithWhereWithoutPlayerInput[]
+    deleteMany?: PlayerServerAccessScalarWhereInput | PlayerServerAccessScalarWhereInput[]
+  }
+
+  export type PlayerCreateNestedOneWithoutServerAccessInput = {
+    create?: XOR<PlayerCreateWithoutServerAccessInput, PlayerUncheckedCreateWithoutServerAccessInput>
+    connectOrCreate?: PlayerCreateOrConnectWithoutServerAccessInput
+    connect?: PlayerWhereUniqueInput
+  }
+
+  export type ServerCreateNestedOneWithoutPlayerAccessInput = {
+    create?: XOR<ServerCreateWithoutPlayerAccessInput, ServerUncheckedCreateWithoutPlayerAccessInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutPlayerAccessInput
+    connect?: ServerWhereUniqueInput
+  }
+
+  export type PlayerUpdateOneRequiredWithoutServerAccessNestedInput = {
+    create?: XOR<PlayerCreateWithoutServerAccessInput, PlayerUncheckedCreateWithoutServerAccessInput>
+    connectOrCreate?: PlayerCreateOrConnectWithoutServerAccessInput
+    upsert?: PlayerUpsertWithoutServerAccessInput
+    connect?: PlayerWhereUniqueInput
+    update?: XOR<XOR<PlayerUpdateToOneWithWhereWithoutServerAccessInput, PlayerUpdateWithoutServerAccessInput>, PlayerUncheckedUpdateWithoutServerAccessInput>
+  }
+
+  export type ServerUpdateOneRequiredWithoutPlayerAccessNestedInput = {
+    create?: XOR<ServerCreateWithoutPlayerAccessInput, ServerUncheckedCreateWithoutPlayerAccessInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutPlayerAccessInput
+    upsert?: ServerUpsertWithoutPlayerAccessInput
+    connect?: ServerWhereUniqueInput
+    update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutPlayerAccessInput, ServerUpdateWithoutPlayerAccessInput>, ServerUncheckedUpdateWithoutPlayerAccessInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -30664,6 +34752,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutUserInput = {
@@ -30698,6 +34787,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutUserInput = {
@@ -30828,6 +34918,47 @@ export namespace Prisma {
 
   export type PushSubscriptionCreateManyUserInputEnvelope = {
     data: PushSubscriptionCreateManyUserInput | PushSubscriptionCreateManyUserInput[]
+  }
+
+  export type PlayerCreateWithoutUserInput = {
+    id?: string
+    name: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    discordId?: string | null
+    status?: string
+    roles?: string | null
+    isGloballyBanned?: boolean
+    globalBanReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    serverAccess?: PlayerServerAccessCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerUncheckedCreateWithoutUserInput = {
+    id?: string
+    name: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    discordId?: string | null
+    status?: string
+    roles?: string | null
+    isGloballyBanned?: boolean
+    globalBanReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    serverAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutPlayerInput
+  }
+
+  export type PlayerCreateOrConnectWithoutUserInput = {
+    where: PlayerWhereUniqueInput
+    create: XOR<PlayerCreateWithoutUserInput, PlayerUncheckedCreateWithoutUserInput>
+  }
+
+  export type PlayerCreateManyUserInputEnvelope = {
+    data: PlayerCreateManyUserInput | PlayerCreateManyUserInput[]
   }
 
   export type GameDefinitionUpsertWithWhereUniqueWithoutOwnerInput = {
@@ -31079,6 +35210,41 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"PushSubscription"> | Date | string
   }
 
+  export type PlayerUpsertWithWhereUniqueWithoutUserInput = {
+    where: PlayerWhereUniqueInput
+    update: XOR<PlayerUpdateWithoutUserInput, PlayerUncheckedUpdateWithoutUserInput>
+    create: XOR<PlayerCreateWithoutUserInput, PlayerUncheckedCreateWithoutUserInput>
+  }
+
+  export type PlayerUpdateWithWhereUniqueWithoutUserInput = {
+    where: PlayerWhereUniqueInput
+    data: XOR<PlayerUpdateWithoutUserInput, PlayerUncheckedUpdateWithoutUserInput>
+  }
+
+  export type PlayerUpdateManyWithWhereWithoutUserInput = {
+    where: PlayerScalarWhereInput
+    data: XOR<PlayerUpdateManyMutationInput, PlayerUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type PlayerScalarWhereInput = {
+    AND?: PlayerScalarWhereInput | PlayerScalarWhereInput[]
+    OR?: PlayerScalarWhereInput[]
+    NOT?: PlayerScalarWhereInput | PlayerScalarWhereInput[]
+    id?: StringFilter<"Player"> | string
+    userId?: StringFilter<"Player"> | string
+    name?: StringFilter<"Player"> | string
+    steamId?: StringNullableFilter<"Player"> | string | null
+    xboxId?: StringNullableFilter<"Player"> | string | null
+    minecraftUuid?: StringNullableFilter<"Player"> | string | null
+    discordId?: StringNullableFilter<"Player"> | string | null
+    status?: StringFilter<"Player"> | string
+    roles?: StringNullableFilter<"Player"> | string | null
+    isGloballyBanned?: BoolFilter<"Player"> | boolean
+    globalBanReason?: StringNullableFilter<"Player"> | string | null
+    createdAt?: DateTimeFilter<"Player"> | Date | string
+    updatedAt?: DateTimeFilter<"Player"> | Date | string
+  }
+
   export type UserCreateWithoutSubscriptionInput = {
     id?: string
     email: string
@@ -31098,6 +35264,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSubscriptionInput = {
@@ -31119,6 +35286,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSubscriptionInput = {
@@ -31156,6 +35324,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSubscriptionInput = {
@@ -31177,6 +35346,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutServersInput = {
@@ -31198,6 +35368,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutServersInput = {
@@ -31219,6 +35390,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutServersInput = {
@@ -31507,6 +35679,31 @@ export namespace Prisma {
     data: DiscordRoleAccessCreateManyServerInput | DiscordRoleAccessCreateManyServerInput[]
   }
 
+  export type PlayerServerAccessCreateWithoutServerInput = {
+    id?: string
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: string | null
+    player: PlayerCreateNestedOneWithoutServerAccessInput
+  }
+
+  export type PlayerServerAccessUncheckedCreateWithoutServerInput = {
+    id?: string
+    playerId: string
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: string | null
+  }
+
+  export type PlayerServerAccessCreateOrConnectWithoutServerInput = {
+    where: PlayerServerAccessWhereUniqueInput
+    create: XOR<PlayerServerAccessCreateWithoutServerInput, PlayerServerAccessUncheckedCreateWithoutServerInput>
+  }
+
+  export type PlayerServerAccessCreateManyServerInputEnvelope = {
+    data: PlayerServerAccessCreateManyServerInput | PlayerServerAccessCreateManyServerInput[]
+  }
+
   export type UserUpsertWithoutServersInput = {
     update: XOR<UserUpdateWithoutServersInput, UserUncheckedUpdateWithoutServersInput>
     create: XOR<UserCreateWithoutServersInput, UserUncheckedCreateWithoutServersInput>
@@ -31537,6 +35734,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutServersInput = {
@@ -31558,6 +35756,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type GameDefinitionUpsertWithoutServersInput = {
@@ -31845,6 +36044,34 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"DiscordRoleAccess"> | Date | string
   }
 
+  export type PlayerServerAccessUpsertWithWhereUniqueWithoutServerInput = {
+    where: PlayerServerAccessWhereUniqueInput
+    update: XOR<PlayerServerAccessUpdateWithoutServerInput, PlayerServerAccessUncheckedUpdateWithoutServerInput>
+    create: XOR<PlayerServerAccessCreateWithoutServerInput, PlayerServerAccessUncheckedCreateWithoutServerInput>
+  }
+
+  export type PlayerServerAccessUpdateWithWhereUniqueWithoutServerInput = {
+    where: PlayerServerAccessWhereUniqueInput
+    data: XOR<PlayerServerAccessUpdateWithoutServerInput, PlayerServerAccessUncheckedUpdateWithoutServerInput>
+  }
+
+  export type PlayerServerAccessUpdateManyWithWhereWithoutServerInput = {
+    where: PlayerServerAccessScalarWhereInput
+    data: XOR<PlayerServerAccessUpdateManyMutationInput, PlayerServerAccessUncheckedUpdateManyWithoutServerInput>
+  }
+
+  export type PlayerServerAccessScalarWhereInput = {
+    AND?: PlayerServerAccessScalarWhereInput | PlayerServerAccessScalarWhereInput[]
+    OR?: PlayerServerAccessScalarWhereInput[]
+    NOT?: PlayerServerAccessScalarWhereInput | PlayerServerAccessScalarWhereInput[]
+    id?: StringFilter<"PlayerServerAccess"> | string
+    playerId?: StringFilter<"PlayerServerAccess"> | string
+    serverId?: StringFilter<"PlayerServerAccess"> | string
+    isWhitelisted?: BoolFilter<"PlayerServerAccess"> | boolean
+    isBanned?: BoolFilter<"PlayerServerAccess"> | boolean
+    serverRole?: StringNullableFilter<"PlayerServerAccess"> | string | null
+  }
+
   export type ServerCreateWithoutDiscordRolesInput = {
     id?: string
     name: string
@@ -31877,6 +36104,7 @@ export namespace Prisma {
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutDiscordRolesInput = {
@@ -31911,6 +36139,7 @@ export namespace Prisma {
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutDiscordRolesInput = {
@@ -31961,6 +36190,7 @@ export namespace Prisma {
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutDiscordRolesInput = {
@@ -31995,6 +36225,7 @@ export namespace Prisma {
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutPlannedSessionsInput = {
@@ -32029,6 +36260,7 @@ export namespace Prisma {
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutPlannedSessionsInput = {
@@ -32063,6 +36295,7 @@ export namespace Prisma {
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutPlannedSessionsInput = {
@@ -32113,6 +36346,7 @@ export namespace Prisma {
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutPlannedSessionsInput = {
@@ -32147,6 +36381,7 @@ export namespace Prisma {
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutHostLinkInput = {
@@ -32181,6 +36416,7 @@ export namespace Prisma {
     automations?: AutomationCreateNestedManyWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutHostLinkInput = {
@@ -32215,6 +36451,7 @@ export namespace Prisma {
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutHostLinkInput = {
@@ -32265,6 +36502,7 @@ export namespace Prisma {
     automations?: AutomationUpdateManyWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutHostLinkInput = {
@@ -32299,6 +36537,7 @@ export namespace Prisma {
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type UserCreateWithoutArchivesInput = {
@@ -32320,6 +36559,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutArchivesInput = {
@@ -32341,6 +36581,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutArchivesInput = {
@@ -32378,6 +36619,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutArchivesInput = {
@@ -32399,6 +36641,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutLogsInput = {
@@ -32420,6 +36663,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutLogsInput = {
@@ -32441,6 +36685,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutLogsInput = {
@@ -32478,6 +36723,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutLogsInput = {
@@ -32499,6 +36745,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ServerCreateWithoutBackupsInput = {
@@ -32533,6 +36780,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutBackupsInput = {
@@ -32567,6 +36815,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutBackupsInput = {
@@ -32617,6 +36866,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutBackupsInput = {
@@ -32651,6 +36901,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutCollaboratorsInput = {
@@ -32685,6 +36936,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutCollaboratorsInput = {
@@ -32719,6 +36971,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutCollaboratorsInput = {
@@ -32745,6 +36998,7 @@ export namespace Prisma {
     logs?: ActivityLogCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCollaboratorAccessInput = {
@@ -32766,6 +37020,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCollaboratorAccessInput = {
@@ -32816,6 +37071,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutCollaboratorsInput = {
@@ -32850,6 +37106,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type UserUpsertWithoutCollaboratorAccessInput = {
@@ -32882,6 +37139,7 @@ export namespace Prisma {
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCollaboratorAccessInput = {
@@ -32903,6 +37161,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutDefinitionsInput = {
@@ -32924,6 +37183,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutDefinitionsInput = {
@@ -32945,6 +37205,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutDefinitionsInput = {
@@ -32984,6 +37245,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutDefinitionInput = {
@@ -33018,6 +37280,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutDefinitionInput = {
@@ -33059,6 +37322,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutDefinitionsInput = {
@@ -33080,6 +37344,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ServerUpsertWithWhereUniqueWithoutDefinitionInput = {
@@ -33130,6 +37395,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutModsInput = {
@@ -33164,6 +37430,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutModsInput = {
@@ -33214,6 +37481,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutModsInput = {
@@ -33248,6 +37516,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutSnapshotsInput = {
@@ -33282,6 +37551,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutSnapshotsInput = {
@@ -33316,6 +37586,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutSnapshotsInput = {
@@ -33366,6 +37637,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutSnapshotsInput = {
@@ -33400,6 +37672,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutAutomationsInput = {
@@ -33434,6 +37707,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutAutomationsInput = {
@@ -33468,6 +37742,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutAutomationsInput = {
@@ -33589,6 +37864,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutAutomationsInput = {
@@ -33623,6 +37899,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type AutomationConditionUpsertWithWhereUniqueWithoutAutomationInput = {
@@ -34030,6 +38307,7 @@ export namespace Prisma {
     logs?: ActivityLogCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTemplateVotesInput = {
@@ -34051,6 +38329,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTemplateVotesInput = {
@@ -34131,6 +38410,7 @@ export namespace Prisma {
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTemplateVotesInput = {
@@ -34152,6 +38432,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutPushSubscriptionInput = {
@@ -34173,6 +38454,7 @@ export namespace Prisma {
     logs?: ActivityLogCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPushSubscriptionInput = {
@@ -34194,6 +38476,7 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPushSubscriptionInput = {
@@ -34231,6 +38514,7 @@ export namespace Prisma {
     logs?: ActivityLogUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPushSubscriptionInput = {
@@ -34252,6 +38536,388 @@ export namespace Prisma {
     logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserCreateWithoutPlayersInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name: string
+    discordId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: string
+    notifyDiscord?: boolean
+    notifyEmail?: boolean
+    notifyWebPush?: boolean
+    definitions?: GameDefinitionCreateNestedManyWithoutOwnerInput
+    subscription?: SubscriptionCreateNestedOneWithoutUserInput
+    servers?: ServerCreateNestedManyWithoutUserInput
+    archives?: ArchiveCreateNestedManyWithoutUserInput
+    logs?: ActivityLogCreateNestedManyWithoutUserInput
+    collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
+    templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+    PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutPlayersInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name: string
+    discordId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: string
+    notifyDiscord?: boolean
+    notifyEmail?: boolean
+    notifyWebPush?: boolean
+    definitions?: GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput
+    subscription?: SubscriptionUncheckedCreateNestedOneWithoutUserInput
+    servers?: ServerUncheckedCreateNestedManyWithoutUserInput
+    archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
+    logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
+    collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
+    templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+    PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutPlayersInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutPlayersInput, UserUncheckedCreateWithoutPlayersInput>
+  }
+
+  export type PlayerServerAccessCreateWithoutPlayerInput = {
+    id?: string
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: string | null
+    server: ServerCreateNestedOneWithoutPlayerAccessInput
+  }
+
+  export type PlayerServerAccessUncheckedCreateWithoutPlayerInput = {
+    id?: string
+    serverId: string
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: string | null
+  }
+
+  export type PlayerServerAccessCreateOrConnectWithoutPlayerInput = {
+    where: PlayerServerAccessWhereUniqueInput
+    create: XOR<PlayerServerAccessCreateWithoutPlayerInput, PlayerServerAccessUncheckedCreateWithoutPlayerInput>
+  }
+
+  export type PlayerServerAccessCreateManyPlayerInputEnvelope = {
+    data: PlayerServerAccessCreateManyPlayerInput | PlayerServerAccessCreateManyPlayerInput[]
+  }
+
+  export type UserUpsertWithoutPlayersInput = {
+    update: XOR<UserUpdateWithoutPlayersInput, UserUncheckedUpdateWithoutPlayersInput>
+    create: XOR<UserCreateWithoutPlayersInput, UserUncheckedCreateWithoutPlayersInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutPlayersInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutPlayersInput, UserUncheckedUpdateWithoutPlayersInput>
+  }
+
+  export type UserUpdateWithoutPlayersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    notifyDiscord?: BoolFieldUpdateOperationsInput | boolean
+    notifyEmail?: BoolFieldUpdateOperationsInput | boolean
+    notifyWebPush?: BoolFieldUpdateOperationsInput | boolean
+    definitions?: GameDefinitionUpdateManyWithoutOwnerNestedInput
+    subscription?: SubscriptionUpdateOneWithoutUserNestedInput
+    servers?: ServerUpdateManyWithoutUserNestedInput
+    archives?: ArchiveUpdateManyWithoutUserNestedInput
+    logs?: ActivityLogUpdateManyWithoutUserNestedInput
+    collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
+    templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+    PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutPlayersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    notifyDiscord?: BoolFieldUpdateOperationsInput | boolean
+    notifyEmail?: BoolFieldUpdateOperationsInput | boolean
+    notifyWebPush?: BoolFieldUpdateOperationsInput | boolean
+    definitions?: GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput
+    subscription?: SubscriptionUncheckedUpdateOneWithoutUserNestedInput
+    servers?: ServerUncheckedUpdateManyWithoutUserNestedInput
+    archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
+    logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
+    collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
+    templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+    PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type PlayerServerAccessUpsertWithWhereUniqueWithoutPlayerInput = {
+    where: PlayerServerAccessWhereUniqueInput
+    update: XOR<PlayerServerAccessUpdateWithoutPlayerInput, PlayerServerAccessUncheckedUpdateWithoutPlayerInput>
+    create: XOR<PlayerServerAccessCreateWithoutPlayerInput, PlayerServerAccessUncheckedCreateWithoutPlayerInput>
+  }
+
+  export type PlayerServerAccessUpdateWithWhereUniqueWithoutPlayerInput = {
+    where: PlayerServerAccessWhereUniqueInput
+    data: XOR<PlayerServerAccessUpdateWithoutPlayerInput, PlayerServerAccessUncheckedUpdateWithoutPlayerInput>
+  }
+
+  export type PlayerServerAccessUpdateManyWithWhereWithoutPlayerInput = {
+    where: PlayerServerAccessScalarWhereInput
+    data: XOR<PlayerServerAccessUpdateManyMutationInput, PlayerServerAccessUncheckedUpdateManyWithoutPlayerInput>
+  }
+
+  export type PlayerCreateWithoutServerAccessInput = {
+    id?: string
+    name: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    discordId?: string | null
+    status?: string
+    roles?: string | null
+    isGloballyBanned?: boolean
+    globalBanReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutPlayersInput
+  }
+
+  export type PlayerUncheckedCreateWithoutServerAccessInput = {
+    id?: string
+    userId: string
+    name: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    discordId?: string | null
+    status?: string
+    roles?: string | null
+    isGloballyBanned?: boolean
+    globalBanReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PlayerCreateOrConnectWithoutServerAccessInput = {
+    where: PlayerWhereUniqueInput
+    create: XOR<PlayerCreateWithoutServerAccessInput, PlayerUncheckedCreateWithoutServerAccessInput>
+  }
+
+  export type ServerCreateWithoutPlayerAccessInput = {
+    id?: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    inviteCode?: string | null
+    user: UserCreateNestedOneWithoutServersInput
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
+    backups?: BackupCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
+    plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
+    discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerUncheckedCreateWithoutPlayerAccessInput = {
+    id?: string
+    userId: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    enableUpnp?: boolean
+    ipAddress: string
+    port: number
+    definitionId?: string | null
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    inviteCode?: string | null
+    backups?: BackupUncheckedCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
+    plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
+    discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerCreateOrConnectWithoutPlayerAccessInput = {
+    where: ServerWhereUniqueInput
+    create: XOR<ServerCreateWithoutPlayerAccessInput, ServerUncheckedCreateWithoutPlayerAccessInput>
+  }
+
+  export type PlayerUpsertWithoutServerAccessInput = {
+    update: XOR<PlayerUpdateWithoutServerAccessInput, PlayerUncheckedUpdateWithoutServerAccessInput>
+    create: XOR<PlayerCreateWithoutServerAccessInput, PlayerUncheckedCreateWithoutServerAccessInput>
+    where?: PlayerWhereInput
+  }
+
+  export type PlayerUpdateToOneWithWhereWithoutServerAccessInput = {
+    where?: PlayerWhereInput
+    data: XOR<PlayerUpdateWithoutServerAccessInput, PlayerUncheckedUpdateWithoutServerAccessInput>
+  }
+
+  export type PlayerUpdateWithoutServerAccessInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    roles?: NullableStringFieldUpdateOperationsInput | string | null
+    isGloballyBanned?: BoolFieldUpdateOperationsInput | boolean
+    globalBanReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutPlayersNestedInput
+  }
+
+  export type PlayerUncheckedUpdateWithoutServerAccessInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    roles?: NullableStringFieldUpdateOperationsInput | string | null
+    isGloballyBanned?: BoolFieldUpdateOperationsInput | boolean
+    globalBanReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerUpsertWithoutPlayerAccessInput = {
+    update: XOR<ServerUpdateWithoutPlayerAccessInput, ServerUncheckedUpdateWithoutPlayerAccessInput>
+    create: XOR<ServerCreateWithoutPlayerAccessInput, ServerUncheckedCreateWithoutPlayerAccessInput>
+    where?: ServerWhereInput
+  }
+
+  export type ServerUpdateToOneWithWhereWithoutPlayerAccessInput = {
+    where?: ServerWhereInput
+    data: XOR<ServerUpdateWithoutPlayerAccessInput, ServerUncheckedUpdateWithoutPlayerAccessInput>
+  }
+
+  export type ServerUpdateWithoutPlayerAccessInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
+    user?: UserUpdateOneRequiredWithoutServersNestedInput
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
+    backups?: BackupUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
+    plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
+    discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerUncheckedUpdateWithoutPlayerAccessInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
+    backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
+    plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
+    discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type GameDefinitionCreateManyOwnerInput = {
@@ -34332,6 +38998,21 @@ export namespace Prisma {
     p256dh: string
     auth: string
     createdAt?: Date | string
+  }
+
+  export type PlayerCreateManyUserInput = {
+    id?: string
+    name: string
+    steamId?: string | null
+    xboxId?: string | null
+    minecraftUuid?: string | null
+    discordId?: string | null
+    status?: string
+    roles?: string | null
+    isGloballyBanned?: boolean
+    globalBanReason?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type GameDefinitionUpdateWithoutOwnerInput = {
@@ -34416,6 +39097,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutUserInput = {
@@ -34450,6 +39132,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateManyWithoutUserInput = {
@@ -34592,6 +39275,53 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type PlayerUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    roles?: NullableStringFieldUpdateOperationsInput | string | null
+    isGloballyBanned?: BoolFieldUpdateOperationsInput | boolean
+    globalBanReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    serverAccess?: PlayerServerAccessUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    roles?: NullableStringFieldUpdateOperationsInput | string | null
+    isGloballyBanned?: BoolFieldUpdateOperationsInput | boolean
+    globalBanReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    serverAccess?: PlayerServerAccessUncheckedUpdateManyWithoutPlayerNestedInput
+  }
+
+  export type PlayerUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    steamId?: NullableStringFieldUpdateOperationsInput | string | null
+    xboxId?: NullableStringFieldUpdateOperationsInput | string | null
+    minecraftUuid?: NullableStringFieldUpdateOperationsInput | string | null
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    roles?: NullableStringFieldUpdateOperationsInput | string | null
+    isGloballyBanned?: BoolFieldUpdateOperationsInput | boolean
+    globalBanReason?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type BackupCreateManyServerInput = {
     id?: string
     userId: string
@@ -34658,6 +39388,14 @@ export namespace Prisma {
     id?: string
     roleId: string
     createdAt?: Date | string
+  }
+
+  export type PlayerServerAccessCreateManyServerInput = {
+    id?: string
+    playerId: string
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: string | null
   }
 
   export type BackupUpdateWithoutServerInput = {
@@ -34870,6 +39608,30 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type PlayerServerAccessUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    isWhitelisted?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    serverRole?: NullableStringFieldUpdateOperationsInput | string | null
+    player?: PlayerUpdateOneRequiredWithoutServerAccessNestedInput
+  }
+
+  export type PlayerServerAccessUncheckedUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    isWhitelisted?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    serverRole?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlayerServerAccessUncheckedUpdateManyWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    playerId?: StringFieldUpdateOperationsInput | string
+    isWhitelisted?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    serverRole?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
   export type ServerCreateManyDefinitionInput = {
     id?: string
     userId: string
@@ -34928,6 +39690,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutDefinitionInput = {
@@ -34962,6 +39725,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateManyWithoutDefinitionInput = {
@@ -35106,6 +39870,38 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type PlayerServerAccessCreateManyPlayerInput = {
+    id?: string
+    serverId: string
+    isWhitelisted?: boolean
+    isBanned?: boolean
+    serverRole?: string | null
+  }
+
+  export type PlayerServerAccessUpdateWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    isWhitelisted?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    serverRole?: NullableStringFieldUpdateOperationsInput | string | null
+    server?: ServerUpdateOneRequiredWithoutPlayerAccessNestedInput
+  }
+
+  export type PlayerServerAccessUncheckedUpdateWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    isWhitelisted?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    serverRole?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type PlayerServerAccessUncheckedUpdateManyWithoutPlayerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    isWhitelisted?: BoolFieldUpdateOperationsInput | boolean
+    isBanned?: BoolFieldUpdateOperationsInput | boolean
+    serverRole?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
 
 
   /**
@@ -35131,6 +39927,10 @@ export namespace Prisma {
      * @deprecated Use MarketplaceTemplateCountOutputTypeDefaultArgs instead
      */
     export type MarketplaceTemplateCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = MarketplaceTemplateCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PlayerCountOutputTypeDefaultArgs instead
+     */
+    export type PlayerCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use UserDefaultArgs instead
      */
@@ -35215,6 +40015,18 @@ export namespace Prisma {
      * @deprecated Use PushSubscriptionDefaultArgs instead
      */
     export type PushSubscriptionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PushSubscriptionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PlayerDefaultArgs instead
+     */
+    export type PlayerArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PlayerServerAccessDefaultArgs instead
+     */
+    export type PlayerServerAccessArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerServerAccessDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PlayerAuditLogDefaultArgs instead
+     */
+    export type PlayerAuditLogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerAuditLogDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

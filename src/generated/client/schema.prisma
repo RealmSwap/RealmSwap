@@ -36,6 +36,7 @@ model User {
   collaboratorAccess Collaborator[]
   templateVotes      TemplateVote[]
   PushSubscription   PushSubscription[]
+  players            Player[]
 }
 
 model DiscordLinkCode {
@@ -58,30 +59,30 @@ model Subscription {
 }
 
 model Server {
-  id               String              @id @default(cuid())
+  id               String               @id @default(cuid())
   userId           String
-  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   name             String
   game             String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
   ramAllocation    Float // GB allocated
   region           String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
   status           String // "RUNNING", "STOPPED", "STARTING"
-  runnerType       String              @default("CLOUD") // "CLOUD" or "LOCAL"
+  runnerType       String               @default("CLOUD") // "CLOUD" or "LOCAL"
   localPath        String? // File path for local server storage
   pid              Int? // Process ID for local runner execution
   password         String? // Unhashed password for Valheim/game server configs
-  enableUpnp       Boolean             @default(false) // Trigger router port mapping
+  enableUpnp       Boolean              @default(false) // Trigger router port mapping
   ipAddress        String
   port             Int
   definitionId     String?
-  definition       GameDefinition?     @relation(fields: [definitionId], references: [id])
+  definition       GameDefinition?      @relation(fields: [definitionId], references: [id])
   paramValues      String? // JSON object of custom param values
-  healthStatus     String              @default("OK") // "OK", "DEGRADED", "FAILING"
-  cpuUsage         Float               @default(0) // Mocked live utilization percentage
-  memoryUsage      Float               @default(0) // Mocked live RAM utilization in GB
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  snapshotInterval Int                 @default(0) // 0 = disabled, 1, 6, 12, 24 hours
+  healthStatus     String               @default("OK") // "OK", "DEGRADED", "FAILING"
+  cpuUsage         Float                @default(0) // Mocked live utilization percentage
+  memoryUsage      Float                @default(0) // Mocked live RAM utilization in GB
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  snapshotInterval Int                  @default(0) // 0 = disabled, 1, 6, 12, 24 hours
   lastSnapshotAt   DateTime?
   backups          Backup[]
   collaborators    Collaborator[]
@@ -89,9 +90,10 @@ model Server {
   snapshots        ServerSnapshot[]
   automations      Automation[]
   hostLink         ServerHostLink?
-  inviteCode       String?             @unique // For RealmSync
+  inviteCode       String?              @unique // For RealmSync
   plannedSessions  PlannedSession[]
   discordRoles     DiscordRoleAccess[]
+  playerAccess     PlayerServerAccess[]
 }
 
 model DiscordRoleAccess {
@@ -318,4 +320,52 @@ model PushSubscription {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
+}
+
+model Player {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name          String
+  steamId       String?
+  xboxId        String?
+  minecraftUuid String?
+  discordId     String?
+
+  status String  @default("TRUSTED") // "TRUSTED", "VIP", "BANNED", "GUEST"
+  roles  String? // Comma-separated global roles
+
+  isGloballyBanned Boolean @default(false)
+  globalBanReason  String?
+
+  serverAccess PlayerServerAccess[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PlayerServerAccess {
+  id       String @id @default(cuid())
+  playerId String
+  serverId String
+
+  isWhitelisted Boolean @default(false)
+  isBanned      Boolean @default(false)
+  serverRole    String? // Override or specific role for this server
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, serverId])
+}
+
+model PlayerAuditLog {
+  id          String   @id @default(cuid())
+  playerId    String? // Null if the action was general, but usually targeted at a player
+  serverId    String? // Null if action was global
+  action      String // "GLOBAL_BAN", "WHITELIST_ADD", "ROLE_ASSIGNED"
+  details     String
+  performedBy String // User ID of the admin who performed it
+  createdAt   DateTime @default(now())
 }
