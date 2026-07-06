@@ -343,6 +343,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   /* Search / Browse state */
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [popularMods, setPopularMods] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [sortBy, setSortBy] = useState("relevance");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -415,8 +416,23 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     } else {
       setInstalledMods([]);
       setSearchResults([]);
+      setPopularMods([]);
       setSearchQuery("");
     }
+  }, [selectedServer]);
+
+  /** Fetch popular / trending mods on mount (for Discover tab) */
+  React.useEffect(() => {
+    if (!selectedServer || !supportsSearch) return;
+
+    setIsSearching(true);
+    fetch(`/api/servers/${selectedServer.id}/mods/search?q=&sort=rating`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.results) setPopularMods(data.results);
+      })
+      .catch((err) => console.error("Popular mods fetch failed:", err))
+      .finally(() => setIsSearching(false));
   }, [selectedServer]);
 
   /** Debounced search (Browse tab) */
@@ -1067,7 +1083,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                           loading={loading}
                           serverStatus={selectedServer.status}
                           isInstalled={isInstalled(mod.packageId)}
-                          onInstall={handleInstallMod}
+                          onInstall={handlePreInstallMod}
                           onDetail={setDetailMod}
                           animationDelay={idx * 50}
                         />
@@ -1355,7 +1371,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                                 loading={loading}
                                 serverStatus={selectedServer.status}
                                 isInstalled={isInstalled(mod.packageId)}
-                                onInstall={handleInstallMod}
+                                onInstall={handlePreInstallMod}
                                 onDetail={setDetailMod}
                                 animationDelay={idx * 30}
                               />
@@ -2071,6 +2087,7 @@ function ModCard({
                 name: mod.name,
                 modId: mod.packageId,
                 downloadUrl: mod.downloadUrl,
+                provider: mod.provider,
                 modType: game === "VALHEIM" ? "PLUGIN" : undefined,
               });
             }}

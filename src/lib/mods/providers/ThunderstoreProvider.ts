@@ -157,24 +157,31 @@ export class ThunderstoreProvider implements ModProvider {
     const visited = new Set<string>();
 
     const resolveRecursive = (currentId: string) => {
+      console.log("[Thunderstore] resolveRecursive called with:", currentId);
       if (visited.has(currentId)) return;
       visited.add(currentId);
 
       const pkg = packageMap.get(currentId);
-      if (!pkg || !pkg.versions || pkg.versions.length === 0) return;
+      if (!pkg) {
+        console.log(`[Thunderstore] packageMap.get(${currentId}) returned undefined!`);
+        return;
+      }
+      if (!pkg.versions || pkg.versions.length === 0) {
+        console.log(`[Thunderstore] pkg.versions is empty for ${currentId}!`);
+        return;
+      }
 
       const latestVersion = pkg.versions[0];
       const deps: string[] = latestVersion.dependencies || [];
+      console.log(`[Thunderstore] ${currentId} has deps:`, deps);
 
       for (const depString of deps) {
-        // e.g. "denikson-BepInExPack_Valheim-5.4.2202"
-        // The package ID is everything before the last hyphen
         const lastDash = depString.lastIndexOf("-");
         if (lastDash === -1) continue;
         const depId = depString.substring(0, lastDash);
+        console.log(`[Thunderstore] parsed depId:`, depId);
 
-        // Skip BepInEx standard dependencies that are already guaranteed or virtual
-        if (depId.startsWith("bbepis-BepInExPack")) continue;
+        if (depId.includes("BepInExPack")) continue;
 
         if (!visited.has(depId)) {
           const depPkg = packageMap.get(depId);
@@ -195,12 +202,16 @@ export class ThunderstoreProvider implements ModProvider {
               websiteUrl: `https://thunderstore.io/c/${community}/p/${depPkg.owner}/${depPkg.name}/`,
             });
             resolveRecursive(depId);
+          } else {
+            console.log(`[Thunderstore] dependency ${depId} NOT FOUND in packageMap!`);
           }
         }
       }
     };
 
+    console.log(`[Thunderstore] Starting resolution for packageId: ${packageId}, packageMap size: ${packageMap.size}`);
     resolveRecursive(packageId);
+    console.log("[Thunderstore] resolveDependenciesFull returning deps:", results.map(r => r.packageId));
     return results;
   }
 

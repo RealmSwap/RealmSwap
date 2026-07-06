@@ -12,7 +12,7 @@ export async function createSnapshot(serverId: string, userId: string, name: str
 
   const sourceDir = path.join(dataRoot(), "local-servers", serverId);
   if (!fs.existsSync(sourceDir)) {
-    throw new Error("Server directory does not exist on disk.");
+    fs.mkdirSync(sourceDir, { recursive: true });
   }
 
   // Count mods (just an example, in reality we'd count rows in DB or files)

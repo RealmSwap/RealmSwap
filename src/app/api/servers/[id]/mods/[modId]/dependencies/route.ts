@@ -46,6 +46,10 @@ export async function GET(
 
     if (provider.resolveDependenciesFull) {
       const deps = await provider.resolveDependenciesFull(modId, version, game);
+      
+      const fs = require('fs');
+      fs.appendFileSync('dependency-debug.log', `[${new Date().toISOString()}] Fetched deps for ${modId}: ${JSON.stringify(deps)}\n`);
+      
       return NextResponse.json({ dependencies: deps });
     }
 

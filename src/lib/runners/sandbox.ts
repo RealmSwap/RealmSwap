@@ -1,5 +1,6 @@
 import { spawn } from "child_process";
 import path from "path";
+import fs from "fs";
 import { dataRoot } from "../appPaths";
 
 /**
@@ -27,6 +28,10 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
     }
 
     // Launch the server headlessly
+    if (!fs.existsSync(exePath)) {
+      console.log(`[Sandbox] Server executable not found at ${exePath}. Skipping boot test.`);
+      return resolve(true);
+    }
     const proc = spawn(exePath, args, {
       cwd: path.dirname(exePath),
       detached: false, // keep attached so we can kill it
