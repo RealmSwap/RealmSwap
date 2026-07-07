@@ -83,7 +83,12 @@
   "build": {
     "appId": "com.realmswap.app",
     "productName": "RealmSwap",
-    "artifactName": "RealmSwap-Setup.exe",
+    "win": {
+      "target": ["nsis"]
+    },
+    "nsis": {
+      "artifactName": "RealmSwap-Setup.exe"
+    },
     "publish": {
       "provider": "github"
     }
