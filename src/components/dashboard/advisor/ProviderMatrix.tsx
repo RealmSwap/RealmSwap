@@ -18,10 +18,10 @@ export function ProviderMatrix({ recommendations, onSelect, selectedProviderId }
         <div 
           key={rec.providerId}
           onClick={() => onSelect(rec.providerId, rec.plan?.id)}
-          className={`relative p-4 rounded-xl border transition-all cursor-pointer \${
+          className={`relative p-4 rounded-xl border-2 transition-all cursor-pointer ${
             selectedProviderId === rec.providerId 
-              ? "bg-accentPurple/20 border-accentPurple shadow-[0_0_15px_rgba(167,139,250,0.3)]"
-              : "bg-slate-900 border-white/10 hover:border-accentPurple/50 hover:bg-slate-800"
+              ? "bg-accentPurple/20 border-accentPurple shadow-[0_0_20px_rgba(167,139,250,0.3)]"
+              : "bg-slate-900 border-white/5 hover:border-accentPurple/50 hover:bg-slate-800"
           }`}
         >
           {i === 0 && (
@@ -34,6 +34,11 @@ export function ProviderMatrix({ recommendations, onSelect, selectedProviderId }
             <div>
               <h4 className="text-lg font-bold text-white flex items-center gap-2">
                 {rec.name}
+                {selectedProviderId === rec.providerId && (
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-accentPurple text-white">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                  </span>
+                )}
               </h4>
               <p className="text-xs text-slate-400 mt-1">{rec.reasoning}</p>
             </div>
