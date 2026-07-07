@@ -13,7 +13,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/components/ModalProvider";
 import { useToast } from "@/components/ToastProvider";
-import HostTransferModal from "@/components/HostTransferModal";
 import { CloudAdvisorModal } from "@/components/dashboard/advisor/CloudAdvisorModal";
 import {
   Server as ServerIcon,
@@ -167,7 +166,6 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Import Map Modal State
-  const [hostModalServer, setHostModalServer] = useState<any>(null);
   const [advisorServer, setAdvisorServer] = useState<any>(null);
   const [importMapServer, setImportMapServer] = useState<any>(null);
   const [importWorldPath, setImportWorldPath] = useState("");
@@ -702,7 +700,6 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                       handlePowerAction,
                       handleArchiveServer,
                       handleOpenServerFolder,
-                      setHostModalServer,
                       setAdvisorServer,
                       setImportMapServer,
                       setImportWorldPath,
@@ -746,15 +743,6 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
           
         </main>
       </div>
-
-      {/* Host Transfer Modal */}
-      {hostModalServer && (
-        <HostTransferModal
-          onClose={() => setHostModalServer(null)}
-          serverId={hostModalServer.id}
-          serverName={hostModalServer.name}
-        />
-      )}
 
       {advisorServer && (
           <CloudAdvisorModal

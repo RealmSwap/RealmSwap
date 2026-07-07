@@ -273,19 +273,11 @@ export function ServerHeroCard({
               </button>
               
               <button 
-                onClick={(e) => { e.stopPropagation(); actions.setHostModalServer(server); }}
-                className="text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors disabled:opacity-50"
-                title="Transfer to Host"
-              >
-                <UploadCloud className="w-3 h-3" /> Transfer
-              </button>
-              
-              <button 
                 onClick={(e) => { e.stopPropagation(); actions.setAdvisorServer(server); }}
                 className="text-[10px] uppercase font-bold text-accentPurple hover:text-purple-300 flex items-center gap-1 transition-colors disabled:opacity-50"
-                title="Cloud Advisor"
+                title="Cloud Hosting"
               >
-                <Sparkles className="w-3 h-3" /> Advisor
+                <Sparkles className="w-3 h-3" /> Cloud
               </button>
             </>
           )}
