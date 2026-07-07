@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST() {
-  const response = NextResponse.json({ success: true });
-  
-  response.cookies.set("gv_session", "", {
-    maxAge: -1,
-    path: "/",
-  });
-
-  return response;
+  const supabase = createClient();
+  // Clears the Supabase auth cookies via the ssr client.
+  await supabase.auth.signOut();
+  return NextResponse.json({ success: true });
 }
