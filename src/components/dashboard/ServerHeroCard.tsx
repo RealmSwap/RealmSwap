@@ -243,7 +243,7 @@ export function ServerHeroCard({
           <Terminal className="w-4 h-4" />
         </Link>
         <button
-          onClick={() => actions.setHostModalServer({ id: server.id, name: server.name })}
+          onClick={(e) => { e.preventDefault(); actions.setAdvisorServer(server); }}
           disabled={isServerLoading || server.status === "STARTING"}
           className="p-2 rounded-xl bg-slate-800 border border-white/5 hover:border-sky-500/40 text-slate-400 hover:text-sky-400 transition-colors disabled:opacity-30"
           title="Push to Cloud"
