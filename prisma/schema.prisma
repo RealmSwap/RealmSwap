@@ -71,6 +71,8 @@ model Server {
   localPath        String? // File path for local server storage
   pid              Int? // Process ID for local runner execution
   password         String? // Unhashed password for Valheim/game server configs
+  rconPort         Int?    // RCON Port
+  rconPassword     String? // RCON Password
   sftpPassword     String? // Unique generated password for SFTP access
   sftpPort         Int?    // Assigned SFTP port (typically 2022+id)
   tunnelEnabled    Boolean             @default(false)

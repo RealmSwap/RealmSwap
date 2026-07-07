@@ -4,7 +4,7 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
-import { dataRoot } from "@/lib/storageLocations";
+import { dataRoot } from "@/lib/appPaths";
 
 export async function POST(
   req: NextRequest,

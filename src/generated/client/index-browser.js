@@ -163,6 +163,8 @@ exports.Prisma.ServerScalarFieldEnum = {
   localPath: 'localPath',
   pid: 'pid',
   password: 'password',
+  rconPort: 'rconPort',
+  rconPassword: 'rconPassword',
   sftpPassword: 'sftpPassword',
   sftpPort: 'sftpPort',
   tunnelEnabled: 'tunnelEnabled',

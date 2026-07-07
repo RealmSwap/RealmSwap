@@ -6330,6 +6330,7 @@ export namespace Prisma {
   export type ServerAvgAggregateOutputType = {
     ramAllocation: number | null
     pid: number | null
+    rconPort: number | null
     sftpPort: number | null
     port: number | null
     cpuUsage: number | null
@@ -6340,6 +6341,7 @@ export namespace Prisma {
   export type ServerSumAggregateOutputType = {
     ramAllocation: number | null
     pid: number | null
+    rconPort: number | null
     sftpPort: number | null
     port: number | null
     cpuUsage: number | null
@@ -6359,6 +6361,8 @@ export namespace Prisma {
     localPath: string | null
     pid: number | null
     password: string | null
+    rconPort: number | null
+    rconPassword: string | null
     sftpPassword: string | null
     sftpPort: number | null
     tunnelEnabled: boolean | null
@@ -6391,6 +6395,8 @@ export namespace Prisma {
     localPath: string | null
     pid: number | null
     password: string | null
+    rconPort: number | null
+    rconPassword: string | null
     sftpPassword: string | null
     sftpPort: number | null
     tunnelEnabled: boolean | null
@@ -6423,6 +6429,8 @@ export namespace Prisma {
     localPath: number
     pid: number
     password: number
+    rconPort: number
+    rconPassword: number
     sftpPassword: number
     sftpPort: number
     tunnelEnabled: number
@@ -6448,6 +6456,7 @@ export namespace Prisma {
   export type ServerAvgAggregateInputType = {
     ramAllocation?: true
     pid?: true
+    rconPort?: true
     sftpPort?: true
     port?: true
     cpuUsage?: true
@@ -6458,6 +6467,7 @@ export namespace Prisma {
   export type ServerSumAggregateInputType = {
     ramAllocation?: true
     pid?: true
+    rconPort?: true
     sftpPort?: true
     port?: true
     cpuUsage?: true
@@ -6477,6 +6487,8 @@ export namespace Prisma {
     localPath?: true
     pid?: true
     password?: true
+    rconPort?: true
+    rconPassword?: true
     sftpPassword?: true
     sftpPort?: true
     tunnelEnabled?: true
@@ -6509,6 +6521,8 @@ export namespace Prisma {
     localPath?: true
     pid?: true
     password?: true
+    rconPort?: true
+    rconPassword?: true
     sftpPassword?: true
     sftpPort?: true
     tunnelEnabled?: true
@@ -6541,6 +6555,8 @@ export namespace Prisma {
     localPath?: true
     pid?: true
     password?: true
+    rconPort?: true
+    rconPassword?: true
     sftpPassword?: true
     sftpPort?: true
     tunnelEnabled?: true
@@ -6660,6 +6676,8 @@ export namespace Prisma {
     localPath: string | null
     pid: number | null
     password: string | null
+    rconPort: number | null
+    rconPassword: string | null
     sftpPassword: string | null
     sftpPort: number | null
     tunnelEnabled: boolean
@@ -6711,6 +6729,8 @@ export namespace Prisma {
     localPath?: boolean
     pid?: boolean
     password?: boolean
+    rconPort?: boolean
+    rconPassword?: boolean
     sftpPassword?: boolean
     sftpPort?: boolean
     tunnelEnabled?: boolean
@@ -6756,6 +6776,8 @@ export namespace Prisma {
     localPath?: boolean
     pid?: boolean
     password?: boolean
+    rconPort?: boolean
+    rconPassword?: boolean
     sftpPassword?: boolean
     sftpPort?: boolean
     tunnelEnabled?: boolean
@@ -6790,6 +6812,8 @@ export namespace Prisma {
     localPath?: boolean
     pid?: boolean
     password?: boolean
+    rconPort?: boolean
+    rconPassword?: boolean
     sftpPassword?: boolean
     sftpPort?: boolean
     tunnelEnabled?: boolean
@@ -6858,6 +6882,8 @@ export namespace Prisma {
       localPath: string | null
       pid: number | null
       password: string | null
+      rconPort: number | null
+      rconPassword: string | null
       sftpPassword: string | null
       sftpPort: number | null
       tunnelEnabled: boolean
@@ -7292,6 +7318,8 @@ export namespace Prisma {
     readonly localPath: FieldRef<"Server", 'String'>
     readonly pid: FieldRef<"Server", 'Int'>
     readonly password: FieldRef<"Server", 'String'>
+    readonly rconPort: FieldRef<"Server", 'Int'>
+    readonly rconPassword: FieldRef<"Server", 'String'>
     readonly sftpPassword: FieldRef<"Server", 'String'>
     readonly sftpPort: FieldRef<"Server", 'Int'>
     readonly tunnelEnabled: FieldRef<"Server", 'Boolean'>
@@ -28592,6 +28620,8 @@ export namespace Prisma {
     localPath: 'localPath',
     pid: 'pid',
     password: 'password',
+    rconPort: 'rconPort',
+    rconPassword: 'rconPassword',
     sftpPassword: 'sftpPassword',
     sftpPort: 'sftpPort',
     tunnelEnabled: 'tunnelEnabled',
@@ -29208,6 +29238,8 @@ export namespace Prisma {
     localPath?: StringNullableFilter<"Server"> | string | null
     pid?: IntNullableFilter<"Server"> | number | null
     password?: StringNullableFilter<"Server"> | string | null
+    rconPort?: IntNullableFilter<"Server"> | number | null
+    rconPassword?: StringNullableFilter<"Server"> | string | null
     sftpPassword?: StringNullableFilter<"Server"> | string | null
     sftpPort?: IntNullableFilter<"Server"> | number | null
     tunnelEnabled?: BoolFilter<"Server"> | boolean
@@ -29252,6 +29284,8 @@ export namespace Prisma {
     localPath?: SortOrderInput | SortOrder
     pid?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
+    rconPort?: SortOrderInput | SortOrder
+    rconPassword?: SortOrderInput | SortOrder
     sftpPassword?: SortOrderInput | SortOrder
     sftpPort?: SortOrderInput | SortOrder
     tunnelEnabled?: SortOrder
@@ -29300,6 +29334,8 @@ export namespace Prisma {
     localPath?: StringNullableFilter<"Server"> | string | null
     pid?: IntNullableFilter<"Server"> | number | null
     password?: StringNullableFilter<"Server"> | string | null
+    rconPort?: IntNullableFilter<"Server"> | number | null
+    rconPassword?: StringNullableFilter<"Server"> | string | null
     sftpPassword?: StringNullableFilter<"Server"> | string | null
     sftpPort?: IntNullableFilter<"Server"> | number | null
     tunnelEnabled?: BoolFilter<"Server"> | boolean
@@ -29343,6 +29379,8 @@ export namespace Prisma {
     localPath?: SortOrderInput | SortOrder
     pid?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
+    rconPort?: SortOrderInput | SortOrder
+    rconPassword?: SortOrderInput | SortOrder
     sftpPassword?: SortOrderInput | SortOrder
     sftpPort?: SortOrderInput | SortOrder
     tunnelEnabled?: SortOrder
@@ -29383,6 +29421,8 @@ export namespace Prisma {
     localPath?: StringNullableWithAggregatesFilter<"Server"> | string | null
     pid?: IntNullableWithAggregatesFilter<"Server"> | number | null
     password?: StringNullableWithAggregatesFilter<"Server"> | string | null
+    rconPort?: IntNullableWithAggregatesFilter<"Server"> | number | null
+    rconPassword?: StringNullableWithAggregatesFilter<"Server"> | string | null
     sftpPassword?: StringNullableWithAggregatesFilter<"Server"> | string | null
     sftpPort?: IntNullableWithAggregatesFilter<"Server"> | number | null
     tunnelEnabled?: BoolWithAggregatesFilter<"Server"> | boolean
@@ -31171,6 +31211,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -31214,6 +31256,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -31255,6 +31299,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -31298,6 +31344,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -31340,6 +31388,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -31371,6 +31421,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -31402,6 +31454,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -33481,6 +33535,8 @@ export namespace Prisma {
     localPath?: SortOrder
     pid?: SortOrder
     password?: SortOrder
+    rconPort?: SortOrder
+    rconPassword?: SortOrder
     sftpPassword?: SortOrder
     sftpPort?: SortOrder
     tunnelEnabled?: SortOrder
@@ -33504,6 +33560,7 @@ export namespace Prisma {
   export type ServerAvgOrderByAggregateInput = {
     ramAllocation?: SortOrder
     pid?: SortOrder
+    rconPort?: SortOrder
     sftpPort?: SortOrder
     port?: SortOrder
     cpuUsage?: SortOrder
@@ -33523,6 +33580,8 @@ export namespace Prisma {
     localPath?: SortOrder
     pid?: SortOrder
     password?: SortOrder
+    rconPort?: SortOrder
+    rconPassword?: SortOrder
     sftpPassword?: SortOrder
     sftpPort?: SortOrder
     tunnelEnabled?: SortOrder
@@ -33555,6 +33614,8 @@ export namespace Prisma {
     localPath?: SortOrder
     pid?: SortOrder
     password?: SortOrder
+    rconPort?: SortOrder
+    rconPassword?: SortOrder
     sftpPassword?: SortOrder
     sftpPort?: SortOrder
     tunnelEnabled?: SortOrder
@@ -33578,6 +33639,7 @@ export namespace Prisma {
   export type ServerSumOrderByAggregateInput = {
     ramAllocation?: SortOrder
     pid?: SortOrder
+    rconPort?: SortOrder
     sftpPort?: SortOrder
     port?: SortOrder
     cpuUsage?: SortOrder
@@ -36195,6 +36257,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -36236,6 +36300,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -36533,6 +36599,8 @@ export namespace Prisma {
     localPath?: StringNullableFilter<"Server"> | string | null
     pid?: IntNullableFilter<"Server"> | number | null
     password?: StringNullableFilter<"Server"> | string | null
+    rconPort?: IntNullableFilter<"Server"> | number | null
+    rconPassword?: StringNullableFilter<"Server"> | string | null
     sftpPassword?: StringNullableFilter<"Server"> | string | null
     sftpPort?: IntNullableFilter<"Server"> | number | null
     tunnelEnabled?: BoolFilter<"Server"> | boolean
@@ -37614,6 +37682,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -37656,6 +37726,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -37712,6 +37784,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -37754,6 +37828,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -37794,6 +37870,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -37836,6 +37914,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -37892,6 +37972,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -37934,6 +38016,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -37974,6 +38058,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -38016,6 +38102,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -38072,6 +38160,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -38114,6 +38204,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -38362,6 +38454,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -38404,6 +38498,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -38460,6 +38556,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -38502,6 +38600,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -38542,6 +38642,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -38584,6 +38686,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -38689,6 +38793,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -38731,6 +38837,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -38875,6 +38983,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -38917,6 +39027,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -39037,6 +39149,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -39079,6 +39193,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -39135,6 +39251,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -39177,6 +39295,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -39217,6 +39337,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -39259,6 +39381,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -39315,6 +39439,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -39357,6 +39483,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -39397,6 +39525,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -39439,6 +39569,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -39495,6 +39627,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -39537,6 +39671,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -39577,6 +39713,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -39619,6 +39757,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -39746,6 +39886,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -39788,6 +39930,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -40647,6 +40791,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -40689,6 +40835,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -40788,6 +40936,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -40830,6 +40980,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -40886,6 +41038,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -41020,6 +41174,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -41061,6 +41217,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -41102,6 +41260,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -41633,6 +41793,8 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
     sftpPassword?: string | null
     sftpPort?: number | null
     tunnelEnabled?: boolean
@@ -41663,6 +41825,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -41705,6 +41869,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
@@ -41746,6 +41912,8 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
