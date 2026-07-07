@@ -17,8 +17,14 @@ import {
   Coins, 
   Terminal, 
   Check,
-  HardDrive
+  HardDrive,
+  Heart,
+  Download,
+  Store,
+  Loader2
 } from "lucide-react";
+
+import type { FeaturedRealm } from "@/lib/backend/realms";
 
 // The desktop installer is published as a version-less asset on GitHub Releases
 // so this "latest" URL is always valid.
@@ -87,6 +93,27 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [activeStatus]);
 
+  // Featured Realms — live from the shared Supabase backend via /api/realms/featured
+  const [realms, setRealms] = useState<FeaturedRealm[]>([]);
+  const [realmsLoading, setRealmsLoading] = useState(true);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/realms/featured")
+      .then((res) => (res.ok ? res.json() : { realms: [] }))
+      .then((data) => {
+        if (active) setRealms(Array.isArray(data.realms) ? data.realms : []);
+      })
+      .catch(() => {
+        if (active) setRealms([]);
+      })
+      .finally(() => {
+        if (active) setRealmsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // FAQ accordion state
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const toggleFaq = (index: number) => {
@@ -105,6 +132,7 @@ export default function LandingPage() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-mutedText">
             <a href="#features" className="hover:text-white transition-colors">Features</a>
             <a href="#demo" className="hover:text-white transition-colors">The Vault Demo</a>
+            <a href="#realms" className="hover:text-white transition-colors">Marketplace</a>
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </nav>
 
@@ -326,6 +354,85 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Featured Realms — live from the shared Supabase marketplace backend */}
+      <section id="realms" className="py-20 px-6 max-w-7xl mx-auto border-t border-borderDark">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accentPurple/10 border border-accentPurple/20 text-xs font-semibold text-accentPurple mb-4">
+            <Store className="w-3.5 h-3.5" />
+            <span>Community Marketplace</span>
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-extrabold mb-4">Featured Realms</h2>
+          <p className="text-mutedText max-w-2xl mx-auto">
+            Ready-made server worlds shared by the community. Browse, download, and swap them into your local machine.
+          </p>
+        </div>
+
+        {realmsLoading ? (
+          <div className="flex items-center justify-center py-16 text-mutedText">
+            <Loader2 className="w-6 h-6 animate-spin mr-3" /> Loading realms&hellip;
+          </div>
+        ) : realms.length === 0 ? (
+          <div className="glass-panel max-w-xl mx-auto text-center rounded-2xl border border-white/5 p-10">
+            <Store className="w-8 h-8 text-accentPurple mx-auto mb-4" />
+            <h3 className="font-bold text-lg mb-2">Marketplace launching soon</h3>
+            <p className="text-mutedText text-sm">
+              The community realm marketplace is warming up. Published realms will show up here automatically.
+            </p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {realms.map((realm) => (
+              <div
+                key={realm.id}
+                className="glass-panel p-6 rounded-2xl border border-white/5 hover:border-accentPurple/25 transition-all duration-300 flex flex-col"
+              >
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h3 className="font-bold text-lg text-white">{realm.name}</h3>
+                  {realm.gameSlug && (
+                    <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded bg-accentPurple/10 text-accentPurple border border-accentPurple/20 whitespace-nowrap">
+                      {realm.gameSlug}
+                    </span>
+                  )}
+                </div>
+                {realm.description && (
+                  <p className="text-mutedText text-sm mb-4 line-clamp-3 flex-1">{realm.description}</p>
+                )}
+                {realm.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {realm.tags.slice(0, 4).map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-300 border border-white/5"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center justify-between mt-auto border-t border-white/5 pt-4 text-xs text-mutedText">
+                  <div className="flex items-center gap-4">
+                    <span className="flex items-center gap-1">
+                      <Heart className="w-3.5 h-3.5" /> {realm.likeCount}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Download className="w-3.5 h-3.5" /> {realm.downloadCount}
+                    </span>
+                  </div>
+                  <span className="font-mono font-bold text-slate-200">
+                    {realm.priceCents === 0
+                      ? "Free"
+                      : (realm.priceCents / 100).toLocaleString("en-US", {
+                          style: "currency",
+                          currency: (realm.currency || "usd").toUpperCase(),
+                        })}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* FAQ Section */}

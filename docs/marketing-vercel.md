@@ -79,12 +79,14 @@ Build Step** command so pushes that don't touch `site/` skip a build
 
 ## Environment variables
 
-**None are required for the current baseline** — it builds and runs with none set (the
-health route just reports `backendConfigured: false`). These are the vars the server
-surface will need once it talks to the **shared Supabase backend** (owned by the
-`realmswap-supabase` effort, branch `feat/supabase-shared-services`). Set them in Vercel
-→ Project → Settings → Environment Variables. Never commit real values; `.env.example`
-holds placeholders only.
+The build needs none of these. The **Featured Realms** feature (below) needs the two
+**public** vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) to populate —
+without them the showcase simply renders its empty state and `/api/health` reports
+`backendConfigured: false`. The **server-only** vars are for future privileged writes and
+point at the same **shared Supabase backend** (owned by the `realmswap-supabase` effort,
+branch `feat/supabase-shared-services`). Set them in Vercel → Project → Settings →
+Environment Variables. Never commit real values; `.env.example` holds placeholders only, and
+local dev reads a gitignored `.env.local`.
 
 | Variable | Scope | In browser? | Purpose |
 | --- | --- | --- | --- |
@@ -110,13 +112,39 @@ When the shared backend is ready: install its client, replace the `getSupabaseSe
 stub body with a real `createClient(...)`, fill in the action's persistence, and wire the
 relevant form(s) to the server action.
 
+## First interactive feature: Featured Realms (live from Supabase)
+
+Branch `feat/marketing-featured-realms` (off merged `main`) wires the marketing server
+surface to the **shared Supabase backend** for the first real feature — a read-only
+"Featured Realms" showcase. Because `site/` is its own Next package, it uses its **own** thin
+Supabase client pointed at the same project; it does not import the Electron app's
+`src/lib/supabase` code, and it adds **no** tables or RLS (those are owned by
+`realmswap-supabase`).
+
+- `site/package.json` — adds `@supabase/supabase-js@^2.110.1`.
+- `site/lib/backend/supabase.ts` — real `getPublicSupabaseClient()` (anon, RLS-gated, no
+  session); `isBackendConfigured()` now reflects the public anon env. The service-role seam
+  stays a no-op stub for future writes.
+- `site/lib/backend/realms.ts` — `getFeaturedRealms()` reads public `realms`
+  (`visibility='PUBLIC'`, ordered by `like_count`), maps snake_case → typed `FeaturedRealm`,
+  returns `[]` on any error (never breaks the page).
+- `site/app/api/realms/featured/route.ts` — `GET /api/realms/featured` → `{ realms }`
+  (dynamic, edge-cached 60s). The concrete server→Supabase endpoint.
+- `site/app/page.tsx` — a "Featured Realms" section (+ nav link) fetches that endpoint and
+  renders cards, with a graceful "Marketplace launching soon" empty state.
+
+Verified: `next build` green; `GET /api/realms/featured` → `{"realms":[]}` (HTTP 200) against
+the live project — anon RLS read of `realms` works; the table is currently empty, so the
+empty state shows until realms are published. `/api/health` → `backendConfigured:true`.
+
 ## Go-live checklist (human-run — not done here)
 
 1. **Import project**: Vercel dashboard → Add New → Project → import `RealmSwap/RealmSwap`.
 2. **Set Root Directory = `site`**; confirm Framework = Next.js.
 3. **Set Node.js Version = 22.x** in Project Settings.
-4. **Env vars**: none needed for first deploy. Add the Supabase vars above when the shared
-   backend lands.
+4. **Env vars**: the build needs none, but set `NEXT_PUBLIC_SUPABASE_URL` +
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` so **Featured Realms** populates (without them it renders
+   the empty state). Add the server-only vars later for privileged writes.
 5. **First deploy** → get the `*.vercel.app` URL. Smoke test: `/` loads; `/api/health`
    returns `{"ok":true,...}`; the logo renders.
 6. **Custom domain**: Project → Settings → Domains → add the chosen domain (e.g.

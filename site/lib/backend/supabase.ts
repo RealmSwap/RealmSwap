@@ -1,38 +1,51 @@
-// Shared Supabase backend — SEAM ONLY (no-op baseline).
-//
-// The real client, schema, and typed helpers are owned by a separate effort:
-// agent `realmswap-supabase`, branch `feat/supabase-shared-services`. This module
-// intentionally does NOT install or import `@supabase/supabase-js` yet — it only
-// documents the contract the marketing site's server surface will consume, so the
-// rest of the app can import a stable name today without a hard dependency.
-//
-// When the shared services package lands, replace the body of
-// `getSupabaseServerClient()` with a real `createClient(...)` call and swap the
-// `SupabaseServerClient` alias for the real client type.
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-/** Placeholder for the real Supabase client type from the shared package. */
-export type SupabaseServerClient = unknown;
+// Marketing-site Supabase access.
+//
+// The marketing site reads PUBLIC data from the shared Supabase project via the
+// anon/publishable key — RLS is the access boundary. The shared backend (schema,
+// RLS policies, auth, and any privileged writes) is owned by a separate effort:
+// agent `realmswap-supabase`, branch `feat/supabase-shared-services`. This app
+// only reads public rows from the same project; it does not own the schema.
+
+/** True when the public (anon) Supabase env is present. */
+export function isBackendConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  );
+}
+
+let cachedPublicClient: SupabaseClient | null = null;
 
 /**
- * Returns a server-side Supabase client, or `null` when the backend is not yet
- * configured. Server-only: relies on `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`,
- * which are never exposed to the browser. Today this is always a no-op stub.
+ * Anon Supabase client for PUBLIC reads, or `null` when the env is not
+ * configured. The anon/publishable key is safe to expose; RLS restricts what it
+ * can read. Cached per server instance. No auth session is used.
  */
+export function getPublicSupabaseClient(): SupabaseClient | null {
+  if (!isBackendConfigured()) return null;
+  if (!cachedPublicClient) {
+    cachedPublicClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { persistSession: false, autoRefreshToken: false } },
+    );
+  }
+  return cachedPublicClient;
+}
+
+// --- Server-only (service-role) seam — still a no-op stub. -------------------
+// For FUTURE privileged writes (e.g. lead capture). Relies on server-only
+// SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY, never exposed to the browser. The
+// real implementation is owned by the realmswap-supabase effort.
+
+/** Placeholder for the real service-role client type from the shared package. */
+export type SupabaseServerClient = unknown;
+
 export function getSupabaseServerClient(): SupabaseServerClient | null {
   const url = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !serviceRoleKey) {
-    return null;
-  }
-
-  // TODO(realmswap-supabase): once `feat/supabase-shared-services` is available,
-  // return createClient(url, serviceRoleKey, { auth: { persistSession: false } }).
-  // Kept as a stub so the site builds without the shared dependency.
+  if (!url || !serviceRoleKey) return null;
+  // TODO(realmswap-supabase): return a real service-role client here.
   return null;
-}
-
-/** True when the shared-backend env vars are present. Cheap liveness signal. */
-export function isBackendConfigured(): boolean {
-  return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
