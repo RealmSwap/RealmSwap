@@ -271,14 +271,6 @@ export function ServerHeroCard({
               >
                 <FolderOpen className="w-3 h-3" /> Files
               </button>
-              
-              <button 
-                onClick={(e) => { e.stopPropagation(); actions.setAdvisorServer(server); }}
-                className="text-[10px] uppercase font-bold text-accentPurple hover:text-purple-300 flex items-center gap-1 transition-colors disabled:opacity-50"
-                title="Cloud Hosting"
-              >
-                <Sparkles className="w-3 h-3" /> Cloud
-              </button>
             </>
           )}
         </div>
