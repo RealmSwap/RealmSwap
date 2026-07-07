@@ -65,7 +65,16 @@ jobs:
         working-directory: 'C:\rsbuild'
         env:
           DATABASE_URL: file:./dev.db
-        run: npm run electron:build
+          DEBUG: electron-builder
+        run: |
+          npm run electron:build > build.log 2>&1 || (cat build.log && exit 1)
+
+      - name: Upload build logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: C:\rsbuild\build.log
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3

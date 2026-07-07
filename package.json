@@ -79,20 +79,5 @@
   },
   "prisma": {
     "seed": "node prisma/seed.js"
-  },
-  "build": {
-    "appId": "com.realmswap.app",
-    "productName": "RealmSwap",
-    "win": {
-      "target": [
-        "nsis"
-      ]
-    },
-    "nsis": {
-      "artifactName": "RealmSwap-Setup.exe"
-    },
-    "publish": {
-      "provider": "github"
-    }
   }
 }
