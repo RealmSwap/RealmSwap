@@ -1,0 +1,299 @@
+// Prisma schema for the RealmSwap CLOUD datasource (Supabase Postgres).
+//
+// This is SEPARATE from the app's local SQLite schema (../schema.prisma). It
+// mirrors the shared-services tables defined authoritatively by the Supabase SQL
+// migrations in ../../supabase/migrations. Use it for TYPED tooling only
+// (admin scripts, tests, codegen) — it generates a distinct client at
+// ../../src/generated/cloud-client.
+//
+// IMPORTANT: do NOT ship this client (or SUPABASE_DB_URL / the service_role key)
+// inside the Electron desktop app. The app reaches the cloud via
+// @supabase/supabase-js using the anon key + the user's JWT, with RLS enforcing
+// access. A direct Postgres connection bypasses RLS and must stay server-side.
+//
+// After the live project exists, run:
+//   prisma db pull  --schema prisma/cloud/schema.prisma   # sync from SQL migrations
+//   prisma generate --schema prisma/cloud/schema.prisma
+// db pull will also author the auth.users relation and any columns added later.
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("SUPABASE_DB_URL") // pooled (pgBouncer) connection — runtime
+  directUrl = env("SUPABASE_DB_DIRECT_URL") // direct connection — migrate / introspect
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../src/generated/cloud-client"
+}
+
+/// 1:1 with Supabase auth.users (managed by Supabase Auth; not modelled here).
+model Profile {
+  id          String   @id @db.Uuid
+  displayName String?  @map("display_name")
+  discordId   String?  @unique @map("discord_id")
+  role        String   @default("USER")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  customer       Customer?
+  subscriptions  Subscription[]
+  realmsSold     Realm[]            @relation("RealmSeller")
+  itemsSold      Item[]             @relation("ItemSeller")
+  realmOwnership RealmOwnership[]
+  itemOwnership  ItemOwnership[]
+  realmPurchases RealmTransaction[] @relation("RealmBuyer")
+  realmSales     RealmTransaction[] @relation("RealmTxSeller")
+  itemPurchases  ItemTransaction[]  @relation("ItemBuyer")
+  itemSales      ItemTransaction[]  @relation("ItemTxSeller")
+  realmVotes     RealmVote[]
+  itemVotes      ItemVote[]
+
+  @@map("profiles")
+}
+
+model Customer {
+  id               String   @id @db.Uuid
+  stripeCustomerId String?  @unique @map("stripe_customer_id")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  profile Profile @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@map("customers")
+}
+
+model Product {
+  id          String   @id
+  active      Boolean  @default(true)
+  name        String?
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  prices Price[]
+
+  @@map("products")
+}
+
+model Price {
+  id            String   @id
+  productId     String?  @map("product_id")
+  active        Boolean  @default(true)
+  currency      String   @default("usd")
+  unitAmount    Int?     @map("unit_amount")
+  interval      String?
+  intervalCount Int?     @default(1) @map("interval_count")
+  plan          String?
+  activeSlots   Int?     @map("active_slots")
+  metadata      Json?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  product       Product?       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  subscriptions Subscription[]
+
+  @@map("prices")
+}
+
+model Subscription {
+  id                 String    @id
+  userId             String    @map("user_id") @db.Uuid
+  status             String
+  priceId            String?   @map("price_id")
+  plan               String?
+  activeSlots        Int       @default(1) @map("active_slots")
+  quantity           Int       @default(1)
+  cancelAtPeriodEnd  Boolean   @default(false) @map("cancel_at_period_end")
+  currentPeriodStart DateTime? @map("current_period_start") @db.Timestamptz
+  currentPeriodEnd   DateTime? @map("current_period_end") @db.Timestamptz
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @default(now()) @map("updated_at") @db.Timestamptz
+
+  user  Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  price Price?  @relation(fields: [priceId], references: [id])
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+model StripeEvent {
+  id          String   @id
+  type        String?
+  processedAt DateTime @default(now()) @map("processed_at") @db.Timestamptz
+  payload     Json?
+
+  @@map("stripe_events")
+}
+
+model Realm {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sellerId      String?  @map("seller_id") @db.Uuid
+  slug          String?
+  name          String
+  description   String?
+  gameSlug      String?  @map("game_slug")
+  tags          String[] @default([])
+  payload       Json
+  customDefSpec Json?    @map("custom_def_spec")
+  priceCents    Int      @default(0) @map("price_cents")
+  currency      String   @default("usd")
+  visibility    String   @default("PUBLIC")
+  status        String   @default("DRAFT")
+  verifiedLevel String   @default("UNVERIFIED") @map("verified_level")
+  downloadCount Int      @default(0) @map("download_count")
+  likeCount     Int      @default(0) @map("like_count")
+  dislikeCount  Int      @default(0) @map("dislike_count")
+  version       String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  seller       Profile?           @relation("RealmSeller", fields: [sellerId], references: [id])
+  ownership    RealmOwnership[]
+  transactions RealmTransaction[]
+  votes        RealmVote[]
+
+  @@index([status, visibility])
+  @@index([gameSlug])
+  @@index([sellerId])
+  @@map("realms")
+}
+
+model Item {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sellerId      String?  @map("seller_id") @db.Uuid
+  slug          String?
+  name          String
+  description   String?
+  gameSlug      String?  @map("game_slug")
+  itemType      String   @default("OTHER") @map("item_type")
+  tags          String[] @default([])
+  payload       Json
+  priceCents    Int      @default(0) @map("price_cents")
+  currency      String   @default("usd")
+  visibility    String   @default("PUBLIC")
+  status        String   @default("DRAFT")
+  verifiedLevel String   @default("UNVERIFIED") @map("verified_level")
+  downloadCount Int      @default(0) @map("download_count")
+  likeCount     Int      @default(0) @map("like_count")
+  dislikeCount  Int      @default(0) @map("dislike_count")
+  version       String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  seller       Profile?          @relation("ItemSeller", fields: [sellerId], references: [id])
+  ownership    ItemOwnership[]
+  transactions ItemTransaction[]
+  votes        ItemVote[]
+
+  @@index([status, visibility])
+  @@index([gameSlug])
+  @@index([sellerId])
+  @@index([itemType])
+  @@map("items")
+}
+
+model RealmOwnership {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  realmId       String   @map("realm_id") @db.Uuid
+  ownerId       String   @map("owner_id") @db.Uuid
+  acquiredVia   String   @default("FREE") @map("acquired_via")
+  transactionId String?  @map("transaction_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  realm Realm   @relation(fields: [realmId], references: [id], onDelete: Cascade)
+  owner Profile @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([realmId, ownerId])
+  @@index([ownerId])
+  @@map("realm_ownership")
+}
+
+model ItemOwnership {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  itemId        String   @map("item_id") @db.Uuid
+  ownerId       String   @map("owner_id") @db.Uuid
+  acquiredVia   String   @default("FREE") @map("acquired_via")
+  transactionId String?  @map("transaction_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  item  Item    @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  owner Profile @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, ownerId])
+  @@index([ownerId])
+  @@map("item_ownership")
+}
+
+model RealmTransaction {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  realmId               String   @map("realm_id") @db.Uuid
+  buyerId               String   @map("buyer_id") @db.Uuid
+  sellerId              String?  @map("seller_id") @db.Uuid
+  amountCents           Int      @default(0) @map("amount_cents")
+  currency              String   @default("usd")
+  type                  String   @default("FREE_ACQUISITION")
+  status                String   @default("COMPLETED")
+  stripePaymentIntentId String?  @map("stripe_payment_intent_id")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  realm  Realm    @relation(fields: [realmId], references: [id], onDelete: Cascade)
+  buyer  Profile  @relation("RealmBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller Profile? @relation("RealmTxSeller", fields: [sellerId], references: [id])
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@map("realm_transactions")
+}
+
+model ItemTransaction {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  itemId                String   @map("item_id") @db.Uuid
+  buyerId               String   @map("buyer_id") @db.Uuid
+  sellerId              String?  @map("seller_id") @db.Uuid
+  amountCents           Int      @default(0) @map("amount_cents")
+  currency              String   @default("usd")
+  type                  String   @default("FREE_ACQUISITION")
+  status                String   @default("COMPLETED")
+  stripePaymentIntentId String?  @map("stripe_payment_intent_id")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  item   Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  buyer  Profile  @relation("ItemBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller Profile? @relation("ItemTxSeller", fields: [sellerId], references: [id])
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@map("item_transactions")
+}
+
+model RealmVote {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  realmId   String   @map("realm_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  value     Int      @db.SmallInt
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  realm Realm   @relation(fields: [realmId], references: [id], onDelete: Cascade)
+  user  Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([realmId, userId])
+  @@map("realm_votes")
+}
+
+model ItemVote {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  itemId    String   @map("item_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  value     Int      @db.SmallInt
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  item Item    @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, userId])
+  @@map("item_votes")
+}
