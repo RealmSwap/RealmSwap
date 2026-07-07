@@ -1,0 +1,7 @@
+ALTER TABLE "Server" ADD COLUMN "rconPort" INTEGER;
+ALTER TABLE "Server" ADD COLUMN "rconPassword" TEXT;
+ALTER TABLE "Server" ADD COLUMN "sftpPassword" TEXT;
+ALTER TABLE "Server" ADD COLUMN "sftpPort" INTEGER;
+ALTER TABLE "Server" ADD COLUMN "tunnelEnabled" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Server" ADD COLUMN "tunnelUrl" TEXT;
+ALTER TABLE "Server" ADD COLUMN "autoUpdate" BOOLEAN NOT NULL DEFAULT false;
