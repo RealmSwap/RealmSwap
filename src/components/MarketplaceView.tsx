@@ -4,6 +4,7 @@ import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ToastProvider";
 import {
   Download,
   Search,
@@ -19,8 +20,6 @@ import {
   Plus,
   Terminal,
   Clock,
-  Users,
-  History,
   LogOut,
   ShieldAlert,
   ShieldCheck,
@@ -35,7 +34,8 @@ import {
   Tag,
   Layers,
   Check,
-  Loader2
+  Loader2,
+  Package
 } from "lucide-react";
 
 /* ─── Types ────────────────────────────────────────────────────── */
@@ -179,9 +179,9 @@ function timeAgo(dateStr: string): string {
 
 export default function MarketplaceView({ user }: MarketplaceViewProps) {
   const router = useRouter();
-
-  /* Tabs */
-  const [activeTab, setActiveTab] = useState<TabId>("discover");
+  const { addToast } = useToast();
+  
+  const [activeTab, setActiveTab] = useState<"discover" | "browse">("discover");
 
   /* Discover State */
   const [staffPicks, setStaffPicks] = useState<MarketplaceTemplate[]>([]);
@@ -368,12 +368,12 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
         router.push(`/dashboard/config?server=${data.serverId}`);
       } else {
         const err = await res.json();
-        alert("Failed to deploy template: " + (err.error || "Unknown error"));
+        addToast("error", "Failed to deploy template: " + (err.error || "Unknown error"));
         setDeploying(false);
       }
     } catch (e) {
       console.error(e);
-      alert("Error deploying template");
+      addToast("error", "Error deploying template");
       setDeploying(false);
     }
   };
@@ -1069,14 +1069,3 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
   );
 }
 
-// Ensure missing Package icon is imported or fallback
-function Package(props: any) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
-      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-      <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-      <line x1="12" y1="22.08" x2="12" y2="12"></line>
-    </svg>
-  );
-}

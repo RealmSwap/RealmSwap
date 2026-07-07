@@ -44,7 +44,7 @@ export function ProviderMatrix({ recommendations, onSelect, selectedProviderId }
             </div>
             {rec.plan && (
               <div className="text-right">
-                <div className="text-xl font-black text-emerald-400">$\{(rec.plan.monthlyCost).toFixed(2)}<span className="text-[10px] font-medium text-emerald-400/50">/mo</span></div>
+                <div className="text-xl font-black text-emerald-400">${(rec.plan.monthlyCost).toFixed(2)}<span className="text-[10px] font-medium text-emerald-400/50">/mo</span></div>
                 <div className="text-[10px] text-slate-400 font-medium">Estimated Cost</div>
               </div>
             )}

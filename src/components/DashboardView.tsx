@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 import { SidebarNavigation } from "./dashboard/SidebarNavigation";
 import { ServerHeroCard } from "./dashboard/ServerHeroCard";
 import { HealthSidebar } from "./dashboard/HealthSidebar";
@@ -23,29 +21,15 @@ import {
   RefreshCw,
   Play,
   Square,
-  Trash2,
   Plus,
   Copy,
   Check,
-  Clock,
-  LogOut,
-  BadgeCent,
-  LayoutDashboard,
-  MapPin,
-  AlertCircle,
-  Terminal,
   X,
-  Download,
-  Pause,
-  Search,
-  Send,
   Activity,
-  Store,
   Package,
   FolderOpen,
   UploadCloud
 } from "lucide-react";
-import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 
 interface DashboardViewProps {
   initialData: {
@@ -61,98 +45,7 @@ interface DashboardViewProps {
   };
 }
 
-function ServerPlayerCount({ server }: { server: any }) {
-  const [queryData, setQueryData] = useState<{ status: string; players?: number; maxplayers?: number; playerList?: any[]; error?: string } | null>(null);
 
-  useEffect(() => {
-    if (server.status !== "RUNNING") {
-      setQueryData(null);
-      return;
-    }
-
-    let isMounted = true;
-    const fetchQuery = async () => {
-      try {
-        const res = await fetch(`/api/servers/${server.id}/query`);
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted) setQueryData(data);
-        }
-      } catch (e) {
-        // silently fail
-      }
-    };
-
-    fetchQuery();
-    const interval = setInterval(fetchQuery, 30000); // 30s poll
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [server.id, server.status]);
-
-  if (!queryData) {
-    return (
-      <div className="flex items-center gap-2">
-        {server.status === "RUNNING" && !server.healthStatus && (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
-            <span className="text-xs font-semibold text-emerald-300">ONLINE</span>
-          </div>
-        )}
-        {server.status === "RUNNING" && server.healthStatus === "DEGRADED" && (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30" title="Monitoring Degraded">
-            <Activity className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-xs font-semibold text-amber-300">DEGRADED</span>
-          </div>
-        )}
-        {server.status === "RUNNING" && server.healthStatus === "FAILING" && (
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30" title="Server Failing">
-            <AlertCircle className="w-3.5 h-3.5 text-red-400" />
-            <span className="text-xs font-semibold text-red-300">FAILING</span>
-          </div>
-        )}
-      </div>
-    );
-  }
-  
-  if (queryData.status === "online" && typeof queryData.players === "number") {
-    return (
-      <div className="relative group inline-block">
-        <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 cursor-help">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          {queryData.players} / {queryData.maxplayers} Players
-        </span>
-        {queryData.playerList && queryData.playerList.length > 0 && (
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-slate-800 border border-slate-700 rounded shadow-xl p-2 z-50 hidden group-hover:block pointer-events-none">
-            <div className="text-[10px] uppercase text-slate-400 font-bold mb-1 border-b border-slate-700 pb-1">Online Players</div>
-            <ul className="text-xs text-slate-200 max-h-32 overflow-y-auto space-y-0.5">
-              {queryData.playerList.map((p: any, i: number) => (
-                <li key={i} className="truncate">{p.name || "Unknown"}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    );
-  }
-  
-  return null;
-}
-
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
-};
 
 export default function DashboardView({ initialData }: DashboardViewProps) {
   const router = useRouter();
@@ -313,27 +206,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   }, [data.servers]);
 
   // Update game server handler
-  const handleUpdateServer = async (serverId: string) => {
-    setActionLoading(`${serverId}-update`);
-    setErrorMessage(null);
-    try {
-      const res = await fetch(`/api/servers/${serverId}/update`, { method: "POST" });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Failed to start update");
-      const stateRes = await fetch("/api/servers");
-      if (stateRes.ok) { const fresh = await stateRes.json(); setData(fresh); }
-    } catch (err: any) {
-      setErrorMessage(err.message);
-    } finally {
-      setActionLoading(null);
-    }
-  };
 
-  const handleCopyIp = (ip: string) => {
-    navigator.clipboard.writeText(ip);
-    setCopiedIp(ip);
-    setTimeout(() => setCopiedIp(null), 2000);
-  };
 
   const handleOpenServerFolder = async (serverId: string) => {
     try {
@@ -349,15 +222,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-      router.refresh();
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
+
 
   // Power action: START, STOP, RESTART
   const handlePowerAction = async (serverId: string, action: "start" | "stop" | "restart") => {
@@ -529,64 +394,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
     }
   };
 
-  const handleRevokeInvite = async (serverId: string) => {
-    setActionLoading(`${serverId}-invite-revoke`);
-    setErrorMessage(null);
-    try {
-      const res = await fetch(`/api/servers/${serverId}/invite`, { method: "DELETE" });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to revoke invite code");
-      }
-      
-      setData((prev: any) => ({
-        ...prev,
-        servers: prev.servers.map((s: any) => 
-          s.id === serverId ? { ...s, inviteCode: null } : s
-        )
-      }));
-      addToast("success", "Invite link revoked.");
-    } catch (err: any) {
-      setErrorMessage(err.message);
-      addToast("error", err.message);
-    } finally {
-      setActionLoading(null);
-    }
-  };
 
-  // Helper for game icons
-  const getGameIcon = (game: string) => {
-    switch(game) {
-      case "MINECRAFT": return "⛏️";
-      case "VALHEIM": return "⛵";
-      case "ENSHROUDED": return "🔥";
-      case "ZOMBOID": return "🧟";
-      case "ARK": return "🦖";
-      case "TERRARIA": return "🌳";
-      case "PALWORLD": return "🦊";
-      case "RUST": return "⚙️";
-      case "SATISFACTORY": return "🏭";
-      case "VRISING": return "🦇";
-      case "WINDROSE": return "⚔️";
-      default: return "🎮";
-    }
-  };
-
-  // SVG Sparkline component
-  const Sparkline = ({ data: points, color, height = 24, width = 100 }: { data: number[]; color: string; height?: number; width?: number }) => {
-    if (!points || points.length < 2) return <div style={{ width, height }} className="bg-white/5 rounded" />;
-    const max = Math.max(...points, 1);
-    const pathPoints = points.map((v, i) => {
-      const x = (i / (points.length - 1)) * width;
-      const y = height - (v / max) * (height - 4) - 2;
-      return `${x},${y}`;
-    }).join(" ");
-    return (
-      <svg width={width} height={height} className="inline-block">
-        <polyline points={pathPoints} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-      </svg>
-    );
-  };
 
   // Aggregate Vault metrics
   const totalVaultSize = data.archives.reduce((acc, cur) => acc + cur.saveSizeGB, 0).toFixed(2);
