@@ -19,7 +19,7 @@ RealmSwap currently supports single-click deployment for the following dedicated
 
 ## Key Features
 - **One-Click Deployments**: Instantly spin up dedicated servers. The app automatically downloads and configures SteamCMD (and direct JAR downloads for Minecraft) behind the scenes.
-- **Cloud Advisor Engine & 1-Click Migration**: Don't know which cloud host to pick? The Cloud Advisor analyzes your server footprint (game type, mod count, RAM requirements) and recommends the best providers (like Hetzner, DigitalOcean, Akliz, and BisectHosting). Once selected, use the built-in SFTP Migration tool to seamlessly push your local save data to the cloud without ever leaving RealmSwap!
+- **Cloud Advisor Engine & Migration Guides**: Don't know which cloud host to pick? The Cloud Advisor analyzes your server footprint (game type, mod count, RAM requirements) and recommends the best providers (like Hetzner, DigitalOcean, Akliz, and BisectHosting). Once selected, it provides custom connection instructions and a built-in SFTP client to seamlessly push your local save data to the cloud without ever leaving RealmSwap!
 - **Discord Bot Integration**: Manage your server remotely! Start, stop, and monitor your server directly from your Discord community using the built-in RealmSwap bot.
 - **Community Marketplace**: Discover, share, and install custom community-made game configurations, modpacks, and server templates with a single click.
 - **Auto-Port Forwarding (UPnP)**: Automatically maps and unmaps router ports using UPnP, allowing friends to join using your public IP without logging into your router.
