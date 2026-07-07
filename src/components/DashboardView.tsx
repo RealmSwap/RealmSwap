@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/components/ModalProvider";
 import { useToast } from "@/components/ToastProvider";
-import HostTransferModal from "@/components/HostTransferModal";
+import { CloudAdvisorModal } from "@/components/dashboard/advisor/CloudAdvisorModal";
 import {
   Server as ServerIcon,
   Archive,
@@ -166,7 +166,8 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Import Map Modal State
-  const [importMapServer, setImportMapServer] = useState<any | null>(null);
+  const [advisorServer, setAdvisorServer] = useState<any>(null);
+  const [importMapServer, setImportMapServer] = useState<any>(null);
   const [importWorldPath, setImportWorldPath] = useState("");
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
@@ -189,9 +190,6 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   const [progressMap, setProgressMap] = useState<
     Record<string, { phase: string; percent: number | null; label: string } | null>
   >({});
-
-  // Server selected for the "Transfer to hosting provider" modal
-  const [hostModalServer, setHostModalServer] = useState<{ id: string; name: string } | null>(null);
 
   // Poll database for updates (live stats fluctuation)
   useEffect(() => {
@@ -702,7 +700,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                       handlePowerAction,
                       handleArchiveServer,
                       handleOpenServerFolder,
-                      setHostModalServer,
+                      setAdvisorServer,
                       setImportMapServer,
                       setImportWorldPath,
                       setImportError,
@@ -746,13 +744,19 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
         </main>
       </div>
 
-      {/* Host Transfer Modal */}
-      {hostModalServer && (
-        <HostTransferModal
-          onClose={() => setHostModalServer(null)}
-          serverId={hostModalServer.id}
-          serverName={hostModalServer.name}
-        />
+      {advisorServer && (
+          <CloudAdvisorModal
+            onClose={() => setAdvisorServer(null)}
+            serverId={advisorServer.id}
+            serverName={advisorServer.name}
+            onMigrateSuccess={() => {
+              setAdvisorServer(null);
+              // Optimistically refresh the state
+              fetch("/api/servers", { cache: "no-store" })
+                .then(r => r.ok && r.json())
+                .then(fresh => fresh && setData(fresh));
+            }}
+          />
       )}
 
       {/* Import Map Dialog Overlay */}
