@@ -50,7 +50,7 @@ export function ProviderMatrix({ recommendations, onSelect, selectedProviderId }
               <div className="text-[10px] uppercase text-slate-500 font-bold mb-1">Performance</div>
               <div className="flex text-amber-400">
                 {[...Array(5)].map((_, idx) => (
-                  <Star key={idx} className={`w-3.5 h-3.5 \${idx < rec.rating.performance ? 'fill-amber-400' : 'text-slate-700'}`} />
+                  <Star key={idx} className={`w-3.5 h-3.5 ${idx < rec.rating.performance ? 'text-amber-400' : 'text-slate-700'}`} fill={idx < rec.rating.performance ? "currentColor" : "none"} />
                 ))}
               </div>
             </div>
@@ -58,7 +58,7 @@ export function ProviderMatrix({ recommendations, onSelect, selectedProviderId }
               <div className="text-[10px] uppercase text-slate-500 font-bold mb-1">Ease of Setup</div>
               <div className="flex text-amber-400">
                 {[...Array(5)].map((_, idx) => (
-                  <Star key={idx} className={`w-3.5 h-3.5 \${idx < rec.rating.easeOfMigration ? 'fill-amber-400' : 'text-slate-700'}`} />
+                  <Star key={idx} className={`w-3.5 h-3.5 ${idx < rec.rating.easeOfMigration ? 'text-amber-400' : 'text-slate-700'}`} fill={idx < rec.rating.easeOfMigration ? "currentColor" : "none"} />
                 ))}
               </div>
             </div>

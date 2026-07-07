@@ -9,8 +9,8 @@ export class AklizProvider implements HostingProvider {
 
   async getPlans(): Promise<CloudProviderPlan[]> {
     return [
-      { id: "standard", name: "Standard Plan", monthlyCost: 10, cpuCores: "Shared", ramGB: 4, storageGB: 50, storageType: "SSD" },
-      { id: "premium", name: "Premium Plan", monthlyCost: 20, cpuCores: "Shared", ramGB: 8, storageGB: 100, storageType: "SSD" },
+      { id: "basic", name: "Basic Plan", monthlyCost: 20, cpuCores: "Shared", ramGB: 4, storageGB: 50, storageType: "SSD" },
+      { id: "premium", name: "Premium Plan", monthlyCost: 40, cpuCores: "Shared", ramGB: 8, storageGB: 100, storageType: "SSD" },
     ];
   }
 
