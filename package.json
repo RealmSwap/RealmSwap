@@ -18,8 +18,12 @@
     "bot": "tsx src/bot/index.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1080.0",
     "@prisma/client": "^5.15.0",
+    "@types/ssh2": "^1.15.5",
+    "adm-zip": "^0.5.18",
     "bcryptjs": "^2.4.3",
+    "check-disk-space": "^3.4.0",
     "chrono-node": "^2.9.1",
     "clsx": "^2.1.1",
     "cron-parser": "^5.6.1",
@@ -33,22 +37,29 @@
     "nat-api": "^0.3.1",
     "next": "^14.2.4",
     "nodemailer": "^9.0.3",
+    "pidtree": "^1.0.0",
+    "pidusage": "^4.0.1",
+    "rcon-client": "^4.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.12.7",
     "sonner": "^2.0.7",
+    "ssh2": "^1.17.0",
     "ssh2-sftp-client": "^11.0.0",
     "tailwind-merge": "^2.3.0",
     "tar": "^7.5.17",
     "tsx": "^4.22.4",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/bcryptjs": "^2.4.6",
     "@types/gamedig": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.2",
     "@types/nodemailer": "^8.0.1",
+    "@types/pidusage": "^2.0.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/ssh2-sftp-client": "^9.0.6",
@@ -68,5 +79,12 @@
   },
   "prisma": {
     "seed": "node prisma/seed.js"
+  },
+  "build": {
+    "appId": "com.realmswap.app",
+    "productName": "RealmSwap",
+    "publish": {
+      "provider": "github"
+    }
   }
 }

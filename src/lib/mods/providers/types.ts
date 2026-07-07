@@ -29,24 +29,7 @@ export interface ModProvider {
   search(query: string, game: string, options?: SearchOptions): Promise<ModSearchResult[]>;
   
   /**
-   * Given a package ID and version, return a list of required package IDs.
-   * @deprecated Use resolveDependenciesFull for detailed dependencies.
-   */
-  resolveDependencies(packageId: string, version: string): Promise<string[]>;
-  
-  /**
    * Given a package ID, return a fully recursive list of dependencies with full details.
    */
   resolveDependenciesFull?(packageId: string, version: string, game: string): Promise<ModSearchResult[]>;
-  
-  /**
-   * Download and extract/install the mod into the specified destination path.
-   */
-  downloadAndInstall(packageId: string, version: string, destPath: string): Promise<void>;
-  
-  /**
-   * Check a list of installed package IDs for newer versions.
-   * Returns a map of packageId -> latestVersion.
-   */
-  checkForUpdates(packageIds: string[]): Promise<Record<string, string>>;
 }

@@ -35,7 +35,7 @@ export function SidebarNavigation({ user }: { user: any }) {
       links: [
         { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
         { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
-        { label: "Server Config", icon: Settings, href: "/dashboard/config" },
+        { label: "Server Settings", icon: Settings, href: "/dashboard/config" },
         { label: "Schedules", icon: Clock, href: "/dashboard/schedules" },
       ]
     },

@@ -161,19 +161,30 @@ export default function AutomationEditor({ server, automation, onSave, onClose }
             <div className="p-5 bg-slate-900/50 border border-white/5 rounded-xl space-y-4">
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase mb-1.5 block">When should this run?</label>
-                <select
-                  value={triggerType}
-                  onChange={e => setTriggerType(e.target.value as TriggerType)}
-                  className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-accentPurple outline-none"
-                >
-                  <option value="CRON">Cron Expression</option>
-                  <option value="DAILY">Daily</option>
-                  <option value="WEEKLY">Weekly</option>
-                  <option value="MONTHLY">Monthly</option>
-                  <option value="ONE_TIME">One-Time</option>
-                  <option value="SERVER_CRASH">Server Crash</option>
-                  <option value="PLAYER_JOINED">Player Joined</option>
-                </select>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { id: "CRON", label: "Cron", desc: "Advanced expression" },
+                    { id: "DAILY", label: "Daily", desc: "Specific time" },
+                    { id: "WEEKLY", label: "Weekly", desc: "Specific day/time" },
+                    { id: "MONTHLY", label: "Monthly", desc: "Specific date/time" },
+                    { id: "ONE_TIME", label: "One-Time", desc: "Run once" },
+                    { id: "SERVER_CRASH", label: "On Crash", desc: "When server halts" },
+                    { id: "PLAYER_JOINED", label: "On Join", desc: "When player logs in" }
+                  ].map(t => (
+                    <div 
+                      key={t.id} 
+                      onClick={() => setTriggerType(t.id as TriggerType)}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                        triggerType === t.id 
+                          ? "bg-accentPurple/20 border-accentPurple text-white" 
+                          : "bg-slate-950 border-white/5 text-slate-400 hover:border-white/20 hover:bg-white/5"
+                      }`}
+                    >
+                      <div className="font-bold text-sm mb-1">{t.label}</div>
+                      <div className="text-[10px] opacity-70">{t.desc}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {triggerType === "CRON" && (
@@ -237,9 +248,14 @@ export default function AutomationEditor({ server, automation, onSave, onClose }
           <section className="space-y-4">
             <h3 className="text-lg font-bold text-white mb-4">Workflow Actions</h3>
             
-            <div className="space-y-3">
+            <div className="relative space-y-4 pl-4">
+              {/* Timeline Line */}
+              {actions.length > 0 && (
+                <div className="absolute left-7 top-6 bottom-6 w-0.5 bg-white/10 rounded-full" />
+              )}
+              
               {actions.length === 0 ? (
-                <div className="text-center p-8 border border-dashed border-white/10 rounded-xl text-slate-500 text-sm">
+                <div className="text-center p-8 border border-dashed border-white/10 rounded-xl text-slate-500 text-sm ml-4">
                   No actions defined. Add one below.
                 </div>
               ) : (
@@ -252,29 +268,31 @@ export default function AutomationEditor({ server, automation, onSave, onClose }
                       onDragStart={(e) => onDragStart(e, idx)}
                       onDragOver={(e) => onDragOver(e, idx)}
                       onDragEnd={() => setDraggedIdx(null)}
-                      className={`flex flex-col bg-slate-900 border ${draggedIdx === idx ? 'border-accentPurple opacity-50' : 'border-white/10'} rounded-xl transition-all cursor-move`}
+                      className={`relative flex flex-col bg-slate-900 border ${draggedIdx === idx ? 'border-accentPurple opacity-50' : 'border-white/10'} rounded-xl transition-all cursor-move shadow-lg`}
                     >
                       <div className="flex items-center p-4">
-                        <GripVertical className="w-5 h-5 text-slate-500 mr-3" />
-                        <div className="flex-1 font-bold text-white flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-accentPurple/20 text-accentPurple flex items-center justify-center text-xs">{idx + 1}</div>
-                          {def?.name || action.type}
+                        <GripVertical className="w-5 h-5 text-slate-500 mr-3 opacity-50 hover:opacity-100 transition-opacity" />
+                        <div className="flex-1 font-bold text-white flex items-center gap-3">
+                          <div className="w-7 h-7 rounded-full bg-accentPurple text-white flex items-center justify-center text-xs shadow-md z-10 border-2 border-slate-900">
+                            {idx + 1}
+                          </div>
+                          <span className="tracking-wide">{def?.name || action.type}</span>
                         </div>
-                        <button onClick={() => removeAction(idx)} className="p-2 text-slate-500 hover:text-red-400 transition-colors">
+                        <button onClick={() => removeAction(idx)} className="p-2 text-slate-500 hover:text-red-400 transition-colors hover:bg-white/5 rounded-lg">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
 
                       {def?.fields && def.fields.length > 0 && (
-                        <div className="px-12 pb-4 pt-0 space-y-3">
+                        <div className="px-14 pb-5 pt-0 space-y-4">
                           {def.fields.map(f => (
                             <div key={f.name}>
-                              <label className="text-xs font-bold text-slate-400 block mb-1">{f.label}</label>
+                              <label className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1.5">{f.label}</label>
                               <input 
                                 type={f.type}
                                 value={action.config[f.name] || ""}
                                 onChange={e => updateActionConfig(idx, f.name, e.target.value)}
-                                className="w-full bg-slate-950 border border-white/5 rounded-lg px-3 py-2 text-sm text-white focus:border-accentPurple outline-none"
+                                className="w-full bg-slate-950 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white focus:border-accentPurple outline-none transition-colors"
                               />
                             </div>
                           ))}

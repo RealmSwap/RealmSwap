@@ -7,7 +7,7 @@
 import fs from "fs";
 import path from "path";
 import https from "https";
-import { exec } from "child_process";
+import AdmZip from "adm-zip";
 import { computePercent } from "@/lib/downloadProgress";
 
 /** Adoptium Temurin "latest GA JRE" binary endpoint for a Windows x64 major version.
@@ -130,15 +130,13 @@ async function defaultProvision(major: number, cacheDir: string, opts: EnsureJav
   }
 }
 
-function extractZip(zip: string, destDir: string): Promise<void> {
-  // PowerShell single-quoted strings escape a quote by doubling it.
-  const psQuote = (p: string) => p.replace(/'/g, "''");
-  return new Promise((resolve, reject) => {
-    const cmd = `powershell -NoProfile -Command "Expand-Archive -Path '${psQuote(zip)}' -DestinationPath '${psQuote(destDir)}' -Force"`;
-    exec(cmd, (err) =>
-      err ? reject(new Error(`Failed to extract Java archive: ${err.message}`)) : resolve()
-    );
-  });
+async function extractZip(zipPath: string, destDir: string): Promise<void> {
+  try {
+    const zip = new AdmZip(zipPath);
+    zip.extractAllTo(destDir, true);
+  } catch (err: any) {
+    throw new Error(`Failed to extract Java archive: ${err.message}`);
+  }
 }
 
 /** https.get that follows 3xx redirects (the Adoptium endpoint redirects to a GitHub asset). */

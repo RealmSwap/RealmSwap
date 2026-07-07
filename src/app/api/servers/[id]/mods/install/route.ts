@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
+import { safeJoin } from "@/lib/safePath";
 import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
 import { testServerBoot } from "@/lib/runners/sandbox";
 import fs from "fs";
 import path from "path";
 import https from "https";
-import { exec } from "child_process";
+import AdmZip from "adm-zip";
 
 // Download utility
 function downloadFile(url: string, dest: string): Promise<void> {
@@ -54,12 +56,26 @@ export async function POST(
     }
 
     const serverId = params.id;
-    const { modType, modId, modName, downloadUrl, workshopId } = await req.json();
+    const modInstallSchema = z.object({
+      modType: z.enum(["STEAM_WORKSHOP", "MODRINTH", "BEPINEX", "THUNDERSTORE"]),
+      modId: z.string().optional(),
+      modName: z.string().optional(),
+      downloadUrl: z.string().url("Invalid download URL").optional(),
+      workshopId: z.string().optional(),
+    });
+
+    const body = await req.json();
+    const parsed = modInstallSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid mod installation parameters", details: parsed.error.format() }, { status: 400 });
+    }
+
+    const { modType, modId, modName, downloadUrl, workshopId } = parsed.data;
 
     // Find and verify server access
-    const access = await verifyServerAccess(serverId, user.id);
+    const access = await verifyServerAccess(serverId, user.id, "ADMIN");
     if (!access) {
-      return NextResponse.json({ error: "Server not found" }, { status: 404 });
+      return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
 
@@ -88,10 +104,26 @@ export async function POST(
           fs.mkdirSync(modsDir, { recursive: true });
         }
 
-        const filename = modId ? `${modId}.jar` : path.basename(downloadUrl) || "mod.jar";
-        const destPath = path.join(modsDir, filename);
+        let actualDownloadUrl = downloadUrl;
+        // Resolve Modrinth project URLs to actual file URLs
+        if (actualDownloadUrl.includes("modrinth.com/mod/")) {
+          const res = await fetch(`https://api.modrinth.com/v2/project/${modId}/version`);
+          if (res.ok) {
+            const versions = await res.json();
+            if (versions.length > 0 && versions[0].files && versions[0].files.length > 0) {
+              actualDownloadUrl = versions[0].files[0].url;
+            } else {
+              throw new Error("No file versions found for this Modrinth project.");
+            }
+          } else {
+            throw new Error(`Failed to resolve Modrinth project version: ${res.statusText}`);
+          }
+        }
 
-        await downloadFile(downloadUrl, destPath);
+        const filename = modId ? `${modId}.jar` : path.basename(actualDownloadUrl) || "mod.jar";
+        const destPath = safeJoin(modsDir, filename);
+
+        await downloadFile(actualDownloadUrl, destPath);
 
       } else if (game === "VALHEIM") {
         if (modType === "BEPINEX") {
@@ -106,18 +138,14 @@ export async function POST(
           // Download BepInEx
           await downloadFile(defaultBepInExUrl, zipPath);
 
-          // Extract using PowerShell
-          await new Promise<void>((resolve, reject) => {
-            const extractCmd = `powershell -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${valheimDir}' -Force"`;
-            exec(extractCmd, (err) => {
-              try { fs.unlinkSync(zipPath); } catch (_) {}
-              if (err) {
-                reject(new Error(`Failed to extract BepInEx: ${err.message}`));
-              } else {
-                resolve();
-              }
-            });
-          });
+          // Extract using AdmZip
+          try {
+            const zip = new AdmZip(zipPath);
+            zip.extractAllTo(valheimDir, true);
+            try { fs.unlinkSync(zipPath); } catch (_) {}
+          } catch (err: any) {
+            throw new Error(`Failed to extract BepInEx: ${err.message}`);
+          }
         } else {
           // Valheim plugin installation (.dll files inside BepInEx/plugins)
           if (!downloadUrl) {
@@ -136,14 +164,13 @@ export async function POST(
             }
             
             await downloadFile(defaultBepInExUrl, zipPath);
-            await new Promise<void>((resolve, reject) => {
-              const extractCmd = `powershell -Command "Expand-Archive -Path '${zipPath}' -DestinationPath '${valheimDir}' -Force"`;
-              exec(extractCmd, (err) => {
-                try { fs.unlinkSync(zipPath); } catch (_) {}
-                if (err) reject(new Error(`Failed to extract BepInEx: ${err.message}`));
-                else resolve();
-              });
-            });
+            try {
+              const zip = new AdmZip(zipPath);
+              zip.extractAllTo(valheimDir, true);
+              try { fs.unlinkSync(zipPath); } catch (_) {}
+            } catch (err: any) {
+              throw new Error(`Failed to extract BepInEx: ${err.message}`);
+            }
 
             // Log BepInEx core as installed so it shows in the UI
             await prisma.modInstallation.upsert({
@@ -173,22 +200,21 @@ export async function POST(
           // Note: Thunderstore download URLs are actually .zip files. If the original implementation
           // downloaded them as .dll, it's saving a zip as a dll. We'll extract it properly.
           if (downloadUrl.endsWith(".zip")) {
-            const tempZip = path.join(pluginsDir, `${modId}.zip`);
+            const tempZip = safeJoin(pluginsDir, `${modId}.zip`);
             await downloadFile(downloadUrl, tempZip);
-            await new Promise<void>((resolve, reject) => {
+            try {
               // Extract contents to a subfolder named after the mod to prevent clutter
-              const modDestDir = path.join(pluginsDir, modId || "plugin");
+              const modDestDir = safeJoin(pluginsDir, modId || "plugin");
               if (!fs.existsSync(modDestDir)) fs.mkdirSync(modDestDir, { recursive: true });
-              const extractCmd = `powershell -Command "Expand-Archive -Path '${tempZip}' -DestinationPath '${modDestDir}' -Force"`;
-              exec(extractCmd, (err) => {
-                try { fs.unlinkSync(tempZip); } catch (_) {}
-                if (err) reject(new Error(`Failed to extract plugin zip: ${err.message}`));
-                else resolve();
-              });
-            });
+              const zip = new AdmZip(tempZip);
+              zip.extractAllTo(modDestDir, true);
+              try { fs.unlinkSync(tempZip); } catch (_) {}
+            } catch (err: any) {
+              throw new Error(`Failed to extract plugin archive: ${err.message}`);
+            }
           } else {
             const filename = modId ? `${modId}.dll` : path.basename(downloadUrl) || "plugin.dll";
-            await downloadFile(downloadUrl, path.join(pluginsDir, filename));
+            await downloadFile(downloadUrl, safeJoin(pluginsDir, filename));
           }
         }
 

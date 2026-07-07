@@ -124,10 +124,6 @@ export class ThunderstoreProvider implements ModProvider {
     return results;
   }
 
-  async resolveDependencies(packageId: string, version: string): Promise<string[]> {
-    return [];
-  }
-
   async resolveDependenciesFull(packageId: string, version: string, game: string): Promise<ModSearchResult[]> {
     const community = THUNDERSTORE_COMMUNITIES[game.toUpperCase()];
     if (!community) return [];
@@ -213,24 +209,5 @@ export class ThunderstoreProvider implements ModProvider {
     resolveRecursive(packageId);
     console.log("[Thunderstore] resolveDependenciesFull returning deps:", results.map(r => r.packageId));
     return results;
-  }
-
-  async downloadAndInstall(packageId: string, version: string, destPath: string): Promise<void> {
-    // Mock installation - in reality, this would download the ZIP, extract it, and place DLLs in BepInEx/plugins
-    console.log(`[Thunderstore] Installing ${packageId}@${version} to ${destPath}`);
-    if (!fs.existsSync(destPath)) {
-      fs.mkdirSync(destPath, { recursive: true });
-    }
-    // Create a dummy DLL to simulate installation
-    fs.writeFileSync(path.join(destPath, `${packageId}.dll`), "DUMMY DLL CONTENT");
-  }
-
-  async checkForUpdates(packageIds: string[]): Promise<Record<string, string>> {
-    // Mock update check
-    const updates: Record<string, string> = {};
-    if (packageIds.includes("ValheimPlus-ValheimPlus")) {
-      updates["ValheimPlus-ValheimPlus"] = "9.11.2"; // Mock newer version
-    }
-    return updates;
   }
 }

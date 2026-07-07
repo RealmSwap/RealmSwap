@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { z } from "zod";
 
 // GET /api/servers/[id]/collaborators
 export async function GET(
@@ -56,16 +57,18 @@ export async function POST(
     }
 
     const serverId = params.id;
-    const { email, role } = await req.json();
+    const collabSchema = z.object({
+      email: z.string().email(),
+      role: z.enum(["ADMIN", "MODERATOR", "VIEWER"])
+    });
 
-    if (!email || !role) {
-      return NextResponse.json({ error: "Email and role are required" }, { status: 400 });
+    const body = await req.json();
+    const parsed = collabSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid payload", details: parsed.error.format() }, { status: 400 });
     }
 
-    const cleanRole = role.toUpperCase();
-    if (!["ADMIN", "CO_HOST"].includes(cleanRole)) {
-      return NextResponse.json({ error: "Invalid role value" }, { status: 400 });
-    }
+    const { email, role } = parsed.data;
 
     // Verify server ownership
     const server = await prisma.server.findUnique({
@@ -117,7 +120,7 @@ export async function POST(
       data: {
         serverId,
         userId: invitee.id,
-        role: cleanRole
+        role: role
       },
       include: {
         user: {
@@ -135,7 +138,7 @@ export async function POST(
       data: {
         userId: user.id,
         action: "RESTORE_SERVER",
-        details: `Invited user '${invitee.name}' (${invitee.email}) to co-manage server '${server.name}' as ${cleanRole}.`
+        details: `Invited user '${invitee.name}' (${invitee.email}) to co-manage server '${server.name}' as ${role}.`
       }
     });
 
@@ -196,6 +199,60 @@ export async function DELETE(
     return NextResponse.json({ success: true, message: "Collaborator access revoked" });
   } catch (error: any) {
     console.error("DELETE /api/servers/[id]/collaborators error:", error);
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+  }
+}
+
+// PUT /api/servers/[id]/collaborators
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const serverId = params.id;
+    const putSchema = z.object({
+      userId: z.string(),
+      role: z.enum(["ADMIN", "MODERATOR", "VIEWER"])
+    });
+
+    const body = await req.json();
+    const parsed = putSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid payload", details: parsed.error.format() }, { status: 400 });
+    }
+
+    const { userId, role } = parsed.data;
+
+    // Verify server ownership
+    const server = await prisma.server.findUnique({
+      where: { id: serverId }
+    });
+
+    if (!server || server.userId !== user.id) {
+      return NextResponse.json({ error: "Server not found or unauthorized" }, { status: 404 });
+    }
+
+    // Update collaborator
+    const updated = await prisma.collaborator.update({
+      where: {
+        serverId_userId: {
+          serverId,
+          userId
+        }
+      },
+      data: {
+        role
+      }
+    });
+
+    return NextResponse.json(updated);
+  } catch (error: any) {
+    console.error("PUT /api/servers/[id]/collaborators error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
 }

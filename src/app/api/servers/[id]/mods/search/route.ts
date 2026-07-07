@@ -4,11 +4,13 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { ThunderstoreProvider } from "@/lib/mods/providers/ThunderstoreProvider";
 import { ModrinthProvider } from "@/lib/mods/providers/ModrinthProvider";
 import { SteamWorkshopProvider } from "@/lib/mods/providers/SteamWorkshopProvider";
+import { CurseForgeProvider } from "@/lib/mods/providers/CurseForgeProvider";
 
 // Instantiate singletons for caching
 const thunderstore = new ThunderstoreProvider();
 const modrinth = new ModrinthProvider();
 const workshop = new SteamWorkshopProvider();
+const curseforge = new CurseForgeProvider();
 
 export async function GET(
   req: NextRequest,
@@ -36,7 +38,12 @@ export async function GET(
     if (ThunderstoreProvider.supportsGame(game)) {
       results = await thunderstore.search(query, game, options);
     } else if (game === "MINECRAFT") {
-      results = await modrinth.search(query, game, options);
+      // Combine Modrinth and CurseForge
+      const modrinthResults = await modrinth.search(query, game, options);
+      const curseforgeResults = await curseforge.search(query, game, options);
+      results = [...modrinthResults, ...curseforgeResults].sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+    } else if (game === "ARK") {
+      results = await curseforge.search(query, game, options);
     } else if (game === "ZOMBOID") {
       results = await workshop.search(query, game, options);
     } else {

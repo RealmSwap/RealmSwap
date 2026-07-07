@@ -163,7 +163,12 @@ exports.Prisma.ServerScalarFieldEnum = {
   localPath: 'localPath',
   pid: 'pid',
   password: 'password',
+  sftpPassword: 'sftpPassword',
+  sftpPort: 'sftpPort',
+  tunnelEnabled: 'tunnelEnabled',
+  tunnelUrl: 'tunnelUrl',
   enableUpnp: 'enableUpnp',
+  autoUpdate: 'autoUpdate',
   ipAddress: 'ipAddress',
   port: 'port',
   definitionId: 'definitionId',
@@ -289,6 +294,14 @@ exports.Prisma.ServerSnapshotScalarFieldEnum = {
   path: 'path',
   gameVersion: 'gameVersion',
   modCount: 'modCount',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ServerTelemetryScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId',
+  cpu: 'cpu',
+  ramMB: 'ramMB',
   createdAt: 'createdAt'
 };
 
@@ -424,6 +437,7 @@ exports.Prisma.ModelName = {
   GameDefinition: 'GameDefinition',
   ModInstallation: 'ModInstallation',
   ServerSnapshot: 'ServerSnapshot',
+  ServerTelemetry: 'ServerTelemetry',
   Automation: 'Automation',
   AutomationCondition: 'AutomationCondition',
   AutomationAction: 'AutomationAction',

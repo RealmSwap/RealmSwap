@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { initBackupScheduler } from "@/lib/backupScheduler";
@@ -9,6 +10,7 @@ import { isPortAvailable, getFreeDiskSpaceGB, isSteamCmdInstalled } from "@/lib/
 import { dataRoot } from "@/lib/appPaths";
 import { resolveRunnerType } from "@/lib/runners/resolveRunnerType";
 import { isDockerAvailable } from "@/lib/runners/docker/dockerCli";
+import * as crypto from "crypto";
 
 // GET /api/servers
 // Returns active servers, archived servers, subscription details, and logs
@@ -76,10 +78,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, definitionId, ramAllocation, password, enableUpnp, paramValues, runnerType: requestedRunner } = await req.json();
-    if (!name || !definitionId || !ramAllocation) {
-      return NextResponse.json({ error: "Name, definition, and RAM allocation are required" }, { status: 400 });
+    const body = await req.json();
+    
+    const serverSchema = z.object({
+      name: z.string().min(1, "Server name is required").max(100),
+      definitionId: z.string().min(1, "Game definition is required"),
+      ramAllocation: z.number().positive("RAM allocation must be positive"),
+      password: z.string().optional(),
+      enableUpnp: z.boolean().optional(),
+      paramValues: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+      runnerType: z.string().optional()
+    });
+
+    const parsed = serverSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid payload", details: parsed.error.format() }, { status: 400 });
     }
+
+    const { name, definitionId, ramAllocation, password, enableUpnp, paramValues, runnerType: requestedRunner } = parsed.data;
 
     const def = await prisma.gameDefinition.findFirst({
       where: { id: definitionId, OR: [{ ownerId: null }, { ownerId: user.id }] },
@@ -151,7 +167,7 @@ export async function POST(req: NextRequest) {
         game: def.slug,
         definitionId: def.id,
         paramValues: stringifyParamValues(paramValues ?? {}),
-        ramAllocation: parseFloat(ramAllocation),
+        ramAllocation,
         region,
         status: "STOPPED", // Server starts stopped, user can turn it on
         runnerType,
@@ -159,6 +175,8 @@ export async function POST(req: NextRequest) {
         port,
         password: password || null,
         enableUpnp: !!enableUpnp,
+        sftpPassword: crypto.randomBytes(8).toString("hex"),
+        sftpPort: 2022,
         cpuUsage: 0,
         memoryUsage: 0,
       },

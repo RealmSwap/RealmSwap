@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
+import { getRunner } from "@/lib/runners";
 
 export async function POST(
   req: NextRequest,
@@ -16,26 +17,37 @@ export async function POST(
     const serverId = params.id;
 
     // Find and verify server access
-    const access = await verifyServerAccess(serverId, user.id);
+    const access = await verifyServerAccess(serverId, user.id, "MODERATOR");
     if (!access) {
-      return NextResponse.json({ error: "Server not found" }, { status: 404 });
+      return NextResponse.json({ error: "Server not found or insufficient permissions (Requires MODERATOR)" }, { status: 403 });
     }
     const { server } = access;
 
-    // TODO: Future Docker/Kubernetes/Pterodactyl integration:
-    // Here we would call the container orchestrator to restart the container,
-    // e.g. sending a restart power signal to the container daemon.
+    // Run in background so we don't block the request if it takes time
+    (async () => {
+      try {
+        const runner = getRunner(server.runnerType);
+        await runner.stop(server);
+        
+        if (server.autoUpdate && server.game.toUpperCase() !== "MINECRAFT") {
+           await runner.update(server, null);
+        }
 
-    // Simulate restart state change
-    const cpuUsage = parseFloat((Math.random() * 20 + 8).toFixed(1)); // 8% - 28%
-    const memoryUsage = parseFloat((server.ramAllocation * (0.45 + Math.random() * 0.25)).toFixed(1));
+        await runner.start(server, null);
+
+        if (server.tunnelEnabled) {
+          const { startTunnel } = await import("@/lib/tunnels");
+          startTunnel(server.id, server.port);
+        }
+      } catch (err) {
+        console.error(`Restart failed for ${serverId}:`, err);
+      }
+    })();
 
     const updatedServer = await prisma.server.update({
       where: { id: serverId },
       data: {
-        status: "RUNNING",
-        cpuUsage,
-        memoryUsage,
+        status: server.autoUpdate && server.game.toUpperCase() !== "MINECRAFT" ? "UPDATING" : "STARTING",
       },
     });
 

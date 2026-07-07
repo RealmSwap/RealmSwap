@@ -17,9 +17,9 @@ export async function POST(
     const serverId = params.id;
 
     // Find and verify server access
-    const access = await verifyServerAccess(serverId, user.id);
+    const access = await verifyServerAccess(serverId, user.id, "MODERATOR");
     if (!access) {
-      return NextResponse.json({ error: "Server not found" }, { status: 404 });
+      return NextResponse.json({ error: "Server not found or insufficient permissions (Requires MODERATOR)" }, { status: 403 });
     }
     const { server } = access;
 
@@ -36,9 +36,12 @@ export async function POST(
         data: {
           userId: user.id,
           action: "STOP_SERVER",
-          details: `Stopped game server '${server.name}' (${server.game}) via ${server.runnerType} runner.`,
+          details: `Stopped game server '${server.name}' (${server.game}).`,
         },
       });
+
+      const { stopTunnel } = await import("@/lib/tunnels");
+      stopTunnel(server.id);
 
       return NextResponse.json(updated);
     } catch (err: any) {

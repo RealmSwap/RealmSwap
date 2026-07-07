@@ -113,17 +113,4 @@ export class SteamWorkshopProvider implements ModProvider {
     return filtered.slice(offset, offset + limit);
   }
 
-  async resolveDependencies(packageId: string, version: string): Promise<string[]> {
-    return [];
-  }
-
-  async downloadAndInstall(packageId: string, version: string, destPath: string): Promise<void> {
-    console.log(`[Workshop] Appending ${packageId} to servertest.ini in ${destPath}`);
-    // The actual downloading happens via SteamCMD on server boot for Workshop items.
-    // Here we just modify the config.
-  }
-
-  async checkForUpdates(packageIds: string[]): Promise<Record<string, string>> {
-    return {};
-  }
 }

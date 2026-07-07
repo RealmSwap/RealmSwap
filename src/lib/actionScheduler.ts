@@ -1,23 +1,64 @@
 import { prisma } from "./db";
-import { CronExpressionParser } from "cron-parser";
+import parser from "cron-parser";
 import { ActionRegistry } from "./automations/registry";
 import { AutomationContext, TriggerConfig } from "./automations/types";
 import { Automation, AutomationExecution } from "@/generated/client";
+import { startSFTPServer } from "./sftpServer";
 
 const globalForScheduler = globalThis as unknown as {
   actionSchedulerInterval: NodeJS.Timeout | undefined;
 };
 
 // Evaluate conditions
-async function evaluateConditions(automationId: string): Promise<boolean> {
+async function evaluateConditions(automationId: string, server: any): Promise<boolean> {
   const conditions = await prisma.automationCondition.findMany({ where: { automationId } });
   if (conditions.length === 0) return true;
 
-  // In a real implementation we would fetch server state (CPU, RAM, players) and evaluate.
-  // For now, we mock condition evaluation to true.
   for (const cond of conditions) {
-    console.log(`[Automation Engine] Evaluating condition: ${cond.type} ${cond.operator} ${cond.value}`);
+    let actualValue: any = null;
+    let expectedValue: any = cond.value;
+
+    if (cond.type === "SERVER_STATE") {
+      actualValue = server.status;
+    } else if (cond.type === "CPU_USAGE") {
+      actualValue = server.cpuUsage;
+      expectedValue = parseFloat(cond.value);
+    } else if (cond.type === "RAM_USAGE") {
+      actualValue = server.memoryUsage;
+      expectedValue = parseFloat(cond.value);
+    } else if (cond.type === "PLAYERS_ONLINE") {
+      // Mock players online for now as it requires heavy GameDig query, or assume 0 if offline
+      actualValue = server.status === "RUNNING" ? 1 : 0;
+      expectedValue = parseInt(cond.value, 10);
+    }
+
+    let isMet = false;
+    switch (cond.operator) {
+      case "EQUALS":
+        isMet = actualValue == expectedValue;
+        break;
+      case "NOT_EQUALS":
+        isMet = actualValue != expectedValue;
+        break;
+      case "GREATER_THAN":
+        isMet = actualValue > expectedValue;
+        break;
+      case "LESS_THAN":
+        isMet = actualValue < expectedValue;
+        break;
+      case "CONTAINS":
+        isMet = String(actualValue).includes(String(expectedValue));
+        break;
+      default:
+        isMet = false;
+    }
+
+    if (!isMet) {
+      console.log(`[Automation Engine] Condition NOT met: ${cond.type} (${actualValue}) ${cond.operator} ${expectedValue}`);
+      return false; // All conditions must be met (AND logic)
+    }
   }
+  
   return true; 
 }
 
@@ -31,7 +72,7 @@ export async function executeAutomation(automationId: string) {
   if (!automation || !automation.server) return;
 
   // Check conditions
-  const conditionsMet = await evaluateConditions(automation.id);
+  const conditionsMet = await evaluateConditions(automation.id, automation.server);
   if (!conditionsMet) {
     console.log(`[Automation Engine] Conditions not met for ${automation.name}, skipping.`);
     return;
@@ -96,10 +137,24 @@ export async function executeAutomation(automationId: string) {
     });
   }
 
-  // Update last run time
+  // Update last run time and calculate next run time
+  let newNextRunAt: Date | null = null;
+  if (automation.triggerType === "CRON" && automation.triggerConfig) {
+    try {
+      const config = JSON.parse(automation.triggerConfig);
+      if (config.expression) {
+        const interval = parser.parse(config.expression);
+        newNextRunAt = interval.next().toDate();
+      }
+    } catch(e) {}
+  }
+
   await prisma.automation.update({
     where: { id: automation.id },
-    data: { lastRunAt: new Date() }
+    data: { 
+      lastRunAt: new Date(),
+      nextRunAt: newNextRunAt 
+    }
   });
 }
 
@@ -109,53 +164,14 @@ async function checkAutomations() {
     const now = new Date();
     
     const automations = await prisma.automation.findMany({
-      where: { enabled: true },
+      where: { 
+        enabled: true,
+        nextRunAt: { lte: now } 
+      },
     });
 
     for (const automation of automations) {
-      let shouldRun = false;
-
-      // Handle CRON trigger
-      if (automation.triggerType === "CRON" && automation.triggerConfig) {
-        try {
-          const config = JSON.parse(automation.triggerConfig) as TriggerConfig;
-          if (config.cronExpression) {
-            const interval = CronExpressionParser.parse(config.cronExpression);
-            const prevDate = interval.prev().toDate(); // the last time it SHOULD have run
-
-            if (!automation.lastRunAt) {
-              if (prevDate.getTime() > new Date(automation.createdAt).getTime()) {
-                shouldRun = true;
-              }
-            } else if (automation.lastRunAt.getTime() < prevDate.getTime()) {
-              shouldRun = true;
-            }
-          }
-        } catch (e) {
-          console.error(`Invalid config for automation ${automation.id}`);
-        }
-      } else if (automation.triggerType === "DAILY" && automation.triggerConfig) {
-         try {
-           const config = JSON.parse(automation.triggerConfig) as TriggerConfig;
-           if (config.timeOfDay) {
-             const [hours, minutes] = config.timeOfDay.split(":").map(Number);
-             const runTimeToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
-             
-             if (!automation.lastRunAt) {
-               if (now.getTime() >= runTimeToday.getTime() && new Date(automation.createdAt).getTime() < runTimeToday.getTime()) {
-                 shouldRun = true;
-               }
-             } else if (now.getTime() >= runTimeToday.getTime() && automation.lastRunAt.getTime() < runTimeToday.getTime()) {
-               shouldRun = true;
-             }
-           }
-         } catch(e) {}
-      }
-      // Add other trigger types here (WEEKLY, MONTHLY, SERVER_CRASH, etc.)
-
-      if (shouldRun) {
-        executeAutomation(automation.id).catch(e => console.error("Execution error", e));
-      }
+      executeAutomation(automation.id).catch(e => console.error("Execution error", e));
     }
   } catch (err: any) {
     console.error("[Automation Engine Error] Failed checking schedules:", err.message);
@@ -170,6 +186,9 @@ export function initActionScheduler() {
 
   console.log("[Automation Engine] Initialized background scheduled tasks loop (60s check).");
   
+  // Start SFTP Server
+  startSFTPServer();
+
   // Run check immediately on start, then every 60s
   checkAutomations().catch(err => console.error("Initial automation check failed:", err));
   

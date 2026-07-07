@@ -17,9 +17,9 @@ export async function POST(
     const serverId = params.id;
 
     // Find and verify server access
-    const access = await verifyServerAccess(serverId, user.id);
+    const access = await verifyServerAccess(serverId, user.id, "MODERATOR");
     if (!access) {
-      return NextResponse.json({ error: "Server not found" }, { status: 404 });
+      return NextResponse.json({ error: "Server not found or insufficient permissions (Requires MODERATOR)" }, { status: 403 });
     }
     const { server } = access;
 
@@ -27,8 +27,24 @@ export async function POST(
     try {
       const runner = getRunner(server.runnerType);
       
-      // We pass the full server object to the runner. The definition is resolved inside startLocalServer for LOCAL,
-      // but the interface expects it. For now, we can pass null or fetch it.
+      if (server.autoUpdate && server.game.toUpperCase() !== "MINECRAFT") {
+        // Run update then start in background
+        (async () => {
+          try {
+            await runner.update(server, null);
+            await runner.start(server, null);
+            if (server.tunnelEnabled) {
+              const { startTunnel } = await import("@/lib/tunnels");
+              startTunnel(server.id, server.port);
+            }
+          } catch (err) {
+            console.error(`Auto-update/start failed for ${server.id}:`, err);
+          }
+        })();
+        
+        return NextResponse.json({ ...server, status: "UPDATING" });
+      }
+
       await runner.start(server, null);
       
       const updated = await prisma.server.findUnique({
@@ -42,6 +58,12 @@ export async function POST(
           details: `Started game server '${server.name}' (${server.game}) via ${server.runnerType} runner.`,
         },
       });
+
+      if (server.tunnelEnabled) {
+        // dynamic import or just standard import. Let's add import at the top.
+        const { startTunnel } = await import("@/lib/tunnels");
+        startTunnel(server.id, server.port);
+      }
 
       return NextResponse.json(updated);
     } catch (err: any) {

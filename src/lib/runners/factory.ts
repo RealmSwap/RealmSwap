@@ -1,8 +1,8 @@
 import { ServerRunner } from "./types";
-import { LocalWindowsRunner } from "./LocalWindowsRunner";
+import { LocalRunner } from "./LocalRunner";
 import { DockerRunner } from "./DockerRunner";
 
-const localWindowsRunner = new LocalWindowsRunner();
+const localRunner = new LocalRunner();
 const dockerRunner = new DockerRunner();
 
 export function getRunner(runnerType: string): ServerRunner {
@@ -11,5 +11,5 @@ export function getRunner(runnerType: string): ServerRunner {
   }
   
   // Default to local windows
-  return localWindowsRunner;
+  return localRunner;
 }

@@ -708,6 +708,48 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     e.target.value = "";
   };
 
+  const handleImportModpack = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (
+      !selectedServer ||
+      !e.target.files ||
+      e.target.files.length === 0
+    )
+      return;
+    const file = e.target.files[0];
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    const formData = new FormData();
+    formData.append("modpack", file);
+
+    try {
+      const res = await fetch(
+        `/api/servers/${selectedServer.id}/mods/import-modpack`,
+        { method: "POST", body: formData }
+      );
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.error || "Failed to import modpack");
+
+      setSuccess(data.message || "Modpack imported successfully!");
+      const modsRes = await fetch(
+        `/api/servers/${selectedServer.id}/mods`
+      );
+      const modsData = await modsRes.json();
+      if (modsData.mods) setInstalledMods(modsData.mods);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+
+    e.target.value = "";
+  };
+
   const handleZomboidSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customWorkshopId || !customModId) return;
@@ -1431,6 +1473,21 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                         accept=".json"
                         className="hidden"
                         onChange={handleImportCollection}
+                        disabled={
+                          loading ||
+                          selectedServer.status === "RUNNING"
+                        }
+                      />
+                    </label>
+
+                    <label className="px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 hover:bg-white/5 text-xs font-bold text-slate-300 transition-colors cursor-pointer flex items-center gap-1.5">
+                      <Package className="w-3.5 h-3.5 text-accentPurple" />
+                      <span>Import Modpack (.zip)</span>
+                      <input
+                        type="file"
+                        accept=".zip"
+                        className="hidden"
+                        onChange={handleImportModpack}
                         disabled={
                           loading ||
                           selectedServer.status === "RUNNING"

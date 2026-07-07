@@ -1,11 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Users, ShieldAlert, Plus, Edit, Trash2, Shield, Search, X } from "lucide-react";
+import { Users, ShieldAlert, Plus, Edit, Trash2, Shield, Search, X, Activity, Server as ServerIcon, Gavel, UserX } from "lucide-react";
 
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 
-export default function PlayersView({ user }: { user: any }) {
+export default function PlayersView({ user, servers = [] }: { user: any; servers?: any[] }) {
+  const [activeTab, setActiveTab] = useState<"global" | "live">("global");
+  const [selectedServer, setSelectedServer] = useState<any | null>(servers[0] || null);
+  const [livePlayers, setLivePlayers] = useState<string[]>([]);
+  const [loadingLive, setLoadingLive] = useState(false);
   const [players, setPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -22,8 +26,55 @@ export default function PlayersView({ user }: { user: any }) {
   const [banReason, setBanReason] = useState("");
 
   useEffect(() => {
-    fetchPlayers();
-  }, []);
+    if (activeTab === "global") {
+      fetchPlayers();
+    } else if (activeTab === "live" && selectedServer) {
+      fetchLivePlayers(selectedServer.id);
+    }
+  }, [activeTab, selectedServer]);
+
+  const fetchLivePlayers = async (serverId: string) => {
+    setLoadingLive(true);
+    try {
+      const res = await fetch(`/api/servers/${serverId}/rcon/players`);
+      if (res.ok) {
+        const data = await res.json();
+        setLivePlayers(data.players || []);
+      } else {
+        setLivePlayers([]);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingLive(false);
+    }
+  };
+
+  const handleLiveAction = async (action: string, playerName: string) => {
+    if (!selectedServer) return;
+    try {
+      let message = "";
+      if (action === "say") {
+        message = prompt("Enter broadcast message:") || "";
+        if (!message) return;
+      }
+
+      const res = await fetch(`/api/servers/${selectedServer.id}/rcon/execute`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, playerName, message }),
+      });
+      if (res.ok) {
+        alert(`Action '${action}' executed successfully.`);
+        fetchLivePlayers(selectedServer.id);
+      } else {
+        const err = await res.json();
+        alert(`Action failed: ${err.error}`);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchPlayers = async () => {
     try {
@@ -164,19 +215,42 @@ export default function PlayersView({ user }: { user: any }) {
           <div>
             <h1 className="text-3xl font-black text-white flex items-center gap-3">
               <Users className="w-8 h-8 text-accentPurple" />
-              Global Player Management
+              Player Management
             </h1>
-            <p className="text-slate-400 mt-2">Manage players, whitelists, and bans across all your servers from one place.</p>
+            <p className="text-slate-400 mt-2">Manage global identities or view live server rosters.</p>
           </div>
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-5 py-2.5 bg-accentPurple hover:bg-accentPurpleHover text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-accentPurple/20 transition-all"
+          {activeTab === "global" && (
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-5 py-2.5 bg-accentPurple hover:bg-accentPurpleHover text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-accentPurple/20 transition-all"
+            >
+              <Plus className="w-5 h-5" /> Add Player
+            </button>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-4 mb-6 border-b border-white/10 pb-4">
+          <button
+            onClick={() => setActiveTab("global")}
+            className={`px-4 py-2 font-bold rounded-lg transition-colors flex items-center gap-2 ${
+              activeTab === "global" ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"
+            }`}
           >
-            <Plus className="w-5 h-5" /> Add Player
+            <Users className="w-4 h-4" /> Global Database
+          </button>
+          <button
+            onClick={() => setActiveTab("live")}
+            className={`px-4 py-2 font-bold rounded-lg transition-colors flex items-center gap-2 ${
+              activeTab === "live" ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Activity className="w-4 h-4" /> Live Roster
           </button>
         </div>
 
-      <div className="flex gap-6 flex-1 min-h-0">
+      {activeTab === "global" && (
+        <div className="flex gap-6 flex-1 min-h-0">
         {/* Left Side: Player List */}
         <div className="w-1/3 flex flex-col bg-slate-900/50 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
           <div className="p-4 border-b border-white/5 bg-slate-950/50">
@@ -358,6 +432,83 @@ export default function PlayersView({ user }: { user: any }) {
           )}
         </div>
       </div>
+      )}
+
+      {activeTab === "live" && (
+        <div className="flex flex-col gap-6 flex-1 min-h-0">
+          <div className="flex items-center gap-4 bg-slate-900/50 p-4 rounded-xl border border-white/5">
+            <ServerIcon className="w-5 h-5 text-slate-400" />
+            <select
+              value={selectedServer?.id || ""}
+              onChange={(e) => {
+                const s = servers?.find(s => s.id === e.target.value);
+                if (s) setSelectedServer(s);
+              }}
+              className="bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white font-bold focus:outline-none focus:border-accentPurple"
+            >
+              {servers?.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} ({s.game})
+                </option>
+              ))}
+            </select>
+            {selectedServer && selectedServer.status !== "RUNNING" && (
+              <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full">Server is offline</span>
+            )}
+            {selectedServer && selectedServer.status === "RUNNING" && (
+              <button 
+                onClick={() => fetchLivePlayers(selectedServer.id)}
+                className="text-xs text-accentPurple hover:text-white font-bold ml-auto"
+              >
+                Refresh Roster
+              </button>
+            )}
+          </div>
+
+          <div className="flex-1 bg-slate-900/50 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden shadow-2xl p-6">
+            {loadingLive ? (
+              <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                <Activity className="w-8 h-8 animate-pulse mb-4" />
+                <p>Querying live server...</p>
+              </div>
+            ) : livePlayers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                <Users className="w-16 h-16 mb-4 opacity-20" />
+                <p className="text-sm font-bold">No players currently online or RCON not configured.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {livePlayers.map((playerName, idx) => (
+                  <div key={idx} className="bg-slate-950/40 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center font-bold text-white shadow-lg">
+                        {playerName.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="font-bold text-slate-200">{playerName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleLiveAction("kick", playerName)}
+                        title="Kick Player"
+                        className="p-2 hover:bg-amber-500/20 text-amber-500 rounded-lg transition-colors"
+                      >
+                        <UserX className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleLiveAction("ban", playerName)}
+                        title="Ban Player"
+                        className="p-2 hover:bg-red-500/20 text-red-500 rounded-lg transition-colors"
+                      >
+                        <Gavel className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       </main>
 
       {/* Add Player Modal */}

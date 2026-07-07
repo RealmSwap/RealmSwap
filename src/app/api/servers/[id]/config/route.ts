@@ -4,6 +4,8 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { parseSpec } from "@/lib/definitions/serialize";
 import { dataRoot } from "@/lib/appPaths";
+import { safeJoin } from "@/lib/safePath";
+import { z } from "zod";
 import fs from "fs";
 import path from "path";
 
@@ -30,8 +32,9 @@ async function getConfigInfo(
     ext === "ini" ? "ini" :
     ext === "cfg" ? "cfg" :
     "text";
+  const serverRoot = path.join(root, "local-servers", serverId);
   return {
-    filePath: path.join(root, "local-servers", serverId, ...rel.split("/")),
+    filePath: safeJoin(serverRoot, rel),
     filename,
     format,
     editable: true,
@@ -101,9 +104,9 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const access = await verifyServerAccess(params.id, user.id);
+    const access = await verifyServerAccess(params.id, user.id, "ADMIN");
     if (!access) {
-      return NextResponse.json({ error: "Server not found" }, { status: 404 });
+      return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
 
     const { server } = access;
@@ -120,10 +123,17 @@ export async function PUT(
       return NextResponse.json({ error: "This game does not support config editing." }, { status: 400 });
     }
 
-    const { content } = await req.json();
-    if (typeof content !== "string") {
-      return NextResponse.json({ error: "Content must be a string" }, { status: 400 });
+    const configSchema = z.object({
+      content: z.string()
+    });
+
+    const body = await req.json();
+    const parsed = configSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid content format", details: parsed.error.format() }, { status: 400 });
     }
+
+    const newContent = parsed.data.content;
 
     // Ensure parent directories exist
     const dir = path.dirname(configInfo.filePath);
@@ -131,7 +141,7 @@ export async function PUT(
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(configInfo.filePath, content, "utf-8");
+    fs.writeFileSync(configInfo.filePath, newContent, "utf-8");
 
     await prisma.activityLog.create({
       data: {

@@ -7,16 +7,26 @@ export class DiscordAnnouncementAction implements AutomationActionInterface {
 
   async execute(context: AutomationContext, config: any): Promise<void> {
     const message = config?.message || "Automated server event occurred.";
-    await context.log(`Sending Discord announcement: ${message}`);
-    // Note: Actual Discord integration will use bot/discord client
-    // For now we mock the execution
+    const webhookUrl = config?.webhookUrl;
+    
+    if (!webhookUrl) {
+      await context.log("Skipping Discord announcement: No webhookUrl configured.");
+      return;
+    }
+
+    await context.log(`Sending Discord announcement via webhook...`);
+    
     try {
-      const res = await fetch(`http://localhost:3000/api/bot/broadcast`, {
+      const res = await fetch(webhookUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ serverId: context.server.id, message })
+        body: JSON.stringify({
+          content: message,
+          username: "RealmSwap Hub",
+          avatar_url: "https://github.com/RealmSwap.png"
+        })
       });
-      if (!res.ok) throw new Error("Broadcast failed");
+      if (!res.ok) throw new Error(`Webhook failed with status: ${res.status}`);
       await context.log("Discord announcement sent successfully.");
     } catch (e: any) {
       await context.log(`Failed to send Discord announcement: ${e.message}`);

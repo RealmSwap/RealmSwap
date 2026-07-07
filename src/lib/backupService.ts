@@ -1,22 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { exec } from "child_process";
+import AdmZip from "adm-zip";
 import { prisma } from "./db";
 import { dataRoot } from "./appPaths";
 import { getSavePath as resolveSavePath } from "./backupPaths";
-
-// Helper to execute PowerShell commands
-function runPowerShell(cmd: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    exec(`powershell -Command "${cmd}"`, (err, stdout, stderr) => {
-      if (err) {
-        reject(new Error(stderr.trim() || err.message));
-      } else {
-        resolve(stdout.trim());
-      }
-    });
-  });
-}
+import { cloudSync } from "./cloudSync";
 
 // Get the local save path for each game type. Delegates to the pure resolver,
 // injecting the live filesystem roots.
@@ -85,12 +73,21 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
   const cleanZipPattern = zipPattern.replace(/\\/g, "/");
 
   try {
-    // Run PowerShell Compress-Archive
-    await runPowerShell(`Compress-Archive -Path '${cleanZipPattern}' -DestinationPath '${cleanZipPath}' -Force`);
+    const zip = new AdmZip();
+    if (server.game.toUpperCase() === "VALHEIM") {
+      const dbFile = path.join(srcDir, "Dedicated.db");
+      const fwlFile = path.join(srcDir, "Dedicated.fwl");
+      if (fs.existsSync(dbFile)) zip.addLocalFile(dbFile);
+      if (fs.existsSync(fwlFile)) zip.addLocalFile(fwlFile);
+    } else {
+      zip.addLocalFolder(srcDir);
+    }
+    
+    zip.writeZip(zipPath);
 
     // Get the size of the zipped archive
     if (!fs.existsSync(zipPath)) {
-      throw new Error("PowerShell failed to create zip archive.");
+      throw new Error("Failed to create zip archive.");
     }
     const stats = fs.statSync(zipPath);
     const fileSizeMB = parseFloat((stats.size / (1024 * 1024)).toFixed(2));
@@ -117,6 +114,11 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
         action: "RESTORE_SERVER", // Keep action name within original enum types for compatibility: RESTORE_SERVER or Stop/Start
         details: `Created local ${backupType.toLowerCase()} backup '${backupName}' for server '${server.name}' (${fileSizeMB} MB).`
       }
+    });
+
+    // Asynchronously upload to S3 if configured
+    cloudSync.uploadSnapshot(serverId, zipPath).catch(err => {
+      console.error(`Failed to upload snapshot to S3: ${err.message}`);
     });
 
     return finalBackup;
@@ -162,8 +164,9 @@ export async function restoreBackup(backupId: string): Promise<void> {
     fs.mkdirSync(destExtractDir, { recursive: true });
   }
 
-  // Expand archive using PowerShell
-  await runPowerShell(`Expand-Archive -Path '${cleanZipPath}' -DestinationPath '${cleanDestDir}' -Force`);
+  // Expand archive using AdmZip
+  const zip = new AdmZip(backup.filePath);
+  zip.extractAllTo(destExtractDir, true);
 
   // Write Activity Log
   await prisma.activityLog.create({

@@ -82,6 +82,15 @@ export function startMonitoring(server: Server): void {
           memoryUsage: memoryGB,
         },
       }).catch(() => {}); // Silently fail if server was deleted
+
+      // Log to historical telemetry table
+      await prisma.serverTelemetry.create({
+        data: {
+          serverId,
+          cpu: stats.cpuPercent,
+          ramMB: stats.memoryMB
+        }
+      }).catch(() => {});
     } catch (e: any) {
       // Handle sampling errors
       const fails = (errorCounts.get(serverId) || 0) + 1;

@@ -84,6 +84,11 @@ export type ModInstallation = $Result.DefaultSelection<Prisma.$ModInstallationPa
  */
 export type ServerSnapshot = $Result.DefaultSelection<Prisma.$ServerSnapshotPayload>
 /**
+ * Model ServerTelemetry
+ * 
+ */
+export type ServerTelemetry = $Result.DefaultSelection<Prisma.$ServerTelemetryPayload>
+/**
  * Model Automation
  * 
  */
@@ -396,6 +401,16 @@ export class PrismaClient<
     * ```
     */
   get serverSnapshot(): Prisma.ServerSnapshotDelegate<ExtArgs>;
+
+  /**
+   * `prisma.serverTelemetry`: Exposes CRUD operations for the **ServerTelemetry** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ServerTelemetries
+    * const serverTelemetries = await prisma.serverTelemetry.findMany()
+    * ```
+    */
+  get serverTelemetry(): Prisma.ServerTelemetryDelegate<ExtArgs>;
 
   /**
    * `prisma.automation`: Exposes CRUD operations for the **Automation** model.
@@ -951,6 +966,7 @@ export namespace Prisma {
     GameDefinition: 'GameDefinition',
     ModInstallation: 'ModInstallation',
     ServerSnapshot: 'ServerSnapshot',
+    ServerTelemetry: 'ServerTelemetry',
     Automation: 'Automation',
     AutomationCondition: 'AutomationCondition',
     AutomationAction: 'AutomationAction',
@@ -976,7 +992,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription" | "player" | "playerServerAccess" | "playerAuditLog"
+      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "serverTelemetry" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription" | "player" | "playerServerAccess" | "playerAuditLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1960,6 +1976,76 @@ export namespace Prisma {
           }
         }
       }
+      ServerTelemetry: {
+        payload: Prisma.$ServerTelemetryPayload<ExtArgs>
+        fields: Prisma.ServerTelemetryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ServerTelemetryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerTelemetryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ServerTelemetryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerTelemetryPayload>
+          }
+          findFirst: {
+            args: Prisma.ServerTelemetryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerTelemetryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ServerTelemetryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerTelemetryPayload>
+          }
+          findMany: {
+            args: Prisma.ServerTelemetryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerTelemetryPayload>[]
+          }
+          create: {
+            args: Prisma.ServerTelemetryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerTelemetryPayload>
+          }
+          createMany: {
+            args: Prisma.ServerTelemetryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ServerTelemetryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerTelemetryPayload>[]
+          }
+          delete: {
+            args: Prisma.ServerTelemetryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerTelemetryPayload>
+          }
+          update: {
+            args: Prisma.ServerTelemetryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerTelemetryPayload>
+          }
+          deleteMany: {
+            args: Prisma.ServerTelemetryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ServerTelemetryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.ServerTelemetryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ServerTelemetryPayload>
+          }
+          aggregate: {
+            args: Prisma.ServerTelemetryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateServerTelemetry>
+          }
+          groupBy: {
+            args: Prisma.ServerTelemetryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ServerTelemetryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ServerTelemetryCountArgs<ExtArgs>
+            result: $Utils.Optional<ServerTelemetryCountAggregateOutputType> | number
+          }
+        }
+      }
       Automation: {
         payload: Prisma.$AutomationPayload<ExtArgs>
         fields: Prisma.AutomationFieldRefs
@@ -2923,6 +3009,7 @@ export namespace Prisma {
     plannedSessions: number
     discordRoles: number
     playerAccess: number
+    telemetry: number
   }
 
   export type ServerCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2934,6 +3021,7 @@ export namespace Prisma {
     plannedSessions?: boolean | ServerCountOutputTypeCountPlannedSessionsArgs
     discordRoles?: boolean | ServerCountOutputTypeCountDiscordRolesArgs
     playerAccess?: boolean | ServerCountOutputTypeCountPlayerAccessArgs
+    telemetry?: boolean | ServerCountOutputTypeCountTelemetryArgs
   }
 
   // Custom InputTypes
@@ -3001,6 +3089,13 @@ export namespace Prisma {
    */
   export type ServerCountOutputTypeCountPlayerAccessArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PlayerServerAccessWhereInput
+  }
+
+  /**
+   * ServerCountOutputType without action
+   */
+  export type ServerCountOutputTypeCountTelemetryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ServerTelemetryWhereInput
   }
 
 
@@ -6235,6 +6330,7 @@ export namespace Prisma {
   export type ServerAvgAggregateOutputType = {
     ramAllocation: number | null
     pid: number | null
+    sftpPort: number | null
     port: number | null
     cpuUsage: number | null
     memoryUsage: number | null
@@ -6244,6 +6340,7 @@ export namespace Prisma {
   export type ServerSumAggregateOutputType = {
     ramAllocation: number | null
     pid: number | null
+    sftpPort: number | null
     port: number | null
     cpuUsage: number | null
     memoryUsage: number | null
@@ -6262,7 +6359,12 @@ export namespace Prisma {
     localPath: string | null
     pid: number | null
     password: string | null
+    sftpPassword: string | null
+    sftpPort: number | null
+    tunnelEnabled: boolean | null
+    tunnelUrl: string | null
     enableUpnp: boolean | null
+    autoUpdate: boolean | null
     ipAddress: string | null
     port: number | null
     definitionId: string | null
@@ -6289,7 +6391,12 @@ export namespace Prisma {
     localPath: string | null
     pid: number | null
     password: string | null
+    sftpPassword: string | null
+    sftpPort: number | null
+    tunnelEnabled: boolean | null
+    tunnelUrl: string | null
     enableUpnp: boolean | null
+    autoUpdate: boolean | null
     ipAddress: string | null
     port: number | null
     definitionId: string | null
@@ -6316,7 +6423,12 @@ export namespace Prisma {
     localPath: number
     pid: number
     password: number
+    sftpPassword: number
+    sftpPort: number
+    tunnelEnabled: number
+    tunnelUrl: number
     enableUpnp: number
+    autoUpdate: number
     ipAddress: number
     port: number
     definitionId: number
@@ -6336,6 +6448,7 @@ export namespace Prisma {
   export type ServerAvgAggregateInputType = {
     ramAllocation?: true
     pid?: true
+    sftpPort?: true
     port?: true
     cpuUsage?: true
     memoryUsage?: true
@@ -6345,6 +6458,7 @@ export namespace Prisma {
   export type ServerSumAggregateInputType = {
     ramAllocation?: true
     pid?: true
+    sftpPort?: true
     port?: true
     cpuUsage?: true
     memoryUsage?: true
@@ -6363,7 +6477,12 @@ export namespace Prisma {
     localPath?: true
     pid?: true
     password?: true
+    sftpPassword?: true
+    sftpPort?: true
+    tunnelEnabled?: true
+    tunnelUrl?: true
     enableUpnp?: true
+    autoUpdate?: true
     ipAddress?: true
     port?: true
     definitionId?: true
@@ -6390,7 +6509,12 @@ export namespace Prisma {
     localPath?: true
     pid?: true
     password?: true
+    sftpPassword?: true
+    sftpPort?: true
+    tunnelEnabled?: true
+    tunnelUrl?: true
     enableUpnp?: true
+    autoUpdate?: true
     ipAddress?: true
     port?: true
     definitionId?: true
@@ -6417,7 +6541,12 @@ export namespace Prisma {
     localPath?: true
     pid?: true
     password?: true
+    sftpPassword?: true
+    sftpPort?: true
+    tunnelEnabled?: true
+    tunnelUrl?: true
     enableUpnp?: true
+    autoUpdate?: true
     ipAddress?: true
     port?: true
     definitionId?: true
@@ -6531,7 +6660,12 @@ export namespace Prisma {
     localPath: string | null
     pid: number | null
     password: string | null
+    sftpPassword: string | null
+    sftpPort: number | null
+    tunnelEnabled: boolean
+    tunnelUrl: string | null
     enableUpnp: boolean
+    autoUpdate: boolean
     ipAddress: string
     port: number
     definitionId: string | null
@@ -6577,7 +6711,12 @@ export namespace Prisma {
     localPath?: boolean
     pid?: boolean
     password?: boolean
+    sftpPassword?: boolean
+    sftpPort?: boolean
+    tunnelEnabled?: boolean
+    tunnelUrl?: boolean
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress?: boolean
     port?: boolean
     definitionId?: boolean
@@ -6601,6 +6740,7 @@ export namespace Prisma {
     plannedSessions?: boolean | Server$plannedSessionsArgs<ExtArgs>
     discordRoles?: boolean | Server$discordRolesArgs<ExtArgs>
     playerAccess?: boolean | Server$playerAccessArgs<ExtArgs>
+    telemetry?: boolean | Server$telemetryArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["server"]>
 
@@ -6616,7 +6756,12 @@ export namespace Prisma {
     localPath?: boolean
     pid?: boolean
     password?: boolean
+    sftpPassword?: boolean
+    sftpPort?: boolean
+    tunnelEnabled?: boolean
+    tunnelUrl?: boolean
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress?: boolean
     port?: boolean
     definitionId?: boolean
@@ -6645,7 +6790,12 @@ export namespace Prisma {
     localPath?: boolean
     pid?: boolean
     password?: boolean
+    sftpPassword?: boolean
+    sftpPort?: boolean
+    tunnelEnabled?: boolean
+    tunnelUrl?: boolean
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress?: boolean
     port?: boolean
     definitionId?: boolean
@@ -6672,6 +6822,7 @@ export namespace Prisma {
     plannedSessions?: boolean | Server$plannedSessionsArgs<ExtArgs>
     discordRoles?: boolean | Server$discordRolesArgs<ExtArgs>
     playerAccess?: boolean | Server$playerAccessArgs<ExtArgs>
+    telemetry?: boolean | Server$telemetryArgs<ExtArgs>
     _count?: boolean | ServerCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ServerIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -6693,6 +6844,7 @@ export namespace Prisma {
       plannedSessions: Prisma.$PlannedSessionPayload<ExtArgs>[]
       discordRoles: Prisma.$DiscordRoleAccessPayload<ExtArgs>[]
       playerAccess: Prisma.$PlayerServerAccessPayload<ExtArgs>[]
+      telemetry: Prisma.$ServerTelemetryPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6706,7 +6858,12 @@ export namespace Prisma {
       localPath: string | null
       pid: number | null
       password: string | null
+      sftpPassword: string | null
+      sftpPort: number | null
+      tunnelEnabled: boolean
+      tunnelUrl: string | null
       enableUpnp: boolean
+      autoUpdate: boolean
       ipAddress: string
       port: number
       definitionId: string | null
@@ -7094,6 +7251,7 @@ export namespace Prisma {
     plannedSessions<T extends Server$plannedSessionsArgs<ExtArgs> = {}>(args?: Subset<T, Server$plannedSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlannedSessionPayload<ExtArgs>, T, "findMany"> | Null>
     discordRoles<T extends Server$discordRolesArgs<ExtArgs> = {}>(args?: Subset<T, Server$discordRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DiscordRoleAccessPayload<ExtArgs>, T, "findMany"> | Null>
     playerAccess<T extends Server$playerAccessArgs<ExtArgs> = {}>(args?: Subset<T, Server$playerAccessArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerServerAccessPayload<ExtArgs>, T, "findMany"> | Null>
+    telemetry<T extends Server$telemetryArgs<ExtArgs> = {}>(args?: Subset<T, Server$telemetryArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7134,7 +7292,12 @@ export namespace Prisma {
     readonly localPath: FieldRef<"Server", 'String'>
     readonly pid: FieldRef<"Server", 'Int'>
     readonly password: FieldRef<"Server", 'String'>
+    readonly sftpPassword: FieldRef<"Server", 'String'>
+    readonly sftpPort: FieldRef<"Server", 'Int'>
+    readonly tunnelEnabled: FieldRef<"Server", 'Boolean'>
+    readonly tunnelUrl: FieldRef<"Server", 'String'>
     readonly enableUpnp: FieldRef<"Server", 'Boolean'>
+    readonly autoUpdate: FieldRef<"Server", 'Boolean'>
     readonly ipAddress: FieldRef<"Server", 'String'>
     readonly port: FieldRef<"Server", 'Int'>
     readonly definitionId: FieldRef<"Server", 'String'>
@@ -7650,6 +7813,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: PlayerServerAccessScalarFieldEnum | PlayerServerAccessScalarFieldEnum[]
+  }
+
+  /**
+   * Server.telemetry
+   */
+  export type Server$telemetryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+    where?: ServerTelemetryWhereInput
+    orderBy?: ServerTelemetryOrderByWithRelationInput | ServerTelemetryOrderByWithRelationInput[]
+    cursor?: ServerTelemetryWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ServerTelemetryScalarFieldEnum | ServerTelemetryScalarFieldEnum[]
   }
 
   /**
@@ -17607,6 +17790,975 @@ export namespace Prisma {
 
 
   /**
+   * Model ServerTelemetry
+   */
+
+  export type AggregateServerTelemetry = {
+    _count: ServerTelemetryCountAggregateOutputType | null
+    _avg: ServerTelemetryAvgAggregateOutputType | null
+    _sum: ServerTelemetrySumAggregateOutputType | null
+    _min: ServerTelemetryMinAggregateOutputType | null
+    _max: ServerTelemetryMaxAggregateOutputType | null
+  }
+
+  export type ServerTelemetryAvgAggregateOutputType = {
+    cpu: number | null
+    ramMB: number | null
+  }
+
+  export type ServerTelemetrySumAggregateOutputType = {
+    cpu: number | null
+    ramMB: number | null
+  }
+
+  export type ServerTelemetryMinAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    cpu: number | null
+    ramMB: number | null
+    createdAt: Date | null
+  }
+
+  export type ServerTelemetryMaxAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    cpu: number | null
+    ramMB: number | null
+    createdAt: Date | null
+  }
+
+  export type ServerTelemetryCountAggregateOutputType = {
+    id: number
+    serverId: number
+    cpu: number
+    ramMB: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ServerTelemetryAvgAggregateInputType = {
+    cpu?: true
+    ramMB?: true
+  }
+
+  export type ServerTelemetrySumAggregateInputType = {
+    cpu?: true
+    ramMB?: true
+  }
+
+  export type ServerTelemetryMinAggregateInputType = {
+    id?: true
+    serverId?: true
+    cpu?: true
+    ramMB?: true
+    createdAt?: true
+  }
+
+  export type ServerTelemetryMaxAggregateInputType = {
+    id?: true
+    serverId?: true
+    cpu?: true
+    ramMB?: true
+    createdAt?: true
+  }
+
+  export type ServerTelemetryCountAggregateInputType = {
+    id?: true
+    serverId?: true
+    cpu?: true
+    ramMB?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ServerTelemetryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ServerTelemetry to aggregate.
+     */
+    where?: ServerTelemetryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerTelemetries to fetch.
+     */
+    orderBy?: ServerTelemetryOrderByWithRelationInput | ServerTelemetryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ServerTelemetryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerTelemetries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerTelemetries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ServerTelemetries
+    **/
+    _count?: true | ServerTelemetryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ServerTelemetryAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ServerTelemetrySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ServerTelemetryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ServerTelemetryMaxAggregateInputType
+  }
+
+  export type GetServerTelemetryAggregateType<T extends ServerTelemetryAggregateArgs> = {
+        [P in keyof T & keyof AggregateServerTelemetry]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateServerTelemetry[P]>
+      : GetScalarType<T[P], AggregateServerTelemetry[P]>
+  }
+
+
+
+
+  export type ServerTelemetryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ServerTelemetryWhereInput
+    orderBy?: ServerTelemetryOrderByWithAggregationInput | ServerTelemetryOrderByWithAggregationInput[]
+    by: ServerTelemetryScalarFieldEnum[] | ServerTelemetryScalarFieldEnum
+    having?: ServerTelemetryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ServerTelemetryCountAggregateInputType | true
+    _avg?: ServerTelemetryAvgAggregateInputType
+    _sum?: ServerTelemetrySumAggregateInputType
+    _min?: ServerTelemetryMinAggregateInputType
+    _max?: ServerTelemetryMaxAggregateInputType
+  }
+
+  export type ServerTelemetryGroupByOutputType = {
+    id: string
+    serverId: string
+    cpu: number
+    ramMB: number
+    createdAt: Date
+    _count: ServerTelemetryCountAggregateOutputType | null
+    _avg: ServerTelemetryAvgAggregateOutputType | null
+    _sum: ServerTelemetrySumAggregateOutputType | null
+    _min: ServerTelemetryMinAggregateOutputType | null
+    _max: ServerTelemetryMaxAggregateOutputType | null
+  }
+
+  type GetServerTelemetryGroupByPayload<T extends ServerTelemetryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ServerTelemetryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ServerTelemetryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ServerTelemetryGroupByOutputType[P]>
+            : GetScalarType<T[P], ServerTelemetryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ServerTelemetrySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    cpu?: boolean
+    ramMB?: boolean
+    createdAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["serverTelemetry"]>
+
+  export type ServerTelemetrySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    cpu?: boolean
+    ramMB?: boolean
+    createdAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["serverTelemetry"]>
+
+  export type ServerTelemetrySelectScalar = {
+    id?: boolean
+    serverId?: boolean
+    cpu?: boolean
+    ramMB?: boolean
+    createdAt?: boolean
+  }
+
+  export type ServerTelemetryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+  export type ServerTelemetryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+
+  export type $ServerTelemetryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ServerTelemetry"
+    objects: {
+      server: Prisma.$ServerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      serverId: string
+      cpu: number
+      ramMB: number
+      createdAt: Date
+    }, ExtArgs["result"]["serverTelemetry"]>
+    composites: {}
+  }
+
+  type ServerTelemetryGetPayload<S extends boolean | null | undefined | ServerTelemetryDefaultArgs> = $Result.GetResult<Prisma.$ServerTelemetryPayload, S>
+
+  type ServerTelemetryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<ServerTelemetryFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: ServerTelemetryCountAggregateInputType | true
+    }
+
+  export interface ServerTelemetryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ServerTelemetry'], meta: { name: 'ServerTelemetry' } }
+    /**
+     * Find zero or one ServerTelemetry that matches the filter.
+     * @param {ServerTelemetryFindUniqueArgs} args - Arguments to find a ServerTelemetry
+     * @example
+     * // Get one ServerTelemetry
+     * const serverTelemetry = await prisma.serverTelemetry.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ServerTelemetryFindUniqueArgs>(args: SelectSubset<T, ServerTelemetryFindUniqueArgs<ExtArgs>>): Prisma__ServerTelemetryClient<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one ServerTelemetry that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {ServerTelemetryFindUniqueOrThrowArgs} args - Arguments to find a ServerTelemetry
+     * @example
+     * // Get one ServerTelemetry
+     * const serverTelemetry = await prisma.serverTelemetry.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ServerTelemetryFindUniqueOrThrowArgs>(args: SelectSubset<T, ServerTelemetryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ServerTelemetryClient<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first ServerTelemetry that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerTelemetryFindFirstArgs} args - Arguments to find a ServerTelemetry
+     * @example
+     * // Get one ServerTelemetry
+     * const serverTelemetry = await prisma.serverTelemetry.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ServerTelemetryFindFirstArgs>(args?: SelectSubset<T, ServerTelemetryFindFirstArgs<ExtArgs>>): Prisma__ServerTelemetryClient<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first ServerTelemetry that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerTelemetryFindFirstOrThrowArgs} args - Arguments to find a ServerTelemetry
+     * @example
+     * // Get one ServerTelemetry
+     * const serverTelemetry = await prisma.serverTelemetry.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ServerTelemetryFindFirstOrThrowArgs>(args?: SelectSubset<T, ServerTelemetryFindFirstOrThrowArgs<ExtArgs>>): Prisma__ServerTelemetryClient<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more ServerTelemetries that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerTelemetryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ServerTelemetries
+     * const serverTelemetries = await prisma.serverTelemetry.findMany()
+     * 
+     * // Get first 10 ServerTelemetries
+     * const serverTelemetries = await prisma.serverTelemetry.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const serverTelemetryWithIdOnly = await prisma.serverTelemetry.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ServerTelemetryFindManyArgs>(args?: SelectSubset<T, ServerTelemetryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a ServerTelemetry.
+     * @param {ServerTelemetryCreateArgs} args - Arguments to create a ServerTelemetry.
+     * @example
+     * // Create one ServerTelemetry
+     * const ServerTelemetry = await prisma.serverTelemetry.create({
+     *   data: {
+     *     // ... data to create a ServerTelemetry
+     *   }
+     * })
+     * 
+     */
+    create<T extends ServerTelemetryCreateArgs>(args: SelectSubset<T, ServerTelemetryCreateArgs<ExtArgs>>): Prisma__ServerTelemetryClient<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many ServerTelemetries.
+     * @param {ServerTelemetryCreateManyArgs} args - Arguments to create many ServerTelemetries.
+     * @example
+     * // Create many ServerTelemetries
+     * const serverTelemetry = await prisma.serverTelemetry.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ServerTelemetryCreateManyArgs>(args?: SelectSubset<T, ServerTelemetryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ServerTelemetries and returns the data saved in the database.
+     * @param {ServerTelemetryCreateManyAndReturnArgs} args - Arguments to create many ServerTelemetries.
+     * @example
+     * // Create many ServerTelemetries
+     * const serverTelemetry = await prisma.serverTelemetry.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ServerTelemetries and only return the `id`
+     * const serverTelemetryWithIdOnly = await prisma.serverTelemetry.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ServerTelemetryCreateManyAndReturnArgs>(args?: SelectSubset<T, ServerTelemetryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a ServerTelemetry.
+     * @param {ServerTelemetryDeleteArgs} args - Arguments to delete one ServerTelemetry.
+     * @example
+     * // Delete one ServerTelemetry
+     * const ServerTelemetry = await prisma.serverTelemetry.delete({
+     *   where: {
+     *     // ... filter to delete one ServerTelemetry
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ServerTelemetryDeleteArgs>(args: SelectSubset<T, ServerTelemetryDeleteArgs<ExtArgs>>): Prisma__ServerTelemetryClient<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one ServerTelemetry.
+     * @param {ServerTelemetryUpdateArgs} args - Arguments to update one ServerTelemetry.
+     * @example
+     * // Update one ServerTelemetry
+     * const serverTelemetry = await prisma.serverTelemetry.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ServerTelemetryUpdateArgs>(args: SelectSubset<T, ServerTelemetryUpdateArgs<ExtArgs>>): Prisma__ServerTelemetryClient<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more ServerTelemetries.
+     * @param {ServerTelemetryDeleteManyArgs} args - Arguments to filter ServerTelemetries to delete.
+     * @example
+     * // Delete a few ServerTelemetries
+     * const { count } = await prisma.serverTelemetry.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ServerTelemetryDeleteManyArgs>(args?: SelectSubset<T, ServerTelemetryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ServerTelemetries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerTelemetryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ServerTelemetries
+     * const serverTelemetry = await prisma.serverTelemetry.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ServerTelemetryUpdateManyArgs>(args: SelectSubset<T, ServerTelemetryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one ServerTelemetry.
+     * @param {ServerTelemetryUpsertArgs} args - Arguments to update or create a ServerTelemetry.
+     * @example
+     * // Update or create a ServerTelemetry
+     * const serverTelemetry = await prisma.serverTelemetry.upsert({
+     *   create: {
+     *     // ... data to create a ServerTelemetry
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ServerTelemetry we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ServerTelemetryUpsertArgs>(args: SelectSubset<T, ServerTelemetryUpsertArgs<ExtArgs>>): Prisma__ServerTelemetryClient<$Result.GetResult<Prisma.$ServerTelemetryPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of ServerTelemetries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerTelemetryCountArgs} args - Arguments to filter ServerTelemetries to count.
+     * @example
+     * // Count the number of ServerTelemetries
+     * const count = await prisma.serverTelemetry.count({
+     *   where: {
+     *     // ... the filter for the ServerTelemetries we want to count
+     *   }
+     * })
+    **/
+    count<T extends ServerTelemetryCountArgs>(
+      args?: Subset<T, ServerTelemetryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ServerTelemetryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ServerTelemetry.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerTelemetryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ServerTelemetryAggregateArgs>(args: Subset<T, ServerTelemetryAggregateArgs>): Prisma.PrismaPromise<GetServerTelemetryAggregateType<T>>
+
+    /**
+     * Group by ServerTelemetry.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ServerTelemetryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ServerTelemetryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ServerTelemetryGroupByArgs['orderBy'] }
+        : { orderBy?: ServerTelemetryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ServerTelemetryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetServerTelemetryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ServerTelemetry model
+   */
+  readonly fields: ServerTelemetryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ServerTelemetry.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ServerTelemetryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    server<T extends ServerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServerDefaultArgs<ExtArgs>>): Prisma__ServerClient<$Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ServerTelemetry model
+   */ 
+  interface ServerTelemetryFieldRefs {
+    readonly id: FieldRef<"ServerTelemetry", 'String'>
+    readonly serverId: FieldRef<"ServerTelemetry", 'String'>
+    readonly cpu: FieldRef<"ServerTelemetry", 'Float'>
+    readonly ramMB: FieldRef<"ServerTelemetry", 'Float'>
+    readonly createdAt: FieldRef<"ServerTelemetry", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ServerTelemetry findUnique
+   */
+  export type ServerTelemetryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerTelemetry to fetch.
+     */
+    where: ServerTelemetryWhereUniqueInput
+  }
+
+  /**
+   * ServerTelemetry findUniqueOrThrow
+   */
+  export type ServerTelemetryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerTelemetry to fetch.
+     */
+    where: ServerTelemetryWhereUniqueInput
+  }
+
+  /**
+   * ServerTelemetry findFirst
+   */
+  export type ServerTelemetryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerTelemetry to fetch.
+     */
+    where?: ServerTelemetryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerTelemetries to fetch.
+     */
+    orderBy?: ServerTelemetryOrderByWithRelationInput | ServerTelemetryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ServerTelemetries.
+     */
+    cursor?: ServerTelemetryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerTelemetries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerTelemetries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ServerTelemetries.
+     */
+    distinct?: ServerTelemetryScalarFieldEnum | ServerTelemetryScalarFieldEnum[]
+  }
+
+  /**
+   * ServerTelemetry findFirstOrThrow
+   */
+  export type ServerTelemetryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerTelemetry to fetch.
+     */
+    where?: ServerTelemetryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerTelemetries to fetch.
+     */
+    orderBy?: ServerTelemetryOrderByWithRelationInput | ServerTelemetryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ServerTelemetries.
+     */
+    cursor?: ServerTelemetryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerTelemetries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerTelemetries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ServerTelemetries.
+     */
+    distinct?: ServerTelemetryScalarFieldEnum | ServerTelemetryScalarFieldEnum[]
+  }
+
+  /**
+   * ServerTelemetry findMany
+   */
+  export type ServerTelemetryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+    /**
+     * Filter, which ServerTelemetries to fetch.
+     */
+    where?: ServerTelemetryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ServerTelemetries to fetch.
+     */
+    orderBy?: ServerTelemetryOrderByWithRelationInput | ServerTelemetryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ServerTelemetries.
+     */
+    cursor?: ServerTelemetryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ServerTelemetries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ServerTelemetries.
+     */
+    skip?: number
+    distinct?: ServerTelemetryScalarFieldEnum | ServerTelemetryScalarFieldEnum[]
+  }
+
+  /**
+   * ServerTelemetry create
+   */
+  export type ServerTelemetryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ServerTelemetry.
+     */
+    data: XOR<ServerTelemetryCreateInput, ServerTelemetryUncheckedCreateInput>
+  }
+
+  /**
+   * ServerTelemetry createMany
+   */
+  export type ServerTelemetryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ServerTelemetries.
+     */
+    data: ServerTelemetryCreateManyInput | ServerTelemetryCreateManyInput[]
+  }
+
+  /**
+   * ServerTelemetry createManyAndReturn
+   */
+  export type ServerTelemetryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many ServerTelemetries.
+     */
+    data: ServerTelemetryCreateManyInput | ServerTelemetryCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ServerTelemetry update
+   */
+  export type ServerTelemetryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ServerTelemetry.
+     */
+    data: XOR<ServerTelemetryUpdateInput, ServerTelemetryUncheckedUpdateInput>
+    /**
+     * Choose, which ServerTelemetry to update.
+     */
+    where: ServerTelemetryWhereUniqueInput
+  }
+
+  /**
+   * ServerTelemetry updateMany
+   */
+  export type ServerTelemetryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ServerTelemetries.
+     */
+    data: XOR<ServerTelemetryUpdateManyMutationInput, ServerTelemetryUncheckedUpdateManyInput>
+    /**
+     * Filter which ServerTelemetries to update
+     */
+    where?: ServerTelemetryWhereInput
+  }
+
+  /**
+   * ServerTelemetry upsert
+   */
+  export type ServerTelemetryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ServerTelemetry to update in case it exists.
+     */
+    where: ServerTelemetryWhereUniqueInput
+    /**
+     * In case the ServerTelemetry found by the `where` argument doesn't exist, create a new ServerTelemetry with this data.
+     */
+    create: XOR<ServerTelemetryCreateInput, ServerTelemetryUncheckedCreateInput>
+    /**
+     * In case the ServerTelemetry was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ServerTelemetryUpdateInput, ServerTelemetryUncheckedUpdateInput>
+  }
+
+  /**
+   * ServerTelemetry delete
+   */
+  export type ServerTelemetryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+    /**
+     * Filter which ServerTelemetry to delete.
+     */
+    where: ServerTelemetryWhereUniqueInput
+  }
+
+  /**
+   * ServerTelemetry deleteMany
+   */
+  export type ServerTelemetryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ServerTelemetries to delete
+     */
+    where?: ServerTelemetryWhereInput
+  }
+
+  /**
+   * ServerTelemetry without action
+   */
+  export type ServerTelemetryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ServerTelemetry
+     */
+    select?: ServerTelemetrySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ServerTelemetryInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model Automation
    */
 
@@ -27440,7 +28592,12 @@ export namespace Prisma {
     localPath: 'localPath',
     pid: 'pid',
     password: 'password',
+    sftpPassword: 'sftpPassword',
+    sftpPort: 'sftpPort',
+    tunnelEnabled: 'tunnelEnabled',
+    tunnelUrl: 'tunnelUrl',
     enableUpnp: 'enableUpnp',
+    autoUpdate: 'autoUpdate',
     ipAddress: 'ipAddress',
     port: 'port',
     definitionId: 'definitionId',
@@ -27600,6 +28757,17 @@ export namespace Prisma {
   };
 
   export type ServerSnapshotScalarFieldEnum = (typeof ServerSnapshotScalarFieldEnum)[keyof typeof ServerSnapshotScalarFieldEnum]
+
+
+  export const ServerTelemetryScalarFieldEnum: {
+    id: 'id',
+    serverId: 'serverId',
+    cpu: 'cpu',
+    ramMB: 'ramMB',
+    createdAt: 'createdAt'
+  };
+
+  export type ServerTelemetryScalarFieldEnum = (typeof ServerTelemetryScalarFieldEnum)[keyof typeof ServerTelemetryScalarFieldEnum]
 
 
   export const AutomationScalarFieldEnum: {
@@ -28040,7 +29208,12 @@ export namespace Prisma {
     localPath?: StringNullableFilter<"Server"> | string | null
     pid?: IntNullableFilter<"Server"> | number | null
     password?: StringNullableFilter<"Server"> | string | null
+    sftpPassword?: StringNullableFilter<"Server"> | string | null
+    sftpPort?: IntNullableFilter<"Server"> | number | null
+    tunnelEnabled?: BoolFilter<"Server"> | boolean
+    tunnelUrl?: StringNullableFilter<"Server"> | string | null
     enableUpnp?: BoolFilter<"Server"> | boolean
+    autoUpdate?: BoolFilter<"Server"> | boolean
     ipAddress?: StringFilter<"Server"> | string
     port?: IntFilter<"Server"> | number
     definitionId?: StringNullableFilter<"Server"> | string | null
@@ -28064,6 +29237,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionListRelationFilter
     discordRoles?: DiscordRoleAccessListRelationFilter
     playerAccess?: PlayerServerAccessListRelationFilter
+    telemetry?: ServerTelemetryListRelationFilter
   }
 
   export type ServerOrderByWithRelationInput = {
@@ -28078,7 +29252,12 @@ export namespace Prisma {
     localPath?: SortOrderInput | SortOrder
     pid?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
+    sftpPassword?: SortOrderInput | SortOrder
+    sftpPort?: SortOrderInput | SortOrder
+    tunnelEnabled?: SortOrder
+    tunnelUrl?: SortOrderInput | SortOrder
     enableUpnp?: SortOrder
+    autoUpdate?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
     definitionId?: SortOrderInput | SortOrder
@@ -28102,6 +29281,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionOrderByRelationAggregateInput
     discordRoles?: DiscordRoleAccessOrderByRelationAggregateInput
     playerAccess?: PlayerServerAccessOrderByRelationAggregateInput
+    telemetry?: ServerTelemetryOrderByRelationAggregateInput
   }
 
   export type ServerWhereUniqueInput = Prisma.AtLeast<{
@@ -28120,7 +29300,12 @@ export namespace Prisma {
     localPath?: StringNullableFilter<"Server"> | string | null
     pid?: IntNullableFilter<"Server"> | number | null
     password?: StringNullableFilter<"Server"> | string | null
+    sftpPassword?: StringNullableFilter<"Server"> | string | null
+    sftpPort?: IntNullableFilter<"Server"> | number | null
+    tunnelEnabled?: BoolFilter<"Server"> | boolean
+    tunnelUrl?: StringNullableFilter<"Server"> | string | null
     enableUpnp?: BoolFilter<"Server"> | boolean
+    autoUpdate?: BoolFilter<"Server"> | boolean
     ipAddress?: StringFilter<"Server"> | string
     port?: IntFilter<"Server"> | number
     definitionId?: StringNullableFilter<"Server"> | string | null
@@ -28143,6 +29328,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionListRelationFilter
     discordRoles?: DiscordRoleAccessListRelationFilter
     playerAccess?: PlayerServerAccessListRelationFilter
+    telemetry?: ServerTelemetryListRelationFilter
   }, "id" | "inviteCode">
 
   export type ServerOrderByWithAggregationInput = {
@@ -28157,7 +29343,12 @@ export namespace Prisma {
     localPath?: SortOrderInput | SortOrder
     pid?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
+    sftpPassword?: SortOrderInput | SortOrder
+    sftpPort?: SortOrderInput | SortOrder
+    tunnelEnabled?: SortOrder
+    tunnelUrl?: SortOrderInput | SortOrder
     enableUpnp?: SortOrder
+    autoUpdate?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
     definitionId?: SortOrderInput | SortOrder
@@ -28192,7 +29383,12 @@ export namespace Prisma {
     localPath?: StringNullableWithAggregatesFilter<"Server"> | string | null
     pid?: IntNullableWithAggregatesFilter<"Server"> | number | null
     password?: StringNullableWithAggregatesFilter<"Server"> | string | null
+    sftpPassword?: StringNullableWithAggregatesFilter<"Server"> | string | null
+    sftpPort?: IntNullableWithAggregatesFilter<"Server"> | number | null
+    tunnelEnabled?: BoolWithAggregatesFilter<"Server"> | boolean
+    tunnelUrl?: StringNullableWithAggregatesFilter<"Server"> | string | null
     enableUpnp?: BoolWithAggregatesFilter<"Server"> | boolean
+    autoUpdate?: BoolWithAggregatesFilter<"Server"> | boolean
     ipAddress?: StringWithAggregatesFilter<"Server"> | string
     port?: IntWithAggregatesFilter<"Server"> | number
     definitionId?: StringNullableWithAggregatesFilter<"Server"> | string | null
@@ -28945,6 +30141,63 @@ export namespace Prisma {
     gameVersion?: StringNullableWithAggregatesFilter<"ServerSnapshot"> | string | null
     modCount?: IntWithAggregatesFilter<"ServerSnapshot"> | number
     createdAt?: DateTimeWithAggregatesFilter<"ServerSnapshot"> | Date | string
+  }
+
+  export type ServerTelemetryWhereInput = {
+    AND?: ServerTelemetryWhereInput | ServerTelemetryWhereInput[]
+    OR?: ServerTelemetryWhereInput[]
+    NOT?: ServerTelemetryWhereInput | ServerTelemetryWhereInput[]
+    id?: StringFilter<"ServerTelemetry"> | string
+    serverId?: StringFilter<"ServerTelemetry"> | string
+    cpu?: FloatFilter<"ServerTelemetry"> | number
+    ramMB?: FloatFilter<"ServerTelemetry"> | number
+    createdAt?: DateTimeFilter<"ServerTelemetry"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }
+
+  export type ServerTelemetryOrderByWithRelationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    cpu?: SortOrder
+    ramMB?: SortOrder
+    createdAt?: SortOrder
+    server?: ServerOrderByWithRelationInput
+  }
+
+  export type ServerTelemetryWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ServerTelemetryWhereInput | ServerTelemetryWhereInput[]
+    OR?: ServerTelemetryWhereInput[]
+    NOT?: ServerTelemetryWhereInput | ServerTelemetryWhereInput[]
+    serverId?: StringFilter<"ServerTelemetry"> | string
+    cpu?: FloatFilter<"ServerTelemetry"> | number
+    ramMB?: FloatFilter<"ServerTelemetry"> | number
+    createdAt?: DateTimeFilter<"ServerTelemetry"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }, "id">
+
+  export type ServerTelemetryOrderByWithAggregationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    cpu?: SortOrder
+    ramMB?: SortOrder
+    createdAt?: SortOrder
+    _count?: ServerTelemetryCountOrderByAggregateInput
+    _avg?: ServerTelemetryAvgOrderByAggregateInput
+    _max?: ServerTelemetryMaxOrderByAggregateInput
+    _min?: ServerTelemetryMinOrderByAggregateInput
+    _sum?: ServerTelemetrySumOrderByAggregateInput
+  }
+
+  export type ServerTelemetryScalarWhereWithAggregatesInput = {
+    AND?: ServerTelemetryScalarWhereWithAggregatesInput | ServerTelemetryScalarWhereWithAggregatesInput[]
+    OR?: ServerTelemetryScalarWhereWithAggregatesInput[]
+    NOT?: ServerTelemetryScalarWhereWithAggregatesInput | ServerTelemetryScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ServerTelemetry"> | string
+    serverId?: StringWithAggregatesFilter<"ServerTelemetry"> | string
+    cpu?: FloatWithAggregatesFilter<"ServerTelemetry"> | number
+    ramMB?: FloatWithAggregatesFilter<"ServerTelemetry"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"ServerTelemetry"> | Date | string
   }
 
   export type AutomationWhereInput = {
@@ -29918,7 +31171,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -29941,6 +31199,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateInput = {
@@ -29955,7 +31214,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -29977,6 +31241,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerUpdateInput = {
@@ -29990,7 +31255,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -30013,6 +31283,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateInput = {
@@ -30027,7 +31298,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -30049,6 +31325,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateManyInput = {
@@ -30063,7 +31340,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -30089,7 +31371,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -30115,7 +31402,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -30918,6 +32210,61 @@ export namespace Prisma {
     path?: StringFieldUpdateOperationsInput | string
     gameVersion?: NullableStringFieldUpdateOperationsInput | string | null
     modCount?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerTelemetryCreateInput = {
+    id?: string
+    cpu: number
+    ramMB: number
+    createdAt?: Date | string
+    server: ServerCreateNestedOneWithoutTelemetryInput
+  }
+
+  export type ServerTelemetryUncheckedCreateInput = {
+    id?: string
+    serverId: string
+    cpu: number
+    ramMB: number
+    createdAt?: Date | string
+  }
+
+  export type ServerTelemetryUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cpu?: FloatFieldUpdateOperationsInput | number
+    ramMB?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    server?: ServerUpdateOneRequiredWithoutTelemetryNestedInput
+  }
+
+  export type ServerTelemetryUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    cpu?: FloatFieldUpdateOperationsInput | number
+    ramMB?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerTelemetryCreateManyInput = {
+    id?: string
+    serverId: string
+    cpu: number
+    ramMB: number
+    createdAt?: Date | string
+  }
+
+  export type ServerTelemetryUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cpu?: FloatFieldUpdateOperationsInput | number
+    ramMB?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerTelemetryUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    cpu?: FloatFieldUpdateOperationsInput | number
+    ramMB?: FloatFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -32084,6 +33431,12 @@ export namespace Prisma {
     none?: PlayerServerAccessWhereInput
   }
 
+  export type ServerTelemetryListRelationFilter = {
+    every?: ServerTelemetryWhereInput
+    some?: ServerTelemetryWhereInput
+    none?: ServerTelemetryWhereInput
+  }
+
   export type BackupOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -32112,6 +33465,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type ServerTelemetryOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type ServerCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -32124,7 +33481,12 @@ export namespace Prisma {
     localPath?: SortOrder
     pid?: SortOrder
     password?: SortOrder
+    sftpPassword?: SortOrder
+    sftpPort?: SortOrder
+    tunnelEnabled?: SortOrder
+    tunnelUrl?: SortOrder
     enableUpnp?: SortOrder
+    autoUpdate?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
     definitionId?: SortOrder
@@ -32142,6 +33504,7 @@ export namespace Prisma {
   export type ServerAvgOrderByAggregateInput = {
     ramAllocation?: SortOrder
     pid?: SortOrder
+    sftpPort?: SortOrder
     port?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
@@ -32160,7 +33523,12 @@ export namespace Prisma {
     localPath?: SortOrder
     pid?: SortOrder
     password?: SortOrder
+    sftpPassword?: SortOrder
+    sftpPort?: SortOrder
+    tunnelEnabled?: SortOrder
+    tunnelUrl?: SortOrder
     enableUpnp?: SortOrder
+    autoUpdate?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
     definitionId?: SortOrder
@@ -32187,7 +33555,12 @@ export namespace Prisma {
     localPath?: SortOrder
     pid?: SortOrder
     password?: SortOrder
+    sftpPassword?: SortOrder
+    sftpPort?: SortOrder
+    tunnelEnabled?: SortOrder
+    tunnelUrl?: SortOrder
     enableUpnp?: SortOrder
+    autoUpdate?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
     definitionId?: SortOrder
@@ -32205,6 +33578,7 @@ export namespace Prisma {
   export type ServerSumOrderByAggregateInput = {
     ramAllocation?: SortOrder
     pid?: SortOrder
+    sftpPort?: SortOrder
     port?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
@@ -32670,6 +34044,40 @@ export namespace Prisma {
 
   export type ServerSnapshotSumOrderByAggregateInput = {
     modCount?: SortOrder
+  }
+
+  export type ServerTelemetryCountOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    cpu?: SortOrder
+    ramMB?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ServerTelemetryAvgOrderByAggregateInput = {
+    cpu?: SortOrder
+    ramMB?: SortOrder
+  }
+
+  export type ServerTelemetryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    cpu?: SortOrder
+    ramMB?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ServerTelemetryMinOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    cpu?: SortOrder
+    ramMB?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ServerTelemetrySumOrderByAggregateInput = {
+    cpu?: SortOrder
+    ramMB?: SortOrder
   }
 
   export type AutomationConditionListRelationFilter = {
@@ -33545,6 +34953,13 @@ export namespace Prisma {
     connect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
   }
 
+  export type ServerTelemetryCreateNestedManyWithoutServerInput = {
+    create?: XOR<ServerTelemetryCreateWithoutServerInput, ServerTelemetryUncheckedCreateWithoutServerInput> | ServerTelemetryCreateWithoutServerInput[] | ServerTelemetryUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ServerTelemetryCreateOrConnectWithoutServerInput | ServerTelemetryCreateOrConnectWithoutServerInput[]
+    createMany?: ServerTelemetryCreateManyServerInputEnvelope
+    connect?: ServerTelemetryWhereUniqueInput | ServerTelemetryWhereUniqueInput[]
+  }
+
   export type BackupUncheckedCreateNestedManyWithoutServerInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -33605,6 +35020,13 @@ export namespace Prisma {
     connectOrCreate?: PlayerServerAccessCreateOrConnectWithoutServerInput | PlayerServerAccessCreateOrConnectWithoutServerInput[]
     createMany?: PlayerServerAccessCreateManyServerInputEnvelope
     connect?: PlayerServerAccessWhereUniqueInput | PlayerServerAccessWhereUniqueInput[]
+  }
+
+  export type ServerTelemetryUncheckedCreateNestedManyWithoutServerInput = {
+    create?: XOR<ServerTelemetryCreateWithoutServerInput, ServerTelemetryUncheckedCreateWithoutServerInput> | ServerTelemetryCreateWithoutServerInput[] | ServerTelemetryUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ServerTelemetryCreateOrConnectWithoutServerInput | ServerTelemetryCreateOrConnectWithoutServerInput[]
+    createMany?: ServerTelemetryCreateManyServerInputEnvelope
+    connect?: ServerTelemetryWhereUniqueInput | ServerTelemetryWhereUniqueInput[]
   }
 
   export type FloatFieldUpdateOperationsInput = {
@@ -33767,6 +35189,20 @@ export namespace Prisma {
     deleteMany?: PlayerServerAccessScalarWhereInput | PlayerServerAccessScalarWhereInput[]
   }
 
+  export type ServerTelemetryUpdateManyWithoutServerNestedInput = {
+    create?: XOR<ServerTelemetryCreateWithoutServerInput, ServerTelemetryUncheckedCreateWithoutServerInput> | ServerTelemetryCreateWithoutServerInput[] | ServerTelemetryUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ServerTelemetryCreateOrConnectWithoutServerInput | ServerTelemetryCreateOrConnectWithoutServerInput[]
+    upsert?: ServerTelemetryUpsertWithWhereUniqueWithoutServerInput | ServerTelemetryUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: ServerTelemetryCreateManyServerInputEnvelope
+    set?: ServerTelemetryWhereUniqueInput | ServerTelemetryWhereUniqueInput[]
+    disconnect?: ServerTelemetryWhereUniqueInput | ServerTelemetryWhereUniqueInput[]
+    delete?: ServerTelemetryWhereUniqueInput | ServerTelemetryWhereUniqueInput[]
+    connect?: ServerTelemetryWhereUniqueInput | ServerTelemetryWhereUniqueInput[]
+    update?: ServerTelemetryUpdateWithWhereUniqueWithoutServerInput | ServerTelemetryUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: ServerTelemetryUpdateManyWithWhereWithoutServerInput | ServerTelemetryUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: ServerTelemetryScalarWhereInput | ServerTelemetryScalarWhereInput[]
+  }
+
   export type BackupUncheckedUpdateManyWithoutServerNestedInput = {
     create?: XOR<BackupCreateWithoutServerInput, BackupUncheckedCreateWithoutServerInput> | BackupCreateWithoutServerInput[] | BackupUncheckedCreateWithoutServerInput[]
     connectOrCreate?: BackupCreateOrConnectWithoutServerInput | BackupCreateOrConnectWithoutServerInput[]
@@ -33887,6 +35323,20 @@ export namespace Prisma {
     update?: PlayerServerAccessUpdateWithWhereUniqueWithoutServerInput | PlayerServerAccessUpdateWithWhereUniqueWithoutServerInput[]
     updateMany?: PlayerServerAccessUpdateManyWithWhereWithoutServerInput | PlayerServerAccessUpdateManyWithWhereWithoutServerInput[]
     deleteMany?: PlayerServerAccessScalarWhereInput | PlayerServerAccessScalarWhereInput[]
+  }
+
+  export type ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput = {
+    create?: XOR<ServerTelemetryCreateWithoutServerInput, ServerTelemetryUncheckedCreateWithoutServerInput> | ServerTelemetryCreateWithoutServerInput[] | ServerTelemetryUncheckedCreateWithoutServerInput[]
+    connectOrCreate?: ServerTelemetryCreateOrConnectWithoutServerInput | ServerTelemetryCreateOrConnectWithoutServerInput[]
+    upsert?: ServerTelemetryUpsertWithWhereUniqueWithoutServerInput | ServerTelemetryUpsertWithWhereUniqueWithoutServerInput[]
+    createMany?: ServerTelemetryCreateManyServerInputEnvelope
+    set?: ServerTelemetryWhereUniqueInput | ServerTelemetryWhereUniqueInput[]
+    disconnect?: ServerTelemetryWhereUniqueInput | ServerTelemetryWhereUniqueInput[]
+    delete?: ServerTelemetryWhereUniqueInput | ServerTelemetryWhereUniqueInput[]
+    connect?: ServerTelemetryWhereUniqueInput | ServerTelemetryWhereUniqueInput[]
+    update?: ServerTelemetryUpdateWithWhereUniqueWithoutServerInput | ServerTelemetryUpdateWithWhereUniqueWithoutServerInput[]
+    updateMany?: ServerTelemetryUpdateManyWithWhereWithoutServerInput | ServerTelemetryUpdateManyWithWhereWithoutServerInput[]
+    deleteMany?: ServerTelemetryScalarWhereInput | ServerTelemetryScalarWhereInput[]
   }
 
   export type ServerCreateNestedOneWithoutDiscordRolesInput = {
@@ -34085,6 +35535,20 @@ export namespace Prisma {
     upsert?: ServerUpsertWithoutSnapshotsInput
     connect?: ServerWhereUniqueInput
     update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutSnapshotsInput, ServerUpdateWithoutSnapshotsInput>, ServerUncheckedUpdateWithoutSnapshotsInput>
+  }
+
+  export type ServerCreateNestedOneWithoutTelemetryInput = {
+    create?: XOR<ServerCreateWithoutTelemetryInput, ServerUncheckedCreateWithoutTelemetryInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutTelemetryInput
+    connect?: ServerWhereUniqueInput
+  }
+
+  export type ServerUpdateOneRequiredWithoutTelemetryNestedInput = {
+    create?: XOR<ServerCreateWithoutTelemetryInput, ServerUncheckedCreateWithoutTelemetryInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutTelemetryInput
+    upsert?: ServerUpsertWithoutTelemetryInput
+    connect?: ServerWhereUniqueInput
+    update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutTelemetryInput, ServerUpdateWithoutTelemetryInput>, ServerUncheckedUpdateWithoutTelemetryInput>
   }
 
   export type ServerCreateNestedOneWithoutAutomationsInput = {
@@ -34731,7 +36195,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -34753,6 +36222,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutUserInput = {
@@ -34766,7 +36236,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -34788,6 +36263,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutUserInput = {
@@ -35057,7 +36533,12 @@ export namespace Prisma {
     localPath?: StringNullableFilter<"Server"> | string | null
     pid?: IntNullableFilter<"Server"> | number | null
     password?: StringNullableFilter<"Server"> | string | null
+    sftpPassword?: StringNullableFilter<"Server"> | string | null
+    sftpPort?: IntNullableFilter<"Server"> | number | null
+    tunnelEnabled?: BoolFilter<"Server"> | boolean
+    tunnelUrl?: StringNullableFilter<"Server"> | string | null
     enableUpnp?: BoolFilter<"Server"> | boolean
+    autoUpdate?: BoolFilter<"Server"> | boolean
     ipAddress?: StringFilter<"Server"> | string
     port?: IntFilter<"Server"> | number
     definitionId?: StringNullableFilter<"Server"> | string | null
@@ -35704,6 +37185,29 @@ export namespace Prisma {
     data: PlayerServerAccessCreateManyServerInput | PlayerServerAccessCreateManyServerInput[]
   }
 
+  export type ServerTelemetryCreateWithoutServerInput = {
+    id?: string
+    cpu: number
+    ramMB: number
+    createdAt?: Date | string
+  }
+
+  export type ServerTelemetryUncheckedCreateWithoutServerInput = {
+    id?: string
+    cpu: number
+    ramMB: number
+    createdAt?: Date | string
+  }
+
+  export type ServerTelemetryCreateOrConnectWithoutServerInput = {
+    where: ServerTelemetryWhereUniqueInput
+    create: XOR<ServerTelemetryCreateWithoutServerInput, ServerTelemetryUncheckedCreateWithoutServerInput>
+  }
+
+  export type ServerTelemetryCreateManyServerInputEnvelope = {
+    data: ServerTelemetryCreateManyServerInput | ServerTelemetryCreateManyServerInput[]
+  }
+
   export type UserUpsertWithoutServersInput = {
     update: XOR<UserUpdateWithoutServersInput, UserUncheckedUpdateWithoutServersInput>
     create: XOR<UserCreateWithoutServersInput, UserUncheckedCreateWithoutServersInput>
@@ -36072,6 +37576,33 @@ export namespace Prisma {
     serverRole?: StringNullableFilter<"PlayerServerAccess"> | string | null
   }
 
+  export type ServerTelemetryUpsertWithWhereUniqueWithoutServerInput = {
+    where: ServerTelemetryWhereUniqueInput
+    update: XOR<ServerTelemetryUpdateWithoutServerInput, ServerTelemetryUncheckedUpdateWithoutServerInput>
+    create: XOR<ServerTelemetryCreateWithoutServerInput, ServerTelemetryUncheckedCreateWithoutServerInput>
+  }
+
+  export type ServerTelemetryUpdateWithWhereUniqueWithoutServerInput = {
+    where: ServerTelemetryWhereUniqueInput
+    data: XOR<ServerTelemetryUpdateWithoutServerInput, ServerTelemetryUncheckedUpdateWithoutServerInput>
+  }
+
+  export type ServerTelemetryUpdateManyWithWhereWithoutServerInput = {
+    where: ServerTelemetryScalarWhereInput
+    data: XOR<ServerTelemetryUpdateManyMutationInput, ServerTelemetryUncheckedUpdateManyWithoutServerInput>
+  }
+
+  export type ServerTelemetryScalarWhereInput = {
+    AND?: ServerTelemetryScalarWhereInput | ServerTelemetryScalarWhereInput[]
+    OR?: ServerTelemetryScalarWhereInput[]
+    NOT?: ServerTelemetryScalarWhereInput | ServerTelemetryScalarWhereInput[]
+    id?: StringFilter<"ServerTelemetry"> | string
+    serverId?: StringFilter<"ServerTelemetry"> | string
+    cpu?: FloatFilter<"ServerTelemetry"> | number
+    ramMB?: FloatFilter<"ServerTelemetry"> | number
+    createdAt?: DateTimeFilter<"ServerTelemetry"> | Date | string
+  }
+
   export type ServerCreateWithoutDiscordRolesInput = {
     id?: string
     name: string
@@ -36083,7 +37614,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -36105,6 +37641,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutDiscordRolesInput = {
@@ -36119,7 +37656,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -36140,6 +37682,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutDiscordRolesInput = {
@@ -36169,7 +37712,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36191,6 +37739,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutDiscordRolesInput = {
@@ -36205,7 +37754,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36226,6 +37780,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutPlannedSessionsInput = {
@@ -36239,7 +37794,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -36261,6 +37821,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutPlannedSessionsInput = {
@@ -36275,7 +37836,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -36296,6 +37862,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutPlannedSessionsInput = {
@@ -36325,7 +37892,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36347,6 +37919,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutPlannedSessionsInput = {
@@ -36361,7 +37934,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36382,6 +37960,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutHostLinkInput = {
@@ -36395,7 +37974,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -36417,6 +38001,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutHostLinkInput = {
@@ -36431,7 +38016,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -36452,6 +38042,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutHostLinkInput = {
@@ -36481,7 +38072,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36503,6 +38099,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutHostLinkInput = {
@@ -36517,7 +38114,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36538,6 +38140,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type UserCreateWithoutArchivesInput = {
@@ -36759,7 +38362,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -36781,6 +38389,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutBackupsInput = {
@@ -36795,7 +38404,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -36816,6 +38430,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutBackupsInput = {
@@ -36845,7 +38460,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36867,6 +38487,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutBackupsInput = {
@@ -36881,7 +38502,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36902,6 +38528,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutCollaboratorsInput = {
@@ -36915,7 +38542,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -36937,6 +38569,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutCollaboratorsInput = {
@@ -36951,7 +38584,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -36972,6 +38610,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutCollaboratorsInput = {
@@ -37050,7 +38689,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37072,6 +38716,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutCollaboratorsInput = {
@@ -37086,7 +38731,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37107,6 +38757,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type UserUpsertWithoutCollaboratorAccessInput = {
@@ -37224,7 +38875,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -37246,6 +38902,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutDefinitionInput = {
@@ -37260,7 +38917,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -37281,6 +38943,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutDefinitionInput = {
@@ -37374,7 +39037,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -37396,6 +39064,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutModsInput = {
@@ -37410,7 +39079,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -37431,6 +39105,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutModsInput = {
@@ -37460,7 +39135,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37482,6 +39162,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutModsInput = {
@@ -37496,7 +39177,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37517,6 +39203,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutSnapshotsInput = {
@@ -37530,7 +39217,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -37552,6 +39244,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutSnapshotsInput = {
@@ -37566,7 +39259,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -37587,6 +39285,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutSnapshotsInput = {
@@ -37616,7 +39315,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37638,6 +39342,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutSnapshotsInput = {
@@ -37652,7 +39357,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37673,6 +39383,187 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerCreateWithoutTelemetryInput = {
+    id?: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
+    enableUpnp?: boolean
+    autoUpdate?: boolean
+    ipAddress: string
+    port: number
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    inviteCode?: string | null
+    user: UserCreateNestedOneWithoutServersInput
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
+    backups?: BackupCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
+    plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
+    discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerUncheckedCreateWithoutTelemetryInput = {
+    id?: string
+    userId: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
+    enableUpnp?: boolean
+    autoUpdate?: boolean
+    ipAddress: string
+    port: number
+    definitionId?: string | null
+    paramValues?: string | null
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    inviteCode?: string | null
+    backups?: BackupUncheckedCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
+    plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
+    discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerCreateOrConnectWithoutTelemetryInput = {
+    where: ServerWhereUniqueInput
+    create: XOR<ServerCreateWithoutTelemetryInput, ServerUncheckedCreateWithoutTelemetryInput>
+  }
+
+  export type ServerUpsertWithoutTelemetryInput = {
+    update: XOR<ServerUpdateWithoutTelemetryInput, ServerUncheckedUpdateWithoutTelemetryInput>
+    create: XOR<ServerCreateWithoutTelemetryInput, ServerUncheckedCreateWithoutTelemetryInput>
+    where?: ServerWhereInput
+  }
+
+  export type ServerUpdateToOneWithWhereWithoutTelemetryInput = {
+    where?: ServerWhereInput
+    data: XOR<ServerUpdateWithoutTelemetryInput, ServerUncheckedUpdateWithoutTelemetryInput>
+  }
+
+  export type ServerUpdateWithoutTelemetryInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
+    user?: UserUpdateOneRequiredWithoutServersNestedInput
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
+    backups?: BackupUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
+    plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
+    discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerUncheckedUpdateWithoutTelemetryInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
+    backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
+    plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
+    discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerCreateWithoutAutomationsInput = {
@@ -37686,7 +39577,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -37708,6 +39604,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutAutomationsInput = {
@@ -37722,7 +39619,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -37743,6 +39645,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
     playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutAutomationsInput = {
@@ -37843,7 +39746,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37865,6 +39773,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutAutomationsInput = {
@@ -37879,7 +39788,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37900,6 +39814,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type AutomationConditionUpsertWithWhereUniqueWithoutAutomationInput = {
@@ -38732,7 +40647,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -38754,6 +40674,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
   }
 
   export type ServerUncheckedCreateWithoutPlayerAccessInput = {
@@ -38768,7 +40689,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -38789,6 +40715,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
   }
 
   export type ServerCreateOrConnectWithoutPlayerAccessInput = {
@@ -38861,7 +40788,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38883,6 +40815,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutPlayerAccessInput = {
@@ -38897,7 +40830,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38918,6 +40856,7 @@ export namespace Prisma {
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type GameDefinitionCreateManyOwnerInput = {
@@ -38947,7 +40886,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -39076,7 +41020,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39098,6 +41047,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutUserInput = {
@@ -39111,7 +41061,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39133,6 +41088,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateManyWithoutUserInput = {
@@ -39146,7 +41102,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39398,6 +41359,13 @@ export namespace Prisma {
     serverRole?: string | null
   }
 
+  export type ServerTelemetryCreateManyServerInput = {
+    id?: string
+    cpu: number
+    ramMB: number
+    createdAt?: Date | string
+  }
+
   export type BackupUpdateWithoutServerInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
@@ -39632,6 +41600,27 @@ export namespace Prisma {
     serverRole?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type ServerTelemetryUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cpu?: FloatFieldUpdateOperationsInput | number
+    ramMB?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerTelemetryUncheckedUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cpu?: FloatFieldUpdateOperationsInput | number
+    ramMB?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ServerTelemetryUncheckedUpdateManyWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cpu?: FloatFieldUpdateOperationsInput | number
+    ramMB?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ServerCreateManyDefinitionInput = {
     id?: string
     userId: string
@@ -39644,7 +41633,12 @@ export namespace Prisma {
     localPath?: string | null
     pid?: number | null
     password?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
     enableUpnp?: boolean
+    autoUpdate?: boolean
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -39669,7 +41663,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39691,6 +41690,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateWithoutDefinitionInput = {
@@ -39705,7 +41705,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39726,6 +41731,7 @@ export namespace Prisma {
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
     playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
   export type ServerUncheckedUpdateManyWithoutDefinitionInput = {
@@ -39740,7 +41746,12 @@ export namespace Prisma {
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39987,6 +41998,10 @@ export namespace Prisma {
      * @deprecated Use ServerSnapshotDefaultArgs instead
      */
     export type ServerSnapshotArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ServerSnapshotDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use ServerTelemetryDefaultArgs instead
+     */
+    export type ServerTelemetryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = ServerTelemetryDefaultArgs<ExtArgs>
     /**
      * @deprecated Use AutomationDefaultArgs instead
      */

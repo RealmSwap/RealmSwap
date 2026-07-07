@@ -71,7 +71,12 @@ model Server {
   localPath        String? // File path for local server storage
   pid              Int? // Process ID for local runner execution
   password         String? // Unhashed password for Valheim/game server configs
+  sftpPassword     String? // Unique generated password for SFTP access
+  sftpPort         Int?    // Assigned SFTP port (typically 2022+id)
+  tunnelEnabled    Boolean             @default(false)
+  tunnelUrl        String? // playit.gg tunnel URL (e.g., xxx.auto.playit.gg:12345)
   enableUpnp       Boolean             @default(false) // Trigger router port mapping
+  autoUpdate       Boolean             @default(false) // Trigger SteamCMD +app_update on start
   ipAddress        String
   port             Int
   definitionId     String?
@@ -94,6 +99,7 @@ model Server {
   plannedSessions  PlannedSession[]
   discordRoles     DiscordRoleAccess[]
   playerAccess     PlayerServerAccess[]
+  telemetry        ServerTelemetry[]
 }
 
 model DiscordRoleAccess {
@@ -229,6 +235,17 @@ model ServerSnapshot {
   gameVersion String?
   modCount    Int
   createdAt   DateTime @default(now())
+}
+
+model ServerTelemetry {
+  id        String   @id @default(cuid())
+  serverId  String
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  cpu       Float    // CPU percentage
+  ramMB     Float    // RAM used in MB
+  createdAt DateTime @default(now())
+
+  @@index([serverId, createdAt])
 }
 
 model Automation {

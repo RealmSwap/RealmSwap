@@ -140,7 +140,8 @@ export function ServerHeroCard({
             {server.ipAddress && (
               <div 
                 className="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors group/ip"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   navigator.clipboard.writeText(`${server.ipAddress}:${server.port}`);
                   actions.setCopiedIp(`${server.ipAddress}:${server.port}`);
                 }}
@@ -152,6 +153,26 @@ export function ServerHeroCard({
                   <Copy className="w-3 h-3 opacity-0 group-hover/ip:opacity-100 transition-opacity" />
                 )}
               </div>
+            )}
+            {server.tunnelUrl && (
+              <>
+                <span className="text-white/30">•</span>
+                <div 
+                  className="flex items-center gap-1.5 cursor-pointer hover:text-accentPurple transition-colors group/tunnel"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(server.tunnelUrl);
+                    actions.setCopiedIp(server.tunnelUrl);
+                  }}
+                >
+                  <span className="text-accentPurple/90 font-bold">{server.tunnelUrl}</span>
+                  {copiedIp === server.tunnelUrl ? (
+                    <Check className="w-3 h-3 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-3 h-3 opacity-0 group-hover/tunnel:opacity-100 transition-opacity" />
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>

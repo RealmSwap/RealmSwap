@@ -1,0 +1,10 @@
+{
+  "dashboard.servers": "Servers",
+  "dashboard.marketplace": "Marketplace",
+  "dashboard.settings": "Settings",
+  "dashboard.createServer": "Create Server",
+  "server.status.running": "Running",
+  "server.status.stopped": "Stopped",
+  "server.status.starting": "Starting",
+  "server.status.crashed": "Crashed"
+}

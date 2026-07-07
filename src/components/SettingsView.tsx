@@ -1,13 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
-import { Save } from "lucide-react";
+import { Save, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 
 export function SettingsView({ user }: { user: any }) {
   const [discordId, setDiscordId] = useState(user?.discordId || "");
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleEggUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setLoading(true);
+      const text = await file.text();
+      
+      const res = await fetch("/api/admin/import-egg", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eggJson: text }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to import egg");
+      
+      toast.success(`Successfully imported ${data.definition.displayName}!`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to parse or import egg.");
+    } finally {
+      setLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,6 +290,40 @@ export function SettingsView({ user }: { user: any }) {
               </button>
             </div>
           </form>
+
+          {user?.role === "ADMIN" && (
+            <div className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5 mt-8">
+              <div>
+                <h2 className="text-xl font-bold text-white mb-1">Administration</h2>
+                <p className="text-xs text-slate-400 mb-6">
+                  Global tools and ecosystem integrations.
+                </p>
+
+                <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-200">Import Pterodactyl Egg</h3>
+                    <p className="text-xs text-slate-500">Upload a standard Pterodactyl Egg JSON file to instantly add a new Game Definition to RealmSwap.</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleEggUpload}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={loading}
+                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition-colors disabled:opacity-50"
+                  >
+                    <UploadCloud className="w-4 h-4" />
+                    Upload JSON
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

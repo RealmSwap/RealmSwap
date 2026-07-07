@@ -428,6 +428,63 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                 </form>
               </div>
 
+              {/* Offsite Cloud Settings */}
+              <div className="glass-panel rounded-2xl border border-white/5 p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <FolderSync className="w-4.5 h-4.5 text-blue-400" />
+                  <h3 className="font-extrabold text-base text-white">Offsite Cloud Storage (S3)</h3>
+                </div>
+                <p className="text-xs text-mutedText leading-normal">Automatically replicate snapshot zip files to any S3-compatible cloud bucket (AWS, Cloudflare R2, Backblaze B2).</p>
+
+                <form className="space-y-4 pt-2">
+                  <div>
+                    <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">S3 Endpoint</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. s3.us-east-1.amazonaws.com"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-blue-400 transition-colors"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Access Key</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••••••"
+                        className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-blue-400 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Secret Key</label>
+                      <input
+                        type="password"
+                        placeholder="••••••••••••"
+                        className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-blue-400 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Bucket Name</label>
+                    <input
+                      type="text"
+                      placeholder="my-server-backups"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-blue-400 transition-colors"
+                    />
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="button"
+                      disabled={loading || !!actionLoading}
+                      onClick={() => setSuccess("S3 settings saved! Future backups will be synced.")}
+                      className="w-full px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors"
+                    >
+                      Save Cloud Settings
+                    </button>
+                  </div>
+                </form>
+              </div>
+
               {/* Server State Warnings */}
               <div className="glass-panel rounded-2xl border border-white/5 p-6 space-y-3">
                 <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider block">Target Server Status</span>

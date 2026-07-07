@@ -22,6 +22,8 @@ import {
   Store,
   UploadCloud,
   X,
+  Copy,
+  FolderOpen,
 } from "lucide-react";
 import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 
@@ -45,6 +47,8 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"general" | "files">("general");
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   
   // Publish Modal State
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -136,6 +140,42 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const handleContentChange = (value: string) => {
     setConfigContent(value);
     setHasChanges(value !== originalContent);
+  };
+
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const toggleSetting = async (action: string, enable: boolean) => {
+    if (!selectedServer) return;
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, enable })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      // Update local state
+      setServers(servers.map(s => {
+        if (s.id === selectedServer.id) {
+          if (action === "TOGGLE_TUNNEL") return { ...s, tunnelEnabled: enable };
+          if (action === "TOGGLE_AUTO_UPDATE") return { ...s, autoUpdate: enable };
+        }
+        return s;
+      }));
+      setSelectedServer((prev: any) => {
+        if (action === "TOGGLE_TUNNEL") return { ...prev, tunnelEnabled: enable };
+        if (action === "TOGGLE_AUTO_UPDATE") return { ...prev, autoUpdate: enable };
+        return prev;
+      });
+    } catch (err: any) {
+      setError(err.message);
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   const handleLogout = async () => {
@@ -286,21 +326,14 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
             <div className="glass-panel rounded-xl border border-white/5 overflow-hidden">
               {/* Editor Header */}
               <div className="p-4 border-b border-white/5 bg-slate-950/30 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <FileCode className="w-4 h-4 text-accentPurple" />
-                  <span className="font-bold text-sm text-white">
-                    {configFilename || "No file selected"}
-                  </span>
-                  {configFormat && isEditable && (
-                    <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono border border-white/5">
-                      {configFormat.toUpperCase()}
-                    </span>
-                  )}
-                  {hasChanges && (
-                    <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-bold">
-                      Unsaved Changes
-                    </span>
-                  )}
+                <div className="flex items-center gap-6">
+                  <button onClick={() => setActiveTab("general")} className={`font-bold text-sm ${activeTab === 'general' ? 'text-accentPurple border-b-2 border-accentPurple' : 'text-slate-400 border-b-2 border-transparent hover:text-slate-200'} pb-4 -mb-4 transition-colors`}>
+                    General Settings
+                  </button>
+                  <button onClick={() => setActiveTab("files")} className={`font-bold text-sm ${activeTab === 'files' ? 'text-accentPurple border-b-2 border-accentPurple' : 'text-slate-400 border-b-2 border-transparent hover:text-slate-200'} pb-4 -mb-4 transition-colors flex items-center gap-2`}>
+                    <FileCode className="w-4 h-4" />
+                    Configuration Files
+                  </button>
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedServer && (
@@ -369,15 +402,91 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
 
               {/* Editor Body */}
               <div className="p-0">
-                {loading ? (
+                {!selectedServer ? (
+                  <div className="p-12 text-center">
+                    <Settings className="w-8 h-8 text-slate-600 mx-auto mb-3" />
+                    <span className="text-sm font-bold text-slate-400">Select a server to edit its settings</span>
+                  </div>
+                ) : activeTab === "general" ? (
+                  <div className="p-6 space-y-8">
+                    {/* General Toggles */}
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-4">Automation & Networking</h3>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
+                          <div>
+                            <h3 className="text-sm font-bold text-slate-200">Playit.gg Tunneling</h3>
+                            <p className="text-xs text-slate-500">Automatically expose this server to the internet without port forwarding.</p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" className="sr-only peer" checked={selectedServer.tunnelEnabled || false} onChange={(e) => toggleSetting("TOGGLE_TUNNEL", e.target.checked)} />
+                            <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
+                          </label>
+                        </div>
+                        <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
+                          <div>
+                            <h3 className="text-sm font-bold text-slate-200">SteamCMD Auto-Updates</h3>
+                            <p className="text-xs text-slate-500">Automatically check for and install game updates when the server starts.</p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" className="sr-only peer" checked={selectedServer.autoUpdate || false} onChange={(e) => toggleSetting("TOGGLE_AUTO_UPDATE", e.target.checked)} disabled={selectedServer.game === "MINECRAFT"} />
+                            <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple peer-disabled:opacity-50"></div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SFTP Credentials */}
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-4">SFTP Connection Details</h3>
+                      <div className="p-4 bg-slate-900 border border-white/5 rounded-lg space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-400">Host (IP)</span>
+                          <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
+                            <span className="text-sm text-white font-mono">{selectedServer.ipAddress}</span>
+                            <button onClick={() => copyToClipboard(selectedServer.ipAddress, "host")} className="text-slate-500 hover:text-white transition-colors">
+                              {copiedKey === "host" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-400">Port</span>
+                          <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
+                            <span className="text-sm text-white font-mono">2022</span>
+                            <button onClick={() => copyToClipboard("2022", "port")} className="text-slate-500 hover:text-white transition-colors">
+                              {copiedKey === "port" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-400">Username</span>
+                          <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
+                            <span className="text-sm text-white font-mono">{selectedServer.id}</span>
+                            <button onClick={() => copyToClipboard(selectedServer.id, "username")} className="text-slate-500 hover:text-white transition-colors">
+                              {copiedKey === "username" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-slate-400">Password</span>
+                          <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
+                            <span className="text-sm text-white font-mono blur-[4px] hover:blur-none transition-all cursor-pointer select-all">{selectedServer.sftpPassword || "Not Generated"}</span>
+                            <button onClick={() => copyToClipboard(selectedServer.sftpPassword, "password")} className="text-slate-500 hover:text-white transition-colors">
+                              {copiedKey === "password" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-2 flex items-center gap-1.5">
+                        <Info className="w-3.5 h-3.5" />
+                        Use an FTP client like WinSCP or FileZilla to connect and manage server files directly.
+                      </p>
+                    </div>
+                  </div>
+                ) : loading ? (
                   <div className="p-12 text-center">
                     <RefreshCw className="w-6 h-6 text-accentPurple animate-spin mx-auto mb-3" />
                     <span className="text-xs text-mutedText">Loading configuration...</span>
-                  </div>
-                ) : !selectedServer ? (
-                  <div className="p-12 text-center">
-                    <Settings className="w-8 h-8 text-slate-600 mx-auto mb-3" />
-                    <span className="text-sm font-bold text-slate-400">Select a server to edit its config</span>
                   </div>
                 ) : infoMessage ? (
                   <div className="p-8">
@@ -390,14 +499,20 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                     </div>
                   </div>
                 ) : (
-                  <textarea
-                    value={configContent}
-                    onChange={(e) => handleContentChange(e.target.value)}
-                    readOnly={selectedServer?.status === "RUNNING"}
-                    className="w-full min-h-[500px] p-5 bg-black/60 text-emerald-400 font-mono text-[12px] leading-relaxed resize-y outline-none border-none selection:bg-emerald-500/20 placeholder:text-slate-600"
-                    placeholder="Configuration file content will appear here..."
-                    spellCheck={false}
-                  />
+                  <>
+                    <div className="px-4 py-2 bg-slate-900 border-b border-white/5 flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-400">File: {configFilename}</span>
+                      {configFormat && <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono border border-white/5">{configFormat.toUpperCase()}</span>}
+                    </div>
+                    <textarea
+                      value={configContent}
+                      onChange={(e) => handleContentChange(e.target.value)}
+                      readOnly={selectedServer?.status === "RUNNING"}
+                      className="w-full min-h-[500px] p-5 bg-black/60 text-emerald-400 font-mono text-[12px] leading-relaxed resize-y outline-none border-none selection:bg-emerald-500/20 placeholder:text-slate-600"
+                      placeholder="Configuration file content will appear here..."
+                      spellCheck={false}
+                    />
+                  </>
                 )}
               </div>
             </div>
