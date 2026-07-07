@@ -2,7 +2,7 @@
 
 RealmSwap is a powerful, locally-hosted game server manager that allows you to easily deploy, monitor, and manage dedicated servers for your favorite multiplayer games—**100% free and without cloud subscription fees.**
 
-Ditch paying for multiple cloud servers your friends only play half the time. Host your own worlds locally on your PC, archive them to your hard drive when you switch games, and restore them instantly. Zero data loss, zero wasted cash.
+Ditch paying for multiple cloud servers your friends only play half the time. Host your own worlds locally on your PC, archive them to your hard drive when you switch games, and restore them instantly. Zero data loss, zero wasted cash. If you ever *do* decide to move to the cloud, RealmSwap has you covered with its built-in Cloud Advisor and Migration tools.
 
 ## Supported Games
 RealmSwap currently supports single-click deployment for the following dedicated servers out-of-the-box:
@@ -19,6 +19,9 @@ RealmSwap currently supports single-click deployment for the following dedicated
 
 ## Key Features
 - **One-Click Deployments**: Instantly spin up dedicated servers. The app automatically downloads and configures SteamCMD (and direct JAR downloads for Minecraft) behind the scenes.
+- **Cloud Advisor Engine & 1-Click Migration**: Don't know which cloud host to pick? The Cloud Advisor analyzes your server footprint (game type, mod count, RAM requirements) and recommends the best providers (like Hetzner, DigitalOcean, Akliz, and BisectHosting). Once selected, use the built-in SFTP Migration tool to seamlessly push your local save data to the cloud without ever leaving RealmSwap!
+- **Discord Bot Integration**: Manage your server remotely! Start, stop, and monitor your server directly from your Discord community using the built-in RealmSwap bot.
+- **Community Marketplace**: Discover, share, and install custom community-made game configurations, modpacks, and server templates with a single click.
 - **Auto-Port Forwarding (UPnP)**: Automatically maps and unmaps router ports using UPnP, allowing friends to join using your public IP without logging into your router.
 - **Server Readiness Checks**: Validates available disk space, missing dependencies (like SteamCMD), and port availability *before* deployment to prevent frustrating mid-install crashes.
 - **Live Server Console**: Interact directly with your running servers. Read live logs and send commands straight from the dashboard.
@@ -27,9 +30,7 @@ RealmSwap currently supports single-click deployment for the following dedicated
 - **Server Config Editor**: Edit raw server configurations (`.ini`, `.json`, `.properties`) directly from the dashboard.
 - **Backup & Restore**: Easily take snapshot backups of your world data and restore them with a single click.
 - **Mod Manager**: Built-in support for searching, installing, and managing mods for supported games.
-- **Collaborators**: Invite friends to have Co-Host or Admin permissions to help manage the server while you are away.
 - **RealmSync Integration**: Generate deep links (`realmsync://`) for your friends to use with the RealmSync companion app. RealmSync automatically downloads required mods and configurations to the player's client and connects them directly to your server in one click!
-- **Audit Logs**: Keep track of every action performed on your servers with detailed security audit logs.
 
 ## Technology & Architecture
 - **Frontend**: Next.js 14 (App Router), React, Tailwind CSS, Lucide Icons
@@ -75,5 +76,3 @@ We are currently focusing on:
 - Docker container abstractions for true cross-platform hosting
 - Replacing native browser dialogs with custom UI modals
 - More extensive game server definitions!
-- Community Marketplace for sharing custom game configurations and mods
-- Discord Bot Integration for managing servers directly from your Discord server
