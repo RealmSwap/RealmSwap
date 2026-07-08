@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { ensureLocalUser } from "@/lib/auth";
+import { getEntitlement, syncEntitlementToMirror } from "@/lib/entitlement";
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,6 +31,12 @@ export async function POST(req: NextRequest) {
     // signInWithPassword set the session cookies via the ssr client. Sync the
     // local mirror so downstream code (getAuthenticatedUser + local FKs) works.
     const user = await ensureLocalUser(data.user);
+
+    // Refresh the local entitlement mirror from the cloud so the dashboard's
+    // slot cap reflects the user's actual plan. Uses the just-authenticated
+    // client (fresh cookies aren't on this request yet).
+    const ent = await getEntitlement(supabase);
+    await syncEntitlementToMirror(data.user.id, ent);
 
     await prisma.activityLog
       .create({

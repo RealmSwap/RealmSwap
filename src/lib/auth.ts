@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
+import { FREE_TIER_SLOTS } from "@/lib/entitlement";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 /**
@@ -63,9 +64,9 @@ export async function ensureLocalUser(supabaseUser: SupabaseUser) {
       role,
       passwordHash: "", // legacy column; identity is owned by Supabase Auth
       subscription: {
-        // FREE / 999 slots preserves the pre-cloud "unlimited local hosting"
-        // behavior; Phase 2 replaces this with cloud entitlement enforcement.
-        create: { plan: "FREE", status: "ACTIVE", activeSlots: 999 },
+        // Seed the mirror at the free-tier default; login syncs it from cloud
+        // entitlement (user_entitlements) once a plan exists.
+        create: { plan: "FREE", status: "FREE", activeSlots: FREE_TIER_SLOTS },
       },
     },
   });
