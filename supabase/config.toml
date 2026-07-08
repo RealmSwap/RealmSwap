@@ -59,3 +59,6 @@ verify_jwt = false
 # Called by the desktop app with the signed-in user's JWT.
 [functions.create-checkout-session]
 verify_jwt = true
+
+[functions.create-portal-session]
+verify_jwt = true

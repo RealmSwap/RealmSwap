@@ -1,21 +1,14 @@
 // Supabase Edge Function: stripe-webhook
 //
-// The TRUSTED billing writer. This runs on Supabase infrastructure (Deno), NOT in
-// the desktop app, so it is the only place that holds the Stripe secret and the
-// Supabase service_role key (which bypasses RLS). Stripe POSTs subscription
-// lifecycle events here; we verify the signature and project them into
-// public.customers / public.subscriptions, which the app reads back (RLS-gated).
+// The TRUSTED billing writer. Runs on Supabase (Deno), NOT in the desktop app, so
+// it is the only place that holds the Stripe secret + the service_role key (which
+// bypasses RLS). Stripe POSTs lifecycle events here; we verify the signature and
+// project them into public.customers / public.subscriptions, and sync the product
+// / price catalogue so user_entitlements and the billing page stay accurate.
 //
-// Config: `verify_jwt = false` in supabase/config.toml (Stripe uses its own
-// signature, not a Supabase JWT).
-//
-// Required function secrets (set via `supabase secrets set ...`):
-//   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
-//   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY   (the last two are injected by the platform)
-//
-// This is a working skeleton: it covers the core events and the plan/active_slots
-// derivation. Harden (retries, partial-failure handling, more event types) before
-// production. Pin the import versions to the ones you test with.
+// Config: verify_jwt = false (Stripe uses its own signature).
+// Secrets: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET (SUPABASE_URL /
+// SUPABASE_SERVICE_ROLE_KEY are injected by the platform).
 
 import Stripe from "https://esm.sh/stripe@16?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -32,10 +25,35 @@ const admin = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
-// Derive our plan + slot entitlement from the Stripe price. Prefer explicit price
-// metadata (plan / active_slots); fall back to our prices table.
+async function upsertProduct(p: Stripe.Product) {
+  await admin.from("products").upsert({
+    id: p.id,
+    active: p.active,
+    name: p.name,
+    description: p.description,
+    metadata: p.metadata,
+  });
+}
+
+async function upsertPrice(price: Stripe.Price) {
+  await admin.from("prices").upsert({
+    id: price.id,
+    product_id: typeof price.product === "string" ? price.product : price.product?.id,
+    active: price.active,
+    currency: price.currency,
+    unit_amount: price.unit_amount,
+    interval: price.recurring?.interval ?? null,
+    interval_count: price.recurring?.interval_count ?? 1,
+    // Plan + slot entitlement live in the Stripe price metadata.
+    plan: price.metadata?.plan ?? null,
+    active_slots: price.metadata?.active_slots ? Number(price.metadata.active_slots) : null,
+    metadata: price.metadata,
+  });
+}
+
+// Derive our plan + slots for a subscription from the synced prices table.
 async function resolveEntitlement(priceId: string | null) {
-  if (!priceId) return { plan: null, activeSlots: 1 };
+  if (!priceId) return { plan: null as string | null, activeSlots: 1 };
   const { data } = await admin
     .from("prices")
     .select("plan, active_slots")
@@ -48,7 +66,6 @@ async function upsertSubscription(sub: Stripe.Subscription) {
   const priceId = sub.items.data[0]?.price?.id ?? null;
   const { plan, activeSlots } = await resolveEntitlement(priceId);
 
-  // Map the Stripe customer to our user via public.customers.
   const { data: customer } = await admin
     .from("customers")
     .select("id")
@@ -83,17 +100,26 @@ Deno.serve(async (req) => {
     return new Response(`signature verification failed: ${err}`, { status: 400 });
   }
 
-  // Idempotency: skip events we've already processed.
+  // Idempotency: record the event id; a duplicate insert means we've handled it.
   const { error: dupErr } = await admin
     .from("stripe_events")
     .insert({ id: event.id, type: event.type, payload: event as unknown as Record<string, unknown> });
   if (dupErr) {
-    // Unique violation => already handled. Ack so Stripe stops retrying.
     return new Response(JSON.stringify({ received: true, duplicate: true }), { status: 200 });
   }
 
   try {
     switch (event.type) {
+      case "product.created":
+      case "product.updated":
+      case "product.deleted":
+        await upsertProduct(event.data.object as Stripe.Product);
+        break;
+      case "price.created":
+      case "price.updated":
+      case "price.deleted":
+        await upsertPrice(event.data.object as Stripe.Price);
+        break;
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         if (session.subscription) {
@@ -104,12 +130,9 @@ Deno.serve(async (req) => {
       }
       case "customer.subscription.created":
       case "customer.subscription.updated":
-      case "customer.subscription.deleted": {
+      case "customer.subscription.deleted":
         await upsertSubscription(event.data.object as Stripe.Subscription);
         break;
-      }
-      // TODO: product.created/updated + price.created/updated to auto-sync the
-      // catalogue into public.products / public.prices.
       default:
         break;
     }
