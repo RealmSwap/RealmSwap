@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
+// Toggle the caller's favorite (heart) on a realm. A favorite is a realm_votes
+// row (value fixed at 1); un-favoriting deletes it. The counter trigger keeps
+// realms.like_count in sync, which the app surfaces as the favorite count.
 export async function POST(
   request: Request,
   { params }: { params: { id: string } },
@@ -12,33 +15,23 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { type } = await request.json(); // "LIKE" | "DISLIKE" | "NONE"
+    const { favorited } = await request.json();
     const realmId = params.id;
     const supabase = createClient();
 
-    // user.id is the Supabase uid (local mirror), so it satisfies the RLS check
-    // user_id = auth.uid(). The realm_votes counter trigger keeps like/dislike counts.
-    if (type === "NONE") {
+    if (favorited) {
+      const { error } = await supabase
+        .from("realm_votes")
+        .upsert({ realm_id: realmId, user_id: user.id, value: 1 }, { onConflict: "realm_id,user_id" });
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    } else {
       const { error } = await supabase
         .from("realm_votes")
         .delete()
         .eq("realm_id", realmId)
         .eq("user_id", user.id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json({ success: true });
     }
-
-    if (type !== "LIKE" && type !== "DISLIKE") {
-      return NextResponse.json({ error: "Invalid vote type" }, { status: 400 });
-    }
-
-    const { error } = await supabase
-      .from("realm_votes")
-      .upsert(
-        { realm_id: realmId, user_id: user.id, value: type === "LIKE" ? 1 : -1 },
-        { onConflict: "realm_id,user_id" },
-      );
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

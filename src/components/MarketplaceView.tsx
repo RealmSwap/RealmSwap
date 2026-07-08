@@ -8,8 +8,7 @@ import { useToast } from "@/components/ToastProvider";
 import {
   Download,
   Search,
-  ThumbsUp,
-  ThumbsDown,
+  Heart,
   Filter,
   Settings,
   Wrench,
@@ -49,9 +48,8 @@ interface MarketplaceTemplate {
   gameSlug: string;
   tags: string;
   downloads: number;
-  likes: number;
-  dislikes: number;
-  userVote?: "LIKE" | "DISLIKE" | null;
+  favorites: number;
+  userFavorited?: boolean;
   payload: string;
   customDefSpec?: string;
   verifiedLevel: string;
@@ -316,20 +314,19 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
     }
   };
 
-  const handleVote = async (templateId: string, type: "LIKE" | "DISLIKE" | "NONE") => {
+  const handleFavorite = async (templateId: string) => {
+    // Determine the new favorite state from whichever list currently holds it.
+    const current =
+      browseResults.find(t => t.id === templateId) ||
+      staffPicks.find(t => t.id === templateId) ||
+      trending.find(t => t.id === templateId) ||
+      (selectedTemplate?.id === templateId ? selectedTemplate : undefined);
+    const favorited = !current?.userFavorited;
+
     // Optimistic update
     const updateList = (list: MarketplaceTemplate[]) => list.map(t => {
       if (t.id !== templateId) return t;
-      let newLikes = t.likes;
-      let newDislikes = t.dislikes;
-
-      if (t.userVote === "LIKE") newLikes--;
-      else if (t.userVote === "DISLIKE") newDislikes--;
-
-      if (type === "LIKE") newLikes++;
-      else if (type === "DISLIKE") newDislikes++;
-
-      return { ...t, likes: newLikes, dislikes: newDislikes, userVote: type === "NONE" ? null : type };
+      return { ...t, userFavorited: favorited, favorites: Math.max(0, t.favorites + (favorited ? 1 : -1)) };
     });
 
     setStaffPicks(updateList);
@@ -341,10 +338,10 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
     }
 
     try {
-      await fetch(`/api/marketplace/${templateId}/vote`, {
+      await fetch(`/api/marketplace/${templateId}/favorite`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type })
+        body: JSON.stringify({ favorited })
       });
     } catch (e) {
       console.error(e);
@@ -429,9 +426,9 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                   <Download className="w-3.5 h-3.5" />
                   {formatCount(t.downloads)}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-blue-400/80 font-medium">
-                  <ThumbsUp className="w-3.5 h-3.5" />
-                  {formatCount(t.likes)}
+                <div className="flex items-center gap-1 text-xs text-rose-400/80 font-medium">
+                  <Heart className="w-3.5 h-3.5" />
+                  {formatCount(t.favorites)}
                 </div>
               </div>
               <button className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 text-[10px] font-bold text-white transition-all uppercase tracking-wider">
@@ -505,9 +502,9 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
               <Download className="w-3.5 h-3.5" />
               {formatCount(t.downloads)}
             </span>
-            <span className="flex items-center gap-1.5 group-hover:text-blue-400/80 transition-colors">
-              <ThumbsUp className="w-3.5 h-3.5" />
-              {formatCount(t.likes)}
+            <span className="flex items-center gap-1.5 group-hover:text-rose-400/80 transition-colors">
+              <Heart className="w-3.5 h-3.5" />
+              {formatCount(t.favorites)}
             </span>
           </div>
           <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider group-hover:text-slate-400 transition-colors">
@@ -641,7 +638,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                                 <Download className="w-4 h-4 text-emerald-400" /> {formatCount(hero.downloads)}
                               </span>
                               <span className="flex items-center gap-1.5 bg-black/30 px-3 py-1.5 rounded-lg border border-white/5">
-                                <ThumbsUp className="w-4 h-4 text-blue-400" /> {formatCount(hero.likes)}
+                                <Heart className="w-4 h-4 text-rose-400" /> {formatCount(hero.favorites)}
                               </span>
                             </div>
                           </div>
@@ -709,7 +706,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                   className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors cursor-pointer font-bold"
                 >
                   <option value="downloads">Most Deployed</option>
-                  <option value="likes">Highest Rated</option>
+                  <option value="likes">Most Favorited</option>
                   <option value="newest">Recently Added</option>
                 </select>
               </div>
@@ -802,7 +799,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                     className="lg:hidden px-3 py-2.5 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple cursor-pointer font-bold"
                   >
                     <option value="downloads">Most Deployed</option>
-                    <option value="likes">Highest Rated</option>
+                    <option value="likes">Most Favorited</option>
                     <option value="newest">Recently Added</option>
                   </select>
                 </div>
@@ -953,31 +950,21 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
             })() : (
               /* Normal Detail View */
               <div className="p-8 overflow-y-auto flex-1 space-y-8 bg-[#0b0e14]">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center justify-center shadow-lg backdrop-blur-sm">
                     <Download className="w-6 h-6 text-emerald-400 mb-2" />
                     <span className="font-black text-lg text-white">{formatCount(selectedTemplate.downloads)}</span>
-                    <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Deploys</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Installs</span>
                   </div>
-                  <div 
+                  <div
                     className={`p-4 rounded-2xl border flex flex-col items-center justify-center cursor-pointer transition-all shadow-lg backdrop-blur-sm ${
-                      selectedTemplate.userVote === 'LIKE' ? 'bg-accentPurple/10 border-accentPurple/30 text-accentPurple shadow-[0_0_15px_rgba(168,85,247,0.15)]' : 'bg-slate-900/50 border-white/5 hover:border-white/10 hover:bg-slate-800/50'
+                      selectedTemplate.userFavorited ? 'bg-rose-500/10 border-rose-500/30 shadow-[0_0_15px_rgba(244,63,94,0.15)]' : 'bg-slate-900/50 border-white/5 hover:border-white/10 hover:bg-slate-800/50'
                     }`}
-                    onClick={() => handleVote(selectedTemplate.id, selectedTemplate.userVote === 'LIKE' ? 'NONE' : 'LIKE')}
+                    onClick={() => handleFavorite(selectedTemplate.id)}
                   >
-                    <ThumbsUp className={`w-6 h-6 mb-2 ${selectedTemplate.userVote === 'LIKE' ? 'text-accentPurple' : 'text-blue-400'}`} />
-                    <span className="font-black text-lg text-white">{formatCount(selectedTemplate.likes)}</span>
-                    <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Likes</span>
-                  </div>
-                  <div 
-                    className={`p-4 rounded-2xl border flex flex-col items-center justify-center cursor-pointer transition-all shadow-lg backdrop-blur-sm ${
-                      selectedTemplate.userVote === 'DISLIKE' ? 'bg-red-500/10 border-red-500/30 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)]' : 'bg-slate-900/50 border-white/5 hover:border-white/10 hover:bg-slate-800/50'
-                    }`}
-                    onClick={() => handleVote(selectedTemplate.id, selectedTemplate.userVote === 'DISLIKE' ? 'NONE' : 'DISLIKE')}
-                  >
-                    <ThumbsDown className={`w-6 h-6 mb-2 ${selectedTemplate.userVote === 'DISLIKE' ? 'text-red-400' : 'text-rose-400'}`} />
-                    <span className="font-black text-lg text-white">{formatCount(selectedTemplate.dislikes)}</span>
-                    <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Dislikes</span>
+                    <Heart className={`w-6 h-6 mb-2 ${selectedTemplate.userFavorited ? 'fill-rose-500 text-rose-500' : 'text-rose-400'}`} />
+                    <span className="font-black text-lg text-white">{formatCount(selectedTemplate.favorites)}</span>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold mt-1">Favorites</span>
                   </div>
                   <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center justify-center shadow-lg backdrop-blur-sm">
                     <Clock className="w-6 h-6 text-slate-400 mb-2" />
