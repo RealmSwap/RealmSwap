@@ -1,11 +1,15 @@
 import { redirect } from "next/navigation";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isBillingEnabled } from "@/lib/billing";
 import BillingView from "@/components/BillingView";
 
 export const dynamic = "force-dynamic";
 
 export default async function BillingPage() {
+  // Billing is behind a feature flag until a real Stripe account is set up.
+  if (!isBillingEnabled()) redirect("/dashboard");
+
   const user = await getAuthenticatedUser();
   if (!user) redirect("/login");
 

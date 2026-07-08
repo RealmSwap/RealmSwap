@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { isBillingEnabled } from "@/lib/billing";
 
 /**
  * Start a Stripe Checkout for a subscription plan. Proxies to the
@@ -8,6 +9,8 @@ import { createClient } from "@/lib/supabase/server";
  * the Stripe secret; the app never does). Returns the Checkout URL to open.
  */
 export async function POST(req: NextRequest) {
+  if (!isBillingEnabled()) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const user = await getAuthenticatedUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
