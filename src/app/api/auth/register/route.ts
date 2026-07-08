@@ -1,89 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { hashPassword, signToken } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { ensureLocalUser } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, plan = "FREE" } = await req.json();
+    const { name, email, password } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
         { error: "Name, email, and password are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: String(email).toLowerCase(),
+      password,
+      options: { data: { full_name: name } },
     });
 
-    if (existingUser) {
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    if (!data.user) {
       return NextResponse.json(
-        { error: "User already exists with this email" },
-        { status: 400 }
+        { error: "Could not create account. Please try again." },
+        { status: 400 },
       );
     }
 
-    // Hash password
-    const hashedPassword = hashPassword(password);
-
-    // Give unlimited active slots for local hosting
-    let activeSlots = 999;
-
-    // Create user and subscription in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      const userCount = await tx.user.count();
-      const role = userCount === 0 ? "ADMIN" : "USER";
-
-      const user = await tx.user.create({
-        data: {
-          name,
-          email: email.toLowerCase(),
-          passwordHash: hashedPassword,
-          role,
+    // With email confirmations enabled there is no session yet — the desktop
+    // flow expects instant sign-in, so surface a clear message. (Disable
+    // "Confirm email" in Supabase Auth settings for the baseline.)
+    if (!data.session) {
+      return NextResponse.json(
+        {
+          error:
+            "Check your email to confirm your account before signing in. (Admins: disable 'Confirm email' in Supabase Auth for instant sign-in.)",
         },
-      });
+        { status: 400 },
+      );
+    }
 
-      const subscription = await tx.subscription.create({
-        data: {
-          userId: user.id,
-          plan,
-          status: "ACTIVE",
-          activeSlots,
-        },
-      });
+    const user = await ensureLocalUser(data.user);
 
-      await tx.activityLog.create({
+    await prisma.activityLog
+      .create({
         data: {
-          userId: user.id,
+          userId: data.user.id,
           action: "USER_REGISTER",
-          details: `Registered account and selected ${plan} plan (${activeSlots} server slot(s)).`,
+          details: "Registered account via Supabase Auth.",
         },
-      });
+      })
+      .catch(() => {});
 
-      return { user, subscription };
-    });
-
-    // Sign JWT and set cookie
-    const token = signToken(result.user.id);
-    const response = NextResponse.json({
+    return NextResponse.json({
       success: true,
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        name: result.user.name,
-      },
+      user: { id: data.user.id, email: user?.email, name: user?.name },
     });
-
-    response.cookies.set("gv_session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: "/",
-    });
-
-    return response;
   } catch (error) {
     console.error("Register API Error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

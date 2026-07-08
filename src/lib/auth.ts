@@ -1,77 +1,106 @@
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { createClient } from "@/lib/supabase/server";
+import { FREE_TIER_SLOTS } from "@/lib/entitlement";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "realmswap_secret_fallback_key_123";
-export const AUTH_COOKIE_NAME = "gv_session";
+/**
+ * Identity is owned by Supabase Auth. The local SQLite `User` row is a thin
+ * MIRROR keyed by the Supabase user id, so local foreign keys (Server.userId,
+ * ActivityLog.userId, ...) keep working unchanged.
+ *
+ * This module preserves the public contract it had under the old bcrypt/JWT
+ * scheme: `getAuthenticatedUser()` returns the local user (with `subscription`,
+ * secrets stripped) or null. ~85 call sites across the app depend on that shape,
+ * so it must not change.
+ */
 
-export function hashPassword(password: string): string {
-  return bcrypt.hashSync(password, 10);
+function displayNameFor(u: SupabaseUser): string {
+  const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
+  return (
+    (meta.full_name as string) ||
+    (meta.name as string) ||
+    (u.email ? u.email.split("@")[0] : "Player")
+  );
 }
 
-export function verifyPassword(password: string, hash: string): boolean {
-  try {
-    return bcrypt.compareSync(password, hash);
-  } catch (e) {
-    return false;
+/**
+ * Create or refresh the local mirror for a Supabase user. Idempotent.
+ *
+ * - The first local user becomes ADMIN. This is a LOCAL-only role for now; cloud
+ *   `profiles.role` is service-role-locked by design and managed separately.
+ * - Ensures a local `Subscription` mirror exists so the dashboard's slot display
+ *   keeps working until entitlement is wired to the cloud (Phase 2).
+ */
+export async function ensureLocalUser(supabaseUser: SupabaseUser) {
+  const email = (supabaseUser.email ?? "").toLowerCase();
+  const name = displayNameFor(supabaseUser);
+
+  const existing = await prisma.user.findUnique({
+    where: { id: supabaseUser.id },
+    include: { subscription: true },
+  });
+
+  if (existing) {
+    if (existing.email !== email || existing.name !== name) {
+      await prisma.user.update({
+        where: { id: supabaseUser.id },
+        data: { email: email || existing.email, name },
+      });
+    }
+    return prisma.user.findUnique({
+      where: { id: supabaseUser.id },
+      include: { subscription: true },
+    });
   }
+
+  const userCount = await prisma.user.count();
+  const role = userCount === 0 ? "ADMIN" : "USER";
+
+  await prisma.user.create({
+    data: {
+      id: supabaseUser.id,
+      email,
+      name,
+      role,
+      passwordHash: "", // legacy column; identity is owned by Supabase Auth
+      subscription: {
+        // Seed the mirror at the free-tier default; login syncs it from cloud
+        // entitlement (user_entitlements) once a plan exists.
+        create: { plan: "FREE", status: "FREE", activeSlots: FREE_TIER_SLOTS },
+      },
+    },
+  });
+
+  return prisma.user.findUnique({
+    where: { id: supabaseUser.id },
+    include: { subscription: true },
+  });
 }
 
-export function signToken(userId: string): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
-}
-
-export function verifyToken(token: string): { userId: string } | null {
-  try {
-    return jwt.verify(token, JWT_SECRET) as { userId: string };
-  } catch (error) {
-    return null;
-  }
-}
-
+/**
+ * Resolve the current user from the Supabase session cookie and return the local
+ * mirror (lazily creating it if missing — self-heals after a reinstall). Returns
+ * null when unauthenticated. Same return shape as the previous JWT implementation.
+ */
 export async function getAuthenticatedUser() {
   try {
-    const cookieStore = cookies();
-    const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
-    
-    if (!token) return null;
-    
-    const payload = verifyToken(token);
-    if (!payload) return null;
-    
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      include: {
-        subscription: true,
-      },
-    });
-    
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) return null;
-    
-    // Don't leak password hash
-    const { passwordHash, ...safeUser } = user;
+
+    let local = await prisma.user.findUnique({
+      where: { id: user.id },
+      include: { subscription: true },
+    });
+    if (!local) local = await ensureLocalUser(user);
+    if (!local) return null;
+
+    // Don't leak the (now-legacy, usually null) password hash.
+    const { passwordHash, ...safeUser } = local;
     return safeUser;
   } catch (error) {
     return null;
   }
-}
-
-export function setAuthCookie(token: string) {
-  const cookieStore = cookies();
-  cookieStore.set(AUTH_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    path: "/",
-  });
-}
-
-export function deleteAuthCookie() {
-  const cookieStore = cookies();
-  cookieStore.set(AUTH_COOKIE_NAME, "", {
-    maxAge: -1,
-    path: "/",
-  });
 }

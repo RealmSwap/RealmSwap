@@ -1,0 +1,64 @@
+# Supabase local config for RealmSwap shared services.
+#
+# NOTE: this file was hand-authored (the Supabase CLI was not installed when the
+# scaffold was created). After you `supabase init` / upgrade the CLI, it will
+# reconcile/format this file. `major_version` and default ports match a stock
+# Supabase local stack; adjust to match your CLI version if needed.
+#
+# Local dev (`supabase start`) requires Docker Desktop running (Windows: install
+# Docker Desktop; the CLI installs via `scoop install supabase` or npm).
+
+project_id = "realmswap"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+# Desktop app deep-link used for OAuth / email redirects. The Electron app
+# registers the realmsync:// protocol handler already (electron/main.js).
+site_url = "realmsync://auth-callback"
+additional_redirect_urls = ["realmsync://auth-callback", "http://localhost:3000"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false  # set true in production once email is wired
+
+# Discord OAuth (replaces the legacy 6-digit DiscordLinkCode flow). Disabled until
+# you fill in the client id/secret from the Discord developer portal and set the
+# env vars below, then flip enabled = true.
+[auth.external.discord]
+enabled = false
+client_id = "env(SUPABASE_AUTH_DISCORD_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_DISCORD_SECRET)"
+
+# Stripe calls this function directly with its own signature (no Supabase JWT).
+[functions.stripe-webhook]
+verify_jwt = false
+
+# Called by the desktop app with the signed-in user's JWT.
+[functions.create-checkout-session]
+verify_jwt = true
+
+[functions.create-portal-session]
+verify_jwt = true

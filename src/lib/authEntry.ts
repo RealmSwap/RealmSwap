@@ -1,17 +1,18 @@
 /**
  * Decides which path the desktop app should open to on launch.
  *
- * - Authenticated (valid session, user still exists) -> the dashboard.
- * - Otherwise, if any users exist -> the login page.
- * - Otherwise (fresh install, no users) -> the register page.
+ * - Authenticated (valid Supabase session) -> the dashboard.
+ * - Otherwise -> the login page (register is reachable from there).
  *
- * Pure function so the branching is unit-testable without a server/DB; the
- * /start server component wires real cookie + DB data into it.
+ * With cloud (Supabase) auth, accounts are global rather than rows in the local
+ * DB, so the old "any local users exist?" heuristic no longer applies — a fresh
+ * install simply shows login.
+ *
+ * Pure function so the branching is unit-testable without a server/session; the
+ * /start server component wires the real session state into it.
  */
 export function pickEntryPath(input: {
   isAuthenticated: boolean;
-  userCount: number;
-}): "/dashboard" | "/login" | "/register" {
-  if (input.isAuthenticated) return "/dashboard";
-  return input.userCount > 0 ? "/login" : "/register";
+}): "/dashboard" | "/login" {
+  return input.isAuthenticated ? "/dashboard" : "/login";
 }

@@ -1,5 +1,5 @@
 "use strict";
-const { app, BrowserWindow, Tray, Menu, nativeImage } = require("electron");
+const { app, BrowserWindow, Tray, Menu, nativeImage, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const net = require("net");
@@ -43,6 +43,24 @@ function showMainWindow() {
   if (mainWindow.isMinimized()) mainWindow.restore();
   mainWindow.show();
   mainWindow.focus();
+}
+
+function appBaseUrl() {
+  return isDev ? "http://localhost:3000" : `http://127.0.0.1:${serverPort}`;
+}
+
+// Map a realmsync:// deep link to the in-app URL it should open.
+function resolveDeepLinkUrl(deepLinkArg) {
+  const base = appBaseUrl();
+  if (deepLinkArg && deepLinkArg.includes("checkout-callback")) {
+    // Return from Stripe Checkout / Customer Portal.
+    return `${base}/dashboard/billing?checkout=success`;
+  }
+  if (deepLinkArg) {
+    // RealmSync invite links and other deep links go through /start.
+    return `${base}/start?link=${encodeURIComponent(deepLinkArg)}`;
+  }
+  return `${base}/start`;
 }
 
 function getFreePort() {
@@ -180,19 +198,18 @@ async function createWindow(port) {
     }
   });
 
-  // Open to the desktop entry route, which redirects to dashboard (valid
-  // session), login (users exist), or register (fresh install) — not the
-  // marketing landing page at /.
-  // Also pass any deep link query parameters to /start.
+  // Open http(s) links (Stripe Checkout / Portal, docs, tunnel URLs) in the user's
+  // real browser instead of a bare in-app window; deny any other popup.
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+    return { action: "deny" };
+  });
+
+  // Open to the desktop entry route (redirects to dashboard/login), or to billing
+  // on a checkout return. Deep links are resolved by resolveDeepLinkUrl.
   const deepLinkArg = process.argv.find(arg => arg.startsWith("realmsync://"));
-  let url = isDev
-    ? "http://localhost:3000/start"
-    : `http://127.0.0.1:${port}/start`;
-    
-  if (deepLinkArg) {
-    url += `?link=${encodeURIComponent(deepLinkArg)}`;
-  }
-  
+  const url = resolveDeepLinkUrl(deepLinkArg);
+
   await mainWindow.loadURL(url);
   mainWindow.show();
   buildTray();
@@ -210,14 +227,20 @@ if (!gotLock) {
       
       const deepLinkArg = commandLine.find(arg => arg.startsWith("realmsync://"));
       if (deepLinkArg) {
-        const url = isDev 
-          ? `http://localhost:3000/start?link=${encodeURIComponent(deepLinkArg)}` 
-          : `http://127.0.0.1:${serverPort}/start?link=${encodeURIComponent(deepLinkArg)}`;
-        mainWindow.loadURL(url);
+        mainWindow.loadURL(resolveDeepLinkUrl(deepLinkArg));
       }
     }
   });
 }
+
+// macOS delivers deep links via open-url (Windows uses argv/second-instance).
+app.on("open-url", (event, urlStr) => {
+  event.preventDefault();
+  if (mainWindow) {
+    showMainWindow();
+    mainWindow.loadURL(resolveDeepLinkUrl(urlStr));
+  }
+});
 
 app.whenReady().then(async () => {
   try {

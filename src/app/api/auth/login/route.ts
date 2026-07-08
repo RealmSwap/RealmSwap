@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { verifyPassword, signToken, setAuthCookie } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { ensureLocalUser } from "@/lib/auth";
+import { getEntitlement, syncEntitlementToMirror } from "@/lib/entitlement";
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,55 +11,47 @@ export async function POST(req: NextRequest) {
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: String(email).toLowerCase(),
+      password,
     });
 
-    if (!user || !verifyPassword(password, user.passwordHash)) {
+    if (error || !data.user) {
       return NextResponse.json(
         { error: "Invalid email or password" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    // Sign JWT and set cookie
-    const token = signToken(user.id);
-    
-    // Set cookies in route handler
-    const response = NextResponse.json({
+    // signInWithPassword set the session cookies via the ssr client. Sync the
+    // local mirror so downstream code (getAuthenticatedUser + local FKs) works.
+    const user = await ensureLocalUser(data.user);
+
+    // Refresh the local entitlement mirror from the cloud so the dashboard's
+    // slot cap reflects the user's actual plan. Uses the just-authenticated
+    // client (fresh cookies aren't on this request yet).
+    const ent = await getEntitlement(supabase);
+    await syncEntitlementToMirror(data.user.id, ent);
+
+    await prisma.activityLog
+      .create({
+        data: {
+          userId: data.user.id,
+          action: "USER_LOGIN",
+          details: "User successfully logged in via Supabase Auth.",
+        },
+      })
+      .catch(() => {});
+
+    return NextResponse.json({
       success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      },
+      user: { id: data.user.id, email: user?.email, name: user?.name },
     });
-    
-    // Use helper to set cookie
-    // Since setAuthCookie uses next/headers cookies(), it works inside Server Actions but might throw inside route handlers.
-    // In Route Handlers, setting cookie on the response object directly is more reliable:
-    response.cookies.set("gv_session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: "/",
-    });
-
-    // Create activity log
-    await prisma.activityLog.create({
-      data: {
-        userId: user.id,
-        action: "USER_LOGIN",
-        details: "User successfully logged in via credentials.",
-      },
-    });
-
-    return response;
   } catch (error) {
     console.error("Login API Error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

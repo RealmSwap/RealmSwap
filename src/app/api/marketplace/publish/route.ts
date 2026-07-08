@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
@@ -25,11 +25,13 @@ export async function POST(request: Request) {
       }
     }
 
+    // Best-effort scrub of accidental secrets in config overrides (matches prior
+    // behavior). NOTE: enforced app-side only; a DB trigger is future hardening.
     let strippedSecrets = false;
     if (payload.configOverrides && Array.isArray(payload.configOverrides)) {
       for (const override of payload.configOverrides) {
-        if (override.content && typeof override.content === 'string') {
-          const newContent = override.content.replace(/(password|token|key|secret)\s*[:=]\s*[^\s\n"']+/gi, '$1=***REMOVED***');
+        if (override.content && typeof override.content === "string") {
+          const newContent = override.content.replace(/(password|token|key|secret)\s*[:=]\s*[^\s\n"']+/gi, "$1=***REMOVED***");
           if (newContent !== override.content) {
             strippedSecrets = true;
             override.content = newContent;
@@ -38,19 +40,38 @@ export async function POST(request: Request) {
       }
     }
 
-    const template = await prisma.marketplaceTemplate.create({
-      data: {
+    const tagsArr =
+      typeof tags === "string"
+        ? tags.split(",").map((t) => t.trim()).filter(Boolean)
+        : Array.isArray(tags)
+        ? tags
+        : [];
+
+    const supabase = createClient();
+    // RLS insert policy requires seller_id = auth.uid() (= the local mirror id).
+    // verified_level is forced to UNVERIFIED here; users cannot self-promote.
+    const { data: realm, error } = await supabase
+      .from("realms")
+      .insert({
+        seller_id: user.id,
         name,
         description,
-        author: user.name,
-        gameSlug,
-        tags: tags || "",
-        payload: JSON.stringify(payload),
-        customDefSpec: customDefSpec ? JSON.stringify(customDefSpec) : null,
-      },
-    });
+        game_slug: gameSlug,
+        tags: tagsArr,
+        payload,
+        custom_def_spec: customDefSpec ?? null,
+        status: "PUBLISHED",
+        visibility: "PUBLIC",
+        verified_level: "UNVERIFIED",
+      })
+      .select("id, name")
+      .single();
 
-    return NextResponse.json({ ...template, strippedSecrets });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ id: realm.id, name: realm.name, strippedSecrets });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

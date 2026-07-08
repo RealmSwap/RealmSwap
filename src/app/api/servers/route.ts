@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { checkServerSlot } from "@/lib/entitlement";
 import { initBackupScheduler } from "@/lib/backupScheduler";
 import { initActionScheduler } from "@/lib/actionScheduler";
 import { parseSpec, stringifyParamValues } from "@/lib/definitions/serialize";
@@ -76,6 +77,21 @@ export async function POST(req: NextRequest) {
     const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Entitlement gate: enforce the plan's active server-slot limit.
+    const slot = await checkServerSlot(user.id);
+    if (!slot.ok) {
+      return NextResponse.json(
+        {
+          error: `You've reached your plan's server limit (${slot.used}/${slot.total} on the ${slot.plan} plan). Upgrade to add more slots.`,
+          code: "SLOT_LIMIT",
+          used: slot.used,
+          total: slot.total,
+          plan: slot.plan,
+        },
+        { status: 403 },
+      );
     }
 
     const body = await req.json();
