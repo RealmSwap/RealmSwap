@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, ThumbsUp, ThumbsDown, ShieldCheck, Store, TrendingUp } from "lucide-react";
+import { ArrowLeft, Download, Heart, ShieldCheck, Store, TrendingUp } from "lucide-react";
 
 type Daily = { day: string; downloads: number };
 type RealmAnalytics = {
@@ -121,10 +121,9 @@ export default function MyRealmsView({ realms }: { realms: RealmAnalytics[] }) {
                   </div>
                   <div className="text-center">
                     <div className="flex items-center gap-1.5 text-white font-bold">
-                      <ThumbsUp className="w-3.5 h-3.5 text-slate-400" />{r.like_count}
-                      <ThumbsDown className="w-3.5 h-3.5 text-slate-400 ml-1" />{r.dislike_count}
+                      <Heart className="w-4 h-4 text-rose-400" />{r.like_count}
                     </div>
-                    <div className="text-[10px] text-mutedText uppercase tracking-wider">Votes</div>
+                    <div className="text-[10px] text-mutedText uppercase tracking-wider">Favorites</div>
                   </div>
                 </div>
 

@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-// Map a cloud `realms` row (with embedded seller + the caller's vote) to the shape
-// the marketplace UI expects (comma-string tags, JSON-string payloads, camelCase,
-// derived author, LIKE/DISLIKE/null vote).
+// Map a cloud `realms` row (with embedded seller + the caller's favorite) to the
+// shape the marketplace UI expects (comma-string tags, JSON-string payloads,
+// camelCase, derived author). A favorite = the presence of a realm_votes row;
+// `like_count` is surfaced as the favorite count.
 function mapRealmToTemplate(r: any) {
-  const vote = Array.isArray(r.realm_votes) && r.realm_votes.length ? r.realm_votes[0].value : null;
   return {
     id: r.id,
     name: r.name,
@@ -15,13 +15,12 @@ function mapRealmToTemplate(r: any) {
     gameSlug: r.game_slug,
     tags: Array.isArray(r.tags) ? r.tags.join(",") : "",
     downloads: r.download_count ?? 0,
-    likes: r.like_count ?? 0,
-    dislikes: r.dislike_count ?? 0,
+    favorites: r.like_count ?? 0,
+    userFavorited: Array.isArray(r.realm_votes) && r.realm_votes.length > 0,
     verifiedLevel: r.verified_level,
     payload: JSON.stringify(r.payload ?? {}),
     customDefSpec: r.custom_def_spec ? JSON.stringify(r.custom_def_spec) : null,
     createdAt: r.created_at,
-    userVote: vote === 1 ? "LIKE" : vote === -1 ? "DISLIKE" : null,
   };
 }
 
@@ -45,7 +44,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from("realms")
       .select(
-        "id, name, description, game_slug, tags, payload, custom_def_spec, download_count, like_count, dislike_count, verified_level, created_at, seller_id, seller:profiles!seller_id(display_name), realm_votes(value)",
+        "id, name, description, game_slug, tags, payload, custom_def_spec, download_count, like_count, verified_level, created_at, seller_id, seller:profiles!seller_id(display_name), realm_votes(realm_id)",
       )
       .eq("status", "PUBLISHED");
 
