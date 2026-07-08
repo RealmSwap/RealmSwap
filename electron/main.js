@@ -1,5 +1,5 @@
 "use strict";
-const { app, BrowserWindow, Tray, Menu, nativeImage, shell } = require("electron");
+const { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const net = require("net");
@@ -211,7 +211,9 @@ async function createWindow(port) {
   const url = resolveDeepLinkUrl(deepLinkArg);
 
   await mainWindow.loadURL(url);
-  mainWindow.show();
+  if (!process.argv.includes("--hidden")) {
+    mainWindow.show();
+  }
   buildTray();
 }
 
@@ -232,6 +234,17 @@ if (!gotLock) {
     }
   });
 }
+
+ipcMain.handle("get-autostart", () => {
+  return app.getLoginItemSettings().openAtLogin;
+});
+
+ipcMain.handle("set-autostart", (event, enabled) => {
+  app.setLoginItemSettings({
+    openAtLogin: enabled,
+    args: ["--hidden"],
+  });
+});
 
 // macOS delivers deep links via open-url (Windows uses argv/second-instance).
 app.on("open-url", (event, urlStr) => {

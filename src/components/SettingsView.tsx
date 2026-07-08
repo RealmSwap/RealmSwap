@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import { Save, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
@@ -59,14 +59,39 @@ export function SettingsView({ user }: { user: any }) {
   const [notifyWebPush, setNotifyWebPush] = useState(user?.notifyWebPush ?? true);
   const [pushSupported, setPushSupported] = useState(false);
 
-  // Check if push is supported on mount
-  if (typeof window !== "undefined" && !pushSupported) {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
+  // Desktop integration state
+  const [autoStart, setAutoStart] = useState(false);
+  const [electronAvailable, setElectronAvailable] = useState(false);
+
+  if (typeof window !== "undefined") {
+    // Check if push is supported on mount
+    if (!pushSupported && "serviceWorker" in navigator && "PushManager" in window) {
       setPushSupported(true);
       // Register Service Worker silently
       navigator.serviceWorker.register("/sw.js").catch(console.error);
     }
   }
+
+  // Load electron settings on mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && (window as any).electron) {
+      setElectronAvailable(true);
+      (window as any).electron.getAutoStart().then(setAutoStart).catch(console.error);
+    }
+  }, []);
+
+  const handleAutoStartChange = async (enabled: boolean) => {
+    setAutoStart(enabled);
+    if ((window as any).electron) {
+      try {
+        await (window as any).electron.setAutoStart(enabled);
+        toast.success(`Auto-start on boot ${enabled ? 'enabled' : 'disabled'}`);
+      } catch (e) {
+        toast.error("Failed to update system settings.");
+        setAutoStart(!enabled);
+      }
+    }
+  };
 
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -290,6 +315,29 @@ export function SettingsView({ user }: { user: any }) {
               </button>
             </div>
           </form>
+
+          {/* Desktop Integration Section */}
+          {electronAvailable && (
+            <div className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5 mt-8">
+              <div>
+                <h2 className="text-xl font-bold text-white mb-1">Desktop Application</h2>
+                <p className="text-xs text-slate-400 mb-6">
+                  Manage how the RealmSwap daemon runs on your computer.
+                </p>
+
+                <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-200">Auto-Start on Boot</h3>
+                    <p className="text-xs text-slate-500">Launch RealmSwap silently in the System Tray when your computer starts.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" checked={autoStart} onChange={(e) => handleAutoStartChange(e.target.checked)} />
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
 
           {user?.role === "ADMIN" && (
             <div className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5 mt-8">
