@@ -206,6 +206,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
   const [showSecurityReport, setShowSecurityReport] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [systemMemoryGB, setSystemMemoryGB] = useState<number | null>(null);
+  const [versions, setVersions] = useState<{ id: string; version: string; changelog: string | null; created_at: string }[]>([]);
 
   /* ── Effects ─────────────────────────────────────────────────── */
 
@@ -345,6 +346,43 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
       });
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  // Load version history whenever a realm's detail modal is opened.
+  useEffect(() => {
+    if (!selectedTemplate?.id) {
+      setVersions([]);
+      return;
+    }
+    fetch(`/api/marketplace/${selectedTemplate.id}/versions`)
+      .then((r) => r.json())
+      .then((d) => setVersions(d.versions || []))
+      .catch(() => setVersions([]));
+  }, [selectedTemplate?.id]);
+
+  // Deploy a specific past version directly (the main button deploys the current
+  // version through the security-report flow).
+  const deployVersion = async (template: MarketplaceTemplate, versionId: string) => {
+    setDeploying(true);
+    try {
+      const res = await fetch("/api/marketplace/deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateId: template.id, versionId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        router.push(`/dashboard/config?server=${data.serverId}`);
+      } else {
+        const err = await res.json();
+        addToast("error", "Failed to deploy version: " + (err.error || "Unknown error"));
+        setDeploying(false);
+      }
+    } catch (e) {
+      console.error(e);
+      addToast("error", "Error deploying version");
+      setDeploying(false);
     }
   };
 
@@ -1033,6 +1071,34 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                       );
                     })()}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Version history */}
+            {!showSecurityReport && versions.length > 0 && (
+              <div className="px-6 py-3 border-t border-white/10 bg-slate-900/40 max-h-44 overflow-y-auto flex-shrink-0">
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Version history</div>
+                <div className="space-y-1.5">
+                  {versions.map((v, i) => (
+                    <div key={v.id} className="flex items-center justify-between gap-3 text-xs">
+                      <div className="min-w-0 flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-white">v{v.version}</span>
+                        {i === 0 && <span className="text-[9px] font-bold uppercase tracking-wider text-accentPurple bg-accentPurple/10 border border-accentPurple/30 px-1.5 py-0.5 rounded">Current</span>}
+                        {v.changelog && <span className="text-slate-400 truncate max-w-[220px]">{v.changelog}</span>}
+                        <span className="text-slate-600">{timeAgo(v.created_at)}</span>
+                      </div>
+                      {i > 0 && (
+                        <button
+                          onClick={() => selectedTemplate && deployVersion(selectedTemplate, v.id)}
+                          disabled={deploying}
+                          className="flex-shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-2.5 py-1 transition-colors disabled:opacity-40"
+                        >
+                          <Download className="w-3 h-3" /> Deploy
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
