@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { templateId } = await request.json();
+    const { templateId, versionId } = await request.json();
     if (!templateId) {
       return NextResponse.json({ error: "Missing templateId" }, { status: 400 });
     }
@@ -43,6 +43,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Realm not found" }, { status: 404 });
     }
 
+    // Deploy a specific past version if requested; otherwise the realm's current.
+    let payload = realm.payload;
+    let customDefSpec = realm.custom_def_spec;
+    if (versionId) {
+      const { data: ver, error: verErr } = await supabase
+        .from("realm_versions")
+        .select("payload, custom_def_spec, realm_id")
+        .eq("id", versionId)
+        .maybeSingle();
+      if (verErr || !ver || ver.realm_id !== templateId) {
+        return NextResponse.json({ error: "Version not found" }, { status: 404 });
+      }
+      payload = ver.payload;
+      customDefSpec = ver.custom_def_spec;
+    }
+
     // Record the acquisition in the cloud: ownership + transaction + download bump
     // (idempotent; rejects paid/unpublished realms).
     const { error: acqErr } = await supabase.rpc("acquire_realm", { p_realm_id: templateId });
@@ -50,14 +66,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: acqErr.message }, { status: 400 });
     }
 
-    // Install locally from the cloud payload.
+    // Install locally from the chosen payload.
     const serverId = await deployTemplate(
       {
         id: realm.id,
         name: realm.name,
         gameSlug: realm.game_slug,
-        payload: realm.payload as DeployableTemplate["payload"],
-        customDefSpec: realm.custom_def_spec,
+        payload: payload as DeployableTemplate["payload"],
+        customDefSpec,
       },
       user.id,
     );
