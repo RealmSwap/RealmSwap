@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   try {
     const user = await getAuthenticatedUser();
@@ -12,70 +12,33 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { type } = await request.json(); // "LIKE", "DISLIKE", or "NONE"
+    const { type } = await request.json(); // "LIKE" | "DISLIKE" | "NONE"
+    const realmId = params.id;
+    const supabase = createClient();
 
-    const templateId = params.id;
-
-    const existingVote = await prisma.templateVote.findUnique({
-      where: {
-        userId_templateId: {
-          userId: user.id,
-          templateId
-        }
-      }
-    });
-
-    if (existingVote) {
-      // Remove old vote effects
-      if (existingVote.type === "LIKE") {
-        await prisma.marketplaceTemplate.update({
-          where: { id: templateId },
-          data: { likes: { decrement: 1 } }
-        });
-      } else if (existingVote.type === "DISLIKE") {
-        await prisma.marketplaceTemplate.update({
-          where: { id: templateId },
-          data: { dislikes: { decrement: 1 } }
-        });
-      }
-
-      if (type === "NONE") {
-        await prisma.templateVote.delete({
-          where: { id: existingVote.id }
-        });
-        return NextResponse.json({ success: true });
-      } else {
-        await prisma.templateVote.update({
-          where: { id: existingVote.id },
-          data: { type }
-        });
-      }
-    } else {
-      if (type !== "NONE") {
-        await prisma.templateVote.create({
-          data: {
-            userId: user.id,
-            templateId,
-            type
-          }
-        });
-      } else {
-        return NextResponse.json({ success: true });
-      }
+    // user.id is the Supabase uid (local mirror), so it satisfies the RLS check
+    // user_id = auth.uid(). The realm_votes counter trigger keeps like/dislike counts.
+    if (type === "NONE") {
+      const { error } = await supabase
+        .from("realm_votes")
+        .delete()
+        .eq("realm_id", realmId)
+        .eq("user_id", user.id);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: true });
     }
 
-    // Apply new vote effects
-    if (type === "LIKE") {
-      await prisma.marketplaceTemplate.update({
-        where: { id: templateId },
-        data: { likes: { increment: 1 } }
-      });
-    } else if (type === "DISLIKE") {
-      await prisma.marketplaceTemplate.update({
-        where: { id: templateId },
-        data: { dislikes: { increment: 1 } }
-      });
+    if (type !== "LIKE" && type !== "DISLIKE") {
+      return NextResponse.json({ error: "Invalid vote type" }, { status: 400 });
     }
+
+    const { error } = await supabase
+      .from("realm_votes")
+      .upsert(
+        { realm_id: realmId, user_id: user.id, value: type === "LIKE" ? 1 : -1 },
+        { onConflict: "realm_id,user_id" },
+      );
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
