@@ -10,10 +10,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, description, gameSlug, tags, payload, customDefSpec } = body;
+    const { name, description, gameSlug, tags, payload, customDefSpec, realmId, version, changelog } = body;
 
-    if (!name || !description || !gameSlug || !payload) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!payload) {
+      return NextResponse.json({ error: "Missing payload" }, { status: 400 });
     }
 
     if (customDefSpec) {
@@ -25,8 +25,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Best-effort scrub of accidental secrets in config overrides (matches prior
-    // behavior). NOTE: enforced app-side only; a DB trigger is future hardening.
+    // Best-effort app-side scrub of accidental secrets in config overrides (the DB
+    // guard / publish RPC scrub again server-side; both are idempotent).
     let strippedSecrets = false;
     if (payload.configOverrides && Array.isArray(payload.configOverrides)) {
       for (const override of payload.configOverrides) {
@@ -40,6 +40,26 @@ export async function POST(request: Request) {
       }
     }
 
+    const supabase = createClient();
+
+    // Publish a NEW VERSION of an existing realm (ownership enforced in the RPC,
+    // which also syncs the realm's current payload/version).
+    if (realmId) {
+      const { data: ver, error } = await supabase.rpc("publish_realm_version", {
+        p_realm_id: realmId,
+        p_version: version || "1.0.0",
+        p_payload: payload,
+        p_custom_def_spec: customDefSpec ?? null,
+        p_changelog: changelog ?? null,
+      });
+      if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+      return NextResponse.json({ id: realmId, version: (ver as { version?: string })?.version, strippedSecrets });
+    }
+
+    // Create a NEW realm + its first version.
+    if (!name || !description || !gameSlug) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
     const tagsArr =
       typeof tags === "string"
         ? tags.split(",").map((t) => t.trim()).filter(Boolean)
@@ -47,9 +67,6 @@ export async function POST(request: Request) {
         ? tags
         : [];
 
-    const supabase = createClient();
-    // RLS insert policy requires seller_id = auth.uid() (= the local mirror id).
-    // verified_level is forced to UNVERIFIED here; users cannot self-promote.
     const { data: realm, error } = await supabase
       .from("realms")
       .insert({
@@ -60,16 +77,27 @@ export async function POST(request: Request) {
         tags: tagsArr,
         payload,
         custom_def_spec: customDefSpec ?? null,
+        version: version || "1.0.0",
         status: "PUBLISHED",
         visibility: "PUBLIC",
         verified_level: "UNVERIFIED",
       })
-      .select("id, name")
+      .select("id, name, payload, custom_def_spec, version")
       .single();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // First version snapshot — use the realm's stored (guard-scrubbed) payload so
+    // history matches the listing exactly.
+    await supabase.from("realm_versions").insert({
+      realm_id: realm.id,
+      version: realm.version,
+      payload: realm.payload,
+      custom_def_spec: realm.custom_def_spec ?? null,
+      changelog: changelog ?? null,
+    });
 
     return NextResponse.json({ id: realm.id, name: realm.name, strippedSecrets });
   } catch (error: any) {

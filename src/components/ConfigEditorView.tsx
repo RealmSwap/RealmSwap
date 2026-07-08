@@ -54,6 +54,11 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [publishName, setPublishName] = useState("");
   const [publishDescription, setPublishDescription] = useState("");
+  const [publishMode, setPublishMode] = useState<"new" | "update">("new");
+  const [publishVersion, setPublishVersion] = useState("1.0.0");
+  const [publishChangelog, setPublishChangelog] = useState("");
+  const [publishTargetRealmId, setPublishTargetRealmId] = useState("");
+  const [myRealms, setMyRealms] = useState<{ id: string; name: string; version: string | null }[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
 
@@ -194,50 +199,67 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
     setPublishDescription("");
   };
 
+  // Load the creator's realms for this game when the publish modal opens, so they
+  // can publish a new version of an existing one instead of a brand-new template.
+  useEffect(() => {
+    if (showPublishModal && selectedServer) {
+      fetch(`/api/marketplace/mine?game=${encodeURIComponent(selectedServer.game)}`)
+        .then((r) => r.json())
+        .then((d) => setMyRealms(d.realms || []))
+        .catch(() => {});
+    }
+  }, [showPublishModal, selectedServer]);
+
   const submitPublish = async () => {
     if (!selectedServer) return;
-    if (!publishName || !publishDescription) {
+    if (publishMode === "new" && (!publishName || !publishDescription)) {
       alert("Name and description are required.");
+      return;
+    }
+    if (publishMode === "update" && !publishTargetRealmId) {
+      alert("Choose which realm to publish the new version to.");
       return;
     }
     setSaving(true);
     try {
-
       // Note: Full implementation of gathering mods/configs goes here.
       // For now we simulate the payload based on current config.
       const payload = {
-        version: "1.0.0",
+        version: publishVersion || "1.0.0",
         mods: [],
         configOverrides: [
           {
             path: configFilename,
             strategy: "template",
-            content: configContent
-          }
+            content: configContent,
+          },
         ],
-        startupParams: {}
+        startupParams: {},
       };
+
+      const body =
+        publishMode === "update"
+          ? { realmId: publishTargetRealmId, gameSlug: selectedServer.game, payload, version: publishVersion, changelog: publishChangelog }
+          : { name: publishName, description: publishDescription, gameSlug: selectedServer.game, tags: "Community", payload, version: publishVersion, changelog: publishChangelog };
 
       const res = await fetch("/api/marketplace/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: publishName,
-          description: publishDescription,
-          gameSlug: selectedServer.game,
-          tags: "Community",
-          payload
-        })
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to publish template");
-      
-      if (data.strippedSecrets) {
-        alert("Successfully published to Marketplace!\n\nSecurity Notice: Sensitive data (passwords, tokens, API keys) was automatically removed from your configuration files before publishing.");
-      } else {
-        alert("Successfully published to Marketplace!");
-      }
+
+      const base =
+        publishMode === "update"
+          ? `Published version ${data.version || publishVersion} to the marketplace!`
+          : "Successfully published to Marketplace!";
+      alert(
+        data.strippedSecrets
+          ? base + "\n\nSecurity Notice: Sensitive data (passwords, tokens, API keys) was automatically removed from your configuration files before publishing."
+          : base,
+      );
       router.push("/dashboard/marketplace");
     } catch (e: any) {
       alert(e.message);
@@ -539,24 +561,85 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
               </button>
             </div>
             <div className="p-5 space-y-4">
+              {/* New template vs. new version of an existing realm */}
+              <div className="flex gap-1 p-1 rounded-lg bg-black/40 border border-slate-700">
+                <button
+                  onClick={() => setPublishMode("new")}
+                  disabled={saving}
+                  className={`flex-1 px-3 py-1.5 rounded-md text-xs font-bold transition-all ${publishMode === "new" ? "bg-accentBlue text-white" : "text-slate-400 hover:text-slate-200"}`}
+                >
+                  New template
+                </button>
+                <button
+                  onClick={() => setPublishMode("update")}
+                  disabled={saving || myRealms.length === 0}
+                  className={`flex-1 px-3 py-1.5 rounded-md text-xs font-bold transition-all disabled:opacity-40 ${publishMode === "update" ? "bg-accentBlue text-white" : "text-slate-400 hover:text-slate-200"}`}
+                >
+                  Update existing{myRealms.length ? ` (${myRealms.length})` : ""}
+                </button>
+              </div>
+
+              {publishMode === "new" ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-300 mb-1.5">Template Name</label>
+                    <input
+                      type="text"
+                      value={publishName}
+                      onChange={e => setPublishName(e.target.value)}
+                      className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors"
+                      placeholder="e.g. Valheim Hardcore PvP"
+                      disabled={saving}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-300 mb-1.5">Description</label>
+                    <textarea
+                      value={publishDescription}
+                      onChange={e => setPublishDescription(e.target.value)}
+                      className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors resize-none h-24"
+                      placeholder="Describe your server setup and configuration..."
+                      disabled={saving}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="block text-sm font-bold text-slate-300 mb-1.5">Realm to update</label>
+                  <select
+                    value={publishTargetRealmId}
+                    onChange={e => setPublishTargetRealmId(e.target.value)}
+                    className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors"
+                    disabled={saving}
+                  >
+                    <option value="">Select a realm…</option>
+                    {myRealms.map(r => (
+                      <option key={r.id} value={r.id}>{r.name}{r.version ? ` — current v${r.version}` : ""}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
-                <label className="block text-sm font-bold text-slate-300 mb-1.5">Template Name</label>
-                <input 
-                  type="text" 
-                  value={publishName}
-                  onChange={e => setPublishName(e.target.value)}
+                <label className="block text-sm font-bold text-slate-300 mb-1.5">Version</label>
+                <input
+                  type="text"
+                  value={publishVersion}
+                  onChange={e => setPublishVersion(e.target.value)}
                   className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors"
-                  placeholder="e.g. Valheim Hardcore PvP"
+                  placeholder="1.0.0"
                   disabled={saving}
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-300 mb-1.5">Description</label>
-                <textarea 
-                  value={publishDescription}
-                  onChange={e => setPublishDescription(e.target.value)}
-                  className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors resize-none h-24"
-                  placeholder="Describe your server setup and configuration..."
+                <label className="block text-sm font-bold text-slate-300 mb-1.5">
+                  Changelog <span className="text-slate-500 font-normal">(optional)</span>
+                </label>
+                <textarea
+                  value={publishChangelog}
+                  onChange={e => setPublishChangelog(e.target.value)}
+                  className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors resize-none h-16"
+                  placeholder="What changed in this version?"
                   disabled={saving}
                 />
               </div>
@@ -571,7 +654,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
               </button>
               <button 
                 onClick={submitPublish}
-                disabled={saving || !publishName || !publishDescription}
+                disabled={saving || (publishMode === "new" ? (!publishName || !publishDescription) : !publishTargetRealmId)}
                 className="flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-sm bg-accentBlue hover:bg-blue-500 disabled:opacity-50 text-white transition-all shadow-lg shadow-accentBlue/20"
               >
                 {saving ? <><RefreshCw className="w-4 h-4 animate-spin" /> Publishing...</> : <><UploadCloud className="w-4 h-4" /> Publish Now</>}
