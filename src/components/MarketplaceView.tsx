@@ -14,6 +14,7 @@ import {
   Settings,
   Wrench,
   Store,
+  BarChart3,
   ChevronRight,
   HardDrive,
   LayoutDashboard,
@@ -535,14 +536,23 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
         </div>
 
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
-            <Store className="w-6 h-6 text-accentPurple animate-float" />
-            <span>Community Marketplace</span>
-          </h1>
-          <p className="text-sm text-mutedText mt-1">
-            Discover and deploy pre-configured server templates, complete with mods and optimized settings.
-          </p>
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
+              <Store className="w-6 h-6 text-accentPurple animate-float" />
+              <span>Community Marketplace</span>
+            </h1>
+            <p className="text-sm text-mutedText mt-1">
+              Discover and deploy pre-configured server templates, complete with mods and optimized settings.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/marketplace/mine"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-accentPurple/40 text-accentPurple hover:bg-accentPurple/10 text-sm font-bold transition-all whitespace-nowrap"
+          >
+            <BarChart3 className="w-4 h-4" />
+            My Realms
+          </Link>
         </div>
 
         {/* Tab Bar */}
