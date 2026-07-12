@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { worldSaveDefaults } from "../worldSaveDefaults";
+import { worldSaveDefaults, isKnownGame } from "../worldSaveDefaults";
 
 describe("worldSaveDefaults", () => {
   it("maps Palworld to its SaveGames dir", () => {
@@ -21,5 +21,20 @@ describe("worldSaveDefaults", () => {
   });
   it("returns [] for unknown games", () => {
     expect(worldSaveDefaults("SOMETHING_ELSE")).toEqual([]);
+  });
+});
+
+describe("isKnownGame", () => {
+  it("recognizes Valheim as known even though its defaults are []", () => {
+    expect(isKnownGame("VALHEIM")).toBe(true);
+  });
+  it("recognizes Palworld as known", () => {
+    expect(isKnownGame("PALWORLD")).toBe(true);
+  });
+  it("returns false for unknown games", () => {
+    expect(isKnownGame("SOMETHING_ELSE")).toBe(false);
+  });
+  it("is case-insensitive", () => {
+    expect(isKnownGame("valheim")).toBe(true);
   });
 });
