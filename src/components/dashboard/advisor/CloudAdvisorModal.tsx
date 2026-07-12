@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { X, Sparkles, Server, Zap, CheckCircle2, ChevronRight, Settings, Loader2, ArrowRight, UploadCloud, DownloadCloud, Plug } from "lucide-react";
 import { ProviderMatrix } from "./ProviderMatrix";
+import { FilePickerTree } from "./FilePickerTree";
+import type { FileEntry } from "@/lib/hosting/types";
 import { toast } from "sonner";
 
 interface Props {
@@ -18,7 +20,6 @@ interface LinkState {
   port: number;
   username: string;
   remoteBasePath: string;
-  excludeConfig: boolean;
   lastPushAt?: string | null;
   lastPullAt?: string | null;
   lastError?: string | null;
@@ -38,12 +39,13 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   
   // Transfer State
-  const [form, setForm] = useState({ host: "", port: 22, username: "", password: "", remoteBasePath: ".", excludeConfig: false });
+  const [form, setForm] = useState({ host: "", port: 22, username: "", password: "", remoteBasePath: "." });
   const [saved, setSaved] = useState<LinkState | null>(null);
   const [confirmStopped, setConfirmStopped] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ percent: number | null; label: string } | null>(null);
+  const [picker, setPicker] = useState<null | { direction: "PUSH" | "PULL"; tree: FileEntry[]; checked: string[] }>(null);
 
   const loadLink = async () => {
     try {
@@ -51,7 +53,7 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
       const body = await res.json();
       if (body.link) {
         setSaved(body.link);
-        setForm((f) => ({ ...f, host: body.link.host, port: body.link.port, username: body.link.username, remoteBasePath: body.link.remoteBasePath, excludeConfig: body.link.excludeConfig, password: "" }));
+        setForm((f) => ({ ...f, host: body.link.host, port: body.link.port, username: body.link.username, remoteBasePath: body.link.remoteBasePath, password: "" }));
       }
     } catch {
       setMessage("Failed to load saved connection.");
@@ -140,8 +142,7 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
     form.host !== saved.host ||
     form.port !== saved.port ||
     form.username !== saved.username ||
-    form.remoteBasePath !== saved.remoteBasePath ||
-    form.excludeConfig !== saved.excludeConfig;
+    form.remoteBasePath !== saved.remoteBasePath;
 
   const testConn = async () => {
     setBusy("test"); setMessage(null);
@@ -184,6 +185,46 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
     } finally {
       clearInterval(interval); setBusy(null); setProgress(null); await loadLink();
     }
+  };
+
+  const beginTransfer = async (direction: "PUSH" | "PULL") => {
+    setBusy(direction); setMessage(null);
+    // Persist unsaved credential/config changes first (and, for PULL, validate
+    // the connection) before we can list files.
+    if (isDirty()) {
+      const ok = await putLink();
+      if (!ok) { setBusy(null); return; }
+    }
+    try {
+      const res = await fetch(`/api/servers/${serverId}/transfer/tree?direction=${direction}`);
+      const body = await res.json();
+      if (!res.ok) { setMessage(body.error || "Failed to load file list"); setBusy(null); return; }
+      const topLevel = (body.tree as FileEntry[]).filter((e) => !e.relPath.includes("/")).map((e) => e.relPath);
+      const initial: string[] =
+        body.includePaths.length ? body.includePaths
+        : body.unknownGame ? topLevel
+        : body.defaultPaths;
+      setPicker({ direction, tree: body.tree, checked: initial });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const confirmPicker = async () => {
+    if (!picker) return;
+    const includePaths = picker.checked;
+    setBusy(picker.direction);
+    // Persist the selection, then run the transfer with it.
+    const res = await fetch(`/api/servers/${serverId}/host-link`, {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, password: "", includePaths }),
+    });
+    if (!res.ok) { const b = await res.json(); setMessage(b.error || "Failed to save selection"); setBusy(null); return; }
+    await loadLink();
+    const dir = picker.direction;
+    setPicker(null);
+    setBusy(null);
+    await transfer(dir);
   };
 
   // Transferable once we either have a saved link or a complete form (which
@@ -386,11 +427,6 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
                 <label className="block text-xs font-medium text-slate-300">Remote base path
                   <input className="mt-1 w-full rounded-lg bg-slate-900 border border-slate-700 focus:border-accentPurple px-3 py-2 text-sm text-white outline-none transition-colors" value={form.remoteBasePath} onChange={(e) => setForm({ ...form, remoteBasePath: e.target.value })} />
                 </label>
-                <label className="flex items-center gap-2 text-xs text-slate-300 mt-2">
-                  <input type="checkbox" checked={form.excludeConfig} onChange={(e) => setForm({ ...form, excludeConfig: e.target.checked })} className="rounded bg-slate-900 border-slate-700 text-accentPurple focus:ring-accentPurple" />
-                  Don't overwrite host config (skip server.properties)
-                </label>
-
                 <div className="flex gap-2 mt-4">
                   <button onClick={saveLink} disabled={!!busy} className="flex-1 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 px-3 py-2 text-sm font-semibold text-white transition-colors">{busy === "save" ? "Saving..." : "Save connection"}</button>
                   <button onClick={testConn} disabled={!saved || !!busy} className="rounded-lg border border-slate-700 hover:bg-slate-800 disabled:opacity-50 px-3 py-2 text-sm font-semibold text-slate-200 flex items-center gap-1.5 transition-colors"><Plug className="w-4 h-4" /> Test</button>
@@ -404,8 +440,8 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
                   I've stopped the remote server.
                 </label>
                 <div className="flex gap-2">
-                  <button onClick={() => transfer("PUSH")} disabled={!canTransfer} className="flex-1 rounded-xl bg-accentPurple hover:bg-purple-500 disabled:opacity-50 px-3 py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-1.5 transition-colors shadow-lg shadow-accentPurple/20">{busy === "PUSH" ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />} Push to Cloud</button>
-                  <button onClick={() => transfer("PULL")} disabled={!canTransfer} className="flex-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 disabled:opacity-50 px-3 py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-1.5 transition-colors">{busy === "PULL" ? <Loader2 className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />} Pull from Cloud</button>
+                  <button onClick={() => beginTransfer("PUSH")} disabled={!canTransfer} className="flex-1 rounded-xl bg-accentPurple hover:bg-purple-500 disabled:opacity-50 px-3 py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-1.5 transition-colors shadow-lg shadow-accentPurple/20">{busy === "PUSH" ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />} Push to Cloud</button>
+                  <button onClick={() => beginTransfer("PULL")} disabled={!canTransfer} className="flex-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 disabled:opacity-50 px-3 py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-1.5 transition-colors">{busy === "PULL" ? <Loader2 className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />} Pull from Cloud</button>
                 </div>
 
                 {progress && (
@@ -426,6 +462,27 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
               </div>
 
               {message && <div className="mt-4 text-sm text-white bg-slate-800/80 rounded-lg px-4 py-3 border border-white/5">{message}</div>}
+
+              {picker && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/70 p-4" onClick={(e) => e.stopPropagation()}>
+                  <div className="w-full max-w-lg rounded-2xl bg-slate-950 border border-white/10 p-5 shadow-2xl">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-sm font-bold text-white">Select files to {picker.direction === "PUSH" ? "upload" : "download"}</h4>
+                      <span className="text-[10px] text-slate-500">{picker.checked.length} selected</span>
+                    </div>
+                    <p className="text-xs text-slate-400 mb-3">Defaults to your world-save files. Check folders to include everything inside them.</p>
+                    <FilePickerTree
+                      entries={picker.tree}
+                      checked={picker.checked}
+                      onChange={(next) => setPicker((p) => (p ? { ...p, checked: next } : p))}
+                    />
+                    <div className="flex gap-2 mt-4 justify-end">
+                      <button onClick={() => { setPicker(null); setBusy(null); }} className="rounded-lg border border-slate-700 hover:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-200">Back</button>
+                      <button onClick={confirmPicker} disabled={picker.checked.length === 0 || !!busy} className="rounded-lg bg-accentPurple hover:bg-purple-500 disabled:opacity-50 px-4 py-2 text-sm font-semibold text-white">Continue</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
