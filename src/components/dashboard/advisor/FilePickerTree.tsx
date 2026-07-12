@@ -69,6 +69,25 @@ export function minimalCover(set: Set<string>): string[] {
   return cover.sort();
 }
 
+// Pure: given the current expanded selection set, toggle `path` (a file, or a
+// directory whose descendant paths are `descendantPaths`) and return the new
+// minimal cover. On turn-off we must also drop `path`'s ancestor directories
+// from the set, otherwise minimalCover would treat the subtree as fully covered
+// and re-include the item the user just unchecked.
+export function toggleSelection(selected: Set<string>, path: string, descendantPaths: string[]): string[] {
+  const next = new Set(selected);
+  const turningOn = !selected.has(path);
+  for (const p of [path, ...descendantPaths]) {
+    if (turningOn) next.add(p);
+    else next.delete(p);
+  }
+  if (!turningOn) {
+    let anc = parentOf(path);
+    while (anc) { next.delete(anc); anc = parentOf(anc); }
+  }
+  return minimalCover(next);
+}
+
 export function FilePickerTree({
   entries,
   checked,
@@ -100,14 +119,7 @@ export function FilePickerTree({
   };
 
   const toggle = (node: Node) => {
-    const next = new Set(selected);
-    const paths = node.isDir ? [node.path, ...(descendants.get(node.path) || [])] : [node.path];
-    const turningOn = !selected.has(node.path);
-    for (const p of paths) {
-      if (turningOn) next.add(p);
-      else next.delete(p);
-    }
-    onChange(minimalCover(next));
+    onChange(toggleSelection(selected, node.path, node.isDir ? (descendants.get(node.path) || []) : []));
   };
 
   const toggleExpand = (path: string) => {

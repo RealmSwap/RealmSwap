@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { expandCover, minimalCover } from "../FilePickerTree";
+import { expandCover, minimalCover, toggleSelection } from "../FilePickerTree";
 
 // Directory entries are represented in allPaths just like file entries (a
 // FileEntry with isDir: true has its own relPath), so a fully-listed tree
@@ -38,5 +38,30 @@ describe("expandCover + minimalCover round-trip", () => {
   it("collapses back to the original cover", () => {
     const expanded = expandCover(["world"], allPaths);
     expect(minimalCover(expanded)).toEqual(["world"]);
+  });
+});
+
+describe("toggleSelection", () => {
+  const worldPaths = ["world", "world/keep.dat", "world/level.dat", "world/unwanted.dat"];
+
+  it("persists unchecking a child under a checked folder", () => {
+    const selected = expandCover(["world"], worldPaths);
+    const cover = toggleSelection(selected, "world/unwanted.dat", []);
+    const reExpanded = expandCover(cover, worldPaths);
+    expect(reExpanded.has("world/unwanted.dat")).toBe(false);
+    expect(reExpanded.has("world/keep.dat")).toBe(true);
+    expect(reExpanded.has("world/level.dat")).toBe(true);
+  });
+
+  it("clears the whole subtree when toggling a folder off", () => {
+    const selected = expandCover(["world"], worldPaths);
+    const cover = toggleSelection(selected, "world", ["world/keep.dat", "world/level.dat", "world/unwanted.dat"]);
+    expect(cover).toEqual([]);
+  });
+
+  it("adds an unchecked file when toggled on", () => {
+    const selected = new Set<string>();
+    const cover = toggleSelection(selected, "world/keep.dat", []);
+    expect(cover).toEqual(["world/keep.dat"]);
   });
 });

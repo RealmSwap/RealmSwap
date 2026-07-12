@@ -409,7 +409,7 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
               </div>
 
               <p className="text-xs text-slate-400 mb-4 bg-slate-900/50 p-3 rounded-lg border border-white/5">
-                Full-server mirror over SFTP. Retrieve your SFTP host, port, username, and password from {selectedProviderName}'s control panel.
+                Sync selected files over SFTP — you'll pick which files (defaulting to your world saves) after choosing a direction. Retrieve your SFTP host, port, username, and password from {selectedProviderName}'s control panel.
               </p>
 
               <div className="space-y-3">
@@ -437,7 +437,7 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
               </div>
 
               <div className="mt-6 border-t border-white/5 pt-4">
-                <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3 text-xs text-amber-300/80 mb-3">A full mirror overwrites files on the destination. The local server is stopped automatically; stop the remote server before transferring.</div>
+                <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3 text-xs text-amber-300/80 mb-3">The files you select overwrite their counterparts on the destination. The local server is stopped automatically; stop the remote server before transferring.</div>
                 <label className="flex items-center gap-2 text-xs text-slate-300 mb-4">
                   <input type="checkbox" checked={confirmStopped} onChange={(e) => setConfirmStopped(e.target.checked)} className="rounded bg-slate-900 border-slate-700 text-accentPurple focus:ring-accentPurple" />
                   I've stopped the remote server.
@@ -480,6 +480,7 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
                       onChange={(next) => setPicker((p) => (p ? { ...p, checked: next } : p))}
                     />
                     {pickerError && <div className="mt-3 text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{pickerError}</div>}
+                    {picker.checked.length === 0 && <p className="text-xs text-amber-300/80 mt-3">Select at least one file to continue.</p>}
                     <div className="flex gap-2 mt-4 justify-end">
                       <button onClick={() => { setPicker(null); setBusy(null); setPickerError(null); }} className="rounded-lg border border-slate-700 hover:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-200">Back</button>
                       <button onClick={confirmPicker} disabled={picker.checked.length === 0 || !!busy} className="rounded-lg bg-accentPurple hover:bg-purple-500 disabled:opacity-50 px-4 py-2 text-sm font-semibold text-white">Continue</button>
