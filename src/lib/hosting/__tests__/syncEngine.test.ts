@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { planTransfer, isIgnored, runTransfer } from "../syncEngine";
+import { planTransfer, isIgnored, isIncluded, runTransfer } from "../syncEngine";
 import { DEFAULT_IGNORE, FileEntry, Transferer, TransferPlan } from "../types";
 
 const f = (relPath: string, size: number, mtimeMs: number): FileEntry => ({ relPath, size, mtimeMs, isDir: false });
@@ -60,6 +60,56 @@ describe("planTransfer", () => {
     const paths = plan.ops.map((o) => o.relPath);
     expect(paths).not.toContain("logs/x.log");
     expect(paths).toContain("world/level.dat");
+  });
+});
+
+describe("isIncluded", () => {
+  it("includes everything when the include list is empty", () => {
+    expect(isIncluded("anything/at/all.txt", [])).toBe(true);
+  });
+  it("includes an exact path match", () => {
+    expect(isIncluded("world", ["world"])).toBe(true);
+  });
+  it("includes paths under an included folder", () => {
+    expect(isIncluded("world/region/r.0.0.mca", ["world"])).toBe(true);
+  });
+  it("excludes paths outside the included set", () => {
+    expect(isIncluded("libraries/foo.jar", ["world"])).toBe(false);
+  });
+  it("does not treat a prefix string as a folder match", () => {
+    // "world2" must NOT match include "world"
+    expect(isIncluded("world2/level.dat", ["world"])).toBe(false);
+  });
+});
+
+describe("planTransfer with include filter", () => {
+  it("copies only included files", () => {
+    const plan = planTransfer(
+      [f("world/level.dat", 5, 1), f("libraries/foo.jar", 5, 1)],
+      [],
+      [],
+      ["world"]
+    );
+    const paths = plan.ops.map((o) => o.relPath);
+    expect(paths).toContain("world/level.dat");
+    expect(paths).not.toContain("libraries/foo.jar");
+  });
+
+  it("still applies DEFAULT_IGNORE under an included folder", () => {
+    const plan = planTransfer(
+      [f("world/session.lock", 5, 1), f("world/level.dat", 5, 1)],
+      [],
+      DEFAULT_IGNORE,
+      ["world"]
+    );
+    const paths = plan.ops.map((o) => o.relPath);
+    expect(paths).not.toContain("world/session.lock");
+    expect(paths).toContain("world/level.dat");
+  });
+
+  it("empty include list transfers everything (back-compat)", () => {
+    const plan = planTransfer([f("a.txt", 1, 1), f("b.txt", 1, 1)], [], [], []);
+    expect(plan.ops.map((o) => o.relPath).sort()).toEqual(["a.txt", "b.txt"]);
   });
 });
 

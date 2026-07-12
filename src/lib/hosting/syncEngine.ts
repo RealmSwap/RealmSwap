@@ -19,13 +19,25 @@ export function isIgnored(relPath: string, ignore: string[]): boolean {
   return false;
 }
 
-export function planTransfer(source: FileEntry[], dest: FileEntry[], ignore: string[]): TransferPlan {
+// Include allowlist (inverse of ignore):
+//   [] (empty)  -> include everything
+//   "path"      -> include that exact relPath and anything beneath it
+export function isIncluded(relPath: string, include: string[]): boolean {
+  if (include.length === 0) return true;
+  for (const inc of include) {
+    if (relPath === inc || relPath.startsWith(inc + "/")) return true;
+  }
+  return false;
+}
+
+export function planTransfer(source: FileEntry[], dest: FileEntry[], ignore: string[], include: string[] = []): TransferPlan {
   const destByPath = new Map(dest.map((e) => [e.relPath, e]));
   const mkdirs: TransferOp[] = [];
   const copies: TransferOp[] = [];
 
   for (const entry of source) {
     if (isIgnored(entry.relPath, ignore)) continue;
+    if (!isIncluded(entry.relPath, include)) continue;
 
     if (entry.isDir) {
       if (!destByPath.has(entry.relPath)) {
