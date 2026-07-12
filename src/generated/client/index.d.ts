@@ -9805,7 +9805,7 @@ export namespace Prisma {
     username: string | null
     secret: string | null
     remoteBasePath: string | null
-    excludeConfig: boolean | null
+    includePaths: string | null
     lastPushAt: Date | null
     lastPullAt: Date | null
     lastError: string | null
@@ -9822,7 +9822,7 @@ export namespace Prisma {
     username: string | null
     secret: string | null
     remoteBasePath: string | null
-    excludeConfig: boolean | null
+    includePaths: string | null
     lastPushAt: Date | null
     lastPullAt: Date | null
     lastError: string | null
@@ -9839,7 +9839,7 @@ export namespace Prisma {
     username: number
     secret: number
     remoteBasePath: number
-    excludeConfig: number
+    includePaths: number
     lastPushAt: number
     lastPullAt: number
     lastError: number
@@ -9866,7 +9866,7 @@ export namespace Prisma {
     username?: true
     secret?: true
     remoteBasePath?: true
-    excludeConfig?: true
+    includePaths?: true
     lastPushAt?: true
     lastPullAt?: true
     lastError?: true
@@ -9883,7 +9883,7 @@ export namespace Prisma {
     username?: true
     secret?: true
     remoteBasePath?: true
-    excludeConfig?: true
+    includePaths?: true
     lastPushAt?: true
     lastPullAt?: true
     lastError?: true
@@ -9900,7 +9900,7 @@ export namespace Prisma {
     username?: true
     secret?: true
     remoteBasePath?: true
-    excludeConfig?: true
+    includePaths?: true
     lastPushAt?: true
     lastPullAt?: true
     lastError?: true
@@ -10004,7 +10004,7 @@ export namespace Prisma {
     username: string
     secret: string
     remoteBasePath: string
-    excludeConfig: boolean
+    includePaths: string | null
     lastPushAt: Date | null
     lastPullAt: Date | null
     lastError: string | null
@@ -10040,7 +10040,7 @@ export namespace Prisma {
     username?: boolean
     secret?: boolean
     remoteBasePath?: boolean
-    excludeConfig?: boolean
+    includePaths?: boolean
     lastPushAt?: boolean
     lastPullAt?: boolean
     lastError?: boolean
@@ -10058,7 +10058,7 @@ export namespace Prisma {
     username?: boolean
     secret?: boolean
     remoteBasePath?: boolean
-    excludeConfig?: boolean
+    includePaths?: boolean
     lastPushAt?: boolean
     lastPullAt?: boolean
     lastError?: boolean
@@ -10076,7 +10076,7 @@ export namespace Prisma {
     username?: boolean
     secret?: boolean
     remoteBasePath?: boolean
-    excludeConfig?: boolean
+    includePaths?: boolean
     lastPushAt?: boolean
     lastPullAt?: boolean
     lastError?: boolean
@@ -10105,7 +10105,7 @@ export namespace Prisma {
       username: string
       secret: string
       remoteBasePath: string
-      excludeConfig: boolean
+      includePaths: string | null
       lastPushAt: Date | null
       lastPullAt: Date | null
       lastError: string | null
@@ -10513,7 +10513,7 @@ export namespace Prisma {
     readonly username: FieldRef<"ServerHostLink", 'String'>
     readonly secret: FieldRef<"ServerHostLink", 'String'>
     readonly remoteBasePath: FieldRef<"ServerHostLink", 'String'>
-    readonly excludeConfig: FieldRef<"ServerHostLink", 'Boolean'>
+    readonly includePaths: FieldRef<"ServerHostLink", 'String'>
     readonly lastPushAt: FieldRef<"ServerHostLink", 'DateTime'>
     readonly lastPullAt: FieldRef<"ServerHostLink", 'DateTime'>
     readonly lastError: FieldRef<"ServerHostLink", 'String'>
@@ -28679,7 +28679,7 @@ export namespace Prisma {
     username: 'username',
     secret: 'secret',
     remoteBasePath: 'remoteBasePath',
-    excludeConfig: 'excludeConfig',
+    includePaths: 'includePaths',
     lastPushAt: 'lastPushAt',
     lastPullAt: 'lastPullAt',
     lastError: 'lastError',
@@ -29581,7 +29581,7 @@ export namespace Prisma {
     username?: StringFilter<"ServerHostLink"> | string
     secret?: StringFilter<"ServerHostLink"> | string
     remoteBasePath?: StringFilter<"ServerHostLink"> | string
-    excludeConfig?: BoolFilter<"ServerHostLink"> | boolean
+    includePaths?: StringNullableFilter<"ServerHostLink"> | string | null
     lastPushAt?: DateTimeNullableFilter<"ServerHostLink"> | Date | string | null
     lastPullAt?: DateTimeNullableFilter<"ServerHostLink"> | Date | string | null
     lastError?: StringNullableFilter<"ServerHostLink"> | string | null
@@ -29599,7 +29599,7 @@ export namespace Prisma {
     username?: SortOrder
     secret?: SortOrder
     remoteBasePath?: SortOrder
-    excludeConfig?: SortOrder
+    includePaths?: SortOrderInput | SortOrder
     lastPushAt?: SortOrderInput | SortOrder
     lastPullAt?: SortOrderInput | SortOrder
     lastError?: SortOrderInput | SortOrder
@@ -29620,7 +29620,7 @@ export namespace Prisma {
     username?: StringFilter<"ServerHostLink"> | string
     secret?: StringFilter<"ServerHostLink"> | string
     remoteBasePath?: StringFilter<"ServerHostLink"> | string
-    excludeConfig?: BoolFilter<"ServerHostLink"> | boolean
+    includePaths?: StringNullableFilter<"ServerHostLink"> | string | null
     lastPushAt?: DateTimeNullableFilter<"ServerHostLink"> | Date | string | null
     lastPullAt?: DateTimeNullableFilter<"ServerHostLink"> | Date | string | null
     lastError?: StringNullableFilter<"ServerHostLink"> | string | null
@@ -29638,7 +29638,7 @@ export namespace Prisma {
     username?: SortOrder
     secret?: SortOrder
     remoteBasePath?: SortOrder
-    excludeConfig?: SortOrder
+    includePaths?: SortOrderInput | SortOrder
     lastPushAt?: SortOrderInput | SortOrder
     lastPullAt?: SortOrderInput | SortOrder
     lastError?: SortOrderInput | SortOrder
@@ -29663,7 +29663,7 @@ export namespace Prisma {
     username?: StringWithAggregatesFilter<"ServerHostLink"> | string
     secret?: StringWithAggregatesFilter<"ServerHostLink"> | string
     remoteBasePath?: StringWithAggregatesFilter<"ServerHostLink"> | string
-    excludeConfig?: BoolWithAggregatesFilter<"ServerHostLink"> | boolean
+    includePaths?: StringNullableWithAggregatesFilter<"ServerHostLink"> | string | null
     lastPushAt?: DateTimeNullableWithAggregatesFilter<"ServerHostLink"> | Date | string | null
     lastPullAt?: DateTimeNullableWithAggregatesFilter<"ServerHostLink"> | Date | string | null
     lastError?: StringNullableWithAggregatesFilter<"ServerHostLink"> | string | null
@@ -31615,7 +31615,7 @@ export namespace Prisma {
     username: string
     secret: string
     remoteBasePath?: string
-    excludeConfig?: boolean
+    includePaths?: string | null
     lastPushAt?: Date | string | null
     lastPullAt?: Date | string | null
     lastError?: string | null
@@ -31633,7 +31633,7 @@ export namespace Prisma {
     username: string
     secret: string
     remoteBasePath?: string
-    excludeConfig?: boolean
+    includePaths?: string | null
     lastPushAt?: Date | string | null
     lastPullAt?: Date | string | null
     lastError?: string | null
@@ -31649,7 +31649,7 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     secret?: StringFieldUpdateOperationsInput | string
     remoteBasePath?: StringFieldUpdateOperationsInput | string
-    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    includePaths?: NullableStringFieldUpdateOperationsInput | string | null
     lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31667,7 +31667,7 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     secret?: StringFieldUpdateOperationsInput | string
     remoteBasePath?: StringFieldUpdateOperationsInput | string
-    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    includePaths?: NullableStringFieldUpdateOperationsInput | string | null
     lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31684,7 +31684,7 @@ export namespace Prisma {
     username: string
     secret: string
     remoteBasePath?: string
-    excludeConfig?: boolean
+    includePaths?: string | null
     lastPushAt?: Date | string | null
     lastPullAt?: Date | string | null
     lastError?: string | null
@@ -31700,7 +31700,7 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     secret?: StringFieldUpdateOperationsInput | string
     remoteBasePath?: StringFieldUpdateOperationsInput | string
-    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    includePaths?: NullableStringFieldUpdateOperationsInput | string | null
     lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31717,7 +31717,7 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     secret?: StringFieldUpdateOperationsInput | string
     remoteBasePath?: StringFieldUpdateOperationsInput | string
-    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    includePaths?: NullableStringFieldUpdateOperationsInput | string | null
     lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33769,7 +33769,7 @@ export namespace Prisma {
     username?: SortOrder
     secret?: SortOrder
     remoteBasePath?: SortOrder
-    excludeConfig?: SortOrder
+    includePaths?: SortOrder
     lastPushAt?: SortOrder
     lastPullAt?: SortOrder
     lastError?: SortOrder
@@ -33790,7 +33790,7 @@ export namespace Prisma {
     username?: SortOrder
     secret?: SortOrder
     remoteBasePath?: SortOrder
-    excludeConfig?: SortOrder
+    includePaths?: SortOrder
     lastPushAt?: SortOrder
     lastPullAt?: SortOrder
     lastError?: SortOrder
@@ -33807,7 +33807,7 @@ export namespace Prisma {
     username?: SortOrder
     secret?: SortOrder
     remoteBasePath?: SortOrder
-    excludeConfig?: SortOrder
+    includePaths?: SortOrder
     lastPushAt?: SortOrder
     lastPullAt?: SortOrder
     lastError?: SortOrder
@@ -37147,7 +37147,7 @@ export namespace Prisma {
     username: string
     secret: string
     remoteBasePath?: string
-    excludeConfig?: boolean
+    includePaths?: string | null
     lastPushAt?: Date | string | null
     lastPullAt?: Date | string | null
     lastError?: string | null
@@ -37163,7 +37163,7 @@ export namespace Prisma {
     username: string
     secret: string
     remoteBasePath?: string
-    excludeConfig?: boolean
+    includePaths?: string | null
     lastPushAt?: Date | string | null
     lastPullAt?: Date | string | null
     lastError?: string | null
@@ -37535,7 +37535,7 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     secret?: StringFieldUpdateOperationsInput | string
     remoteBasePath?: StringFieldUpdateOperationsInput | string
-    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    includePaths?: NullableStringFieldUpdateOperationsInput | string | null
     lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37551,7 +37551,7 @@ export namespace Prisma {
     username?: StringFieldUpdateOperationsInput | string
     secret?: StringFieldUpdateOperationsInput | string
     remoteBasePath?: StringFieldUpdateOperationsInput | string
-    excludeConfig?: BoolFieldUpdateOperationsInput | boolean
+    includePaths?: NullableStringFieldUpdateOperationsInput | string | null
     lastPushAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastPullAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastError?: NullableStringFieldUpdateOperationsInput | string | null

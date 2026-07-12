@@ -138,7 +138,7 @@ model ServerHostLink {
   username       String
   secret         String
   remoteBasePath String    @default(".")
-  excludeConfig  Boolean   @default(false)
+  includePaths   String? // JSON array of POSIX relPaths; null/[] = full mirror
   lastPushAt     DateTime?
   lastPullAt     DateTime?
   lastError      String?
