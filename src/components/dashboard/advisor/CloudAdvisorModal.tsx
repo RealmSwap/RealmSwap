@@ -114,15 +114,34 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
     setStep("TRANSFER");
   };
 
-  const saveLink = async () => {
-    setBusy("save"); setMessage(null);
+  // Persist the current form to the host link. Returns true on success and
+  // reloads the saved state (which clears the password field). Sets an error
+  // message on failure. Does not touch `busy` so callers can wrap it.
+  const putLink = async (): Promise<boolean> => {
     const res = await fetch(`/api/servers/${serverId}/host-link`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const body = await res.json();
-    setBusy(null);
-    if (!res.ok) { setMessage(body.error || "Save failed"); return; }
-    setMessage("Connection saved.");
+    if (!res.ok) { setMessage(body.error || "Save failed"); return false; }
     await loadLink();
+    return true;
   };
+
+  const saveLink = async () => {
+    setBusy("save"); setMessage(null);
+    const ok = await putLink();
+    setBusy(null);
+    if (ok) setMessage("Connection saved.");
+  };
+
+  // The form has changes not yet persisted to the stored host link. A typed
+  // password is always "dirty" because the stored secret is never sent back.
+  const isDirty = (): boolean =>
+    !saved ||
+    !!form.password ||
+    form.host !== saved.host ||
+    form.port !== saved.port ||
+    form.username !== saved.username ||
+    form.remoteBasePath !== saved.remoteBasePath ||
+    form.excludeConfig !== saved.excludeConfig;
 
   const testConn = async () => {
     setBusy("test"); setMessage(null);
@@ -141,6 +160,14 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
 
   const transfer = async (direction: "PUSH" | "PULL") => {
     setBusy(direction); setMessage(null); setProgress(null);
+    // Persist any unsaved changes first — most importantly a freshly typed
+    // password. The transfer route authenticates with the *stored* secret, so
+    // without this the new password would be silently ignored and the upload
+    // would keep using the old (possibly wrong) credentials and hang.
+    if (isDirty()) {
+      const ok = await putLink();
+      if (!ok) { setBusy(null); return; }
+    }
     const interval = setInterval(pollProgress, 1000);
     try {
       const res = await fetch(`/api/servers/${serverId}/transfer`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ direction, confirmRemoteStopped: confirmStopped }) });
@@ -159,7 +186,11 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
     }
   };
 
-  const canTransfer = saved && confirmStopped && !busy;
+  // Transferable once we either have a saved link or a complete form (which
+  // auto-saves on transfer). A new link needs a password; an existing one can
+  // reuse the stored secret.
+  const connectionReady = saved || (form.host && form.username && form.password);
+  const canTransfer = connectionReady && confirmStopped && !busy;
 
   const selectedProviderName = recommendations.find(r => r.providerId === selectedProviderId)?.name || "Host";
 
