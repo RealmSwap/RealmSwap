@@ -46,6 +46,7 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
   const [message, setMessage] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ percent: number | null; label: string } | null>(null);
   const [picker, setPicker] = useState<null | { direction: "PUSH" | "PULL"; tree: FileEntry[]; checked: string[] }>(null);
+  const [pickerError, setPickerError] = useState<string | null>(null);
 
   const loadLink = async () => {
     try {
@@ -204,6 +205,7 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
         body.includePaths.length ? body.includePaths
         : body.unknownGame ? topLevel
         : body.defaultPaths;
+      setPickerError(null);
       setPicker({ direction, tree: body.tree, checked: initial });
     } finally {
       setBusy(null);
@@ -214,12 +216,13 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
     if (!picker) return;
     const includePaths = picker.checked;
     setBusy(picker.direction);
+    setPickerError(null);
     // Persist the selection, then run the transfer with it.
     const res = await fetch(`/api/servers/${serverId}/host-link`, {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, password: "", includePaths }),
     });
-    if (!res.ok) { const b = await res.json(); setMessage(b.error || "Failed to save selection"); setBusy(null); return; }
+    if (!res.ok) { const b = await res.json(); setPickerError(b.error || "Failed to save selection"); setBusy(null); return; }
     await loadLink();
     const dir = picker.direction;
     setPicker(null);
@@ -476,8 +479,9 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
                       checked={picker.checked}
                       onChange={(next) => setPicker((p) => (p ? { ...p, checked: next } : p))}
                     />
+                    {pickerError && <div className="mt-3 text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{pickerError}</div>}
                     <div className="flex gap-2 mt-4 justify-end">
-                      <button onClick={() => { setPicker(null); setBusy(null); }} className="rounded-lg border border-slate-700 hover:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-200">Back</button>
+                      <button onClick={() => { setPicker(null); setBusy(null); setPickerError(null); }} className="rounded-lg border border-slate-700 hover:bg-slate-800 px-3 py-2 text-sm font-semibold text-slate-200">Back</button>
                       <button onClick={confirmPicker} disabled={picker.checked.length === 0 || !!busy} className="rounded-lg bg-accentPurple hover:bg-purple-500 disabled:opacity-50 px-4 py-2 text-sm font-semibold text-white">Continue</button>
                     </div>
                   </div>
