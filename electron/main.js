@@ -174,7 +174,11 @@ function buildTray() {
   Menu.setApplicationMenu(Menu.buildFromTemplate([
     { label: "File", submenu: [{ label: "Quit", click: () => { beginQuit(); app.quit(); } }] },
     { label: "View", submenu: [{ role: "reload" }, { role: "toggleDevTools" }] },
-    { label: "Help", submenu: [{ role: "about" }] },
+    { label: "Help", submenu: [
+      { role: "about" },
+      { type: "separator" },
+      { label: "Check for Updates…", click: () => checkForUpdatesManual() },
+    ] },
   ]));
 }
 
