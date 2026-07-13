@@ -7,8 +7,18 @@ import { getProvider } from "@/lib/hosting/registry";
 
 function publicLink(link: any) {
   if (!link) return null;
-  const { secret, id, serverId, createdAt, updatedAt, ...rest } = link;
-  return rest;
+  const { secret, id, serverId, createdAt, updatedAt, includePaths, ...rest } = link;
+  return { ...rest, includePaths: parseIncludePaths(includePaths) };
+}
+
+function parseIncludePaths(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
 }
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -53,9 +63,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     port: creds.port,
     username: creds.username,
     remoteBasePath: creds.remoteBasePath,
-    excludeConfig: Boolean(body.excludeConfig),
   };
   if (body.password) data.secret = encryptSecret(body.password);
+  if (Array.isArray(body.includePaths)) {
+    data.includePaths = JSON.stringify(body.includePaths.filter((x: unknown) => typeof x === "string"));
+  }
 
   let link;
   if (existing) {
@@ -65,8 +77,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     link = await prisma.serverHostLink.create({ data: { ...data, serverId: params.id } });
   }
 
-  const { secret, id, serverId, createdAt, updatedAt, ...rest } = link;
-  return NextResponse.json({ link: rest });
+  return NextResponse.json({ link: publicLink(link) });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {

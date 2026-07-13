@@ -11,7 +11,7 @@ function baseCtx(over: Partial<TransferContext> = {}): TransferContext {
     async copy(rel) { copied.push(rel); },
   };
   return {
-    excludeConfig: false,
+    include: [],
     localEntries: [f("world/level.dat", 10, 100), f("server.properties", 5, 100)],
     remoteEntries: [],
     sizesFor: (entries: FileEntry[]) => new Map(entries.map((e) => [e.relPath, e.size])),
@@ -30,9 +30,10 @@ describe("executeTransfer", () => {
     expect(summary.filesTransferred).toBe(2);
   });
 
-  it("excludeConfig skips server.properties", async () => {
-    const ctx = baseCtx({ excludeConfig: true });
+  it("include filter limits the transfer to selected paths", async () => {
+    const ctx = baseCtx({ include: ["world"] });
     await executeTransfer("PUSH", ctx);
+    expect((ctx as any)._copied).toEqual(["world/level.dat"]);
     expect((ctx as any)._copied).not.toContain("server.properties");
   });
 

@@ -213,7 +213,7 @@ exports.Prisma.ServerHostLinkScalarFieldEnum = {
   username: 'username',
   secret: 'secret',
   remoteBasePath: 'remoteBasePath',
-  excludeConfig: 'excludeConfig',
+  includePaths: 'includePaths',
   lastPushAt: 'lastPushAt',
   lastPullAt: 'lastPullAt',
   lastError: 'lastError',

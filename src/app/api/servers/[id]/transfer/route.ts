@@ -12,6 +12,16 @@ import { getRunner } from "@/lib/runners/factory";
 import { dataRoot } from "@/lib/appPaths";
 import { FileEntry, SftpClient, TransferDirection, Transferer } from "@/lib/hosting/types";
 
+function parseIncludePaths(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr.filter((x) => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const user = await getAuthenticatedUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -78,7 +88,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     });
 
     const summary = await executeTransfer(direction, {
-      excludeConfig: link.excludeConfig,
+      include: parseIncludePaths(link.includePaths),
       localEntries,
       remoteEntries,
       sizesFor: (entries: FileEntry[]) => new Map(entries.map((e) => [e.relPath, e.size])),
