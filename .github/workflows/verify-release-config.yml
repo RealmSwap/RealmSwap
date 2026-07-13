@@ -1,0 +1,71 @@
+name: Verify release config
+
+# On-demand pre-release check: confirms the Supabase build secrets are present
+# and that the auth backend they point at is reachable and configured for
+# email/password login — the exact dependency that, when unset, bricked v0.4.5
+# startup. Uses the secrets inside the runner; never prints their values.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Probe Supabase auth
+        shell: bash
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -u
+          fail=0
+
+          if [ -z "${NEXT_PUBLIC_SUPABASE_URL}" ] || [ -z "${NEXT_PUBLIC_SUPABASE_ANON_KEY}" ]; then
+            echo "::error::One or both Supabase secrets are empty."
+            exit 1
+          fi
+          # Basic shape check without echoing values.
+          case "${NEXT_PUBLIC_SUPABASE_URL}" in
+            https://*.supabase.co) echo "URL shape: OK (https://<ref>.supabase.co)";;
+            *) echo "::warning::URL does not look like https://<ref>.supabase.co";;
+          esac
+
+          echo "== 1) Auth health endpoint =="
+          health=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
+            "${NEXT_PUBLIC_SUPABASE_URL}/auth/v1/health")
+          echo "  HTTP ${health}"
+          if [ "${health}" != "200" ]; then
+            echo "::error::Auth health check did not return 200 (got ${health}). URL or anon key likely wrong / project unreachable."
+            fail=1
+          fi
+
+          echo "== 2) Password grant with a bogus credential (expect 400 invalid_grant) =="
+          body=$(curl -s \
+            -H "apikey: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            -X POST "${NEXT_PUBLIC_SUPABASE_URL}/auth/v1/token?grant_type=password" \
+            -d '{"email":"release-smoketest-nonexistent@example.invalid","password":"definitely-wrong"}')
+          # Interpret without printing tokens/keys.
+          if echo "${body}" | grep -qiE "invalid login credentials|invalid_grant"; then
+            echo "  Got 'invalid credentials' -> URL + anon key valid, email/password auth ENABLED. PASS"
+          elif echo "${body}" | grep -qiE "email logins are disabled|provider is not enabled|signups? not allowed|password.*disabled"; then
+            echo "::error::Supabase returned a provider-disabled error -> email/password auth is OFF for this project."
+            fail=1
+          elif echo "${body}" | grep -qiE "invalid api key|no api key|jwt"; then
+            echo "::error::Supabase rejected the anon key -> NEXT_PUBLIC_SUPABASE_ANON_KEY is wrong."
+            fail=1
+          else
+            echo "::error::Unexpected auth response (not the benign 'invalid credentials'). Check project config."
+            # Print a short, non-sensitive classification of the error field only.
+            echo "  error_code field: $(echo "${body}" | grep -oiE '\"error_code\":\"[a-z_]+\"' | head -1)"
+            fail=1
+          fi
+
+          if [ "${fail}" = "0" ]; then
+            echo "RESULT: PASS — Supabase auth is reachable and configured for email/password login."
+          else
+            echo "RESULT: FAIL — see errors above."
+            exit 1
+          fi
