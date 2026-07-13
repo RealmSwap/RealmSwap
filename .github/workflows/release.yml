@@ -61,11 +61,33 @@ jobs:
         working-directory: 'C:\rsbuild'
         run: npm version ${{ steps.ver.outputs.version }} --no-git-tag-version --allow-same-version
 
+      # NEXT_PUBLIC_* vars are inlined at `next build` time. Without them the
+      # bundled Supabase client is constructed with undefined URL/key, which
+      # throws in the auth middleware on every request (including the /start
+      # readiness probe) and bricks startup ("Server returned 500"). Fail loudly
+      # here rather than shipping a broken installer.
+      - name: Verify required build-time config
+        shell: bash
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          missing=0
+          for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY; do
+            if [ -z "${!v}" ]; then echo "::error::Missing required build secret $v"; missing=1; fi
+          done
+          if [ "$missing" != "0" ]; then
+            echo "Refusing to build a release without Supabase config — it would brick startup." >&2
+            exit 1
+          fi
+
       - name: Build Windows installer
         working-directory: 'C:\rsbuild'
         env:
           DATABASE_URL: file:./dev.db
           DEBUG: electron-builder
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           npm run electron:build > build.log 2>&1 || (cat build.log && exit 1)
 
