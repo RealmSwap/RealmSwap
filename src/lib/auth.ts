@@ -53,6 +53,31 @@ export async function ensureLocalUser(supabaseUser: SupabaseUser) {
     });
   }
 
+  // Re-link a pre-Supabase local account. Older builds keyed the local User row
+  // by a bcrypt-era cuid; on the user's first Supabase login the id lookup above
+  // misses, and a naive create then collides on the unique email — a hard 500 on
+  // login for every upgrading user. Instead, re-key the legacy row to the Supabase
+  // id. Every FK to User.id is ON UPDATE CASCADE (and SQLite foreign_keys is ON),
+  // so the user's servers/subscription/logs follow the id automatically.
+  if (email) {
+    const legacy = await prisma.user.findUnique({ where: { email } });
+    if (legacy && legacy.id !== supabaseUser.id) {
+      await prisma.$executeRawUnsafe(
+        `UPDATE "User" SET "id" = ? WHERE "id" = ?`,
+        supabaseUser.id,
+        legacy.id,
+      );
+      await prisma.user.update({
+        where: { id: supabaseUser.id },
+        data: { email, name },
+      });
+      return prisma.user.findUnique({
+        where: { id: supabaseUser.id },
+        include: { subscription: true },
+      });
+    }
+  }
+
   const userCount = await prisma.user.count();
   const role = userCount === 0 ? "ADMIN" : "USER";
 
