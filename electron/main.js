@@ -246,6 +246,18 @@ app.on("open-url", (event, urlStr) => {
   }
 });
 
+// Append-only startup log. The packaged main process has no visible console, so
+// without this a failed/skipped DB migration on upgrade is undiagnosable from
+// the outside. Best-effort — never throws into startup.
+function logStartup(msg) {
+  try {
+    const line = `[${new Date().toISOString()}] ${msg}\n`;
+    fs.appendFileSync(path.join(app.getPath("userData"), "startup.log"), line);
+  } catch {
+    /* ignore */
+  }
+}
+
 app.whenReady().then(async () => {
   try {
     if (isDev) {
@@ -253,15 +265,22 @@ app.whenReady().then(async () => {
       await createWindow();
     } else {
       const dataDir = ensureDataDir();
-      await runMigrations({
+      logStartup(`startup: packaged launch, dataDir=${dataDir}`);
+      const migResult = await runMigrations({
         dbPath: path.join(dataDir, "realmswap.db"),
         migrationsDir: path.join(process.resourcesPath, "migrations"),
         backupDir: path.join(dataDir, "backups"),
         makeClient: makeMigrationClient,
+        log: { info: (m) => logStartup(m) },
       });
+      logStartup(
+        `migrations applied: ${JSON.stringify(migResult.applied)}` +
+          (migResult.backupPath ? ` (backup: ${migResult.backupPath})` : "")
+      );
       serverPort = await getFreePort();
       startNextServer(serverPort, dataDir);
       await waitForServer(serverPort, 30000);
+      logStartup(`server ready on port ${serverPort}`);
       await createWindow(serverPort);
       initAutoUpdate({
         getMainWindow: () => mainWindow,
@@ -273,6 +292,7 @@ app.whenReady().then(async () => {
     // Startup failed. In packaged builds, give the app one bounded chance to
     // pull a fixing update before giving up — otherwise a bad release bricks
     // the install with no way to self-heal.
+    logStartup(`STARTUP ERROR: ${String((err && err.stack) || err)}`);
     let recovered = false;
     if (!isDev) {
       try {
