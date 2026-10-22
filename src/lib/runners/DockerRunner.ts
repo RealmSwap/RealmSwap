@@ -6,8 +6,8 @@ import { prisma } from "../db";
 import { dataRoot } from "../appPaths";
 import { parseSpec } from "../definitions/serialize";
 import { buildContext } from "../definitions/context";
-import { planContainer, planConfigFiles, planPorts, planInstall } from "../definitions/plan";
-import { writeStrategyConfig } from "../definitions/strategies";
+import { planContainer, planPorts, planInstall } from "../definitions/plan";
+import { applyConfigFiles } from "../definitions/applyConfigFiles";
 import { appendLog, clearLogs, getServerLogTail } from "../serverLogs";
 import { serverEventBus } from "../eventBus";
 import { setProgress, clearProgress, parseSteamProgress } from "../downloadProgress";
@@ -90,18 +90,7 @@ export class DockerRunner implements ServerRunner {
     const baseDir = hostDataDir(serverId);
     const installDir = container.installSubDir ? path.join(baseDir, container.installSubDir) : baseDir;
     fs.mkdirSync(installDir, { recursive: true });
-    for (const cf of planConfigFiles(spec, ctx)) {
-      const full = path.join(installDir, cf.relPath);
-      fs.mkdirSync(path.dirname(full), { recursive: true });
-      if (cf.strategy === "template") {
-        fs.writeFileSync(full, cf.content ?? "");
-      } else {
-        writeStrategyConfig({
-          strategy: cf.strategy as "enshroudedJson" | "zomboidIniMerge",
-          installDir, serverName: record.name, password: record.password || undefined,
-        });
-      }
-    }
+    applyConfigFiles(spec, ctx, { installDir, server: { name: record.name, password: record.password } });
 
     // Remove any stale container so start is idempotent.
     await docker(["rm", "-f", containerName(serverId)]);

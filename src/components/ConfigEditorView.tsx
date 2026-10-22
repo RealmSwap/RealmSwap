@@ -24,8 +24,10 @@ import {
   X,
   Copy,
   FolderOpen,
+  SlidersHorizontal,
 } from "lucide-react";
 import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
+import DefinitionParamFields from "@/components/DefinitionParamFields";
 
 interface ConfigEditorViewProps {
   user: any;
@@ -47,8 +49,17 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"general" | "files">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "game" | "files">("general");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // Game Settings tab state (schema-driven, from the server's game definition)
+  const [gameName, setGameName] = useState("");
+  const [gameFields, setGameFields] = useState<any[]>([]);
+  const [gameValues, setGameValues] = useState<Record<string, any>>({});
+  const [gameSavedValues, setGameSavedValues] = useState<Record<string, any>>({});
+  const [supportsGameSettings, setSupportsGameSettings] = useState(true);
+  const [gameLoading, setGameLoading] = useState(false);
+  const [gameSaving, setGameSaving] = useState(false);
   
   // Publish Modal State
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -84,6 +95,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
 
   const loadConfig = async (server: any) => {
     setSelectedServer(server);
+    loadGameSettings(server);
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -113,6 +125,66 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
       setIsEditable(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadGameSettings = async (server: any) => {
+    setGameLoading(true);
+    setSupportsGameSettings(true);
+    setGameFields([]);
+    setGameValues({});
+    setGameSavedValues({});
+    try {
+      const res = await fetch(`/api/servers/${server.id}/settings`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load game settings");
+      setGameName(data.game || server.game);
+      setSupportsGameSettings(!!data.supportsSettings);
+      setGameFields(data.fields || []);
+      const values: Record<string, any> = {};
+      for (const f of data.fields || []) values[f.key] = f.value;
+      setGameValues(values);
+      setGameSavedValues(values);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setGameLoading(false);
+    }
+  };
+
+  const handleGameValueChange = (key: string, value: any) => {
+    setGameValues((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const gameSettingsDirty = gameFields.some((f) => gameValues[f.key] !== gameSavedValues[f.key]);
+
+  const resetGameSettings = () => {
+    const values: Record<string, any> = {};
+    for (const f of gameFields) values[f.key] = f.default ?? "";
+    setGameValues(values);
+  };
+
+  const handleSaveGameSettings = async () => {
+    if (!selectedServer || !gameSettingsDirty) return;
+    setGameSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paramValues: gameValues }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save settings");
+
+      setSuccess(data.message || "Settings saved.");
+      setGameSavedValues({ ...gameValues });
+      setTimeout(() => setSuccess(null), 4000);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setGameSaving(false);
     }
   };
 
@@ -352,6 +424,10 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                   <button onClick={() => setActiveTab("general")} className={`font-bold text-sm ${activeTab === 'general' ? 'text-accentPurple border-b-2 border-accentPurple' : 'text-slate-400 border-b-2 border-transparent hover:text-slate-200'} pb-4 -mb-4 transition-colors`}>
                     General Settings
                   </button>
+                  <button onClick={() => setActiveTab("game")} className={`font-bold text-sm ${activeTab === 'game' ? 'text-accentPurple border-b-2 border-accentPurple' : 'text-slate-400 border-b-2 border-transparent hover:text-slate-200'} pb-4 -mb-4 transition-colors flex items-center gap-2`}>
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Game Settings
+                  </button>
                   <button onClick={() => setActiveTab("files")} className={`font-bold text-sm ${activeTab === 'files' ? 'text-accentPurple border-b-2 border-accentPurple' : 'text-slate-400 border-b-2 border-transparent hover:text-slate-200'} pb-4 -mb-4 transition-colors flex items-center gap-2`}>
                     <FileCode className="w-4 h-4" />
                     Configuration Files
@@ -360,17 +436,57 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                 <div className="flex items-center gap-2">
                   {selectedServer && (
                     <>
-                      {isEditable && (
-                        <button
-                          onClick={() => loadConfig(selectedServer)}
-                          className="px-3 py-1.5 rounded-lg bg-slate-900 border border-white/5 hover:border-white/10 text-xs font-bold text-slate-300 transition-colors flex items-center gap-1.5"
-                          title="Reload from disk"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                          Reload
-                        </button>
+                      {activeTab === "game" && supportsGameSettings ? (
+                        <>
+                          <button
+                            onClick={resetGameSettings}
+                            className="px-3 py-1.5 rounded-lg bg-slate-900 border border-white/5 hover:border-white/10 text-xs font-bold text-slate-300 transition-colors"
+                            title="Reset all fields to the game's defaults"
+                          >
+                            Reset to Defaults
+                          </button>
+                          <button
+                            onClick={handleSaveGameSettings}
+                            disabled={gameSaving || !gameSettingsDirty}
+                            className="px-4 py-1.5 rounded-lg bg-accentPurple hover:bg-accentPurpleHover disabled:bg-accentPurple/30 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors flex items-center gap-1.5 border border-accentPurple/30"
+                          >
+                            {gameSaving ? (
+                              <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Saving...</>
+                            ) : (
+                              <><Save className="w-3.5 h-3.5" /> Save Settings</>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {isEditable && (
+                            <button
+                              onClick={() => loadConfig(selectedServer)}
+                              className="px-3 py-1.5 rounded-lg bg-slate-900 border border-white/5 hover:border-white/10 text-xs font-bold text-slate-300 transition-colors flex items-center gap-1.5"
+                              title="Reload from disk"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                              Reload
+                            </button>
+                          )}
+                          {isEditable && (
+                            <button
+                              onClick={handleSave}
+                              disabled={saving || !hasChanges || selectedServer?.status === "RUNNING"}
+                              className="px-4 py-1.5 rounded-lg bg-accentPurple hover:bg-accentPurpleHover disabled:bg-accentPurple/30 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors flex items-center gap-1.5 border border-accentPurple/30"
+                            >
+                              {saving ? (
+                                <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Saving...</>
+                              ) : success ? (
+                                <><Check className="w-3.5 h-3.5" /> Saved!</>
+                              ) : (
+                                <><Save className="w-3.5 h-3.5" /> Save Changes</>
+                              )}
+                            </button>
+                          )}
+                        </>
                       )}
-                      
+
                       <button
                         onClick={handlePublishClick}
                         className="px-3 py-1.5 rounded-lg bg-accentBlue/20 border border-accentBlue/30 hover:bg-accentBlue/30 text-xs font-bold text-accentBlue transition-colors flex items-center gap-1.5"
@@ -379,32 +495,23 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                         <UploadCloud className="w-3.5 h-3.5" />
                         Publish
                       </button>
-
-                      {isEditable && (
-                        <button
-                          onClick={handleSave}
-                          disabled={saving || !hasChanges || selectedServer?.status === "RUNNING"}
-                          className="px-4 py-1.5 rounded-lg bg-accentPurple hover:bg-accentPurpleHover disabled:bg-accentPurple/30 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors flex items-center gap-1.5 border border-accentPurple/30"
-                        >
-                          {saving ? (
-                            <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Saving...</>
-                          ) : success ? (
-                            <><Check className="w-3.5 h-3.5" /> Saved!</>
-                          ) : (
-                            <><Save className="w-3.5 h-3.5" /> Save Changes</>
-                          )}
-                        </button>
-                      )}
                     </>
                   )}
                 </div>
               </div>
 
               {/* Warnings */}
-              {selectedServer?.status === "RUNNING" && isEditable && (
+              {selectedServer?.status === "RUNNING" && isEditable && activeTab === "files" && (
                 <div className="px-4 py-3 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>Stop the server before editing configuration files to prevent data corruption.</span>
+                </div>
+              )}
+
+              {selectedServer?.status === "RUNNING" && activeTab === "game" && supportsGameSettings && (
+                <div className="px-4 py-3 bg-amber-500/10 border-b border-amber-500/20 text-amber-400 text-xs flex items-center gap-2">
+                  <Clock className="w-4 h-4 flex-shrink-0" />
+                  <span>Server is running — saved settings take effect the next time the server starts.</span>
                 </div>
               )}
 
@@ -428,6 +535,47 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                   <div className="p-12 text-center">
                     <Settings className="w-8 h-8 text-slate-600 mx-auto mb-3" />
                     <span className="text-sm font-bold text-slate-400">Select a server to edit its settings</span>
+                  </div>
+                ) : activeTab === "game" ? (
+                  <div className="p-6 space-y-8">
+                    {gameLoading ? (
+                      <div className="p-12 text-center">
+                        <RefreshCw className="w-6 h-6 text-accentPurple animate-spin mx-auto mb-3" />
+                        <span className="text-xs text-mutedText">Loading game settings...</span>
+                      </div>
+                    ) : !supportsGameSettings ? (
+                      <div className="p-5 rounded-xl bg-accentPurple/5 border border-accentPurple/20 text-sm text-slate-300 flex gap-3">
+                        <Info className="w-5 h-5 text-accentPurple flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-bold text-white block mb-1">No structured settings for {gameName || "this game"} (yet)</span>
+                          <p className="leading-relaxed text-xs mb-3">
+                            This game is configured through its launch arguments or raw configuration files.
+                            Use the Configuration Files tab to edit it directly, or re-create the server to change creation-time options.
+                          </p>
+                          <button
+                            onClick={() => setActiveTab("files")}
+                            className="px-3 py-1.5 rounded-lg bg-slate-900 border border-white/5 hover:border-white/10 text-xs font-bold text-slate-300 transition-colors"
+                          >
+                            Open Configuration Files
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">{gameName} Settings</h3>
+                          <p className="text-xs text-slate-500 mt-1">
+                            The important settings for this game, with safe defaults. Changes apply to config files and launch
+                            arguments automatically — no manual file editing needed.
+                          </p>
+                        </div>
+                        <DefinitionParamFields
+                          params={gameFields}
+                          values={gameValues}
+                          onChange={handleGameValueChange}
+                        />
+                      </>
+                    )}
                   </div>
                 ) : activeTab === "general" ? (
                   <div className="p-6 space-y-8">

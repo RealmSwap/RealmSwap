@@ -12,6 +12,8 @@ export interface ParamSpec {
   min?: number;
   max?: number;
   required?: boolean;
+  group?: string; // optional display grouping for settings forms (e.g. "World", "Gameplay", "Network")
+  help?: string; // optional one-line explanation shown next to the field in settings forms
 }
 
 export type ArgSpec = string | { value: string[]; includeWhen: string };

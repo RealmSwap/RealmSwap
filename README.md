@@ -27,7 +27,8 @@ RealmSwap currently supports single-click deployment for the following dedicated
 - **Live Server Console**: Interact directly with your running servers. Read live logs and send commands straight from the dashboard.
 - **Real-time Monitoring**: Track live server CPU and memory usage with beautiful dashboard sparklines powered by WMI and PowerShell polling.
 - **Crash Detection & Auto-Restart**: Automatically detects server crashes and attempts to restart them up to 3 times within a 10-minute window using our robust crash policy engine.
-- **Server Config Editor**: Edit raw server configurations (`.ini`, `.json`, `.properties`) directly from the dashboard.
+- **Game Settings**: Change the settings that matter — max players, difficulty, world name, MOTD, and more — through friendly typed forms instead of raw config files. Saved settings re-render config files and launch arguments automatically (games that launch with command-line arguments are no longer locked to their creation-time settings).
+- **Server Config Editor**: Edit raw server configurations (`.ini`, `.json`, `.properties`) directly from the dashboard. Hand edits are preserved: managed keys are merge-written on restart, and a `.rsbak` backup is kept of your last saved file.
 - **Backup & Restore**: Easily take snapshot backups of your world data and restore them with a single click.
 - **Mod Manager**: Built-in support for searching, installing, and managing mods for supported games.
 - **RealmSync Integration**: Generate deep links (`realmsync://`) for your friends to use with the RealmSync companion app. RealmSync automatically downloads required mods and configurations to the player's client and connects them directly to your server in one click!
