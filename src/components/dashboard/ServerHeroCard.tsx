@@ -166,43 +166,6 @@ export function ServerHeroCard({
           )}
           <div className="flex items-center gap-2 text-xs font-medium text-white/80 mt-1">
             <span className="bg-white/20 px-2 py-0.5 rounded text-white">{isLocal ? "Local Machine" : server.region}</span>
-            {server.ipAddress && (
-              <div 
-                className="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors group/ip"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.clipboard.writeText(`${server.ipAddress}:${server.port}`);
-                  actions.setCopiedIp(`${server.ipAddress}:${server.port}`);
-                }}
-              >
-                <span>{server.ipAddress}:{server.port}</span>
-                {copiedIp === `${server.ipAddress}:${server.port}` ? (
-                  <Check className="w-3 h-3 text-emerald-400" />
-                ) : (
-                  <Copy className="w-3 h-3 opacity-0 group-hover/ip:opacity-100 transition-opacity" />
-                )}
-              </div>
-            )}
-            {server.tunnelUrl && (
-              <>
-                <span className="text-white/30">•</span>
-                <div 
-                  className="flex items-center gap-1.5 cursor-pointer hover:text-accentPurple transition-colors group/tunnel"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigator.clipboard.writeText(server.tunnelUrl);
-                    actions.setCopiedIp(server.tunnelUrl);
-                  }}
-                >
-                  <span className="text-accentPurple/90 font-bold">{server.tunnelUrl}</span>
-                  {copiedIp === server.tunnelUrl ? (
-                    <Check className="w-3 h-3 text-emerald-400" />
-                  ) : (
-                    <Copy className="w-3 h-3 opacity-0 group-hover/tunnel:opacity-100 transition-opacity" />
-                  )}
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -357,49 +320,6 @@ export function ServerHeroCard({
         </div>
       </div>
 
-      {/* RealmSync Feature Card inline */}
-      <div className="px-4 pb-4 pt-3 border-t border-white/5 bg-slate-950/50" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <BadgeCent className="w-4 h-4 text-accentPurple" />
-            <h3 className="font-extrabold text-white text-xs tracking-wide">RealmSync Link</h3>
-          </div>
-        </div>
-        {server.inviteCode ? (
-          <div className="relative group/link mt-1">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-accentPurple to-blue-500 rounded-xl opacity-20 group-hover/link:opacity-50 blur transition duration-300"></div>
-            <div className="relative flex items-center justify-between bg-slate-950/90 border border-white/10 rounded-xl p-1.5 backdrop-blur-md">
-              <div className="flex items-center gap-2 pl-2 overflow-hidden">
-                <span className="font-mono text-[11px] text-slate-300 truncate select-all">realmsync://{server.inviteCode}</span>
-              </div>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigator.clipboard.writeText(`realmsync://${server.inviteCode}`);
-                  actions.setCopiedIp(server.id + '-sync');
-                  setTimeout(() => actions.setCopiedIp(null), 2000);
-                }}
-                className="shrink-0 ml-2 p-2 rounded-lg bg-white/5 hover:bg-accentPurple hover:text-white text-slate-400 transition-all duration-200"
-                title="Copy Deep Link"
-              >
-                {copiedIp === server.id + '-sync' ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => actions.handleGenerateInvite(server.id)}
-            className="w-full py-2 bg-white/5 border border-white/10 hover:border-accentPurple/50 hover:bg-accentPurple/10 text-white font-bold text-xs rounded-xl transition-all shadow-md group/gen flex items-center justify-center gap-2"
-          >
-            <BadgeCent className="w-3.5 h-3.5 text-slate-400 group-hover/gen:text-accentPurple transition-colors" />
-            <span>Generate Sync Link</span>
-          </button>
-        )}
-      </div>
     </div>
     </motion.div>
   );

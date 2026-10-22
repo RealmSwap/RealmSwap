@@ -169,7 +169,7 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
               <Settings2 className="w-8 h-8 text-accentPurple" />
               Automation Engine
             </h1>
-            <p className="text-slate-400 mt-2 text-sm font-medium">Build complex workflows and schedules to manage your server.</p>
+            <p className="text-slate-400 mt-2 text-sm font-medium">Workflows, schedules, and overnight update windows — everything that runs your servers on autopilot. (Update windows are set per server in Server Config → Game Settings.)</p>
           </div>
           
           <div className="flex items-center gap-3">

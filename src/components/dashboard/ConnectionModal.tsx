@@ -38,6 +38,43 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [tunnelOn, setTunnelOn] = useState<boolean>(!!server.tunnelEnabled);
+  const [tunnelBusy, setTunnelBusy] = useState(false);
+  const [inviteCode, setInviteCode] = useState<string | null>(server.inviteCode ?? null);
+  const [inviteBusy, setInviteBusy] = useState(false);
+
+  const toggleTunnel = async (enable: boolean) => {
+    setTunnelBusy(true);
+    try {
+      const res = await fetch(`/api/servers/${server.id}/settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "TOGGLE_TUNNEL", enable }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to toggle tunnel");
+      setTunnelOn(enable);
+      load(); // re-run checks with the new path
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setTunnelBusy(false);
+    }
+  };
+
+  const generateInvite = async () => {
+    setInviteBusy(true);
+    try {
+      const res = await fetch(`/api/servers/${server.id}/invite`, { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to generate invite");
+      setInviteCode(json.inviteCode);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setInviteBusy(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setChecking(true);
@@ -59,7 +96,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
 
   // QR encodes the realmsync deep link when present, else the raw address.
   useEffect(() => {
-    const invite = data?.invite;
+    const invite = data?.invite ? { ...data.invite, inviteCode } : undefined;
     if (!invite) return;
     const content = invite.inviteCode ? `realmsync://${invite.inviteCode}` : invite.address;
     QRCode.toDataURL(content, { width: 220, margin: 1, color: { dark: "#0f172a", light: "#ffffff" } })
@@ -73,7 +110,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const invite = data?.invite;
+  const invite = data?.invite ? { ...data.invite, inviteCode } : undefined;
   const inviteText = invite
     ? [
         `Join my ${invite.gameDisplayName} server — ${invite.serverName}`,
@@ -157,6 +194,15 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
                     </div>
                   </div>
                 )}
+                {!invite.inviteCode && (
+                  <button
+                    onClick={generateInvite}
+                    disabled={inviteBusy}
+                    className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-accentPurple/50 hover:bg-accentPurple/10 text-white text-xs font-bold transition-colors"
+                  >
+                    {inviteBusy ? "Generating…" : "Generate one-click invite link"}
+                  </button>
+                )}
                 {invite.inviteCode && (
                   <div>
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">One-click link (RealmSync app)</span>
@@ -177,6 +223,28 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
               </div>
             </div>
           )}
+
+          {/* Tunnel control — the troubleshooter's most common fix, one click away */}
+          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-950/60 border border-white/5">
+            <div>
+              <h4 className="text-sm font-bold text-slate-200">Playit tunnel</h4>
+              <p className="text-xs text-slate-500">
+                {tunnelOn
+                  ? "Active — friends can join without any router configuration."
+                  : "Off — lets friends join through the internet with zero router setup."}
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={tunnelOn}
+                disabled={tunnelBusy}
+                onChange={(e) => toggleTunnel(e.target.checked)}
+              />
+              <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
+            </label>
+          </div>
 
           {/* Diagnose section */}
           {report && (

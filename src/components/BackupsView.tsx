@@ -321,7 +321,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                 <div className="overflow-x-auto pt-2">
                   {backups.length === 0 ? (
                     <div className="p-8 rounded-xl border border-dashed border-white/5 bg-slate-950/20 text-center text-xs text-mutedText">
-                      No backups or snapshots exist for this server yet. Set a schedule or click "Create Manual Backup".
+                      No backups yet. Take one manually below, or set a schedule so RealmSwap backs this world up automatically.
                     </div>
                   ) : (
                     <table className="w-full text-left text-xs border-collapse">

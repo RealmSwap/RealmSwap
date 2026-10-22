@@ -162,7 +162,7 @@ export default function TeamView({ servers, user }: TeamViewProps) {
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
             <Users className="w-6 h-6 text-accentPurple animate-float" />
-            <span>Team & Collaborators</span>
+            <span>App Access</span>
           </h1>
           <p className="text-sm text-mutedText mt-1">Delegate server controls to your friends so they can start, stop, configure mods, or restore snapshots.</p>
         </div>
