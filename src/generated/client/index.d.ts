@@ -6332,6 +6332,7 @@ export namespace Prisma {
     pid: number | null
     rconPort: number | null
     sftpPort: number | null
+    autoUpdateHour: number | null
     port: number | null
     cpuUsage: number | null
     memoryUsage: number | null
@@ -6343,6 +6344,7 @@ export namespace Prisma {
     pid: number | null
     rconPort: number | null
     sftpPort: number | null
+    autoUpdateHour: number | null
     port: number | null
     cpuUsage: number | null
     memoryUsage: number | null
@@ -6369,6 +6371,8 @@ export namespace Prisma {
     tunnelUrl: string | null
     enableUpnp: boolean | null
     autoUpdate: boolean | null
+    autoUpdateHour: number | null
+    lastAutoUpdateAt: Date | null
     ipAddress: string | null
     port: number | null
     definitionId: string | null
@@ -6403,6 +6407,8 @@ export namespace Prisma {
     tunnelUrl: string | null
     enableUpnp: boolean | null
     autoUpdate: boolean | null
+    autoUpdateHour: number | null
+    lastAutoUpdateAt: Date | null
     ipAddress: string | null
     port: number | null
     definitionId: string | null
@@ -6437,6 +6443,8 @@ export namespace Prisma {
     tunnelUrl: number
     enableUpnp: number
     autoUpdate: number
+    autoUpdateHour: number
+    lastAutoUpdateAt: number
     ipAddress: number
     port: number
     definitionId: number
@@ -6458,6 +6466,7 @@ export namespace Prisma {
     pid?: true
     rconPort?: true
     sftpPort?: true
+    autoUpdateHour?: true
     port?: true
     cpuUsage?: true
     memoryUsage?: true
@@ -6469,6 +6478,7 @@ export namespace Prisma {
     pid?: true
     rconPort?: true
     sftpPort?: true
+    autoUpdateHour?: true
     port?: true
     cpuUsage?: true
     memoryUsage?: true
@@ -6495,6 +6505,8 @@ export namespace Prisma {
     tunnelUrl?: true
     enableUpnp?: true
     autoUpdate?: true
+    autoUpdateHour?: true
+    lastAutoUpdateAt?: true
     ipAddress?: true
     port?: true
     definitionId?: true
@@ -6529,6 +6541,8 @@ export namespace Prisma {
     tunnelUrl?: true
     enableUpnp?: true
     autoUpdate?: true
+    autoUpdateHour?: true
+    lastAutoUpdateAt?: true
     ipAddress?: true
     port?: true
     definitionId?: true
@@ -6563,6 +6577,8 @@ export namespace Prisma {
     tunnelUrl?: true
     enableUpnp?: true
     autoUpdate?: true
+    autoUpdateHour?: true
+    lastAutoUpdateAt?: true
     ipAddress?: true
     port?: true
     definitionId?: true
@@ -6684,6 +6700,8 @@ export namespace Prisma {
     tunnelUrl: string | null
     enableUpnp: boolean
     autoUpdate: boolean
+    autoUpdateHour: number
+    lastAutoUpdateAt: Date | null
     ipAddress: string
     port: number
     definitionId: string | null
@@ -6737,6 +6755,8 @@ export namespace Prisma {
     tunnelUrl?: boolean
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: boolean
+    lastAutoUpdateAt?: boolean
     ipAddress?: boolean
     port?: boolean
     definitionId?: boolean
@@ -6784,6 +6804,8 @@ export namespace Prisma {
     tunnelUrl?: boolean
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: boolean
+    lastAutoUpdateAt?: boolean
     ipAddress?: boolean
     port?: boolean
     definitionId?: boolean
@@ -6820,6 +6842,8 @@ export namespace Prisma {
     tunnelUrl?: boolean
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: boolean
+    lastAutoUpdateAt?: boolean
     ipAddress?: boolean
     port?: boolean
     definitionId?: boolean
@@ -6890,6 +6914,8 @@ export namespace Prisma {
       tunnelUrl: string | null
       enableUpnp: boolean
       autoUpdate: boolean
+      autoUpdateHour: number
+      lastAutoUpdateAt: Date | null
       ipAddress: string
       port: number
       definitionId: string | null
@@ -7326,6 +7352,8 @@ export namespace Prisma {
     readonly tunnelUrl: FieldRef<"Server", 'String'>
     readonly enableUpnp: FieldRef<"Server", 'Boolean'>
     readonly autoUpdate: FieldRef<"Server", 'Boolean'>
+    readonly autoUpdateHour: FieldRef<"Server", 'Int'>
+    readonly lastAutoUpdateAt: FieldRef<"Server", 'DateTime'>
     readonly ipAddress: FieldRef<"Server", 'String'>
     readonly port: FieldRef<"Server", 'Int'>
     readonly definitionId: FieldRef<"Server", 'String'>
@@ -28652,6 +28680,8 @@ export namespace Prisma {
     tunnelUrl: 'tunnelUrl',
     enableUpnp: 'enableUpnp',
     autoUpdate: 'autoUpdate',
+    autoUpdateHour: 'autoUpdateHour',
+    lastAutoUpdateAt: 'lastAutoUpdateAt',
     ipAddress: 'ipAddress',
     port: 'port',
     definitionId: 'definitionId',
@@ -29272,6 +29302,8 @@ export namespace Prisma {
     tunnelUrl?: StringNullableFilter<"Server"> | string | null
     enableUpnp?: BoolFilter<"Server"> | boolean
     autoUpdate?: BoolFilter<"Server"> | boolean
+    autoUpdateHour?: IntFilter<"Server"> | number
+    lastAutoUpdateAt?: DateTimeNullableFilter<"Server"> | Date | string | null
     ipAddress?: StringFilter<"Server"> | string
     port?: IntFilter<"Server"> | number
     definitionId?: StringNullableFilter<"Server"> | string | null
@@ -29318,6 +29350,8 @@ export namespace Prisma {
     tunnelUrl?: SortOrderInput | SortOrder
     enableUpnp?: SortOrder
     autoUpdate?: SortOrder
+    autoUpdateHour?: SortOrder
+    lastAutoUpdateAt?: SortOrderInput | SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
     definitionId?: SortOrderInput | SortOrder
@@ -29368,6 +29402,8 @@ export namespace Prisma {
     tunnelUrl?: StringNullableFilter<"Server"> | string | null
     enableUpnp?: BoolFilter<"Server"> | boolean
     autoUpdate?: BoolFilter<"Server"> | boolean
+    autoUpdateHour?: IntFilter<"Server"> | number
+    lastAutoUpdateAt?: DateTimeNullableFilter<"Server"> | Date | string | null
     ipAddress?: StringFilter<"Server"> | string
     port?: IntFilter<"Server"> | number
     definitionId?: StringNullableFilter<"Server"> | string | null
@@ -29413,6 +29449,8 @@ export namespace Prisma {
     tunnelUrl?: SortOrderInput | SortOrder
     enableUpnp?: SortOrder
     autoUpdate?: SortOrder
+    autoUpdateHour?: SortOrder
+    lastAutoUpdateAt?: SortOrderInput | SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
     definitionId?: SortOrderInput | SortOrder
@@ -29455,6 +29493,8 @@ export namespace Prisma {
     tunnelUrl?: StringNullableWithAggregatesFilter<"Server"> | string | null
     enableUpnp?: BoolWithAggregatesFilter<"Server"> | boolean
     autoUpdate?: BoolWithAggregatesFilter<"Server"> | boolean
+    autoUpdateHour?: IntWithAggregatesFilter<"Server"> | number
+    lastAutoUpdateAt?: DateTimeNullableWithAggregatesFilter<"Server"> | Date | string | null
     ipAddress?: StringWithAggregatesFilter<"Server"> | string
     port?: IntWithAggregatesFilter<"Server"> | number
     definitionId?: StringNullableWithAggregatesFilter<"Server"> | string | null
@@ -31255,6 +31295,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -31300,6 +31342,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -31343,6 +31387,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31388,6 +31434,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31432,6 +31480,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -31465,6 +31515,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -31498,6 +31550,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -33593,6 +33647,8 @@ export namespace Prisma {
     tunnelUrl?: SortOrder
     enableUpnp?: SortOrder
     autoUpdate?: SortOrder
+    autoUpdateHour?: SortOrder
+    lastAutoUpdateAt?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
     definitionId?: SortOrder
@@ -33612,6 +33668,7 @@ export namespace Prisma {
     pid?: SortOrder
     rconPort?: SortOrder
     sftpPort?: SortOrder
+    autoUpdateHour?: SortOrder
     port?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
@@ -33638,6 +33695,8 @@ export namespace Prisma {
     tunnelUrl?: SortOrder
     enableUpnp?: SortOrder
     autoUpdate?: SortOrder
+    autoUpdateHour?: SortOrder
+    lastAutoUpdateAt?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
     definitionId?: SortOrder
@@ -33672,6 +33731,8 @@ export namespace Prisma {
     tunnelUrl?: SortOrder
     enableUpnp?: SortOrder
     autoUpdate?: SortOrder
+    autoUpdateHour?: SortOrder
+    lastAutoUpdateAt?: SortOrder
     ipAddress?: SortOrder
     port?: SortOrder
     definitionId?: SortOrder
@@ -33691,6 +33752,7 @@ export namespace Prisma {
     pid?: SortOrder
     rconPort?: SortOrder
     sftpPort?: SortOrder
+    autoUpdateHour?: SortOrder
     port?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
@@ -36321,6 +36383,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -36364,6 +36428,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -36663,6 +36729,8 @@ export namespace Prisma {
     tunnelUrl?: StringNullableFilter<"Server"> | string | null
     enableUpnp?: BoolFilter<"Server"> | boolean
     autoUpdate?: BoolFilter<"Server"> | boolean
+    autoUpdateHour?: IntFilter<"Server"> | number
+    lastAutoUpdateAt?: DateTimeNullableFilter<"Server"> | Date | string | null
     ipAddress?: StringFilter<"Server"> | string
     port?: IntFilter<"Server"> | number
     definitionId?: StringNullableFilter<"Server"> | string | null
@@ -37752,6 +37820,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -37796,6 +37866,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -37854,6 +37926,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37898,6 +37972,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -37940,6 +38016,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -37984,6 +38062,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -38042,6 +38122,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38086,6 +38168,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38128,6 +38212,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -38172,6 +38258,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -38230,6 +38318,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38274,6 +38364,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38524,6 +38616,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -38568,6 +38662,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -38626,6 +38722,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38670,6 +38768,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38712,6 +38812,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -38756,6 +38858,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -38863,6 +38967,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38907,6 +39013,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39053,6 +39161,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -39097,6 +39207,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -39219,6 +39331,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -39263,6 +39377,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -39321,6 +39437,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39365,6 +39483,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39407,6 +39527,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -39451,6 +39573,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -39509,6 +39633,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39553,6 +39679,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39595,6 +39723,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -39639,6 +39769,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -39697,6 +39829,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39741,6 +39875,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39783,6 +39919,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -39827,6 +39965,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -39956,6 +40096,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -40000,6 +40142,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -40861,6 +41005,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -40905,6 +41051,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -41006,6 +41154,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41050,6 +41200,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41108,6 +41260,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     definitionId?: string | null
@@ -41244,6 +41398,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41287,6 +41443,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41330,6 +41488,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41871,6 +42031,8 @@ export namespace Prisma {
     tunnelUrl?: string | null
     enableUpnp?: boolean
     autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
     ipAddress: string
     port: number
     paramValues?: string | null
@@ -41903,6 +42065,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41947,6 +42111,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41990,6 +42156,8 @@ export namespace Prisma {
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null

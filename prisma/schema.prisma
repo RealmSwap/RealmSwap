@@ -78,7 +78,9 @@ model Server {
   tunnelEnabled    Boolean             @default(false)
   tunnelUrl        String? // playit.gg tunnel URL (e.g., xxx.auto.playit.gg:12345)
   enableUpnp       Boolean             @default(false) // Trigger router port mapping
-  autoUpdate       Boolean             @default(false) // Trigger SteamCMD +app_update on start
+  autoUpdate       Boolean             @default(false) // Nightly SteamCMD update while the server is stopped
+  autoUpdateHour   Int                 @default(4) // Local hour (0-23) of the nightly update window
+  lastAutoUpdateAt DateTime? // Last overnight update run (dedupes within a calendar day)
   ipAddress        String
   port             Int
   definitionId     String?

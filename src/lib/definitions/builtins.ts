@@ -96,7 +96,11 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
     spec: {
       install: { appId: "2278520", installSubDir: "enshrouded-server", checkFile: "enshrouded_server.exe", requiredDiskGB: 4.0 },
       launch: { executable: "enshrouded_server.exe", cwdSubDir: "enshrouded-server", args: [] },
-      defaultPort: 15637, params: [],
+      defaultPort: 15637,
+      params: [
+        { key: "slotCount", label: "Player slots", type: "number", default: 16, min: 1, max: 16, group: "Gameplay",
+          help: "Enshrouded caps dedicated servers at 16 slots." },
+      ],
       configFiles: [{ path: "enshrouded_server.json", strategy: "enshroudedJson" }],
       editableConfigPath: "enshrouded-server/enshrouded_server.json",
       ports: [
@@ -138,8 +142,8 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         executable: "ShooterGame/Binaries/Win64/ShooterGameServer.exe",
         cwdSubDir: "ark-server/ShooterGame/Binaries/Win64",
         args: [
-          { value: ["TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers=20"], includeWhen: "password" },
-          { value: ["TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers=20"], includeWhen: "passwordEmpty" },
+          { value: ["TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"], includeWhen: "password" },
+          { value: ["TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"], includeWhen: "passwordEmpty" },
           "-server", "-nosound", "-QueryPort=27015",
         ],
       },
@@ -147,13 +151,15 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         executable: "ShooterGame/Binaries/Linux/ShooterGameServer",
         installSubDir: "ark-server",
         args: [
-          { value: ["TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers=20"], includeWhen: "password" },
-          { value: ["TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers=20"], includeWhen: "passwordEmpty" },
+          { value: ["TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"], includeWhen: "password" },
+          { value: ["TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"], includeWhen: "passwordEmpty" },
           "-server", "-nosound", "-QueryPort=27015",
         ],
       },
       defaultPort: 7777,
-      params: [],
+            params: [
+        { key: "maxPlayers", label: "Max players", type: "number", default: 20, min: 1, max: 200, group: "Gameplay" },
+      ],
       configFiles: [],
       ports: [{ protocol: "UDP", port: "7777" }, { protocol: "UDP", port: "7778" }, { protocol: "UDP", port: "27015" }],
     },
@@ -168,7 +174,7 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       launch: {
         executable: "TerrariaServer.exe", cwdSubDir: "terraria-server",
         args: [
-          "-port", "7777", "-players", "8",
+          "-port", "7777", "-players", "{maxPlayers}",
           { value: ["-pass", "{password}"], includeWhen: "password" },
           "-autocreate", "1", "-worldname", "{nameSanitized}",
           "-world", "worlds/{nameSanitized}.wld",
@@ -178,13 +184,16 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         executable: "TerrariaServer.bin.x86_64",
         installSubDir: "terraria-server",
         args: [
-          "-port", "7777", "-players", "8",
+          "-port", "7777", "-players", "{maxPlayers}",
           { value: ["-pass", "{password}"], includeWhen: "password" },
           "-autocreate", "1", "-worldname", "{nameSanitized}",
           "-world", "worlds/{nameSanitized}.wld",
         ],
       },
-      defaultPort: 7777, params: [], configFiles: [],
+      defaultPort: 7777,
+      params: [
+        { key: "maxPlayers", label: "Max players", type: "number", default: 8, min: 1, max: 32, group: "Gameplay" },
+      ], configFiles: [],
       ports: [{ protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" }],
     },
   },
@@ -198,8 +207,8 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       launch: {
         executable: "PalServer.exe", cwdSubDir: "palworld-server",
         args: [
-          { value: ["?port=8211?players=16?AdminPassword={password}"], includeWhen: "password" },
-          { value: ["?port=8211?players=16"], includeWhen: "passwordEmpty" },
+          { value: ["?port=8211?players={maxPlayers}?AdminPassword={password}"], includeWhen: "password" },
+          { value: ["?port=8211?players={maxPlayers}"], includeWhen: "passwordEmpty" },
           "-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS",
         ],
       },
@@ -207,12 +216,15 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         executable: "PalServer.sh",
         installSubDir: "palworld-server",
         args: [
-          { value: ["?port=8211?players=16?AdminPassword={password}"], includeWhen: "password" },
-          { value: ["?port=8211?players=16"], includeWhen: "passwordEmpty" },
+          { value: ["?port=8211?players={maxPlayers}?AdminPassword={password}"], includeWhen: "password" },
+          { value: ["?port=8211?players={maxPlayers}"], includeWhen: "passwordEmpty" },
           "-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS",
         ],
       },
-      defaultPort: 8211, params: [],
+      defaultPort: 8211,
+      params: [
+        { key: "maxPlayers", label: "Max players", type: "number", default: 16, min: 1, max: 32, group: "Gameplay" },
+      ],
       configFiles: [],
       editableConfigPath: "palworld-server/Pal/Saved/Config/WindowsServer/PalWorldSettings.ini",
       ports: [{ protocol: "UDP", port: "8211" }],
@@ -230,7 +242,7 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         executable: "RustDedicated.exe", cwdSubDir: "rust-server",
         args: [
           "-batchmode", "+server.port", "28015", "+server.identity", "servertest",
-          "+server.seed", "12345", "+server.worldsize", "3000", "+server.maxplayers", "10",
+          "+server.seed", "{seed}", "+server.worldsize", "{worldSize}", "+server.maxplayers", "{maxPlayers}",
           "+server.hostname", "{name}", "+rcon.port", "28016", "+rcon.password", "{password}", "+rcon.web", "1",
         ],
       },
@@ -240,11 +252,18 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         env: { LD_LIBRARY_PATH: "." },
         args: [
           "-batchmode", "+server.port", "28015", "+server.identity", "servertest",
-          "+server.seed", "12345", "+server.worldsize", "3000", "+server.maxplayers", "10",
+          "+server.seed", "{seed}", "+server.worldsize", "{worldSize}", "+server.maxplayers", "{maxPlayers}",
           "+server.hostname", "{name}", "+rcon.port", "28016", "+rcon.password", "{password}", "+rcon.web", "1",
         ],
       },
-      defaultPort: 28015, params: [],
+      defaultPort: 28015,
+      params: [
+        { key: "maxPlayers", label: "Max players", type: "number", default: 10, min: 1, max: 500, group: "Gameplay" },
+        { key: "worldSize", label: "World size", type: "number", default: 3000, min: 1000, max: 6000, group: "World",
+          help: "Map edge length in units (1000 = small, 3000 = default, 6000 = huge)." },
+        { key: "seed", label: "World seed", type: "number", default: 12345, group: "World",
+          help: "Changing this generates a brand-new map." },
+      ],
       configFiles: [],
       editableConfigPath: "rust-server/server/servertest/cfg/server.cfg",
       ports: [{ protocol: "UDP", port: "28015" }, { protocol: "TCP", port: "28016" }],
@@ -262,7 +281,8 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       // with that code — not a direct IP. We read it from that file post-launch and surface
       // it as the connect info; we do NOT pre-write a config (the server ignores ours).
       launch: { executable: "WindroseServer.exe", cwdSubDir: "windrose-server", args: [], inviteCodeFile: "R5/ServerDescription.json" },
-      defaultPort: 7777, params: [],
+      defaultPort: 7777,
+      params: [],
       configFiles: [],
       editableConfigPath: "windrose-server/R5/ServerDescription.json",
       ports: [{ protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" }],
@@ -282,7 +302,8 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         executable: "FactoryServer.exe", cwdSubDir: "satisfactory-server",
         args: ["-log", "-unattended"],
       },
-      defaultPort: 7777, params: [], configFiles: [],
+      defaultPort: 7777,
+      params: [], configFiles: [],
       ports: [{ protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" }],
     },
   },

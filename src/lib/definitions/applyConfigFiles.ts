@@ -48,6 +48,7 @@ export function applyConfigFiles(
         installDir: opts.installDir,
         serverName: opts.server.name,
         password: opts.server.password || undefined,
+        slotCount: typeof ctx.slotCount === "number" ? ctx.slotCount : undefined,
       });
     }
   }

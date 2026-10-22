@@ -255,6 +255,24 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
     }
   };
 
+  const setUpdateHour = async (hour: number) => {
+    if (!selectedServer) return;
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "SET_UPDATE_HOUR", hour })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setSelectedServer((prev: any) => ({ ...prev, autoUpdateHour: hour }));
+      setServers(servers.map(s => s.id === selectedServer.id ? { ...s, autoUpdateHour: hour } : s));
+    } catch (err: any) {
+      setError(err.message);
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -596,7 +614,23 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                         <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
                           <div>
                             <h3 className="text-sm font-bold text-slate-200">SteamCMD Auto-Updates</h3>
-                            <p className="text-xs text-slate-500">Automatically check for and install game updates when the server starts.</p>
+                            <p className="text-xs text-slate-500">Overnight, while the server is stopped: check for and install game updates so starts are instant. A running server is never touched.</p>
+                            {selectedServer.autoUpdate && selectedServer.game !== "MINECRAFT" && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Update at</span>
+                                <select
+                                  value={selectedServer.autoUpdateHour ?? 4}
+                                  onChange={(e) => setUpdateHour(Number(e.target.value))}
+                                  className="bg-slate-950 border border-white/10 rounded px-2 py-1 text-xs text-slate-200 outline-none focus:border-accentPurple"
+                                >
+                                  {Array.from({ length: 24 }, (_, h) => (
+                                    <option key={h} value={h}>
+                                      {h === 0 ? "12 AM" : h < 12 ? `${h} AM` : h === 12 ? "12 PM" : `${h - 12} PM`}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
                           </div>
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" className="sr-only peer" checked={selectedServer.autoUpdate || false} onChange={(e) => toggleSetting("TOGGLE_AUTO_UPDATE", e.target.checked)} disabled={selectedServer.game === "MINECRAFT"} />

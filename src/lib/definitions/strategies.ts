@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 
 // Writes Enshrouded configuration files (moved verbatim from localRunner.ts)
-export function writeEnshroudedConfig(serverDir: string, serverName: string, password?: string) {
+export function writeEnshroudedConfig(serverDir: string, serverName: string, password?: string, slotCount = 16) {
   const configPath = path.join(serverDir, "enshrouded_server.json");
 
   // Enshrouded uses a role-based userGroups password configuration.
@@ -37,7 +37,7 @@ export function writeEnshroudedConfig(serverDir: string, serverName: string, pas
     ip: "0.0.0.0",
     gamePort: 15636,
     queryPort: 15637,
-    slotCount: 16,
+    slotCount,
     userGroups: defaultGroups
   };
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
@@ -72,7 +72,8 @@ export function writeStrategyConfig(args: {
   installDir: string;       // the server's install subdir (e.g. .../enshrouded-server)
   serverName: string;
   password?: string;
+  slotCount?: number;       // resolved from definition params (Enshrouded)
 }) {
-  if (args.strategy === "enshroudedJson") writeEnshroudedConfig(args.installDir, args.serverName, args.password);
+  if (args.strategy === "enshroudedJson") writeEnshroudedConfig(args.installDir, args.serverName, args.password, args.slotCount);
   else if (args.strategy === "zomboidIniMerge") writeZomboidConfig(args.installDir, args.password);
 }

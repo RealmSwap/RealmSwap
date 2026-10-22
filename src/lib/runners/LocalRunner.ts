@@ -1126,3 +1126,69 @@ export class LocalRunner implements ServerRunner {
     return getLocalServerLogs(server.id);
   }
 }
+
+/**
+ * Run a SteamCMD app_update for an already-installed server, even when the
+ * check file exists (installSteamCmdApp skips in that case — this is the
+ * update counterpart). Used by the overnight update window to keep stopped
+ * servers current so starts are instant. Returns whether new files were
+ * downloaded ("already up to date" counts as no).
+ */
+export async function runSteamUpdate(serverId: string): Promise<{ ran: boolean; updated: boolean; detail?: string }> {
+  const record = await prisma.server.findUnique({ where: { id: serverId } });
+  if (!record) return { ran: false, updated: false, detail: "server record missing" };
+
+  const { spec, installMethod } = await resolveDefinition(record);
+  if (installMethod !== "STEAMCMD") {
+    return { ran: false, updated: false, detail: "not a SteamCMD game" };
+  }
+  const installPlan = planInstall(spec, "STEAMCMD");
+  const appId = installPlan.appId;
+  if (!appId) return { ran: false, updated: false, detail: "no appId" };
+
+  const installDir = installPlan.installSubDir ? getLocalServerDir(serverId, installPlan.installSubDir) : getLocalServerDir(serverId);
+  const logWriter = (m: string) => appendLog(serverId, `[Update Window] ${m}`);
+  logWriter(`Starting SteamCMD update check for app ${appId}…`);
+
+  const steamcmdExe = await setupSteamCMD((m) => logWriter(m));
+  await ensureSteamCmdUpdated(steamcmdExe, (m) => logWriter(m));
+
+  const cleanInstallDir = installDir.replace(/\\/g, "/");
+  return new Promise((resolve) => {
+    let sawAlreadyUpToDate = false;
+    let errorDetail = "";
+    const child = spawn(steamcmdExe, [
+      "+force_install_dir", cleanInstallDir,
+      "+login", "anonymous",
+      "+app_info_update", "1",
+      "+app_update", appId,
+      "validate",
+      "+quit",
+    ]);
+    child.stdout.on("data", (data) => {
+      const line = data.toString().replace(/[\r\n]+/g, " ").trim();
+      if (!line) return;
+      if (/already up to date/i.test(line)) sawAlreadyUpToDate = true;
+      if (/ERROR!|Failed to install|No subscription|Disk write failure/i.test(line)) {
+        errorDetail = line;
+        logWriter(`[SteamCMD Error] ${line}`);
+      }
+    });
+    child.stderr.on("data", (data) => {
+      const line = data.toString().trim();
+      if (line) errorDetail = errorDetail || line;
+    });
+    child.on("error", (err) => {
+      resolve({ ran: true, updated: false, detail: `steamcmd failed to start: ${err.message}` });
+    });
+    child.on("close", (code) => {
+      if (code === 0) {
+        const updated = !sawAlreadyUpToDate;
+        logWriter(updated ? "Update installed." : "Already up to date.");
+        resolve({ ran: true, updated });
+      } else {
+        resolve({ ran: true, updated: false, detail: errorDetail || `steamcmd exited with code ${code}` });
+      }
+    });
+  });
+}
