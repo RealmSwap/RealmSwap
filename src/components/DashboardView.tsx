@@ -6,6 +6,7 @@ import { HealthSidebar } from "./dashboard/HealthSidebar";
 import { ActivityFeed } from "./dashboard/ActivityFeed";
 import { VaultSection } from "./dashboard/VaultSection";
 import { FirstServerWizard } from "./dashboard/FirstServerWizard";
+import { ConnectionModal } from "./dashboard/ConnectionModal";
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -61,6 +62,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
 
   // Import Map Modal State
   const [advisorServer, setAdvisorServer] = useState<any>(null);
+  const [connectionServer, setConnectionServer] = useState<any>(null);
   const [importMapServer, setImportMapServer] = useState<any>(null);
   const [importWorldPath, setImportWorldPath] = useState("");
   const [importLoading, setImportLoading] = useState(false);
@@ -510,6 +512,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                       handleArchiveServer,
                       handleOpenServerFolder,
                       setAdvisorServer,
+                      setConnectionServer,
                       setImportMapServer,
                       setImportWorldPath,
                       setImportError,
@@ -546,6 +549,10 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
           
         </main>
       </div>
+
+      {connectionServer && (
+        <ConnectionModal server={connectionServer} onClose={() => setConnectionServer(null)} />
+      )}
 
       {advisorServer && (
           <CloudAdvisorModal
