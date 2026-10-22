@@ -248,6 +248,8 @@ exports.Prisma.BackupScalarFieldEnum = {
   filePath: 'filePath',
   fileSizeMB: 'fileSizeMB',
   backupType: 'backupType',
+  verifiedAt: 'verifiedAt',
+  verifyError: 'verifyError',
   createdAt: 'createdAt'
 };
 

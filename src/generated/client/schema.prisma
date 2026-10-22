@@ -167,16 +167,18 @@ model ActivityLog {
 }
 
 model Backup {
-  id         String   @id @default(cuid())
-  serverId   String
-  server     Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  userId     String
-  name       String // e.g. "Survival World - Auto Save" or "Manual Snapshot"
-  game       String // "MINECRAFT", etc.
-  filePath   String // path to backup zip/folder on disk
-  fileSizeMB Float
-  backupType String // "MANUAL" or "AUTOMATED"
-  createdAt  DateTime @default(now())
+  id          String    @id @default(cuid())
+  serverId    String
+  server      Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  userId      String
+  name        String // e.g. "Survival World - Auto Save" or "Manual Snapshot"
+  game        String // "MINECRAFT", etc.
+  filePath    String // path to backup zip/folder on disk
+  fileSizeMB  Float
+  backupType  String // "MANUAL" or "AUTOMATED"
+  verifiedAt  DateTime? // last successful restore-verification (archive opened + entries decompressed)
+  verifyError String? // non-null when the last verification failed
+  createdAt   DateTime  @default(now())
 }
 
 model Collaborator {

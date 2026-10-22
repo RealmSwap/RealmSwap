@@ -26,7 +26,8 @@ RealmSwap currently supports single-click deployment for the following dedicated
 - **Server Readiness Checks**: Validates available disk space, missing dependencies (like SteamCMD), and port availability *before* deployment to prevent frustrating mid-install crashes.
 - **Live Server Console**: Interact directly with your running servers. Read live logs and send commands straight from the dashboard.
 - **Real-time Monitoring**: Track live server CPU and memory usage with beautiful dashboard sparklines powered by WMI and PowerShell polling.
-- **Crash Detection & Auto-Restart**: Automatically detects server crashes and attempts to restart them up to 3 times within a 10-minute window using our robust crash policy engine.
+- **Crash Detection & Auto-Restart**: Automatically detects server crashes and attempts to restart them up to 3 times within a 10-minute window using our robust crash policy engine. You get an alert on every crash (browser push, email, or Discord DM) with a **Restart Server** button right in the notification — push keys are provisioned automatically, zero setup.
+- **Verified Backups**: Every snapshot is verified on creation (archive opened, entries decompressed) and badged ✓ Verified / ⚠ Failed in the World Backups view, with on-demand re-verification. A backup you haven't verified is a hope, not a backup.
 - **Game Settings**: Change the settings that matter — max players, difficulty, world name, MOTD, and more — through friendly typed forms instead of raw config files. Saved settings re-render config files and launch arguments automatically (games that launch with command-line arguments are no longer locked to their creation-time settings).
 - **Server Config Editor**: Edit raw server configurations (`.ini`, `.json`, `.properties`) directly from the dashboard. Hand edits are preserved: managed keys are merge-written on restart, and a `.rsbak` backup is kept of your last saved file.
 - **Backup & Restore**: Easily take snapshot backups of your world data and restore them with a single click.
@@ -36,6 +37,7 @@ RealmSwap currently supports single-click deployment for the following dedicated
 ## Technology & Architecture
 - **Frontend**: Next.js 14 (App Router), React, Tailwind CSS, Lucide Icons
 - **Backend API**: Next.js API Routes, Node.js (`child_process`), Prisma ORM
+- **E2E Smoke Tests**: Playwright suite (`npm run e2e`) covering the public surface in CI, with an env-gated authenticated flow (login → create server → edit Game Settings)
 - **RealmSync Engine**: Standalone Node.js WebSocket server (`realmSyncHost.ts`) for real-time mod synchronization, file hashing, and UPnP-powered public IP discovery.
 - **Desktop Wrapper**: Electron builder with embedded standalone Node server
 - **Database**: SQLite (Local file-based, zero configuration)

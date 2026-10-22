@@ -141,6 +141,29 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
   };
 
   // Restore backup
+  // Re-verify a backup archive on demand
+  const handleVerify = async (backup: any) => {
+    if (!selectedServer) return;
+    setActionLoading(`${backup.id}-verify`);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/backups/${backup.id}/verify`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to verify backup");
+      if (data.success) setSuccess(`'${backup.name}' verified — ${data.entries} entries restorable.`);
+      else setError(data.message || `Verification failed for '${backup.name}'.`);
+      loadBackups(selectedServer.id);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleRestore = (backup: any) => {
     if (!selectedServer) return;
     
@@ -308,6 +331,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                           <th className="p-3">Date Taken</th>
                           <th className="p-3">Type</th>
                           <th className="p-3">Size</th>
+                          <th className="p-3">Status</th>
                           <th className="p-3 text-right">Actions</th>
                         </tr>
                       </thead>
@@ -315,7 +339,8 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                         {backups.map((backup) => {
                           const isRestoring = actionLoading === `${backup.id}-restore`;
                           const isDeleting = actionLoading === `${backup.id}-delete`;
-                          
+                          const isVerifying = actionLoading === `${backup.id}-verify`;
+
                           return (
                             <tr key={backup.id} className="hover:bg-white/[0.02] transition-colors">
                               <td className="p-3 font-bold text-white max-w-[200px] truncate">{backup.name}</td>
@@ -334,7 +359,36 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                               <td className="p-3 font-mono text-[10px] text-slate-300">
                                 {backup.fileSizeMB ? `${backup.fileSizeMB} MB` : "Calculating..."}
                               </td>
+                              <td className="p-3">
+                                {backup.verifyError ? (
+                                  <span
+                                    className="px-2 py-0.5 rounded font-extrabold text-[9px] uppercase tracking-wide bg-red-500/20 text-red-400 border border-red-500/30 cursor-help"
+                                    title={backup.verifyError}
+                                  >
+                                    ⚠ Verify failed
+                                  </span>
+                                ) : backup.verifiedAt ? (
+                                  <span
+                                    className="px-2 py-0.5 rounded font-extrabold text-[9px] uppercase tracking-wide bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-help"
+                                    title={`Verified ${new Date(backup.verifiedAt).toLocaleString()}`}
+                                  >
+                                    ✓ Verified
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded font-extrabold text-[9px] uppercase tracking-wide bg-slate-700/40 text-slate-400 border border-white/5">
+                                    Unverified
+                                  </span>
+                                )}
+                              </td>
                               <td className="p-3 text-right space-x-2">
+                                <button
+                                  onClick={() => handleVerify(backup)}
+                                  disabled={loading || !!actionLoading}
+                                  className="px-3 py-1.5 rounded bg-slate-900 border border-white/5 hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed text-[10px] font-bold text-slate-300 transition-colors"
+                                  title="Check that this archive can actually be restored"
+                                >
+                                  {isVerifying ? "Verifying..." : "Verify"}
+                                </button>
                                 <button
                                   onClick={() => handleRestore(backup)}
                                   disabled={loading || !!actionLoading || selectedServer.status === "RUNNING"}

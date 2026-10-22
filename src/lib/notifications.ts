@@ -1,14 +1,21 @@
 import { prisma } from "./db";
 import webpush from "web-push";
 import nodemailer from "nodemailer";
+import { getVapidKeys } from "./vapidKeys";
 
-// Web Push Setup
-if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    "mailto:admin@realmswap.io",
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
+// Web Push Setup — keys come from env or the auto-provisioned key file; the
+// details are configured lazily on first send (see sendNotification).
+let vapidConfigured = false;
+function ensureVapidConfigured(): boolean {
+  if (vapidConfigured) return true;
+  if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails("mailto:admin@realmswap.io", process.env.VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
+  } else {
+    const keys = getVapidKeys();
+    webpush.setVapidDetails("mailto:admin@realmswap.io", keys.publicKey, keys.privateKey);
+  }
+  vapidConfigured = true;
+  return true;
 }
 
 // Nodemailer Setup
@@ -22,7 +29,12 @@ const transporter = process.env.SMTP_HOST ? nodemailer.createTransport({
   },
 }) : null;
 
-export async function sendNotification(userId: string, title: string, message: string) {
+export async function sendNotification(
+  userId: string,
+  title: string,
+  message: string,
+  opts?: { serverId?: string }
+) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -81,8 +93,8 @@ export async function sendNotification(userId: string, title: string, message: s
     }
 
     // 3. Web Push
-    if (user.notifyWebPush && user.PushSubscription && user.PushSubscription.length > 0 && process.env.VAPID_PUBLIC_KEY) {
-      const payload = JSON.stringify({ title, body: message });
+    if (user.notifyWebPush && user.PushSubscription && user.PushSubscription.length > 0 && ensureVapidConfigured()) {
+      const payload = JSON.stringify({ title, body: message, serverId: opts?.serverId });
       
       for (const sub of user.PushSubscription) {
         try {
