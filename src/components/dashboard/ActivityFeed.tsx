@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Terminal, Filter, Search } from "lucide-react";
 
 export function ActivityFeed({ activityLogs }: { activityLogs: any[] }) {
@@ -27,7 +28,7 @@ export function ActivityFeed({ activityLogs }: { activityLogs: any[] }) {
       <div className="p-4 border-b border-white/5 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 shrink-0">
         <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
           <Terminal className="w-4 h-4 text-accentPurple" />
-          <span>Activity Feed</span>
+          <span>Activity</span>
         </h2>
         
         <div className="flex items-center gap-3">
@@ -41,8 +42,12 @@ export function ActivityFeed({ activityLogs }: { activityLogs: any[] }) {
               className="bg-slate-900/50 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-accentPurple/50 w-48"
             />
           </div>
-          <div className="flex items-center gap-1 bg-slate-900/50 p-1 rounded-lg border border-white/5">
-            <Filter className="w-3.5 h-3.5 text-slate-500 ml-1 mr-1" />
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard/logs" className="text-[10px] font-bold text-slate-500 hover:text-accentPurple transition-colors uppercase tracking-wider">
+              View all
+            </Link>
+            <div className="flex items-center gap-1 bg-slate-900/50 p-1 rounded-lg border border-white/5">
+              <Filter className="w-3.5 h-3.5 text-slate-500 ml-1 mr-1" />
             {["ALL", "START", "STOP", "ERROR"].map(f => (
               <button
                 key={f}
@@ -52,6 +57,7 @@ export function ActivityFeed({ activityLogs }: { activityLogs: any[] }) {
                 {f}
               </button>
             ))}
+          </div>
           </div>
         </div>
       </div>

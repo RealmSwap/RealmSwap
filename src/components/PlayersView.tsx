@@ -215,9 +215,9 @@ export default function PlayersView({ user, servers = [] }: { user: any; servers
           <div>
             <h1 className="text-3xl font-black text-white flex items-center gap-3">
               <Users className="w-8 h-8 text-accentPurple" />
-              Player Management
+              Game Players
             </h1>
-            <p className="text-slate-400 mt-2">Manage global identities or view live server rosters.</p>
+            <p className="text-slate-400 mt-2">Whitelists, bans and ops — the people inside your games.</p>
           </div>
           {activeTab === "global" && (
             <button 

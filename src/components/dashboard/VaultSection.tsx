@@ -33,7 +33,7 @@ export function VaultSection({
           </div>
           <h3 className="text-xl font-extrabold text-white mb-2">Vault is empty</h3>
           <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
-            Archive your servers to safely store their world data while freeing up system resources. You can restore them instantly at any time.
+            Archiving stores a server away safely and frees its disk space — restore it instantly whenever your group picks the game back up.
           </p>
           <button className="px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all shadow-lg shadow-black/20">
             Archive a Server

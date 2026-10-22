@@ -586,97 +586,36 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                         />
                       </>
                     )}
-                  </div>
-                ) : activeTab === "general" ? (
-                  <div className="p-6 space-y-8">
-                    {/* General Toggles */}
-                    <div>
-                      <h3 className="text-lg font-bold text-white mb-4">Automation & Networking</h3>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
-                          <div>
-                            <h3 className="text-sm font-bold text-slate-200">Playit.gg Tunneling</h3>
-                            <p className="text-xs text-slate-500">Automatically expose this server to the internet without port forwarding.</p>
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" className="sr-only peer" checked={selectedServer.tunnelEnabled || false} onChange={(e) => toggleSetting("TOGGLE_TUNNEL", e.target.checked)} />
-                            <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
-                          </label>
-                        </div>
-                        <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
-                          <div>
-                            <h3 className="text-sm font-bold text-slate-200">SteamCMD Auto-Updates</h3>
-                            <p className="text-xs text-slate-500">Overnight, while the server is stopped: check for and install game updates so starts are instant. A running server is never touched.</p>
-                            {selectedServer.autoUpdate && selectedServer.game !== "MINECRAFT" && (
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Update at</span>
-                                <select
-                                  value={selectedServer.autoUpdateHour ?? 4}
-                                  onChange={(e) => setUpdateHour(Number(e.target.value))}
-                                  className="bg-slate-950 border border-white/10 rounded px-2 py-1 text-xs text-slate-200 outline-none focus:border-accentPurple"
-                                >
-                                  {Array.from({ length: 24 }, (_, h) => (
-                                    <option key={h} value={h}>
-                                      {h === 0 ? "12 AM" : h < 12 ? `${h} AM` : h === 12 ? "12 PM" : `${h - 12} PM`}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            )}
-                          </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" className="sr-only peer" checked={selectedServer.autoUpdate || false} onChange={(e) => toggleSetting("TOGGLE_AUTO_UPDATE", e.target.checked)} disabled={selectedServer.game === "MINECRAFT"} />
-                            <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple peer-disabled:opacity-50"></div>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* SFTP Credentials */}
+                    {/* Update behavior — lives with the other server-behavior settings */}
                     <div>
-                      <h3 className="text-lg font-bold text-white mb-4">SFTP Connection Details</h3>
-                      <div className="p-4 bg-slate-900 border border-white/5 rounded-lg space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-400">Host (IP)</span>
-                          <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
-                            <span className="text-sm text-white font-mono">{selectedServer.ipAddress}</span>
-                            <button onClick={() => copyToClipboard(selectedServer.ipAddress, "host")} className="text-slate-500 hover:text-white transition-colors">
-                              {copiedKey === "host" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                            </button>
-                          </div>
+                      <h3 className="text-lg font-bold text-white mb-4">Updates</h3>
+                      <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-200">SteamCMD Auto-Updates</h4>
+                          <p className="text-xs text-slate-500">Overnight, while the server is stopped: check for and install game updates so starts are instant. A running server is never touched.</p>
+                          {selectedServer.autoUpdate && selectedServer.game !== "MINECRAFT" && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Update at</span>
+                              <select
+                                value={selectedServer.autoUpdateHour ?? 4}
+                                onChange={(e) => setUpdateHour(Number(e.target.value))}
+                                className="bg-slate-950 border border-white/10 rounded px-2 py-1 text-xs text-slate-200 outline-none focus:border-accentPurple"
+                              >
+                                {Array.from({ length: 24 }, (_, h) => (
+                                  <option key={h} value={h}>
+                                    {h === 0 ? "12 AM" : h < 12 ? `${h} AM` : h === 12 ? "12 PM" : `${h - 12} PM`}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-400">Port</span>
-                          <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
-                            <span className="text-sm text-white font-mono">2022</span>
-                            <button onClick={() => copyToClipboard("2022", "port")} className="text-slate-500 hover:text-white transition-colors">
-                              {copiedKey === "port" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-400">Username</span>
-                          <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
-                            <span className="text-sm text-white font-mono">{selectedServer.id}</span>
-                            <button onClick={() => copyToClipboard(selectedServer.id, "username")} className="text-slate-500 hover:text-white transition-colors">
-                              {copiedKey === "username" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-400">Password</span>
-                          <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
-                            <span className="text-sm text-white font-mono blur-[4px] hover:blur-none transition-all cursor-pointer select-all">{selectedServer.sftpPassword || "Not Generated"}</span>
-                            <button onClick={() => copyToClipboard(selectedServer.sftpPassword, "password")} className="text-slate-500 hover:text-white transition-colors">
-                              {copiedKey === "password" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" className="sr-only peer" checked={selectedServer.autoUpdate || false} onChange={(e) => toggleSetting("TOGGLE_AUTO_UPDATE", e.target.checked)} disabled={selectedServer.game === "MINECRAFT"} />
+                          <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple peer-disabled:opacity-50"></div>
+                        </label>
                       </div>
-                      <p className="text-[10px] text-slate-500 mt-2 flex items-center gap-1.5">
-                        <Info className="w-3.5 h-3.5" />
-                        Use an FTP client like WinSCP or FileZilla to connect and manage server files directly.
-                      </p>
                     </div>
                   </div>
                 ) : loading ? (
@@ -709,6 +648,53 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                       spellCheck={false}
                     />
                   </>
+                )}
+
+                {/* Direct file access — lives with the files tab */}
+                {activeTab === "files" && selectedServer && (
+                <div className="p-6 border-t border-white/5">
+                  <div>
+                    <h3 className="text-lg font-bold text-white mb-4">SFTP Connection Details</h3>
+                    <div className="p-4 bg-slate-900 border border-white/5 rounded-lg space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-400">Host (IP)</span>
+                        <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
+                          <span className="text-sm text-white font-mono">{selectedServer.ipAddress}</span>
+                          <button onClick={() => copyToClipboard(selectedServer.ipAddress, "host")} className="text-slate-500 hover:text-white transition-colors">
+                            {copiedKey === "host" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-400">Port</span>
+                        <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
+                          <span className="text-sm text-white font-mono">2022</span>
+                          <button onClick={() => copyToClipboard("2022", "port")} className="text-slate-500 hover:text-white transition-colors">
+                            {copiedKey === "port" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-400">Username</span>
+                        <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
+                          <span className="text-sm text-white font-mono">{selectedServer.id}</span>
+                          <button onClick={() => copyToClipboard(selectedServer.id, "username")} className="text-slate-500 hover:text-white transition-colors">
+                            {copiedKey === "username" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-400">Password</span>
+                        <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded border border-white/5">
+                          <span className="text-sm text-white font-mono blur-[4px] hover:blur-none transition-all cursor-pointer select-all">{selectedServer.sftpPassword || "Not Generated"}</span>
+                          <button onClick={() => copyToClipboard(selectedServer.sftpPassword, "password")} className="text-slate-500 hover:text-white transition-colors">
+                            {copiedKey === "password" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 )}
               </div>
             </div>
