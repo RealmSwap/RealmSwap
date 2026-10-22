@@ -4,6 +4,7 @@ import AdmZip from "adm-zip";
 import { prisma } from "./db";
 import { dataRoot } from "./appPaths";
 import { getSavePath as resolveSavePath } from "./backupPaths";
+import { verifyBackupFile } from "./backupVerify";
 import { cloudSync } from "./cloudSync";
 
 // Get the local save path for each game type. Delegates to the pure resolver,
@@ -100,6 +101,21 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
         fileSizeMB
       }
     });
+
+    // Verify the archive we just wrote is actually restorable, and record the
+    // result on the row (a backup that can't inflate is worse than no backup —
+    // it looks safe). Fire-and-report: verification must not fail the snapshot.
+    try {
+      const verification = verifyBackupFile(zipPath);
+      await prisma.backup.update({
+        where: { id: backup.id },
+        data: verification.ok
+          ? { verifiedAt: new Date(), verifyError: null }
+          : { verifiedAt: null, verifyError: verification.error ?? "Unknown verification error" },
+      });
+    } catch (verifyErr: any) {
+      console.error(`Backup verification error for ${backup.id}:`, verifyErr?.message);
+    }
 
     // Update server's lastSnapshotAt
     await prisma.server.update({

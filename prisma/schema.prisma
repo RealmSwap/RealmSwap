@@ -176,6 +176,8 @@ model Backup {
   filePath   String // path to backup zip/folder on disk
   fileSizeMB Float
   backupType String // "MANUAL" or "AUTOMATED"
+  verifiedAt DateTime? // last successful restore-verification (archive opened + entries decompressed)
+  verifyError String? // non-null when the last verification failed
   createdAt  DateTime @default(now())
 }
 

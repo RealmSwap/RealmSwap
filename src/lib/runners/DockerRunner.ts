@@ -184,6 +184,19 @@ export class DockerRunner implements ServerRunner {
       const { counter, shouldRestart } = evaluateCrash(crashCounters.get(serverId), Date.now());
       crashCounters.set(serverId, counter);
       appendLog(serverId, `[Crash Detection] Container exited with code ${code} (Attempt ${counter.count}/${CRASH_MAX_RETRIES})`);
+
+      // Alert on every crash, matching the Local runner's behavior.
+      import("../notifications").then(({ sendNotification }) => {
+        sendNotification(
+          rec.userId,
+          "⚠️ Server Crashed",
+          shouldRestart
+            ? `Your container '${rec.name}' exited (code ${code}). Auto-restarting (${counter.count}/${CRASH_MAX_RETRIES})…`
+            : `Your container '${rec.name}' exited (code ${code}) and exhausted all auto-restart attempts.`,
+          { serverId }
+        );
+      }).catch(err => console.error("Failed to load notifications module:", err));
+
       if (shouldRestart) {
         appendLog(serverId, "[Crash Detection] Auto-restarting in 5 seconds...");
         await setStatus(serverId, "STARTING", { pid: null, cpuUsage: 0, memoryUsage: 0 });
@@ -195,16 +208,21 @@ export class DockerRunner implements ServerRunner {
           } catch (e: any) {
             appendLog(serverId, `[Crash Detection] Auto-restart failed: ${e.message}`);
             await setStatus(serverId, "CRASHED", { pid: null });
+            import("../notifications").then(({ sendNotification }) => {
+              sendNotification(
+                rec.userId,
+                "🛑 Auto-restart failed",
+                `Your container '${rec.name}' crashed and the automatic restart failed: ${e.message}`,
+                { serverId }
+              );
+            }).catch(err => console.error("Failed to load notifications module:", err));
           }
         }, 5000);
         return;
       }
       appendLog(serverId, `[Crash Detection] Max retries (${CRASH_MAX_RETRIES}) exhausted. Marking server as CRASHED.`);
       await setStatus(serverId, "CRASHED", { pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 });
-      import("../notifications").then(({ sendNotification }) => {
-        sendNotification(rec.userId, "⚠️ Server Crashed", `Your server '${rec.name}' has crashed and exhausted all auto-restart attempts.`);
-      }).catch(err => console.error("Failed to load notifications module:", err));
-      return;
+      return; // notification already sent in the shared crash-alert block above
     }
 
     await setStatus(serverId, "STOPPED", { pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 });

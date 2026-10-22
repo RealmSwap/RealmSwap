@@ -787,6 +787,19 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
         }
       });
 
+      // Alert on every crash — "restarting" when an attempt is coming, the
+      // stronger wording when retries are exhausted (sent below).
+      import("../notifications").then(({ sendNotification }) => {
+        sendNotification(
+          serverRec.userId,
+          "⚠️ Server Crashed",
+          shouldRestart
+            ? `Your server '${serverRec.name}' crashed (exit ${code}). Auto-restarting (${counter.count}/${CRASH_MAX_RETRIES})…`
+            : `Your server '${serverRec.name}' crashed (exit ${code}) and exhausted all auto-restart attempts.`,
+          { serverId }
+        );
+      }).catch(err => console.error("Failed to load notifications module:", err));
+
       if (shouldRestart) {
         appendLog(serverId, `[Crash Detection] Auto-restarting in 5 seconds...`);
         await prisma.server.update({
@@ -806,6 +819,14 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
               data: { status: "CRASHED", pid: null, cpuUsage: 0, memoryUsage: 0 },
             }).catch(() => {});
             serverEventBus.emit("status_update", { serverId, status: "CRASHED" });
+            import("../notifications").then(({ sendNotification }) => {
+              sendNotification(
+                serverRec.userId,
+                "🛑 Auto-restart failed",
+                `Your server '${serverRec.name}' crashed and the automatic restart failed: ${restartErr.message}`,
+                { serverId }
+              );
+            }).catch(err => console.error("Failed to load notifications module:", err));
           }
         }, 5000);
         return;
@@ -816,10 +837,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
           data: { status: "CRASHED", pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 },
         });
         serverEventBus.emit("status_update", { serverId, status: "CRASHED" });
-        import("../notifications").then(({ sendNotification }) => {
-          sendNotification(serverRec.userId, "⚠️ Server Crashed", `Your server '${serverRec.name}' has crashed and exhausted all auto-restart attempts.`);
-        }).catch(err => console.error("Failed to load notifications module:", err));
-        return;
+        return; // notification already sent in the shared crash-alert block above
       }
     }
 

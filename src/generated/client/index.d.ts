@@ -12798,6 +12798,8 @@ export namespace Prisma {
     filePath: string | null
     fileSizeMB: number | null
     backupType: string | null
+    verifiedAt: Date | null
+    verifyError: string | null
     createdAt: Date | null
   }
 
@@ -12810,6 +12812,8 @@ export namespace Prisma {
     filePath: string | null
     fileSizeMB: number | null
     backupType: string | null
+    verifiedAt: Date | null
+    verifyError: string | null
     createdAt: Date | null
   }
 
@@ -12822,6 +12826,8 @@ export namespace Prisma {
     filePath: number
     fileSizeMB: number
     backupType: number
+    verifiedAt: number
+    verifyError: number
     createdAt: number
     _all: number
   }
@@ -12844,6 +12850,8 @@ export namespace Prisma {
     filePath?: true
     fileSizeMB?: true
     backupType?: true
+    verifiedAt?: true
+    verifyError?: true
     createdAt?: true
   }
 
@@ -12856,6 +12864,8 @@ export namespace Prisma {
     filePath?: true
     fileSizeMB?: true
     backupType?: true
+    verifiedAt?: true
+    verifyError?: true
     createdAt?: true
   }
 
@@ -12868,6 +12878,8 @@ export namespace Prisma {
     filePath?: true
     fileSizeMB?: true
     backupType?: true
+    verifiedAt?: true
+    verifyError?: true
     createdAt?: true
     _all?: true
   }
@@ -12967,6 +12979,8 @@ export namespace Prisma {
     filePath: string
     fileSizeMB: number
     backupType: string
+    verifiedAt: Date | null
+    verifyError: string | null
     createdAt: Date
     _count: BackupCountAggregateOutputType | null
     _avg: BackupAvgAggregateOutputType | null
@@ -12998,6 +13012,8 @@ export namespace Prisma {
     filePath?: boolean
     fileSizeMB?: boolean
     backupType?: boolean
+    verifiedAt?: boolean
+    verifyError?: boolean
     createdAt?: boolean
     server?: boolean | ServerDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["backup"]>
@@ -13011,6 +13027,8 @@ export namespace Prisma {
     filePath?: boolean
     fileSizeMB?: boolean
     backupType?: boolean
+    verifiedAt?: boolean
+    verifyError?: boolean
     createdAt?: boolean
     server?: boolean | ServerDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["backup"]>
@@ -13024,6 +13042,8 @@ export namespace Prisma {
     filePath?: boolean
     fileSizeMB?: boolean
     backupType?: boolean
+    verifiedAt?: boolean
+    verifyError?: boolean
     createdAt?: boolean
   }
 
@@ -13048,6 +13068,8 @@ export namespace Prisma {
       filePath: string
       fileSizeMB: number
       backupType: string
+      verifiedAt: Date | null
+      verifyError: string | null
       createdAt: Date
     }, ExtArgs["result"]["backup"]>
     composites: {}
@@ -13451,6 +13473,8 @@ export namespace Prisma {
     readonly filePath: FieldRef<"Backup", 'String'>
     readonly fileSizeMB: FieldRef<"Backup", 'Float'>
     readonly backupType: FieldRef<"Backup", 'String'>
+    readonly verifiedAt: FieldRef<"Backup", 'DateTime'>
+    readonly verifyError: FieldRef<"Backup", 'String'>
     readonly createdAt: FieldRef<"Backup", 'DateTime'>
   }
     
@@ -28723,6 +28747,8 @@ export namespace Prisma {
     filePath: 'filePath',
     fileSizeMB: 'fileSizeMB',
     backupType: 'backupType',
+    verifiedAt: 'verifiedAt',
+    verifyError: 'verifyError',
     createdAt: 'createdAt'
   };
 
@@ -29805,6 +29831,8 @@ export namespace Prisma {
     filePath?: StringFilter<"Backup"> | string
     fileSizeMB?: FloatFilter<"Backup"> | number
     backupType?: StringFilter<"Backup"> | string
+    verifiedAt?: DateTimeNullableFilter<"Backup"> | Date | string | null
+    verifyError?: StringNullableFilter<"Backup"> | string | null
     createdAt?: DateTimeFilter<"Backup"> | Date | string
     server?: XOR<ServerRelationFilter, ServerWhereInput>
   }
@@ -29818,6 +29846,8 @@ export namespace Prisma {
     filePath?: SortOrder
     fileSizeMB?: SortOrder
     backupType?: SortOrder
+    verifiedAt?: SortOrderInput | SortOrder
+    verifyError?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     server?: ServerOrderByWithRelationInput
   }
@@ -29834,6 +29864,8 @@ export namespace Prisma {
     filePath?: StringFilter<"Backup"> | string
     fileSizeMB?: FloatFilter<"Backup"> | number
     backupType?: StringFilter<"Backup"> | string
+    verifiedAt?: DateTimeNullableFilter<"Backup"> | Date | string | null
+    verifyError?: StringNullableFilter<"Backup"> | string | null
     createdAt?: DateTimeFilter<"Backup"> | Date | string
     server?: XOR<ServerRelationFilter, ServerWhereInput>
   }, "id">
@@ -29847,6 +29879,8 @@ export namespace Prisma {
     filePath?: SortOrder
     fileSizeMB?: SortOrder
     backupType?: SortOrder
+    verifiedAt?: SortOrderInput | SortOrder
+    verifyError?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: BackupCountOrderByAggregateInput
     _avg?: BackupAvgOrderByAggregateInput
@@ -29867,6 +29901,8 @@ export namespace Prisma {
     filePath?: StringWithAggregatesFilter<"Backup"> | string
     fileSizeMB?: FloatWithAggregatesFilter<"Backup"> | number
     backupType?: StringWithAggregatesFilter<"Backup"> | string
+    verifiedAt?: DateTimeNullableWithAggregatesFilter<"Backup"> | Date | string | null
+    verifyError?: StringNullableWithAggregatesFilter<"Backup"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Backup"> | Date | string
   }
 
@@ -31857,6 +31893,8 @@ export namespace Prisma {
     filePath: string
     fileSizeMB: number
     backupType: string
+    verifiedAt?: Date | string | null
+    verifyError?: string | null
     createdAt?: Date | string
     server: ServerCreateNestedOneWithoutBackupsInput
   }
@@ -31870,6 +31908,8 @@ export namespace Prisma {
     filePath: string
     fileSizeMB: number
     backupType: string
+    verifiedAt?: Date | string | null
+    verifyError?: string | null
     createdAt?: Date | string
   }
 
@@ -31881,6 +31921,8 @@ export namespace Prisma {
     filePath?: StringFieldUpdateOperationsInput | string
     fileSizeMB?: FloatFieldUpdateOperationsInput | number
     backupType?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verifyError?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     server?: ServerUpdateOneRequiredWithoutBackupsNestedInput
   }
@@ -31894,6 +31936,8 @@ export namespace Prisma {
     filePath?: StringFieldUpdateOperationsInput | string
     fileSizeMB?: FloatFieldUpdateOperationsInput | number
     backupType?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verifyError?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -31906,6 +31950,8 @@ export namespace Prisma {
     filePath: string
     fileSizeMB: number
     backupType: string
+    verifiedAt?: Date | string | null
+    verifyError?: string | null
     createdAt?: Date | string
   }
 
@@ -31917,6 +31963,8 @@ export namespace Prisma {
     filePath?: StringFieldUpdateOperationsInput | string
     fileSizeMB?: FloatFieldUpdateOperationsInput | number
     backupType?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verifyError?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -31929,6 +31977,8 @@ export namespace Prisma {
     filePath?: StringFieldUpdateOperationsInput | string
     fileSizeMB?: FloatFieldUpdateOperationsInput | number
     backupType?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verifyError?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -33890,6 +33940,8 @@ export namespace Prisma {
     filePath?: SortOrder
     fileSizeMB?: SortOrder
     backupType?: SortOrder
+    verifiedAt?: SortOrder
+    verifyError?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -33906,6 +33958,8 @@ export namespace Prisma {
     filePath?: SortOrder
     fileSizeMB?: SortOrder
     backupType?: SortOrder
+    verifiedAt?: SortOrder
+    verifyError?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -33918,6 +33972,8 @@ export namespace Prisma {
     filePath?: SortOrder
     fileSizeMB?: SortOrder
     backupType?: SortOrder
+    verifiedAt?: SortOrder
+    verifyError?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -36994,6 +37050,8 @@ export namespace Prisma {
     filePath: string
     fileSizeMB: number
     backupType: string
+    verifiedAt?: Date | string | null
+    verifyError?: string | null
     createdAt?: Date | string
   }
 
@@ -37005,6 +37063,8 @@ export namespace Prisma {
     filePath: string
     fileSizeMB: number
     backupType: string
+    verifiedAt?: Date | string | null
+    verifyError?: string | null
     createdAt?: Date | string
   }
 
@@ -37404,6 +37464,8 @@ export namespace Prisma {
     filePath?: StringFilter<"Backup"> | string
     fileSizeMB?: FloatFilter<"Backup"> | number
     backupType?: StringFilter<"Backup"> | string
+    verifiedAt?: DateTimeNullableFilter<"Backup"> | Date | string | null
+    verifyError?: StringNullableFilter<"Backup"> | string | null
     createdAt?: DateTimeFilter<"Backup"> | Date | string
   }
 
@@ -41451,6 +41513,8 @@ export namespace Prisma {
     filePath: string
     fileSizeMB: number
     backupType: string
+    verifiedAt?: Date | string | null
+    verifyError?: string | null
     createdAt?: Date | string
   }
 
@@ -41534,6 +41598,8 @@ export namespace Prisma {
     filePath?: StringFieldUpdateOperationsInput | string
     fileSizeMB?: FloatFieldUpdateOperationsInput | number
     backupType?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verifyError?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -41545,6 +41611,8 @@ export namespace Prisma {
     filePath?: StringFieldUpdateOperationsInput | string
     fileSizeMB?: FloatFieldUpdateOperationsInput | number
     backupType?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verifyError?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -41556,6 +41624,8 @@ export namespace Prisma {
     filePath?: StringFieldUpdateOperationsInput | string
     fileSizeMB?: FloatFieldUpdateOperationsInput | number
     backupType?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verifyError?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

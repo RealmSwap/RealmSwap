@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "e2e": "playwright test",
     "test:watch": "vitest",
     "postinstall": "prisma generate",
     "db:push": "cross-env DATABASE_URL=\"file:./dev.db\" prisma db push",
@@ -55,6 +56,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@types/adm-zip": "^0.5.8",
     "@types/bcryptjs": "^2.4.6",
     "@types/gamedig": "^5.0.3",
