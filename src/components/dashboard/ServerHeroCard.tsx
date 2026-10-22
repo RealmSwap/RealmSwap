@@ -164,8 +164,16 @@ export function ServerHeroCard({
               <span className="truncate max-w-[320px]">{server.ramHint}</span>
             </div>
           )}
-          <div className="flex items-center gap-2 text-xs font-medium text-white/80 mt-1">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-white/80 mt-1">
             <span className="bg-white/20 px-2 py-0.5 rounded text-white">{isLocal ? "Local Machine" : server.region}</span>
+            <button
+              onClick={(e) => { e.stopPropagation(); actions.setConnectionServer(server); }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-accentPurple/20 border border-accentPurple/40 text-accentPurple hover:bg-accentPurple hover:text-white hover:border-accentPurple text-[11px] font-bold transition-all shadow-sm"
+              title="Invite friends or check why they can't join"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              Join Info
+            </button>
           </div>
         </div>
       </div>
@@ -266,27 +274,21 @@ export function ServerHeroCard({
       </div>
 
       {/* Secondary Actions */}
-      <div className="px-4 pb-4 pt-1 flex justify-between gap-2 border-t border-white/5 mt-auto bg-slate-950/20">
+      <div className="px-4 pb-4 pt-1 flex flex-wrap items-start justify-between gap-x-4 gap-y-1 border-t border-white/5 mt-auto bg-slate-950/20">
         <div className="flex gap-2 pt-3">
           <button
             onClick={(e) => { e.stopPropagation(); actions.handleArchiveServer(server.id); }}
             disabled={isServerLoading || server.status === "STARTING"}
-            className="text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors disabled:opacity-50"
+            className="text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             <Archive className="w-3 h-3" /> Vault
           </button>
           {isLocal && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); actions.setConnectionServer(server); }}
-                className="text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors"
-              >
-                <QrCode className="w-3 h-3" /> Join Info
-              </button>
-              <button
                 onClick={(e) => { e.stopPropagation(); actions.handleOpenServerFolder(server.id); }}
                 disabled={isServerLoading || server.status === "STARTING"}
-                className="text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors disabled:opacity-50"
+                className="text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors disabled:opacity-50 whitespace-nowrap"
               >
                 <FolderOpen className="w-3 h-3" /> Files
               </button>
@@ -298,7 +300,7 @@ export function ServerHeroCard({
             href={`/api/servers/${server.id}/export`}
             onClick={(e) => e.stopPropagation()}
             download
-            className={`text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors ${isServerLoading || server.status === "STARTING" ? "opacity-50 pointer-events-none" : ""}`}
+            className={`text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors whitespace-nowrap ${isServerLoading || server.status === "STARTING" ? "opacity-50 pointer-events-none" : ""}`}
           >
             <Package className="w-3 h-3" /> Export
           </a>
@@ -312,7 +314,7 @@ export function ServerHeroCard({
                 actions.setImportSuccess(null);
               }}
               disabled={isServerLoading || server.status === "STARTING"}
-              className="text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors disabled:opacity-50"
+              className="text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors disabled:opacity-50 whitespace-nowrap"
             >
               <UploadCloud className="w-3 h-3" /> Import
             </button>
