@@ -5,6 +5,7 @@ import { ServerHeroCard } from "./dashboard/ServerHeroCard";
 import { HealthSidebar } from "./dashboard/HealthSidebar";
 import { ActivityFeed } from "./dashboard/ActivityFeed";
 import { VaultSection } from "./dashboard/VaultSection";
+import { FirstServerWizard } from "./dashboard/FirstServerWizard";
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -519,19 +520,13 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                   />
                 ))}
                 {data.servers.length === 0 && (
-                  <div className="col-span-full py-16 flex flex-col items-center justify-center border border-white/5 border-dashed rounded-[18px] bg-slate-900/20">
-                    <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
-                      <ServerIcon className="w-8 h-8 text-slate-500" />
-                    </div>
-                    <h3 className="font-extrabold text-lg text-white mb-2">No Active Servers</h3>
-                    <p className="text-slate-400 text-sm mb-6 max-w-sm text-center">Deploy a new dedicated server to get started. RealmSwap handles the installation and port forwarding automatically.</p>
-                    <Link
-                      href="/dashboard/servers/new"
-                      className="px-6 py-2.5 rounded-xl bg-accentPurple hover:bg-accentPurple/90 text-white font-bold text-sm transition-all shadow-lg shadow-accentPurple/25"
-                    >
-                      Deploy First Server
-                    </Link>
-                  </div>
+                  <FirstServerWizard
+                    onDeployed={() => {
+                      fetch("/api/servers", { cache: "no-store" })
+                        .then((r) => r.ok && r.json())
+                        .then((fresh) => fresh && setData(fresh));
+                    }}
+                  />
                 )}
               </div>
             </section>

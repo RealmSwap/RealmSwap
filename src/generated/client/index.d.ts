@@ -6377,6 +6377,7 @@ export namespace Prisma {
     port: number | null
     definitionId: string | null
     paramValues: string | null
+    pendingRestart: boolean | null
     healthStatus: string | null
     cpuUsage: number | null
     memoryUsage: number | null
@@ -6413,6 +6414,7 @@ export namespace Prisma {
     port: number | null
     definitionId: string | null
     paramValues: string | null
+    pendingRestart: boolean | null
     healthStatus: string | null
     cpuUsage: number | null
     memoryUsage: number | null
@@ -6449,6 +6451,7 @@ export namespace Prisma {
     port: number
     definitionId: number
     paramValues: number
+    pendingRestart: number
     healthStatus: number
     cpuUsage: number
     memoryUsage: number
@@ -6511,6 +6514,7 @@ export namespace Prisma {
     port?: true
     definitionId?: true
     paramValues?: true
+    pendingRestart?: true
     healthStatus?: true
     cpuUsage?: true
     memoryUsage?: true
@@ -6547,6 +6551,7 @@ export namespace Prisma {
     port?: true
     definitionId?: true
     paramValues?: true
+    pendingRestart?: true
     healthStatus?: true
     cpuUsage?: true
     memoryUsage?: true
@@ -6583,6 +6588,7 @@ export namespace Prisma {
     port?: true
     definitionId?: true
     paramValues?: true
+    pendingRestart?: true
     healthStatus?: true
     cpuUsage?: true
     memoryUsage?: true
@@ -6706,6 +6712,7 @@ export namespace Prisma {
     port: number
     definitionId: string | null
     paramValues: string | null
+    pendingRestart: boolean
     healthStatus: string
     cpuUsage: number
     memoryUsage: number
@@ -6761,6 +6768,7 @@ export namespace Prisma {
     port?: boolean
     definitionId?: boolean
     paramValues?: boolean
+    pendingRestart?: boolean
     healthStatus?: boolean
     cpuUsage?: boolean
     memoryUsage?: boolean
@@ -6810,6 +6818,7 @@ export namespace Prisma {
     port?: boolean
     definitionId?: boolean
     paramValues?: boolean
+    pendingRestart?: boolean
     healthStatus?: boolean
     cpuUsage?: boolean
     memoryUsage?: boolean
@@ -6848,6 +6857,7 @@ export namespace Prisma {
     port?: boolean
     definitionId?: boolean
     paramValues?: boolean
+    pendingRestart?: boolean
     healthStatus?: boolean
     cpuUsage?: boolean
     memoryUsage?: boolean
@@ -6920,6 +6930,7 @@ export namespace Prisma {
       port: number
       definitionId: string | null
       paramValues: string | null
+      pendingRestart: boolean
       healthStatus: string
       cpuUsage: number
       memoryUsage: number
@@ -7358,6 +7369,7 @@ export namespace Prisma {
     readonly port: FieldRef<"Server", 'Int'>
     readonly definitionId: FieldRef<"Server", 'String'>
     readonly paramValues: FieldRef<"Server", 'String'>
+    readonly pendingRestart: FieldRef<"Server", 'Boolean'>
     readonly healthStatus: FieldRef<"Server", 'String'>
     readonly cpuUsage: FieldRef<"Server", 'Float'>
     readonly memoryUsage: FieldRef<"Server", 'Float'>
@@ -28686,6 +28698,7 @@ export namespace Prisma {
     port: 'port',
     definitionId: 'definitionId',
     paramValues: 'paramValues',
+    pendingRestart: 'pendingRestart',
     healthStatus: 'healthStatus',
     cpuUsage: 'cpuUsage',
     memoryUsage: 'memoryUsage',
@@ -29308,6 +29321,7 @@ export namespace Prisma {
     port?: IntFilter<"Server"> | number
     definitionId?: StringNullableFilter<"Server"> | string | null
     paramValues?: StringNullableFilter<"Server"> | string | null
+    pendingRestart?: BoolFilter<"Server"> | boolean
     healthStatus?: StringFilter<"Server"> | string
     cpuUsage?: FloatFilter<"Server"> | number
     memoryUsage?: FloatFilter<"Server"> | number
@@ -29356,6 +29370,7 @@ export namespace Prisma {
     port?: SortOrder
     definitionId?: SortOrderInput | SortOrder
     paramValues?: SortOrderInput | SortOrder
+    pendingRestart?: SortOrder
     healthStatus?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
@@ -29408,6 +29423,7 @@ export namespace Prisma {
     port?: IntFilter<"Server"> | number
     definitionId?: StringNullableFilter<"Server"> | string | null
     paramValues?: StringNullableFilter<"Server"> | string | null
+    pendingRestart?: BoolFilter<"Server"> | boolean
     healthStatus?: StringFilter<"Server"> | string
     cpuUsage?: FloatFilter<"Server"> | number
     memoryUsage?: FloatFilter<"Server"> | number
@@ -29455,6 +29471,7 @@ export namespace Prisma {
     port?: SortOrder
     definitionId?: SortOrderInput | SortOrder
     paramValues?: SortOrderInput | SortOrder
+    pendingRestart?: SortOrder
     healthStatus?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
@@ -29499,6 +29516,7 @@ export namespace Prisma {
     port?: IntWithAggregatesFilter<"Server"> | number
     definitionId?: StringNullableWithAggregatesFilter<"Server"> | string | null
     paramValues?: StringNullableWithAggregatesFilter<"Server"> | string | null
+    pendingRestart?: BoolWithAggregatesFilter<"Server"> | boolean
     healthStatus?: StringWithAggregatesFilter<"Server"> | string
     cpuUsage?: FloatWithAggregatesFilter<"Server"> | number
     memoryUsage?: FloatWithAggregatesFilter<"Server"> | number
@@ -31300,6 +31318,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -31348,6 +31367,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -31392,6 +31412,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -31440,6 +31461,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -31486,6 +31508,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -31520,6 +31543,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -31556,6 +31580,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -33653,6 +33678,7 @@ export namespace Prisma {
     port?: SortOrder
     definitionId?: SortOrder
     paramValues?: SortOrder
+    pendingRestart?: SortOrder
     healthStatus?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
@@ -33701,6 +33727,7 @@ export namespace Prisma {
     port?: SortOrder
     definitionId?: SortOrder
     paramValues?: SortOrder
+    pendingRestart?: SortOrder
     healthStatus?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
@@ -33737,6 +33764,7 @@ export namespace Prisma {
     port?: SortOrder
     definitionId?: SortOrder
     paramValues?: SortOrder
+    pendingRestart?: SortOrder
     healthStatus?: SortOrder
     cpuUsage?: SortOrder
     memoryUsage?: SortOrder
@@ -36388,6 +36416,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -36434,6 +36463,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -36735,6 +36765,7 @@ export namespace Prisma {
     port?: IntFilter<"Server"> | number
     definitionId?: StringNullableFilter<"Server"> | string | null
     paramValues?: StringNullableFilter<"Server"> | string | null
+    pendingRestart?: BoolFilter<"Server"> | boolean
     healthStatus?: StringFilter<"Server"> | string
     cpuUsage?: FloatFilter<"Server"> | number
     memoryUsage?: FloatFilter<"Server"> | number
@@ -37825,6 +37856,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -37872,6 +37904,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -37931,6 +37964,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -37978,6 +38012,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -38021,6 +38056,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -38068,6 +38104,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -38127,6 +38164,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -38174,6 +38212,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -38217,6 +38256,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -38264,6 +38304,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -38323,6 +38364,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -38370,6 +38412,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -38621,6 +38664,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -38668,6 +38712,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -38727,6 +38772,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -38774,6 +38820,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -38817,6 +38864,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -38864,6 +38912,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -38972,6 +39021,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -39019,6 +39069,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -39166,6 +39217,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -39212,6 +39264,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -39336,6 +39389,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -39383,6 +39437,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -39442,6 +39497,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -39489,6 +39545,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -39532,6 +39589,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -39579,6 +39637,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -39638,6 +39697,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -39685,6 +39745,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -39728,6 +39789,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -39775,6 +39837,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -39834,6 +39897,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -39881,6 +39945,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -39924,6 +39989,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -39971,6 +40037,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -40101,6 +40168,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -40148,6 +40216,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -41010,6 +41079,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -41057,6 +41127,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -41159,6 +41230,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -41206,6 +41278,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -41266,6 +41339,7 @@ export namespace Prisma {
     port: number
     definitionId?: string | null
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -41403,6 +41477,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -41449,6 +41524,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -41494,6 +41570,7 @@ export namespace Prisma {
     port?: IntFieldUpdateOperationsInput | number
     definitionId?: NullableStringFieldUpdateOperationsInput | string | null
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -42036,6 +42113,7 @@ export namespace Prisma {
     ipAddress: string
     port: number
     paramValues?: string | null
+    pendingRestart?: boolean
     healthStatus?: string
     cpuUsage?: number
     memoryUsage?: number
@@ -42070,6 +42148,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -42116,6 +42195,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number
@@ -42161,6 +42241,7 @@ export namespace Prisma {
     ipAddress?: StringFieldUpdateOperationsInput | string
     port?: IntFieldUpdateOperationsInput | number
     paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
     healthStatus?: StringFieldUpdateOperationsInput | string
     cpuUsage?: FloatFieldUpdateOperationsInput | number
     memoryUsage?: FloatFieldUpdateOperationsInput | number

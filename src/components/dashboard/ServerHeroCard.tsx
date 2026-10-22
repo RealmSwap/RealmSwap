@@ -19,7 +19,9 @@ import {
   Activity,
   HardDrive,
   BadgeCent,
-  Sparkles
+  Sparkles,
+  RotateCw,
+  MemoryStick
 } from "lucide-react";
 
 export function ServerHeroCard({
@@ -131,10 +133,29 @@ export function ServerHeroCard({
             {isRunning && <span className={`w-1.5 h-1.5 rounded-full ${server.status === "RUNNING" ? "bg-emerald-400 animate-pulse" : "bg-amber-400 animate-pulse"}`} />}
             {server.status}
           </div>
+
+          {server.pendingRestart && isRunning && (
+            <div
+              className="px-2.5 py-1 rounded-lg border backdrop-blur-md text-[10px] font-bold shadow-lg flex items-center gap-1.5 bg-sky-500/20 border-sky-500/40 text-sky-300"
+              title="Settings were saved while the server was running — they take effect on the next start."
+            >
+              <RotateCw className="w-3 h-3" />
+              RESTART PENDING
+            </div>
+          )}
         </div>
         
         <div className="relative z-10">
           <h2 className="text-2xl font-extrabold text-white drop-shadow-md truncate">{server.name}</h2>
+          {server.ramHint && (
+            <div
+              className="flex items-center gap-1.5 text-[11px] font-medium text-sky-300/90 mt-1 w-fit"
+              title="Based on the peak memory usage of the last 7 days"
+            >
+              <MemoryStick className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate max-w-[320px]">{server.ramHint}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2 text-xs font-medium text-white/80 mt-1">
             <span className="bg-white/20 px-2 py-0.5 rounded text-white">{isLocal ? "Local Machine" : server.region}</span>
             {server.ipAddress && (

@@ -97,13 +97,23 @@ export async function PUT(
       spec.params.map((p) => [p.key, effective[p.key]])
     ) as Record<string, string | number | boolean>;
 
+    const isRunning = server.status === "RUNNING" || server.status === "STARTING";
+    const previous = Object.fromEntries(
+      spec.params.map((p) => [p.key, p.key in stored ? stored[p.key] : p.default ?? ""])
+    ) as Record<string, string | number | boolean>;
+    const valuesChanged = spec.params.some((p) => String(previous[p.key] ?? "") !== String(clean[p.key] ?? ""));
     await prisma.server.update({
       where: { id: server.id },
-      data: { paramValues: stringifyParamValues(clean) },
+      data: {
+        paramValues: stringifyParamValues(clean),
+        // Applied immediately below when stopped; while running the values ride
+        // along until the next start — surface that on the server card.
+        pendingRestart: isRunning && valuesChanged ? true : isRunning ? server.pendingRestart : false,
+      },
     });
 
     let appliedNow = false;
-    if (server.status !== "RUNNING" && server.status !== "STARTING" && spec.configFiles.length > 0) {
+    if (!isRunning && spec.configFiles.length > 0) {
       const serverRoot = path.join(dataRoot(), "local-servers", server.id);
       if (fs.existsSync(serverRoot)) {
         const ctx = buildContext({

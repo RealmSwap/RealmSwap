@@ -105,3 +105,49 @@ describe("mergeConfigContent", () => {
     expect(mergeConfigContent("   \n", rendered)).toBe(rendered);
   });
 });
+
+import { splitTupleFields, mergeTupleValue } from "../mergeConfig";
+
+describe("tuple field merge (Unreal-style OptionSettings)", () => {
+  it("splits on top-level commas only — quotes and nested parens respected", () => {
+    expect(splitTupleFields('A=1, B=(x=1,y=2), C="has, comma", D=4')).toEqual([
+      "A=1",
+      "B=(x=1,y=2)",
+      'C="has, comma"',
+      "D=4",
+    ]);
+  });
+
+  it("updates managed fields in place, preserving order and all other fields", () => {
+    const existing = "(Difficulty=None,DayTimeSpeedRate=1.0,ServerPlayerMaxNum=16,ServerName=\"Old\")";
+    const rendered = "(Difficulty=Hard,ServerPlayerMaxNum=32)";
+    expect(mergeTupleValue(existing, rendered)).toBe(
+      "(Difficulty=Hard,DayTimeSpeedRate=1.0,ServerPlayerMaxNum=32,ServerName=\"Old\")"
+    );
+  });
+
+  it("appends fields the existing tuple lacks", () => {
+    expect(mergeTupleValue("(A=1)", "(A=2,B=3)")).toBe("(A=2,B=3)");
+  });
+
+  it("falls back to the rendered value when either side is not a tuple", () => {
+    expect(mergeTupleValue("plain", "(A=1)")).toBe("(A=1)");
+    expect(mergeTupleValue("(A=1)", "plain")).toBe("plain");
+  });
+
+  it("merges a managed template into a full Palworld-style line via key=value merge", () => {
+    const existing =
+      "[/Script/Pal.PalGameWorldSettings]\nOptionSettings=(Difficulty=None,DayTimeSpeedRate=1.000000,ExpRate=1.000000,ServerPlayerMaxNum=16,ServerName=\"My World\",AdminPassword=\"\",PublicPort=8211)\n";
+    const rendered =
+      "[/Script/Pal.PalGameWorldSettings]\nOptionSettings=(Difficulty=Normal,ServerPlayerMaxNum=32,ServerName=\"Renamed\",AdminPassword=\"pw\")\n";
+    const out = mergeConfigContent(existing, rendered);
+    expect(out).toContain("Difficulty=Normal");
+    expect(out).toContain("ServerPlayerMaxNum=32");
+    expect(out).toContain('ServerName="Renamed"');
+    expect(out).toContain('AdminPassword="pw"');
+    // untouched fields survive
+    expect(out).toContain("DayTimeSpeedRate=1.000000");
+    expect(out).toContain("ExpRate=1.000000");
+    expect(out).toContain("PublicPort=8211");
+  });
+});

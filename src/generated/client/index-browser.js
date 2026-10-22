@@ -177,6 +177,7 @@ exports.Prisma.ServerScalarFieldEnum = {
   port: 'port',
   definitionId: 'definitionId',
   paramValues: 'paramValues',
+  pendingRestart: 'pendingRestart',
   healthStatus: 'healthStatus',
   cpuUsage: 'cpuUsage',
   memoryUsage: 'memoryUsage',

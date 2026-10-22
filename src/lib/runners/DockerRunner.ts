@@ -48,7 +48,7 @@ async function resolveDefinition(server: { definitionId: string | null; game: st
 
 function setStatus(serverId: string, status: string, extra: Record<string, unknown> = {}) {
   return prisma.server
-    .update({ where: { id: serverId }, data: { status, ...extra } })
+    .update({ where: { id: serverId }, data: { status, ...(status === "RUNNING" ? { pendingRestart: false } : {}), ...extra } })
     .then(() => serverEventBus.emit("status_update", { serverId, status }))
     .catch(() => {});
 }
