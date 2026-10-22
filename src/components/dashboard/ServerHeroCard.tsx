@@ -3,6 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { Sparkline } from "./Sparkline";
+import { statusLabel } from "@/lib/gameDisplay";
+import { motion } from "framer-motion";
 import {
   Play,
   Square,
@@ -97,6 +99,11 @@ export function ServerHeroCard({
   };
 
   return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+    >
     <div 
       className={`bg-slate-900/40 backdrop-blur-xl border ${isSelected ? 'border-accentPurple shadow-[0_0_20px_rgba(167,139,250,0.3)] ring-1 ring-accentPurple' : 'border-white/5 hover:border-accentPurple/30'} rounded-[18px] shadow-xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-accentPurple/10 flex flex-col group cursor-pointer`}
       onClick={onSelect}
@@ -131,7 +138,7 @@ export function ServerHeroCard({
               "bg-slate-800/80 border-slate-600 text-slate-300"}`}
           >
             {isRunning && <span className={`w-1.5 h-1.5 rounded-full ${server.status === "RUNNING" ? "bg-emerald-400 animate-pulse" : "bg-amber-400 animate-pulse"}`} />}
-            {server.status}
+            {statusLabel(server.status)}
           </div>
 
           {server.pendingRestart && isRunning && (
@@ -387,5 +394,6 @@ export function ServerHeroCard({
         )}
       </div>
     </div>
+    </motion.div>
   );
 }

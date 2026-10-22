@@ -3,6 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { initClientErrorReporting } from "@/lib/sentry.client";
 import {
   Server as ServerIcon,
   Store,
@@ -20,6 +22,8 @@ import {
 
 export function SidebarNavigation({ user }: { user: any }) {
   const pathname = usePathname();
+  // Activate opt-in crash reporting (inert without DSN + user consent).
+  useEffect(() => { initClientErrorReporting(); }, []);
   const router = useRouter();
 
   const navSections = [

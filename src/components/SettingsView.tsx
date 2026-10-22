@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import { Save, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
+import { initClientErrorReporting } from "@/lib/sentry.client";
 
 export function SettingsView({ user }: { user: any }) {
   const [discordId, setDiscordId] = useState(user?.discordId || "");
@@ -57,6 +58,10 @@ export function SettingsView({ user }: { user: any }) {
   const [notifyDiscord, setNotifyDiscord] = useState(user?.notifyDiscord ?? true);
   const [notifyEmail, setNotifyEmail] = useState(user?.notifyEmail ?? true);
   const [notifyWebPush, setNotifyWebPush] = useState(user?.notifyWebPush ?? true);
+  const [crashOn, setCrashOn] = useState(false);
+  useEffect(() => {
+    setCrashOn(window.localStorage.getItem("rs.crashReports") === "on");
+  }, []);
   const [pushSupported, setPushSupported] = useState(false);
 
   // Check if push is supported on mount
@@ -225,6 +230,31 @@ export function SettingsView({ user }: { user: any }) {
               </p>
 
               <div className="space-y-4">
+                {/* Crash Reports (opt-in) */}
+                <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-200">Anonymous Crash Reports</h3>
+                    <p className="text-xs text-slate-500">
+                      Help us fix bugs by sending anonymous error reports when something breaks.
+                      Off by default; nothing is sent unless you turn this on.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={crashOn}
+                      onChange={(e) => {
+                        window.localStorage.setItem("rs.crashReports", e.target.checked ? "on" : "off");
+                        setCrashOn(e.target.checked);
+                        if (e.target.checked) initClientErrorReporting();
+                        toast.success(e.target.checked ? "Crash reporting enabled — thank you!" : "Crash reporting disabled.");
+                      }}
+                    />
+                    <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
+                  </label>
+                </div>
+
                 {/* Discord Toggle */}
                 <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
                   <div>

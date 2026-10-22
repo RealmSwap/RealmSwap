@@ -49,7 +49,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         name: server.name,
         game: server.game,
         ramAllocation: server.ramAllocation,
-        password: server.password,
+        // Secrets never ride in the manifest — imports prompt for a fresh
+        // password (the import route treats a missing password as null).
         port: server.port,
         paramValues: server.paramValues ? JSON.parse(server.paramValues) : null,
       },

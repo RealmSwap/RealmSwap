@@ -83,7 +83,11 @@ export async function GET(req: NextRequest) {
             ramHint = `Peaks at only ${peakGB.toFixed(1)} of ${s.ramAllocation} GB — you can free RAM by lowering the allocation.`;
           }
         }
-        return { ...s, ramHint };
+        // Secrets (password/rcon/sftp) never ride in the shared list payload —
+        // team members see servers too. The SFTP panel fetches them per-server
+        // via /api/servers/[id]/secrets (ADMIN only).
+        const { password: _pw, rconPassword: _rcon, sftpPassword: _sftp, ...safe } = s;
+        return { ...safe, ramHint };
       }),
       archives,
       activityLogs: logs,
