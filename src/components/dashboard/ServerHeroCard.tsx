@@ -21,7 +21,8 @@ import {
   BadgeCent,
   Sparkles,
   RotateCw,
-  MemoryStick
+  MemoryStick,
+  QrCode
 } from "lucide-react";
 
 export function ServerHeroCard({
@@ -306,6 +307,12 @@ export function ServerHeroCard({
           </button>
           {isLocal && (
             <>
+              <button
+                onClick={(e) => { e.stopPropagation(); actions.setConnectionServer(server); }}
+                className="text-[10px] uppercase font-bold text-slate-500 hover:text-white flex items-center gap-1 transition-colors"
+              >
+                <QrCode className="w-3 h-3" /> Join Info
+              </button>
               <button
                 onClick={(e) => { e.stopPropagation(); actions.handleOpenServerFolder(server.id); }}
                 disabled={isServerLoading || server.status === "STARTING"}
