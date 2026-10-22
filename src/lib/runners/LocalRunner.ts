@@ -15,9 +15,9 @@ import { startMonitoring, stopMonitoring, clearStatsHistory } from "../processMo
 import { serverEventBus } from "../eventBus";
 import { parseSpec } from "../definitions/serialize";
 import { buildContext } from "../definitions/context";
-import { planInstall, planConfigFiles, planLaunch, planPorts, resolveCommand, resolveExecutablePath } from "../definitions/plan";
+import { planInstall, planLaunch, planPorts, resolveCommand, resolveExecutablePath } from "../definitions/plan";
 import { ensureJava, parseRequiredJavaMajor } from "../runtimes/javaRuntime";
-import { writeStrategyConfig } from "../definitions/strategies";
+import { applyConfigFiles } from "../definitions/applyConfigFiles";
 import { parseWindroseInviteCode } from "../definitions/windrose";
 import type { GameDefinitionSpec } from "../definitions/types";
 import { setProgress, clearProgress, parseSteamProgress, computePercent, isMissingConfigError } from "../downloadProgress";
@@ -590,21 +590,8 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     }
   }
 
-  // 4. Write config files
-  for (const cf of planConfigFiles(spec, ctx)) {
-    const full = path.join(installDir, cf.relPath);
-    fs.mkdirSync(path.dirname(full), { recursive: true });
-    if (cf.strategy === "template") {
-      fs.writeFileSync(full, cf.content ?? "");
-    } else {
-      writeStrategyConfig({
-        strategy: cf.strategy as "enshroudedJson" | "zomboidIniMerge",
-        installDir,
-        serverName: server.name,
-        password: server.password || undefined,
-      });
-    }
-  }
+  // 4. Write config files (merge-preserving: unmanaged keys and hand edits survive)
+  applyConfigFiles(spec, ctx, { installDir, server: { name: server.name, password: server.password } });
 
   // 5. Launch the server process
   const launch = planLaunch(spec, ctx);

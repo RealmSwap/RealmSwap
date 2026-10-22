@@ -141,12 +141,22 @@ export async function PUT(
       fs.mkdirSync(dir, { recursive: true });
     }
 
+    // Back up the current file so a bad edit is one click to undo (the raw
+    // editor is an advanced tool; this keeps a last-known-good copy on disk).
+    if (fs.existsSync(configInfo.filePath)) {
+      try {
+        fs.copyFileSync(configInfo.filePath, `${configInfo.filePath}.rsbak`);
+      } catch (e) {
+        console.error("Config backup failed (continuing with save):", e);
+      }
+    }
+
     fs.writeFileSync(configInfo.filePath, newContent, "utf-8");
 
     await prisma.activityLog.create({
       data: {
         userId: user.id,
-        action: "RESTORE_SERVER",
+        action: "UPDATE_CONFIG",
         details: `Updated config file '${configInfo.filename}' for server '${server.name}' (${server.game}).`,
       },
     });
