@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import DefinitionParamFields from "@/components/DefinitionParamFields";
+import { gameIcon as getGameIcon } from "@/lib/gameDisplay";
+import { toast } from "sonner";
 
 interface ConfigEditorViewProps {
   user: any;
@@ -96,6 +98,14 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const loadConfig = async (server: any) => {
     setSelectedServer(server);
     loadGameSettings(server);
+    // Secrets are no longer in the list payload — the SFTP panel fetches them
+    // per-server (ADMIN-gated endpoint).
+    fetch(`/api/servers/${server.id}/secrets`)
+      .then((r) => (r.ok ? r.json() : { sftpPassword: null }))
+      .then((d) => {
+        setSelectedServer((prev: any) => (prev && prev.id === server.id ? { ...prev, sftpPassword: d.sftpPassword } : prev));
+      })
+      .catch(() => {});
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -303,11 +313,11 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const submitPublish = async () => {
     if (!selectedServer) return;
     if (publishMode === "new" && (!publishName || !publishDescription)) {
-      alert("Name and description are required.");
+      toast.error("Name and description are required.");
       return;
     }
     if (publishMode === "update" && !publishTargetRealmId) {
-      alert("Choose which realm to publish the new version to.");
+      toast.error("Choose which realm to publish the new version to.");
       return;
     }
     setSaving(true);
@@ -345,38 +355,20 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
         publishMode === "update"
           ? `Published version ${data.version || publishVersion} to the marketplace!`
           : "Successfully published to Marketplace!";
-      alert(
-        data.strippedSecrets
-          ? base + "\n\nSecurity Notice: Sensitive data (passwords, tokens, API keys) was automatically removed from your configuration files before publishing."
-          : base,
-      );
+      toast.success(base);
+      if (data.strippedSecrets) {
+        toast.info("Sensitive data was automatically removed from the published configuration files.");
+      }
       router.push("/dashboard/marketplace");
     } catch (e: any) {
-      alert(e.message);
+      toast.error(e.message);
     } finally {
       setSaving(false);
       setShowPublishModal(false);
     }
   };
 
-  const getGameIcon = (game: string) => {
-    switch(game) {
-      case "MINECRAFT": return "⛏️";
-      case "VALHEIM": return "⛵";
-      case "ENSHROUDED": return "🔥";
-      case "ZOMBOID": return "🧟";
-      case "ARK": return "🦖";
-      case "TERRARIA": return "🌳";
-      case "PALWORLD": return "🦊";
-      case "RUST": return "⚙️";
-      case "SATISFACTORY": return "🏭";
-      case "VRISING": return "🦇";
-      case "WINDROSE": return "⚔️";
-      default: return "🎮";
-    }
-  };
-
-  return (
+    return (
     <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
 
       {/* Sidebar Navigation */}

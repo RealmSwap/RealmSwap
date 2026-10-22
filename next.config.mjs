@@ -2,6 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
+  // src/instrumentation.ts (server-side Sentry bootstrap) requires this flag
+  // on Next 14.
+  experimental: {
+    instrumentationHook: true,
+  },
   async redirects() {
     return [
       {

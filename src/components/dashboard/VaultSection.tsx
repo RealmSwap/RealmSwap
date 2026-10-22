@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Archive, Plus, Trash2 } from "lucide-react";
+import { gameIcon as getGameIcon } from "@/lib/gameDisplay";
 
 export function VaultSection({ 
   archives, 
@@ -12,24 +13,7 @@ export function VaultSection({
   actions: any,
   actionLoading: string | null
 }) {
-  const getGameIcon = (game: string) => {
-    switch(game) {
-      case "MINECRAFT": return "⛏️";
-      case "VALHEIM": return "⛵";
-      case "ENSHROUDED": return "🔥";
-      case "ZOMBOID": return "🧟";
-      case "ARK": return "🦖";
-      case "TERRARIA": return "🌳";
-      case "PALWORLD": return "🦊";
-      case "RUST": return "⚙️";
-      case "SATISFACTORY": return "🏭";
-      case "VRISING": return "🦇";
-      case "WINDROSE": return "⚔️";
-      default: return "🎮";
-    }
-  };
-
-  if (archives.length === 0) {
+    if (archives.length === 0) {
     return (
       <section className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] shadow-xl overflow-hidden h-full flex flex-col">
         <div className="p-4 border-b border-white/5 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 shrink-0">
