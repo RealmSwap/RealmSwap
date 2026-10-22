@@ -171,6 +171,8 @@ exports.Prisma.ServerScalarFieldEnum = {
   tunnelUrl: 'tunnelUrl',
   enableUpnp: 'enableUpnp',
   autoUpdate: 'autoUpdate',
+  autoUpdateHour: 'autoUpdateHour',
+  lastAutoUpdateAt: 'lastAutoUpdateAt',
   ipAddress: 'ipAddress',
   port: 'port',
   definitionId: 'definitionId',

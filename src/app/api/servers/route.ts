@@ -5,6 +5,8 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { checkServerSlot } from "@/lib/entitlement";
 import { initBackupScheduler } from "@/lib/backupScheduler";
 import { initActionScheduler } from "@/lib/actionScheduler";
+import { ensureServerSecretsEncrypted } from "@/lib/secretsMigrate";
+import { initUpdateScheduler } from "@/lib/updateScheduler";
 import { parseSpec, stringifyParamValues } from "@/lib/definitions/serialize";
 import { validateParamValues } from "@/lib/definitions/validate";
 import { isPortAvailable, getFreeDiskSpaceGB, isSteamCmdInstalled } from "@/lib/preflight";
@@ -18,6 +20,8 @@ import * as crypto from "crypto";
 export async function GET(req: NextRequest) {
   try {
     initBackupScheduler();
+    ensureServerSecretsEncrypted();
+    initUpdateScheduler();
     const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -74,6 +78,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     initBackupScheduler();
+    ensureServerSecretsEncrypted();
+    initUpdateScheduler();
     const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

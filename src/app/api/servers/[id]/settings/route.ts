@@ -189,6 +189,18 @@ export async function POST(
       return NextResponse.json({ success: true, autoUpdate: enable });
     }
 
+    if (body.action === "SET_UPDATE_HOUR") {
+      const hour = Number(body.hour);
+      if (!Number.isInteger(hour) || hour < 0 || hour > 23) {
+        return NextResponse.json({ error: "hour must be an integer between 0 and 23" }, { status: 400 });
+      }
+      await prisma.server.update({
+        where: { id: server.id },
+        data: { autoUpdateHour: hour }
+      });
+      return NextResponse.json({ success: true, autoUpdateHour: hour });
+    }
+
     if (body.action === "REGENERATE_SFTP") {
       const newPass = crypto.randomBytes(8).toString("hex");
       const updated = await prisma.server.update({
