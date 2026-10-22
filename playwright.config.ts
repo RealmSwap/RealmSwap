@@ -1,4 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+
+// Load .env when present so the Supabase stubs below only kick in when no
+// real configuration exists (i.e. CI, which has no .env and no secrets).
+dotenv.config();
 
 /**
  * E2E smoke tests. Two tiers:
@@ -34,6 +39,17 @@ export default defineConfig({
       // Keep the app's data writes (e.g. auto-provisioned VAPID key file) out
       // of the repo during test runs.
       GAMEVAULT_DATA_DIR: "/tmp/realmswap-e2e-data",
+      // The app's middleware throws (and every route 500s) when the Supabase
+      // env vars are missing entirely. Well-formed stubs let the public
+      // surface render in CI — session refresh just fails and is caught,
+      // exactly like an unreachable project URL. Real .env values win locally.
+      ...(process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? {}
+        : {
+            NEXT_PUBLIC_SUPABASE_URL: "https://e2e-stub.supabase.co",
+            NEXT_PUBLIC_SUPABASE_ANON_KEY:
+              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e2Utd3ViIn0.c3R1Yg",
+          }),
     },
   },
 });
