@@ -224,8 +224,15 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       defaultPort: 8211,
       params: [
         { key: "maxPlayers", label: "Max players", type: "number", default: 16, min: 1, max: 32, group: "Gameplay" },
+        { key: "difficulty", label: "Difficulty", type: "enum", default: "None", options: ["None", "Normal", "Hard"], group: "Gameplay" },
       ],
-      configFiles: [],
+      configFiles: [
+        // Only the fields RealmSwap manages. The tuple-aware merge updates these
+        // in place inside the game's full OptionSettings=(...) line — every other
+        // field the game (or the user) wrote is preserved on rewrite.
+        { path: "Pal/Saved/Config/WindowsServer/PalWorldSettings.ini", strategy: "template",
+          template: "[/Script/Pal.PalGameWorldSettings]\nOptionSettings=(Difficulty={difficulty},ServerPlayerMaxNum={maxPlayers},ServerName=\"{name}\",AdminPassword=\"{password}\")\n" },
+      ],
       editableConfigPath: "palworld-server/Pal/Saved/Config/WindowsServer/PalWorldSettings.ini",
       ports: [{ protocol: "UDP", port: "8211" }],
     },

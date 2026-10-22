@@ -57,13 +57,34 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
+    // Peak RAM per server over the last 7 days, for right-sizing hints.
+    const peaks = await prisma.serverTelemetry
+      .groupBy({
+        by: ["serverId"],
+        where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+        _max: { ramMB: true },
+      })
+      .catch(() => [] as { serverId: string; _max: { ramMB: number | null } }[]);
+    const peakByServer = new Map(peaks.map((p) => [p.serverId, p._max.ramMB ?? 0]));
+
     return NextResponse.json({
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
       },
-      servers,
+      servers: servers.map((s) => {
+        const peakGB = (peakByServer.get(s.id) ?? 0) / 1024;
+        let ramHint: string | null = null;
+        if (peakGB > 0 && s.status === "RUNNING") {
+          if (peakGB >= s.ramAllocation * 0.9) {
+            ramHint = `Peaks at ${peakGB.toFixed(1)} of ${s.ramAllocation} GB — raise RAM or trim mods to avoid lag spikes.`;
+          } else if (peakGB <= s.ramAllocation * 0.3) {
+            ramHint = `Peaks at only ${peakGB.toFixed(1)} of ${s.ramAllocation} GB — you can free RAM by lowering the allocation.`;
+          }
+        }
+        return { ...s, ramHint };
+      }),
       archives,
       activityLogs: logs,
     });

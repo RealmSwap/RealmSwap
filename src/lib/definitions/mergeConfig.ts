@@ -21,6 +21,77 @@
 
 const KEY_VALUE_LINE_RE = /^(\s*)([A-Za-z0-9_.\-[\]]+?)(\s*[=:]\s*)(.*)$/;
 
+/** Split "A=1, B=(x,y), C=\"s, t\"" on top-level commas only (quote/paren/bracket aware). */
+export function splitTupleFields(input: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let inQuote: string | null = null;
+  let current = "";
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (inQuote) {
+      current += ch;
+      if (ch === inQuote && input[i - 1] !== "\\") inQuote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inQuote = ch;
+      current += ch;
+      continue;
+    }
+    if (ch === "(" || ch === "[" || ch === "{") depth++;
+    if (ch === ")" || ch === "]" || ch === "}") depth--;
+    if (ch === "," && depth === 0) {
+      out.push(current.trim());
+      current = "";
+      continue;
+    }
+    current += ch;
+  }
+  if (current.trim() !== "") out.push(current.trim());
+  return out;
+}
+
+function tupleFieldKey(field: string): string | null {
+  const m = /^([A-Za-z0-9_]+)\s*=/.exec(field);
+  return m ? m[1] : null;
+}
+
+/**
+ * Field-level merge for Unreal-style tuple values (`Key=(A=1,B="x",C=2)`),
+ * used by .ini files like Palworld's OptionSettings. Rendered fields win and
+ * keep the existing field order; unknown existing fields are preserved; new
+ * fields append. Non-tuple inputs fall back to the rendered value wholesale.
+ */
+export function mergeTupleValue(existingValue: string, renderedValue: string): string {
+  const ex = /^\((.*)\)$/.exec(existingValue.trim());
+  const ren = /^\((.*)\)$/.exec(renderedValue.trim());
+  if (!ex || !ren) return renderedValue;
+
+  const existingFields = splitTupleFields(ex[1]);
+  const renderedPairs = new Map<string, string>();
+  for (const f of splitTupleFields(ren[1])) {
+    const k = tupleFieldKey(f);
+    if (k) renderedPairs.set(k, f);
+  }
+
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const f of existingFields) {
+    const k = tupleFieldKey(f);
+    if (k && renderedPairs.has(k)) {
+      out.push(renderedPairs.get(k)!);
+      seen.add(k);
+    } else {
+      out.push(f);
+    }
+  }
+  renderedPairs.forEach((f, k) => {
+    if (!seen.has(k)) out.push(f);
+  });
+  return `(${out.join(",")})`;
+}
+
 function isCommentLine(line: string): boolean {
   const t = line.trim();
   return t === "" || t.startsWith("#") || t.startsWith(";");
@@ -53,9 +124,15 @@ export function mergeKeyValueContent(existing: string, rendered: string): string
     const idx = lineIndexOf.get(key);
     if (idx !== undefined) {
       // Preserve the original line's indentation, key spelling, and separator.
+      // Tuple values (Unreal-style `K=(A=1,B=2)`) merge at field level so a
+      // managed template updates its own fields without clobbering the rest.
+      const mergedValue =
+        existingLines[idx].includes("=") || existingLines[idx].includes(":")
+          ? mergeTupleValue(existingLines[idx].replace(KEY_VALUE_LINE_RE, "$4"), value)
+          : value;
       existingLines[idx] = existingLines[idx].replace(
         KEY_VALUE_LINE_RE,
-        (_m, indent: string, k: string, sep: string) => `${indent}${k}${sep}${value}`
+        (_m, indent: string, k: string, sep: string) => `${indent}${k}${sep}${mergedValue}`
       );
     } else {
       appended.push(`${key}=${value}`);

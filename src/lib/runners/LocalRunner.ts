@@ -386,7 +386,7 @@ function waitForReadiness(
     
     prisma.server.update({
       where: { id: serverId },
-      data: { status: "RUNNING" },
+      data: { status: "RUNNING", pendingRestart: false },
     }).then(() => serverEventBus.emit("status_update", { serverId, status: "RUNNING" })).catch(e => console.error("Error updating status to RUNNING:", e));
   };
 
