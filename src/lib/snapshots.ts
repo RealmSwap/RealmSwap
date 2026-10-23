@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { dataRoot } from "./appPaths";
 import { prisma } from "./db";
+import { reconcileInstalledMods } from "./mods/reconcile";
 
 /**
  * Creates a complete snapshot of a server's state on disk.
@@ -56,4 +57,14 @@ export async function restoreSnapshot(snapshotId: string): Promise<void> {
 
   // Copy snapshot back to server dir
   fs.cpSync(snapshot.path, serverDir, { recursive: true, force: true });
+
+  // The restored directory is now the source of truth for what's installed.
+  // Rows are repaired to match it so the Installed tab doesn't list mods that
+  // were rolled away or miss mods that came back. Best-effort: the restore
+  // itself already succeeded, so a reconciliation failure must not undo it.
+  try {
+    await reconcileInstalledMods(snapshot.serverId);
+  } catch (err) {
+    console.error("Post-restore mod reconciliation failed:", err);
+  }
 }

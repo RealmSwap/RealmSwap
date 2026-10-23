@@ -6,6 +6,7 @@ import { dataRoot } from "./appPaths";
 import { getSavePath as resolveSavePath } from "./backupPaths";
 import { verifyBackupFile } from "./backupVerify";
 import { cloudSync } from "./cloudSync";
+import { reconcileInstalledMods } from "./mods/reconcile";
 
 // Get the local save path for each game type. Delegates to the pure resolver,
 // injecting the live filesystem roots.
@@ -192,6 +193,15 @@ export async function restoreBackup(backupId: string): Promise<void> {
       details: `Restored local backup '${backup.name}' to server '${backup.server.name}'.`
     }
   });
+
+  // Backups today only restore save data, but keep the invariant "after any
+  // restore, mod rows match disk" structural rather than call-site-dependent.
+  // Best-effort: the restore itself already succeeded.
+  try {
+    await reconcileInstalledMods(backup.serverId);
+  } catch (err) {
+    console.error("Post-restore mod reconciliation failed:", err);
+  }
 }
 
 // Delete a local server backup snapshot

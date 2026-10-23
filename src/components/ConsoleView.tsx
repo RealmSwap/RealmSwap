@@ -20,13 +20,21 @@ import {
   Send,
   X,
   FolderOpen,
+  Archive,
 } from "lucide-react";
 import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import { useToast } from "@/components/ToastProvider";
+import { classifyLogLevel, highlightSegments } from "@/lib/consoleFormat";
 
 interface ConsoleViewProps {
   servers: any[];
   user: any;
+}
+
+interface LogArchiveMeta {
+  name: string;
+  sizeBytes: number;
+  createdAt: string;
 }
 
 export default function ConsoleView({ servers, user }: ConsoleViewProps) {
@@ -47,6 +55,16 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
   const [pendingCount, setPendingCount] = useState(0);
   const [consoleCommand, setConsoleCommand] = useState("");
   const [consoleCommandError, setConsoleCommandError] = useState<string | null>(null);
+
+  // Rotated log archives (history viewer)
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [archives, setArchives] = useState<LogArchiveMeta[]>([]);
+  const [archivesLoading, setArchivesLoading] = useState(false);
+  const [archiveLoading, setArchiveLoading] = useState(false);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [viewingArchive, setViewingArchive] = useState<string | null>(null);
+  const [archiveLines, setArchiveLines] = useState<string[]>([]);
+  const [archiveTruncated, setArchiveTruncated] = useState(false);
   
   const consolePausedRef = useRef(false);
   const pendingLinesRef = useRef<string[]>([]);
@@ -54,6 +72,7 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
   const autoScrollRef = useRef(true);
 
   const MAX_CONSOLE_LINES = 5000;
+  const ARCHIVE_VIEW_MAX_LINES = 2000;
   const capLines = (lines: string[]) =>
     lines.length > MAX_CONSOLE_LINES ? lines.slice(-MAX_CONSOLE_LINES) : lines;
 
@@ -71,6 +90,9 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
       setConsoleSearch("");
       setConsoleCommand("");
       setConsoleCommandError(null);
+      setHistoryOpen(false);
+      setViewingArchive(null);
+      setArchiveLines([]);
       return;
     }
 
@@ -79,6 +101,11 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
     pendingLinesRef.current = [];
     setPendingCount(0);
     autoScrollRef.current = true;
+    setHistoryOpen(false);
+    setViewingArchive(null);
+    setArchiveLines([]);
+    setArchiveTruncated(false);
+    setArchiveError(null);
 
     const es = new EventSource(`/api/servers/${selectedServer.id}/logs/stream`);
     es.onopen = () => setConsoleConn("live");
@@ -164,6 +191,81 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
     } catch {
       addToast("error", "Could not open server folder");
     }
+  };
+
+  const loadArchives = async () => {
+    if (!selectedServer) return;
+    setArchivesLoading(true);
+    setArchiveError(null);
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/logs/archives`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Could not list log archives");
+      }
+      const data = await res.json();
+      setArchives(data.archives ?? []);
+    } catch (err: any) {
+      setArchiveError(err.message);
+    } finally {
+      setArchivesLoading(false);
+    }
+  };
+
+  const toggleHistory = () => {
+    const next = !historyOpen;
+    setHistoryOpen(next);
+    if (next) void loadArchives();
+  };
+
+  const handleViewArchive = async (name: string) => {
+    if (!selectedServer) return;
+    setArchiveLoading(true);
+    setArchiveError(null);
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/logs/archives/${encodeURIComponent(name)}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Could not load log archive");
+      }
+      const data = await res.json();
+      const lines = String(data.content ?? "").split("\n");
+      if (lines.at(-1) === "") lines.pop();
+      setViewingArchive(name);
+      setArchiveLines(lines.slice(-ARCHIVE_VIEW_MAX_LINES));
+      setArchiveTruncated(!!data.truncated || lines.length > ARCHIVE_VIEW_MAX_LINES);
+    } catch (err: any) {
+      setArchiveError(err.message);
+    } finally {
+      setArchiveLoading(false);
+    }
+  };
+
+  const backToLive = () => {
+    setViewingArchive(null);
+    setArchiveLines([]);
+    setArchiveTruncated(false);
+    autoScrollRef.current = true;
+  };
+
+  // One colored line; highlights filter matches when a filter is active.
+  const renderConsoleLine = (line: string, key: number) => {
+    const level = classifyLogLevel(line);
+    const colorClass =
+      level === "error" ? "text-red-400" : level === "warn" ? "text-amber-300" : "text-emerald-400";
+    return (
+      <div key={key} className={colorClass}>
+        {consoleSearch
+          ? highlightSegments(line, consoleSearch).map((seg, j) =>
+              seg.match ? (
+                <span key={j} className="bg-accentPurple/40 text-white rounded-sm px-0.5">{seg.text}</span>
+              ) : (
+                <span key={j}>{seg.text}</span>
+              )
+            )
+          : line || "\u00A0"}
+      </div>
+    );
   };
 
   const handleLogout = async () => {
@@ -257,6 +359,18 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
                 </button>
               )}
               <button
+                onClick={toggleHistory}
+                className={`px-3.5 py-2 rounded-lg border font-bold text-xs flex items-center gap-1.5 transition-all ${
+                  historyOpen
+                    ? "bg-accentPurple/20 border-accentPurple/40 text-white"
+                    : "bg-slate-900 border-white/10 hover:border-white/20 text-slate-300"
+                }`}
+                title="Browse rotated log archives"
+              >
+                <Archive className="w-3.5 h-3.5" />
+                <span>History</span>
+              </button>
+              <button
                 onClick={toggleConsolePause}
                 className="px-3 py-2 rounded-lg bg-slate-900 border border-white/10 hover:border-white/20 text-xs font-bold text-slate-300 transition-colors flex items-center gap-1.5"
               >
@@ -279,6 +393,58 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
               </button>
             </div>
 
+            {/* Rotated log archives panel */}
+            {historyOpen && (
+              <div className="mb-3 rounded-lg bg-black/40 border border-white/10 p-3 max-h-44 overflow-y-auto scrollbar-thin">
+                <div className="text-[10px] font-bold text-mutedText uppercase tracking-wider mb-2">
+                  Rotated log archives (kept 30 days)
+                </div>
+                {archivesLoading ? (
+                  <div className="text-xs text-mutedText">Loading archives…</div>
+                ) : archives.length === 0 ? (
+                  <div className="text-xs text-mutedText">
+                    No rotated archives yet — one is created automatically whenever server.log passes 50 MB.
+                  </div>
+                ) : (
+                  archives.map((a) => (
+                    <button
+                      key={a.name}
+                      onClick={() => handleViewArchive(a.name)}
+                      disabled={archiveLoading}
+                      className={`w-full text-left px-2.5 py-1.5 rounded-md font-mono text-[11px] flex items-center justify-between transition-colors border disabled:opacity-50 ${
+                        viewingArchive === a.name
+                          ? "bg-accentPurple/20 border-accentPurple/40 text-white"
+                          : "border-transparent text-slate-300 hover:bg-white/5"
+                      }`}
+                    >
+                      <span>{new Date(a.createdAt).toLocaleString()}</span>
+                      <span className="text-mutedText">{(a.sizeBytes / 1024).toFixed(0)} KB</span>
+                    </button>
+                  ))
+                )}
+                {archiveError && (
+                  <div className="text-[11px] text-red-400 mt-1">{archiveError}</div>
+                )}
+              </div>
+            )}
+
+            {/* Archive viewing banner */}
+            {viewingArchive && (
+              <div className="flex items-center justify-between mb-2 text-[11px]">
+                <span className="text-amber-300 font-bold flex items-center gap-1.5">
+                  <Archive className="w-3.5 h-3.5" />
+                  Viewing archived log (read-only)
+                  {archiveTruncated && <span className="text-mutedText font-normal">· most recent lines only</span>}
+                </span>
+                <button
+                  onClick={backToLive}
+                  className="px-2.5 py-1 rounded-md bg-slate-900 border border-white/10 hover:border-white/20 text-slate-300 font-bold transition-colors"
+                >
+                  Back to live stream
+                </button>
+              </div>
+            )}
+
             {/* Log Terminal Screen */}
             <div
               ref={logContainerRef}
@@ -286,6 +452,13 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
               className="flex-1 bg-black/90 border border-white/5 rounded-xl p-4 font-mono text-[11px] text-emerald-400 overflow-y-auto whitespace-pre-wrap select-text selection:bg-emerald-500/20 scrollbar-thin"
             >
               {(() => {
+                if (viewingArchive) {
+                  const visible = consoleSearch
+                    ? archiveLines.filter((l) => l.toLowerCase().includes(consoleSearch.toLowerCase()))
+                    : archiveLines;
+                  if (visible.length === 0) return "No lines match the filter.";
+                  return visible.map((l, i) => renderConsoleLine(l, i));
+                }
                 const visible = consoleSearch
                   ? consoleLines.filter((l) =>
                       l.toLowerCase().includes(consoleSearch.toLowerCase())
@@ -296,7 +469,7 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
                     ? "No lines match the filter."
                     : "Initializing console stream…";
                 }
-                return visible.join("\n");
+                return visible.map((l, i) => renderConsoleLine(l, i));
               })()}
             </div>
 
@@ -308,8 +481,14 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
                   type="text"
                   value={consoleCommand}
                   onChange={(e) => setConsoleCommand(e.target.value)}
-                  placeholder={selectedServer.status !== "RUNNING" ? "Server must be running to send commands… (Wait for live stream)" : "Enter console command…"}
-                  disabled={consoleConn !== "live"}
+                  placeholder={
+                    viewingArchive
+                      ? "Viewing an archived log — return to the live stream to send commands…"
+                      : selectedServer.status !== "RUNNING"
+                        ? "Server must be running to send commands… (Wait for live stream)"
+                        : "Enter console command…"
+                  }
+                  disabled={consoleConn !== "live" || !!viewingArchive}
                   autoComplete="off"
                   spellCheck={false}
                   className="w-full pl-8 pr-3 py-2 rounded-lg bg-black/40 border border-white/10 focus:border-accentPurple/40 outline-none text-xs font-mono text-slate-200 placeholder:text-mutedText disabled:opacity-50 disabled:cursor-not-allowed"
@@ -317,7 +496,7 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
               </div>
               <button
                 type="submit"
-                disabled={consoleConn !== "live" || !consoleCommand.trim()}
+                disabled={consoleConn !== "live" || !!viewingArchive || !consoleCommand.trim()}
                 className="px-4 py-2 rounded-lg bg-accentPurple/80 hover:bg-accentPurple disabled:bg-slate-800 disabled:text-slate-500 text-white text-xs font-bold transition-colors flex items-center gap-1.5"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -344,7 +523,9 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
                   <span className="text-red-400 ml-2">• {consoleCommandError}</span>
                 )}
               </span>
-              <span className="text-[10px] text-mutedText">{consoleLines.length} lines</span>
+              <span className="text-[10px] text-mutedText">
+                {viewingArchive ? `${archiveLines.length} archived lines` : `${consoleLines.length} lines`}
+              </span>
             </div>
 
           </div>

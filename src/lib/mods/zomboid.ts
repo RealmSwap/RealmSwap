@@ -35,6 +35,20 @@ function editIni(iniPath: string, edit: (content: string) => string): void {
   fs.writeFileSync(iniPath, edit(content));
 }
 
+/**
+ * Read both list keys: the workshop file IDs and the enabled mod IDs. The two
+ * lists cannot be re-paired from the ini alone (they are parallel, not
+ * interleaved), so callers get them as independent sets.
+ */
+export function readZomboidModLists(iniPath: string): { workshopIds: string[]; modIds: string[] } {
+  if (!fs.existsSync(iniPath)) return { workshopIds: [], modIds: [] };
+  const content = fs.readFileSync(iniPath, "utf-8");
+  return {
+    workshopIds: readList(content, "WorkshopItems"),
+    modIds: readList(content, "Mods"),
+  };
+}
+
 /** Register a workshop mod on both keys. Idempotent per id; safe on a missing ini. */
 export function addZomboidWorkshopMod(iniPath: string, workshopId: string, modId: string): void {
   editIni(iniPath, (content) => {
