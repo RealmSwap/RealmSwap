@@ -27,9 +27,4 @@ export interface ModProvider {
    * Search for mods compatible with the specified game.
    */
   search(query: string, game: string, options?: SearchOptions): Promise<ModSearchResult[]>;
-  
-  /**
-   * Given a package ID, return a fully recursive list of dependencies with full details.
-   */
-  resolveDependenciesFull?(packageId: string, version: string, game: string): Promise<ModSearchResult[]>;
 }

@@ -14,6 +14,10 @@ import {
 import {
   resolveInstallCandidate, fetchVersions, pickCompatibleVersion, primaryFile,
 } from "@/lib/mods/modrinth";
+import {
+  communityForGame, fetchCommunityIndex, findVersionEntry, newestVersion,
+  collectDependencies, extractThunderstorePackage,
+} from "@/lib/mods/thunderstore";
 import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
@@ -39,6 +43,7 @@ export async function POST(
       modType: z.enum(["STEAM_WORKSHOP", "MODRINTH", "BEPINEX", "THUNDERSTORE"]),
       modId: z.string().optional(),
       modName: z.string().optional(),
+      version: z.string().optional(),
       downloadUrl: z.string().url("Invalid download URL").optional(),
       workshopId: z.string().optional(),
     });
@@ -49,7 +54,7 @@ export async function POST(
       return NextResponse.json({ error: "Invalid mod installation parameters", details: parsed.error.format() }, { status: 400 });
     }
 
-    const { modType, modId, modName, downloadUrl, workshopId } = parsed.data;
+    const { modType, modId, modName, version, downloadUrl, workshopId } = parsed.data;
 
     const access = await verifyServerAccess(serverId, user.id, "ADMIN");
     if (!access) {
@@ -70,6 +75,7 @@ export async function POST(
 
     // Filled during install for the response and the audit log.
     let warnings: string[] = [];
+    let dependencyCount = 0;
 
     try {
       // 2. Perform Installation
@@ -197,14 +203,15 @@ export async function POST(
         });
 
       } else if (game === "VALHEIM") {
+        const valheimDir = path.join(serverRoot, "valheim-server");
+        if (!fs.existsSync(valheimDir)) {
+          throw new Error("Valheim server directory not found. Please start/install the server first.");
+        }
+
         if (modType === "BEPINEX") {
-          const valheimDir = path.join(serverRoot, "valheim-server");
+          // Core framework install only (official release zip).
           const zipPath = path.join(serverRoot, "bepinex.zip");
           const defaultBepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
-
-          if (!fs.existsSync(valheimDir)) {
-            throw new Error("Valheim server directory not found. Please start/install the server first.");
-          }
 
           await downloadFile(defaultBepInExUrl, zipPath);
           try {
@@ -215,20 +222,42 @@ export async function POST(
             throw new Error(`Failed to extract BepInEx: ${err.message}`);
           }
         } else {
-          if (!downloadUrl) {
-            throw new Error("Download URL is required for Valheim plugins.");
+          // Thunderstore package install. Everything — version, download URL
+          // and dependency graph — is resolved from the package index so the
+          // recorded rows describe what is actually on disk.
+          if (!modId) {
+            throw new Error("A Thunderstore package id is required for Valheim mods.");
           }
-          const valheimDir = path.join(serverRoot, "valheim-server");
-          const bepinexCheckFile = path.join(valheimDir, "doorstop_config.ini");
+          const community = communityForGame(game);
+          if (!community) {
+            throw new Error(`Mods are not supported for game: ${server.game}`);
+          }
+          const index = await fetchCommunityIndex(community);
+          const pkg = index.find((p) => p.full_name === modId);
+          if (!pkg) {
+            throw new Error(`Package '${modId}' not found on Thunderstore.`);
+          }
+          if (pkg.is_deprecated) {
+            warnings.push(`'${pkg.name}' is deprecated on Thunderstore — consider an alternative.`);
+          }
 
+          const requested = findVersionEntry(pkg, { versionNumber: version, downloadUrl });
+          const versionEntry = requested ?? newestVersion(pkg);
+          if (!versionEntry) {
+            throw new Error(`Package '${modId}' has no published versions.`);
+          }
+          if (!requested) {
+            warnings.push(
+              `Could not match the requested version of ${pkg.name} — installing ${versionEntry.version_number} (latest).`
+            );
+          }
+
+          // BepInEx core is a hard prerequisite for any plugin.
+          const bepinexCheckFile = path.join(valheimDir, "doorstop_config.ini");
           if (!fs.existsSync(bepinexCheckFile)) {
             console.log(`[Sandbox] BepInEx not found for server ${serverId}. Auto-installing core framework first...`);
             const zipPath = path.join(serverRoot, "bepinex.zip");
             const defaultBepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
-
-            if (!fs.existsSync(valheimDir)) {
-              fs.mkdirSync(valheimDir, { recursive: true });
-            }
 
             await downloadFile(defaultBepInExUrl, zipPath);
             try {
@@ -263,23 +292,62 @@ export async function POST(
             fs.mkdirSync(pluginsDir, { recursive: true });
           }
 
-          // Thunderstore packages ship as zips; extract into a per-mod folder.
-          if (downloadUrl.endsWith(".zip")) {
-            const tempZip = safeJoin(pluginsDir, `${modId}.zip`);
-            await downloadFile(downloadUrl, tempZip);
-            try {
-              const modDestDir = safeJoin(pluginsDir, modId || "plugin");
-              if (!fs.existsSync(modDestDir)) fs.mkdirSync(modDestDir, { recursive: true });
-              const zip = new AdmZip(tempZip);
-              zip.extractAllTo(modDestDir, true);
-              try { fs.unlinkSync(tempZip); } catch (_) {}
-            } catch (err: any) {
-              throw new Error(`Failed to extract plugin archive: ${err.message}`);
-            }
-          } else {
-            const filename = modId ? `${modId}.dll` : path.basename(downloadUrl) || "plugin.dll";
-            await downloadFile(downloadUrl, safeJoin(pluginsDir, filename));
+          // Required dependencies first, skipping anything already installed.
+          // Unresolvable deps warn (the mod may misbehave) instead of failing
+          // the whole install.
+          const installedIds = new Set(
+            (await prisma.modInstallation.findMany({ where: { serverId }, select: { packageId: true } }))
+              .map((m) => m.packageId)
+          );
+          const { order: depOrder, missing } = collectDependencies(
+            { packageId: modId, version: versionEntry },
+            (id) => index.find((p) => p.full_name === id) ?? null,
+            (id) => installedIds.has(id)
+          );
+          for (const depString of missing) {
+            warnings.push(
+              `Dependency ${depString} could not be resolved — the mod may not work without it.`
+            );
           }
+
+          const installPackage = async (
+            packageId: string,
+            name: string,
+            versionNumber: string,
+            url: string,
+            dependenciesJson?: string
+          ) => {
+            const tempZip = safeJoin(pluginsDir, `.${packageId}.staging.zip`);
+            await downloadFile(url, tempZip);
+            try {
+              const zip = new AdmZip(tempZip);
+              const modDestDir = safeJoin(pluginsDir, packageId);
+              fs.rmSync(modDestDir, { recursive: true, force: true });
+              extractThunderstorePackage(zip, modDestDir);
+            } finally {
+              try { fs.unlinkSync(tempZip); } catch (_) {}
+            }
+            await prisma.modInstallation.upsert({
+              where: { serverId_provider_packageId: { serverId, provider: "thunderstore", packageId } },
+              update: { version: versionNumber, name, ...(dependenciesJson ? { dependencies: dependenciesJson } : {}) },
+              create: {
+                serverId, provider: "thunderstore", packageId,
+                version: versionNumber, name, ...(dependenciesJson ? { dependencies: dependenciesJson } : {}),
+              },
+            });
+          };
+
+          for (const dep of depOrder) {
+            await installPackage(dep.packageId, dep.name, dep.version, dep.downloadUrl);
+          }
+          dependencyCount = depOrder.length;
+          await installPackage(
+            modId,
+            modName || pkg.name,
+            versionEntry.version_number,
+            versionEntry.download_url,
+            JSON.stringify(depOrder.map((d) => d.packageId))
+          );
         }
 
       } else if (game === "ZOMBOID") {
@@ -344,8 +412,12 @@ export async function POST(
 
       return NextResponse.json({
         success: true,
-        message: "Mod installed successfully and passed sandbox testing.",
+        message:
+          dependencyCount > 0
+            ? `Mod + ${dependencyCount} ${dependencyCount === 1 ? "dependency" : "dependencies"} installed successfully and passed sandbox testing.`
+            : "Mod installed successfully and passed sandbox testing.",
         warnings,
+        dependencyCount,
       });
 
     } catch (installError: any) {
