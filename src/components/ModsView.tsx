@@ -306,6 +306,13 @@ const RECOMMENDED_MODS: Record<string, any[]> = {
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
+const LOADER_LABELS: Record<string, string> = {
+  fabric: "Fabric",
+  quilt: "Quilt",
+  forge: "Forge",
+  neoforge: "NeoForge",
+};
+
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -486,9 +493,9 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     return "THUNDERSTORE";
   };
 
-  const handleInstallLoader = async (loader: "fabric" | "forge" | "neoforge") => {
+  const handleInstallLoader = async (loader: "fabric" | "quilt" | "forge" | "neoforge") => {
     if (!selectedServer) return;
-    const label = loader === "neoforge" ? "NeoForge" : loader === "forge" ? "Forge" : "Fabric";
+    const label = LOADER_LABELS[loader];
     setLoaderBusy(true);
     try {
       const res = await fetch(`/api/servers/${selectedServer.id}/mods/loader`, {
@@ -1120,8 +1127,8 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                     </span>
                     <div className="text-xs text-slate-400 leading-normal space-y-3">
                       <p>
-                        💡 <strong>Mod loaders:</strong> Fabric, Forge, and
-                        NeoForge mods need their loader installed first — a
+                        💡 <strong>Mod loaders:</strong> Fabric, Quilt, Forge,
+                        and NeoForge mods need their loader installed first — a
                         vanilla server silently ignores the mods/ folder.
                       </p>
                       <p>
@@ -1435,7 +1442,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                     <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300">
                       <Check className="w-4 h-4" />
                       <span className="font-bold">
-                        {loaderInfo.loader.type === "neoforge" ? "NeoForge" : loaderInfo.loader.type === "forge" ? "Forge" : "Fabric"}{" "}
+                        {LOADER_LABELS[loaderInfo.loader.type] || loaderInfo.loader.type}{" "}
                         {loaderInfo.loader.loaderVersion} active (Minecraft {loaderInfo.loader.minecraftVersion}) — jars in mods/ load on boot.
                       </span>
                     </div>
@@ -1445,14 +1452,14 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                         This is a vanilla server — mods won't load until you install a mod loader.
                       </span>
                       <div className="flex items-center gap-2">
-                        {(["fabric", "forge", "neoforge"] as const).map((l) => (
+                        {(["fabric", "quilt", "forge", "neoforge"] as const).map((l) => (
                           <button
                             key={l}
                             onClick={() => handleInstallLoader(l)}
                             disabled={loaderBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
                             className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-amber-200 font-bold transition-colors disabled:opacity-50"
                           >
-                            Install {l === "neoforge" ? "NeoForge" : l === "forge" ? "Forge" : "Fabric"}
+                            Install {LOADER_LABELS[l]}
                           </button>
                         ))}
                       </div>

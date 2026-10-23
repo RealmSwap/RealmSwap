@@ -17,6 +17,8 @@ import { dataRoot as defaultDataRoot } from "../appPaths";
  *
  * - Fabric: download `fabric-server-launch.jar` from the official meta API; the
  *   vanilla `server.jar` is swapped for it at launch.
+ * - Quilt: run the official installer headlessly; it leaves
+ *   `quilt-server-launch.jar`, which swaps in the same way.
  * - Forge / NeoForge: download the official installer jar and run it headless
  *   (`--installServer`). Modern (1.17+) installs must launch through the args
  *   file the installer writes (`@libraries/.../win_args.txt`), legacy Forge
@@ -43,6 +45,7 @@ export interface LoaderMarker {
 
 const MARKER_FILE = "realmswap-loader.json";
 const FABRIC_META = "https://meta.fabricmc.net/v2";
+const QUILT_META = "https://meta.quiltmc.org/v3";
 const FORGE_PROMOTIONS = "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json";
 const FORGE_MAVEN = "https://maven.minecraftforge.net";
 const NEOFORGE_MAVEN = "https://maven.neoforged.net";
@@ -272,23 +275,21 @@ export interface InstallerDeps {
   download?: (url: string, dest: string) => Promise<void>;
   ensureJava?: (major: number) => Promise<string>;
   runInstaller?: (javaExe: string, installerPath: string, installDir: string, opts: { modern: boolean }) => Promise<void>;
+  /** Run `java <args>` in cwd — used by installers whose CLI isn't `--installServer` (Quilt). */
+  runProcess?: (javaExe: string, args: string[], cwd: string) => Promise<void>;
+  exists?: (p: string) => boolean;
 }
 
 const INSTALLER_TIMEOUT_MS = 10 * 60 * 1000;
 
-function defaultRunInstaller(
+function runJavaProcess(
   javaExe: string,
-  installerPath: string,
-  installDir: string,
-  modern: boolean,
+  args: string[],
+  cwd: string,
   onLog: (msg: string) => void
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Modern Forge/NeoForge installers take the target dir; legacy Forge
-    // (MC ≤1.16) treats --installServer as a bare flag and uses its cwd.
-    const args = ["-jar", path.basename(installerPath), "--installServer"];
-    if (modern) args.push(installDir);
-    const child = spawn(javaExe, args, { cwd: installDir, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(javaExe, args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
     let output = "";
     const timer = setTimeout(() => {
       child.kill("SIGKILL");
@@ -320,6 +321,20 @@ function defaultRunInstaller(
       else reject(new Error(`Loader installer exited with code ${code}: ${output.slice(-400)}`));
     });
   });
+}
+
+function defaultRunInstaller(
+  javaExe: string,
+  installerPath: string,
+  installDir: string,
+  modern: boolean,
+  onLog: (msg: string) => void
+): Promise<void> {
+  // Modern Forge/NeoForge installers take the target dir; legacy Forge
+  // (MC ≤1.16) treats --installServer as a bare flag and uses its cwd.
+  const args = ["-jar", path.basename(installerPath), "--installServer"];
+  if (modern) args.push(installDir);
+  return runJavaProcess(javaExe, args, installDir, onLog);
 }
 
 /**
@@ -409,6 +424,91 @@ export async function installFabricServer(
   };
   writeLoaderMarker(installDir, marker);
   onLog(`Fabric ${loaderVersion} installed for Minecraft ${minecraftVersion}.`);
+  return marker;
+}
+
+export interface InstallQuiltOpts {
+  /** Pack/collection-pinned quilt-loader version; when omitted the newest is used. */
+  pinnedVersion?: string;
+  onLog?: (msg: string) => void;
+}
+
+/**
+ * Install the Quilt server launcher for the given Minecraft version: the
+ * official installer runs headlessly (`install server <mc> [<loader>]
+ * --install-dir=<dir>`) and leaves `quilt-server-launch.jar`, which replaces
+ * `server.jar` in the launch command exactly like Fabric's launcher. The
+ * vanilla server.jar is left alone (no --download-server).
+ */
+export async function installQuiltServer(
+  installDir: string,
+  minecraftVersion: string,
+  opts: InstallQuiltOpts = {},
+  deps: InstallerDeps = {}
+): Promise<LoaderMarker> {
+  const onLog = opts.onLog ?? (() => {});
+  const fetchJsonDep = deps.fetchJson ?? fetchJson;
+  const download = deps.download ?? ((url: string, dest: string) => downloadFile(url, dest));
+  const ensureJavaDep =
+    deps.ensureJava ??
+    ((major: number) => ensureJava(major, { dataRoot: defaultDataRoot(), onLog }));
+  const runProcess =
+    deps.runProcess ?? ((javaExe, args, cwd) => runJavaProcess(javaExe, args, cwd, onLog));
+  const exists = deps.exists ?? ((p: string) => fs.existsSync(p));
+
+  onLog(`Resolving Quilt loader for Minecraft ${minecraftVersion}…`);
+  const loaders: any[] = await fetchJsonDep(`${QUILT_META}/versions/loader/${encodeURIComponent(minecraftVersion)}`);
+  let loaderVersion: string | null = opts.pinnedVersion ?? loaders[0]?.loader?.version ?? null;
+  if (!loaderVersion) throw new Error(`No Quilt loader available for Minecraft ${minecraftVersion}`);
+  if (opts.pinnedVersion && !loaders.some((l) => l?.loader?.version === opts.pinnedVersion)) {
+    throw new Error(`Quilt loader ${opts.pinnedVersion} is not available for Minecraft ${minecraftVersion}.`);
+  }
+
+  onLog("Resolving Quilt installer version…");
+  const installers: any[] = await fetchJsonDep(`${QUILT_META}/versions/installer`);
+  const installerVersion: string | undefined = installers[0]?.version;
+  const installerUrl: string | undefined = installers[0]?.url;
+  if (!installerVersion || !installerUrl) throw new Error("No Quilt installer version available");
+
+  const installerName = `quilt-installer-${installerVersion}.jar`;
+  const installerPath = path.join(installDir, installerName);
+  onLog("Downloading Quilt installer…");
+  await download(installerUrl, installerPath);
+
+  // The installer itself needs a modern JVM even when the server it sets up
+  // targets an old Minecraft version.
+  const javaMajor = Math.max(javaMajorForMinecraft(minecraftVersion), 17);
+  const javaExe = await ensureJavaDep(javaMajor);
+  onLog(`Running Quilt installer with Java ${javaMajor}…`);
+  try {
+    await runProcess(
+      javaExe,
+      ["-jar", installerName, "install", "server", minecraftVersion, loaderVersion, `--install-dir=${installDir}`],
+      installDir
+    );
+  } finally {
+    try {
+      fs.unlinkSync(installerPath);
+    } catch {
+      // installer already cleaned up or never fully written — snapshot restore covers it
+    }
+  }
+
+  if (!exists(path.join(installDir, "quilt-server-launch.jar"))) {
+    throw new Error(
+      "The Quilt installer completed but produced no quilt-server-launch.jar. Installation rolled back."
+    );
+  }
+
+  const marker: LoaderMarker = {
+    type: "quilt",
+    loaderVersion,
+    minecraftVersion,
+    installedAt: new Date().toISOString(),
+    launch: { kind: "jar", file: "quilt-server-launch.jar" },
+  };
+  writeLoaderMarker(installDir, marker);
+  onLog(`Quilt ${loaderVersion} installed for Minecraft ${minecraftVersion}.`);
   return marker;
 }
 

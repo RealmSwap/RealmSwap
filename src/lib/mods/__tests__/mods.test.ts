@@ -8,6 +8,7 @@ import {
   javaMajorForMinecraft, pickForgeVersion, forgeArtifact, forgeInstallerUrl,
   neoforgeStreamFor, pickNeoforgeVersion, neoforgeInstallerUrl,
   applyLoaderLaunch, findLoaderLaunch, installForgeServer, installNeoForgeServer,
+  installQuiltServer,
 } from "../mcLoaders";
 import {
   pickCompatibleVersion, primaryFile, collectRequiredDependencies,
@@ -324,6 +325,95 @@ describe("installer flows (dependency-injected)", () => {
   });
 });
 
+describe("Quilt installer flow (dependency-injected)", () => {
+  const quiltDeps = (effects: {
+    loaderVersions?: string[];
+    produceLaunchJar?: boolean;
+  } = {}) => {
+    const argsSeen: string[][] = [];
+    const javaMajors: number[] = [];
+    const installDir = path.join(dir, `quilt-${Math.random().toString(36).slice(2)}`);
+    fs.mkdirSync(installDir, { recursive: true });
+    return {
+      installDir,
+      argsSeen,
+      javaMajors,
+      deps: {
+        fetchJson: async (url: string) => {
+          if (url.includes("/versions/loader/")) {
+            return (effects.loaderVersions ?? ["0.20.0-beta.9", "0.19.2"])
+              .map((v) => ({ loader: { version: v } }));
+          }
+          if (url.endsWith("/versions/installer")) {
+            return [{ version: "0.15.1", url: "https://maven.quiltmc.org/quilt-installer-0.15.1.jar" }];
+          }
+          throw new Error(`unexpected fetch: ${url}`);
+        },
+        download: async (_url: string, dest: string) => fs.writeFileSync(dest, "installer-jar"),
+        ensureJava: async (major: number) => {
+          javaMajors.push(major);
+          return `/fake/java-${major}/bin/java`;
+        },
+        runProcess: async (_javaExe: string, args: string[], _cwd: string) => {
+          argsSeen.push(args);
+          if (effects.produceLaunchJar !== false) {
+            fs.writeFileSync(path.join(installDir, "quilt-server-launch.jar"), "launch");
+          }
+        },
+      },
+    };
+  };
+
+  it("installs via the official installer CLI and records the jar-swap marker", async () => {
+    const { installDir, deps, argsSeen, javaMajors } = quiltDeps();
+    const marker = await installQuiltServer(installDir, "1.20.4", {}, deps);
+    expect(marker).toMatchObject({
+      type: "quilt",
+      loaderVersion: "0.20.0-beta.9",
+      minecraftVersion: "1.20.4",
+      launch: { kind: "jar", file: "quilt-server-launch.jar" },
+    });
+    expect(readLoaderMarker(installDir)).toMatchObject(marker);
+    expect(argsSeen[0]).toEqual([
+      "-jar", "quilt-installer-0.15.1.jar",
+      "install", "server", "1.20.4", "0.20.0-beta.9",
+      `--install-dir=${installDir}`,
+    ]);
+    expect(javaMajors).toEqual([17]); // 1.20.4 needs Java 17
+    expect(fs.readdirSync(installDir).filter((f) => f.startsWith("quilt-installer-"))).toEqual([]); // cleaned up
+  });
+
+  it("honors a pinned loader version and rejects one that doesn't exist", async () => {
+    const pinned = quiltDeps();
+    const marker = await installQuiltServer(pinned.installDir, "1.20.4", { pinnedVersion: "0.19.2" }, pinned.deps);
+    expect(marker.loaderVersion).toBe("0.19.2");
+    expect(pinned.argsSeen[0][5]).toBe("0.19.2");
+
+    const bad = quiltDeps();
+    await expect(
+      installQuiltServer(bad.installDir, "1.20.4", { pinnedVersion: "0.99.0" }, bad.deps)
+    ).rejects.toThrow(/not available/);
+  });
+
+  it("runs the installer on a modern JVM even for old Minecraft servers", async () => {
+    const old = quiltDeps();
+    await installQuiltServer(old.installDir, "1.16.5", {}, old.deps);
+    expect(old.javaMajors).toEqual([17]);
+  });
+
+  it("fails when the installer produced no quilt-server-launch.jar", async () => {
+    const silent = quiltDeps({ produceLaunchJar: false });
+    await expect(installQuiltServer(silent.installDir, "1.20.4", {}, silent.deps)).rejects.toThrow(
+      /no quilt-server-launch\.jar/
+    );
+  });
+
+  it("refuses Minecraft versions with no Quilt loader", async () => {
+    const none = quiltDeps({ loaderVersions: [] });
+    await expect(installQuiltServer(none.installDir, "1.19.4", {}, none.deps)).rejects.toThrow(/No Quilt loader/);
+  });
+});
+
 function version(partial: Partial<ModrinthVersion> & { id: string; project_id: string }): ModrinthVersion {
   return {
     version_number: "1.0.0",
@@ -340,11 +430,22 @@ describe("modrinth helpers", () => {
     const versions = [
       version({ id: "v3", project_id: "p", version_number: "3.0.0", game_versions: ["1.21"], loaders: ["fabric"] }),
       version({ id: "v2", project_id: "p", version_number: "2.0.0", game_versions: ["1.20.4"], loaders: ["fabric"] }),
-      version({ id: "v1", project_id: "p", version_number: "1.0.0", game_versions: ["1.20.4"], loaders: ["forge"] }),
+      version({ id: "v1", project_id: "p", version_number: "1.0.0", game_versions: ["1.20.4", "1.21"], loaders: ["fabric"] }),
     ];
     expect(pickCompatibleVersion(versions, { gameVersion: "1.20.4", loader: "fabric" })?.version_number).toBe("2.0.0");
     expect(pickCompatibleVersion(versions, {})?.version_number).toBe("3.0.0"); // no constraints → newest
     expect(pickCompatibleVersion(versions, { loader: "quilt" })).toBeNull();
+  });
+
+  it("honors an exact pinned version number over compatibility order", () => {
+    const versions = [
+      version({ id: "v3", project_id: "p", version_number: "3.0.0", game_versions: ["1.21"], loaders: ["fabric"] }),
+      version({ id: "v2", project_id: "p", version_number: "2.0.0", game_versions: ["1.20.4"], loaders: ["fabric"] }),
+    ];
+    // the pin wins even though a newer version matches the game version
+    expect(pickCompatibleVersion(versions, { gameVersion: "1.21", versionNumber: "2.0.0" })?.version_number).toBe("2.0.0");
+    // an unknown pin falls back to the newest compatible version
+    expect(pickCompatibleVersion(versions, { gameVersion: "1.21", versionNumber: "9.9.9" })?.version_number).toBe("3.0.0");
   });
 
   it("prefers the primary file", () => {

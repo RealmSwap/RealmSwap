@@ -9,7 +9,7 @@ import { testServerBoot } from "@/lib/runners/sandbox";
 import { downloadFile } from "@/lib/download";
 import {
   readLoaderMarker, detectMinecraftVersion,
-  installFabricServer, installForgeServer, installNeoForgeServer,
+  installFabricServer, installForgeServer, installNeoForgeServer, installQuiltServer,
 } from "@/lib/mods/mcLoaders";
 import {
   readMrpackIndex, safePackPath, selectServerFiles, verifyFileHash,
@@ -19,13 +19,16 @@ import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
 
+const LOADER_LABELS: Record<string, string> = {
+  fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
+};
+
 // POST /api/servers/[id]/mods/import-modpack
 // Body: multipart form with a `modpack` file in Modrinth .mrpack format.
 //
 // Same safety contract as single-mod installs: snapshot -> download + hash
 // verify every manifest file -> apply overrides -> sandbox boot test ->
-// automatic rollback on any failure. Packs pinning Forge or Quilt loaders are
-// refused with a clear error rather than installed broken.
+// automatic rollback on any failure.
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -87,17 +90,11 @@ export async function POST(
     }
 
     const loader = loaderRequirement(index);
-    if (loader?.type === "quilt") {
-      return NextResponse.json(
-        { error: `This pack requires the Quilt loader (v${loader.version}). Quilt server installation isn't supported yet.` },
-        { status: 400 }
-      );
-    }
     if (loader) {
       const existing = readLoaderMarker(serverRoot);
       if (existing && existing.type !== loader.type) {
-        const want = loader.type === "neoforge" ? "NeoForge" : loader.type === "forge" ? "Forge" : "Fabric";
-        const have = existing.type === "neoforge" ? "NeoForge" : existing.type === "forge" ? "Forge" : "Fabric";
+        const want = LOADER_LABELS[loader.type];
+        const have = LOADER_LABELS[existing.type];
         return NextResponse.json(
           { error: `This pack requires the ${want} loader, but the server already runs ${have}. Import it onto a vanilla server (or one already running ${want}).` },
           { status: 400 }
@@ -112,7 +109,7 @@ export async function POST(
 
     try {
       // Packs that pin a loader: install it first, exactly like the explicit
-      // "Install Loader" flow (Quilt packs were refused in pre-flight above).
+      // "Install Loader" flow.
       if (loader) {
         const marker = readLoaderMarker(serverRoot);
         if (!marker || marker.type !== loader.type) {
@@ -121,12 +118,13 @@ export async function POST(
             await installFabricServer(serverRoot, serverMcVersion, onLog);
           } else if (loader.type === "forge") {
             await installForgeServer(serverRoot, serverMcVersion, { pinnedVersion: loader.version, onLog });
+          } else if (loader.type === "quilt") {
+            await installQuiltServer(serverRoot, serverMcVersion, { pinnedVersion: loader.version, onLog });
           } else {
             await installNeoForgeServer(serverRoot, serverMcVersion, { pinnedVersion: loader.version, onLog });
           }
         } else if (marker.loaderVersion !== loader.version) {
-          const name = loader.type === "neoforge" ? "NeoForge" : loader.type === "forge" ? "Forge" : "Fabric";
-          warnings.push(`Pack pins ${name} loader ${loader.version}; server has ${marker.loaderVersion}.`);
+          warnings.push(`Pack pins ${LOADER_LABELS[loader.type]} loader ${loader.version}; server has ${marker.loaderVersion}.`);
         }
       }
 

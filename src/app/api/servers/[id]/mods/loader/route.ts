@@ -7,9 +7,14 @@ import { dataRoot } from "@/lib/appPaths";
 import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
 import { testServerBoot } from "@/lib/runners/sandbox";
 import {
-  detectMinecraftVersion, installFabricServer, installForgeServer, installNeoForgeServer, readLoaderMarker,
+  detectMinecraftVersion, installFabricServer, installForgeServer, installNeoForgeServer,
+  installQuiltServer, readLoaderMarker,
 } from "@/lib/mods/mcLoaders";
 import path from "path";
+
+const LOADER_LABELS: Record<string, string> = {
+  fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
+};
 
 // GET: current loader state for the Mod Manager UI.
 export async function GET(
@@ -56,10 +61,10 @@ export async function POST(
       return NextResponse.json({ error: "Stop the server before installing a mod loader." }, { status: 400 });
     }
 
-    const bodySchema = z.object({ loader: z.enum(["fabric", "forge", "neoforge"]) });
+    const bodySchema = z.object({ loader: z.enum(["fabric", "quilt", "forge", "neoforge"]) });
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
-    const loaderName = parsed.data.loader === "neoforge" ? "NeoForge" : parsed.data.loader === "forge" ? "Forge" : "Fabric";
+    const loaderName = LOADER_LABELS[parsed.data.loader];
 
     const installDir = path.join(dataRoot(), "local-servers", serverId);
     const minecraftVersion = detectMinecraftVersion(installDir);
@@ -74,9 +79,8 @@ export async function POST(
     // pre-loader snapshot instead of layering loaders on top of each other.
     const existing = readLoaderMarker(installDir);
     if (existing && existing.type !== parsed.data.loader) {
-      const existingName = existing.type === "neoforge" ? "NeoForge" : existing.type === "forge" ? "Forge" : "Fabric";
       return NextResponse.json(
-        { error: `This server already runs the ${existingName} loader. To switch loaders, restore a snapshot from before it was installed (Backups), then install ${loaderName}.` },
+        { error: `This server already runs the ${LOADER_LABELS[existing.type]} loader. To switch loaders, restore a snapshot from before it was installed (Backups), then install ${loaderName}.` },
         { status: 400 }
       );
     }
@@ -89,6 +93,8 @@ export async function POST(
         marker = await installForgeServer(installDir, minecraftVersion, { onLog });
       } else if (parsed.data.loader === "neoforge") {
         marker = await installNeoForgeServer(installDir, minecraftVersion, { onLog });
+      } else if (parsed.data.loader === "quilt") {
+        marker = await installQuiltServer(installDir, minecraftVersion, { onLog });
       } else {
         marker = await installFabricServer(installDir, minecraftVersion, onLog);
       }

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
+import { dataRoot } from "@/lib/appPaths";
+import { readLoaderMarker } from "@/lib/mods/mcLoaders";
+import path from "path";
 
 export async function GET(
   req: NextRequest,
@@ -17,17 +20,28 @@ export async function GET(
 
     const mods = await prisma.modInstallation.findMany({
       where: { serverId },
-      select: { provider: true, packageId: true, name: true }
+      select: { provider: true, packageId: true, name: true, version: true, workshopModId: true }
     });
 
     if (mods.length === 0) {
       return NextResponse.json({ error: "No mods installed to export." }, { status: 400 });
     }
 
+    // Loader state so a Minecraft collection can recreate the server it came
+    // from — jars in mods/ are a silent no-op without it.
+    let loader: { type: string; loaderVersion: string; minecraftVersion: string } | null = null;
+    if (access.server.game.toUpperCase() === "MINECRAFT") {
+      const marker = readLoaderMarker(path.join(dataRoot(), "local-servers", serverId));
+      if (marker) {
+        loader = { type: marker.type, loaderVersion: marker.loaderVersion, minecraftVersion: marker.minecraftVersion };
+      }
+    }
+
     const payload = {
       name: `${access.server.name} Mod Collection`,
       game: access.server.game,
       createdAt: new Date().toISOString(),
+      ...(loader ? { loader } : {}),
       mods: mods
     };
 
