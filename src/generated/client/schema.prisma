@@ -77,6 +77,8 @@ model Server {
   sftpPort         Int? // Assigned SFTP port (typically 2022+id)
   tunnelEnabled    Boolean              @default(false)
   tunnelUrl        String? // playit.gg tunnel URL (e.g., xxx.auto.playit.gg:12345)
+  tunnelClaimUrl   String? // playit agent claim link while the agent is unclaimed
+  tunnelPid        Int? // OS pid of the spawned playit agent, for orphan cleanup on boot
   enableUpnp       Boolean              @default(false) // Trigger router port mapping
   autoUpdate       Boolean              @default(false) // Nightly SteamCMD update while the server is stopped
   autoUpdateHour   Int                  @default(4) // Local hour (0-23) of the nightly update window

@@ -169,6 +169,8 @@ exports.Prisma.ServerScalarFieldEnum = {
   sftpPort: 'sftpPort',
   tunnelEnabled: 'tunnelEnabled',
   tunnelUrl: 'tunnelUrl',
+  tunnelClaimUrl: 'tunnelClaimUrl',
+  tunnelPid: 'tunnelPid',
   enableUpnp: 'enableUpnp',
   autoUpdate: 'autoUpdate',
   autoUpdateHour: 'autoUpdateHour',

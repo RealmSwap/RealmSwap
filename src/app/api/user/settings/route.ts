@@ -10,15 +10,21 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { discordId } = body;
 
-    // Optional: add validation here if needed
+    // discordId is intentionally NOT writable here: User.discordId is what
+    // the Discord bot resolves accounts by, so a raw write would let anyone
+    // squat another person's identity (and block their real link). The only
+    // path is the bot's /link code flow -> /api/user/discord-link.
+    if ("discordId" in body) {
+      return NextResponse.json(
+        { error: "Discord can only be linked via the bot: type /link in Discord and enter the code here." },
+        { status: 400 }
+      );
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: {
-        discordId: discordId ? discordId.trim() : null,
-      },
+      data: {},
     });
 
     return NextResponse.json({ success: true, user: updatedUser });

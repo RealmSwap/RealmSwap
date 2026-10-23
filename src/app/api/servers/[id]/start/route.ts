@@ -35,7 +35,8 @@ export async function POST(
             await runner.start(server, null);
             if (server.tunnelEnabled) {
               const { startTunnel } = await import("@/lib/tunnels");
-              startTunnel(server.id, server.port);
+              const tunnelResult = await startTunnel(server.id, server.port);
+              if (!tunnelResult.ok) console.error(`[Tunnel] Auto-start after update failed for ${server.id}: ${tunnelResult.error}`);
             }
           } catch (err) {
             console.error(`Auto-update/start failed for ${server.id}:`, err);
@@ -60,9 +61,11 @@ export async function POST(
       });
 
       if (server.tunnelEnabled) {
-        // dynamic import or just standard import. Let's add import at the top.
         const { startTunnel } = await import("@/lib/tunnels");
-        startTunnel(server.id, server.port);
+        const tunnelResult = await startTunnel(server.id, server.port);
+        if (!tunnelResult.ok) {
+          console.error(`[Tunnel] Failed to start for ${server.id}: ${tunnelResult.error}`);
+        }
       }
 
       return NextResponse.json(updated);

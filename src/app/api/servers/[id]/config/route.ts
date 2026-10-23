@@ -52,7 +52,10 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const access = await verifyServerAccess(params.id, user.id);
+    // Config files can embed credentials (e.g. rcon.password in
+    // server.properties), so reading them sits behind the same ADMIN gate as
+    // the dedicated secrets route.
+    const access = await verifyServerAccess(params.id, user.id, "ADMIN");
     if (!access) {
       return NextResponse.json({ error: "Server not found" }, { status: 404 });
     }

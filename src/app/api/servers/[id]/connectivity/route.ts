@@ -4,7 +4,8 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { parseSpec } from "@/lib/definitions/serialize";
 import { runConnectivityChecks } from "@/lib/connectivityCheck";
-import { getPublicIP } from "@/lib/upnp";
+import { advertisedGameAddress } from "@/lib/advertisedAddress";
+import { isTunnelAlive } from "@/lib/tunnels";
 
 // GET: everything the "Connection" dialog needs in one round trip —
 // the shareable invite details and a friends-can't-join diagnosis.
@@ -29,18 +30,28 @@ export async function GET(
     if (!def) return NextResponse.json({ error: "Unsupported game" }, { status: 400 });
 
     const report = await runConnectivityChecks(server, parseSpec(def.spec));
-    const publicIp = await getPublicIP().catch(() => null);
+    const tunnelAlive = isTunnelAlive(server.id);
 
     return NextResponse.json({
       report,
       invite: {
         gameDisplayName: def.displayName,
         serverName: server.name,
-        // The address friends type: public IP when the host is reachable that
-        // way, the LAN address otherwise (same machine / same network).
-        address: publicIp ? `${publicIp}:${server.port}` : `${server.ipAddress}:${server.port}`,
+        // The address friends type: tunnel when one is live (works behind
+        // CGNAT), otherwise the server's recorded address (public IP when
+        // direct access works, LAN otherwise).
+        address: advertisedGameAddress(server, tunnelAlive),
         password: server.password ?? "",
         inviteCode: server.inviteCode ?? null,
+      },
+      tunnel: {
+        enabled: server.tunnelEnabled,
+        url: server.tunnelUrl ?? null,
+        claimUrl: server.tunnelClaimUrl ?? null,
+        // The playit agent must be claimed and its port bound on the playit
+        // dashboard before it forwards anything — "url set" alone is not
+        // "friends can join".
+        alive: tunnelAlive,
       },
     });
   } catch (error: any) {

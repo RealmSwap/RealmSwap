@@ -51,7 +51,10 @@ export async function syncServerPlayers(serverId: string) {
     if (access.isWhitelisted) {
       whitelistedPlayers.push({ access, player: access.player });
     }
-    if (access.serverRole === "ADMIN" || access.serverRole === "MODERATOR" || access.player.roles?.includes("ADMIN")) {
+    // Exact token match — a substring test made roles like "NOT_ADMIN"
+    // grant Minecraft OP (level 4).
+    const playerRoles = (access.player.roles || "").split(",").map((r: string) => r.trim());
+    if (access.serverRole === "ADMIN" || access.serverRole === "MODERATOR" || playerRoles.includes("ADMIN")) {
       ops.push({ access, player: access.player });
     }
   }

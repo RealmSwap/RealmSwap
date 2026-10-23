@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { findAuthorizedServer } from "../utils/auth";
+import { advertisedGameAddress } from "../../lib/advertisedAddress";
 
 export default {
   data: new SlashCommandBuilder()
@@ -20,12 +21,16 @@ export default {
       return interaction.reply({ content: error, ephemeral: true });
     }
 
+    // The bot process can't see the API process's live agent map, so tunnel
+    // liveness here is the DB flag (cleared on agent exit and app boot).
+    const address = advertisedGameAddress(server, !!server.tunnelUrl);
+
     const embed = new EmbedBuilder()
       .setColor(0x8B5CF6)
       .setTitle(`Join ${server.name}`)
       .setDescription(server.status === "RUNNING" ? "🟢 **Online**" : "🔴 **Offline**")
       .addFields(
-        { name: "Address", value: `\`${server.ipAddress || "localhost"}\``, inline: true },
+        { name: "Address", value: `\`${address}\``, inline: true },
         { name: "Port", value: `\`${server.port}\``, inline: true }
       );
 
@@ -39,6 +44,8 @@ export default {
       embed.addFields({ name: "Password", value: `None`, inline: false });
     }
 
-    await interaction.reply({ embeds: [embed] });
+    // Ephemeral: the embed carries the server password and the full
+    // RealmSync invite secret — neither belongs in the public channel.
+    await interaction.reply({ embeds: [embed], ephemeral: true });
   },
 };

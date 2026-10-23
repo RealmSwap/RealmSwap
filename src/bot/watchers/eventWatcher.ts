@@ -1,5 +1,6 @@
 import { Client, TextChannel } from "discord.js";
 import { prisma } from "../../lib/db";
+import { advertisedGameAddress } from "../../lib/advertisedAddress";
 
 export function startEventWatcher(client: Client) {
   setInterval(async () => {
@@ -29,10 +30,9 @@ export function startEventWatcher(client: Client) {
           const roster: string[] = JSON.parse(event.roster);
           const mentions = roster.map(id => `<@${id}>`).join(" ");
           
-          let joinInfo = `\`${event.server.ipAddress}:${event.server.port}\``;
-          if (event.server.inviteCode) {
-            joinInfo += `\n**Invite Code:** \`${event.server.inviteCode}\``;
-          }
+          // Public channel post: the address only — the invite code is a
+          // credential and travels per-member via /join (ephemeral).
+          const joinInfo = `\`${advertisedGameAddress(event.server, !!event.server.tunnelUrl)}\``;
 
           await (channel as TextChannel).send({
             content: `⏰ **It's almost time!**\n${mentions}\n\nThe planned session **"${event.title}"** for **${event.server.name}** is starting in 15 minutes!\n\n🚀 *Automatically booting up the server now...*\n\n**Join Info:**\n${joinInfo}`
@@ -40,9 +40,10 @@ export function startEventWatcher(client: Client) {
         }
 
         // Trigger server start by calling our internal API action endpoint
-        // Using the same Bearer token logic we use for bot commands
-        const fetch = require("node-fetch");
-        const TOKEN = process.env.DISCORD_BOT_TOKEN;
+        // Using the same Bearer token logic we use for bot commands.
+        // (Node 18+ global fetch — a `require("node-fetch")` here threw
+        // because that package isn't installed, so auto-start never ran.)
+        const TOKEN = process.env.BOT_API_SECRET || process.env.DISCORD_BOT_TOKEN;
         const PORT = process.env.PORT || "3000";
         
         try {

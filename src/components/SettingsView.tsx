@@ -38,21 +38,9 @@ export function SettingsView({ user }: { user: any }) {
   };
 
   const handleSave = async (e: React.FormEvent) => {
+    // Discord linking happens exclusively through the Link Account button
+    // (the bot's /link code flow) — there is no raw discordId save anymore.
     e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch("/api/user/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ discordId }),
-      });
-      if (!res.ok) throw new Error("Failed to save settings");
-      toast.success("Settings saved successfully!");
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const [notifyDiscord, setNotifyDiscord] = useState(user?.notifyDiscord ?? true);

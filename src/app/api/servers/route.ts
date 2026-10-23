@@ -19,13 +19,15 @@ import * as crypto from "crypto";
 // Returns active servers, archived servers, subscription details, and logs
 export async function GET(req: NextRequest) {
   try {
-    initBackupScheduler();
-    ensureServerSecretsEncrypted();
-    initUpdateScheduler();
     const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    // Background initializers run after auth so unauthenticated traffic can't
+    // trigger DB writes / scheduler starts as a side effect of a GET.
+    initBackupScheduler();
+    ensureServerSecretsEncrypted();
+    initUpdateScheduler();
 
     const [servers, archives, logs] = await Promise.all([
       prisma.server.findMany({

@@ -41,7 +41,7 @@ export async function POST(
       });
 
       const { stopTunnel } = await import("@/lib/tunnels");
-      stopTunnel(server.id);
+      await stopTunnel(server.id);
 
       return NextResponse.json(updated);
     } catch (err: any) {

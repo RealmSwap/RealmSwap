@@ -349,6 +349,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   const [loaderInfo, setLoaderInfo] = useState<{ supported: boolean; loader: { type: string; loaderVersion: string; minecraftVersion: string } | null } | null>(null);
   const [loaderBusy, setLoaderBusy] = useState(false);
   const [updatingModId, setUpdatingModId] = useState<string | null>(null);
+  const [updateAllBusy, setUpdateAllBusy] = useState(false);
   const [syncingDisk, setSyncingDisk] = useState(false);
   const [updatesInfo, setUpdatesInfo] = useState<{ updates: any[]; unknown: any[] } | null>(null);
   const [staleOnly, setStaleOnly] = useState(false);
@@ -478,6 +479,19 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     [updatesInfo]
   );
 
+  /** Fetch the stale/unknown mod report for the selected server */
+  const refreshUpdates = React.useCallback(() => {
+    const serverId = selectedServer?.id;
+    if (!serverId) {
+      setUpdatesInfo(null);
+      return;
+    }
+    fetch(`/api/servers/${serverId}/mods/updates`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data && setUpdatesInfo(data))
+      .catch(() => {});
+  }, [selectedServer]);
+
   /** Check installed mods against provider latests when the Installed tab loads */
   React.useEffect(() => {
     setStaleOnly(false);
@@ -485,12 +499,8 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       setUpdatesInfo(null);
       return;
     }
-    const serverId = selectedServer.id;
-    fetch(`/api/servers/${serverId}/mods/updates`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => data && setUpdatesInfo(data))
-      .catch(() => {});
-  }, [activeTab, selectedServer]);
+    refreshUpdates();
+  }, [activeTab, selectedServer, refreshUpdates]);
 
   /** Fetch popular / trending mods on mount (for Discover tab) */
   React.useEffect(() => {
@@ -585,12 +595,34 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       if (data.updated) {
         const fresh = await fetch(`/api/servers/${selectedServer.id}/mods`).then((r) => r.json());
         setInstalledMods(fresh.mods || fresh || []);
+        refreshUpdates();
       }
     } catch (err: any) {
       if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
       else toast.error(err.message);
     } finally {
       setUpdatingModId(null);
+    }
+  };
+
+  /** Update every stale mod in one snapshot window (sequential, stop-on-failure,
+   *  full rollback server-side). */
+  const handleUpdateAll = async () => {
+    if (!selectedServer || updateAllBusy) return;
+    setUpdateAllBusy(true);
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/mods/update-all`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) { const e = new Error(data.error || "Update all failed"); (e as any).bootOutput = data.bootOutput; throw e; }
+      toast.success(data.message);
+      const fresh = await fetch(`/api/servers/${selectedServer.id}/mods`).then((r) => r.json());
+      setInstalledMods(fresh.mods || fresh || []);
+      refreshUpdates();
+    } catch (err: any) {
+      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
+      else toast.error(err.message);
+    } finally {
+      setUpdateAllBusy(false);
     }
   };
 
@@ -1557,12 +1589,24 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                         </>
                       )}
                     </span>
-                    <button
-                      onClick={() => setStaleOnly((v) => !v)}
-                      className="px-3 py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 text-sky-200 font-bold transition-colors"
-                    >
-                      {staleOnly ? "Show all mods" : "Review updates"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {!staleOnly && updatesInfo.updates.length > 0 && (
+                        <button
+                          onClick={handleUpdateAll}
+                          disabled={updateAllBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                          className="px-3 py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 text-sky-200 font-bold transition-colors disabled:opacity-50"
+                          title="Updates every stale mod in one snapshot window: sequential updates, one sandbox boot test, full rollback on any failure."
+                        >
+                          {updateAllBusy ? "Updating…" : `Update all (${updatesInfo.updates.length})`}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setStaleOnly((v) => !v)}
+                        className="px-3 py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 text-sky-200 font-bold transition-colors"
+                      >
+                        {staleOnly ? "Show all mods" : "Review updates"}
+                      </button>
+                    </div>
                   </div>
                 )}
                 {game === "MINECRAFT" && loaderInfo?.supported && (

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
-import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
+import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
@@ -215,7 +215,7 @@ export async function POST(
       // Automatic Rollback
       console.error(`[Import] Error detected. Rolling back ${serverId} to snapshot ${snapshot.id}`);
       await restoreSnapshot(snapshot.id);
-      await prisma.serverSnapshot.delete({ where: { id: snapshot.id } });
+      await discardSnapshot(snapshot.id);
 
       return NextResponse.json({
         error: `Import failed or crashed the server. Safe Rollback completed. Cause: ${importError.message}`,

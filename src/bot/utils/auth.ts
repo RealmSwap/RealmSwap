@@ -47,5 +47,17 @@ export async function findAuthorizedServer(
     return { error: `Could not find any server matching \`${gameQuery}\` that you have access to.` };
   }
 
-  return { server: servers[0], user };
+  // `contains` matching can hit several servers; silently acting on [0]
+  // would run start/stop against the wrong world. Exact matches win, and a
+  // remaining tie demands a more specific query.
+  const exact = servers.filter(
+    (s) => s.game.toLowerCase() === gameQuery || s.name.toLowerCase() === gameQuery
+  );
+  const pool = exact.length > 0 ? exact : servers;
+  if (pool.length > 1) {
+    const names = pool.slice(0, 5).map((s) => s.name).join(", ");
+    return { error: `Multiple servers match \`${gameQuery}\` (${names}${pool.length > 5 ? ", …" : ""}). Use the exact server name.` };
+  }
+
+  return { server: pool[0], user };
 }

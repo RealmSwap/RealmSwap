@@ -10,7 +10,7 @@ import pidusage from "pidusage";
 import pidtree from "pidtree";
 import net from "net";
 import { prisma } from "../db";
-import { mapPort, unmapPort, getPublicIP } from "../upnp";
+import { mapPort, unmapPort, getPublicIP, getLanIP } from "../upnp";
 import { startMonitoring, stopMonitoring, clearStatsHistory } from "../processMonitor";
 import { serverEventBus } from "../eventBus";
 import { parseSpec } from "../definitions/serialize";
@@ -482,18 +482,30 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
   });
 
   // 2. Map router ports using UPnP if requested or enabled by default
+  let upnpMapped = false;
   if (server.enableUpnp || server.runnerType === "LOCAL") {
     logWriter("[UPnP] Requesting router port forwarding rules...");
     try {
       for (const pm of planPorts(spec, ctx)) {
-        await mapPort(pm.port, pm.protocol, `RealmSwap - ${server.name}`);
+        const ok = await mapPort(pm.port, pm.protocol, `RealmSwap - ${server.name}`);
+        if (!ok) throw new Error(`router rejected the ${pm.protocol} ${pm.port} mapping`);
       }
+      upnpMapped = true;
       logWriter("[UPnP] Success! Router port forward mapping completed successfully.");
     } catch (e: any) {
       logWriter(`[UPnP Warning] Failed to configure router port maps: ${e.message}`);
-      if (currentIp !== "127.0.0.1") {
-        logWriter(`[UPnP Note] You can still share your public IP (${currentIp}) with friends, but you may need to configure port forwarding manually on your router.`);
-      }
+    }
+  }
+  // The public IP is only honest when the router actually forwards to this
+  // machine. Without a mapping (CGNAT, strict router) friends can't reach it,
+  // so advertise the LAN address instead of a WAN address that dead-ends.
+  if (!upnpMapped && currentIp !== "127.0.0.1") {
+    const lanIp = getLanIP();
+    if (lanIp) {
+      logWriter(`[IP Resolver] No router port mapping — advertising the LAN address ${lanIp}; the public IP would be unreachable from the internet.`);
+      currentIp = lanIp;
+    } else {
+      currentIp = "127.0.0.1";
     }
   }
 

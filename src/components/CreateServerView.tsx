@@ -60,7 +60,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importManifest, setImportManifest] = useState<any | null>(null);
-  const [importTempFile, setImportTempFile] = useState<string | null>(null);
+  const [importUploadId, setImportUploadId] = useState<string | null>(null);
   const [importMode, setImportMode] = useState<"NEW" | "REPLACE">("NEW");
   const [replaceServerId, setReplaceServerId] = useState<string>("");
   const [myServers, setMyServers] = useState<any[]>([]);
@@ -186,7 +186,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
       if (!res.ok) throw new Error(data || "Validation failed");
       
       setImportManifest(data.manifest);
-      setImportTempFile(data.tempFile);
+      setImportUploadId(data.uploadId);
 
       const srvRes = await fetch("/api/servers");
       if (srvRes.ok) {
@@ -212,7 +212,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tempFile: importTempFile,
+          uploadId: importUploadId,
           mode: importMode,
           serverId: importMode === "REPLACE" ? replaceServerId : undefined,
           manifest: importManifest
@@ -620,7 +620,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                 </div>
               </div>
               <button 
-                onClick={() => { setImportManifest(null); setImportTempFile(null); }}
+                onClick={() => { setImportManifest(null); setImportUploadId(null); }}
                 className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -704,7 +704,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
 
             <div className="flex justify-end gap-3 mt-auto pt-4 border-t border-white/10">
               <button
-                onClick={() => { setImportManifest(null); setImportTempFile(null); }}
+                onClick={() => { setImportManifest(null); setImportUploadId(null); }}
                 className="px-4 py-2 rounded-lg font-bold text-sm text-slate-300 hover:text-white transition-colors"
                 disabled={isImporting}
               >

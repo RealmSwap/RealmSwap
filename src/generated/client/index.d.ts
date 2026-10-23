@@ -6332,6 +6332,7 @@ export namespace Prisma {
     pid: number | null
     rconPort: number | null
     sftpPort: number | null
+    tunnelPid: number | null
     autoUpdateHour: number | null
     port: number | null
     cpuUsage: number | null
@@ -6344,6 +6345,7 @@ export namespace Prisma {
     pid: number | null
     rconPort: number | null
     sftpPort: number | null
+    tunnelPid: number | null
     autoUpdateHour: number | null
     port: number | null
     cpuUsage: number | null
@@ -6369,6 +6371,8 @@ export namespace Prisma {
     sftpPort: number | null
     tunnelEnabled: boolean | null
     tunnelUrl: string | null
+    tunnelClaimUrl: string | null
+    tunnelPid: number | null
     enableUpnp: boolean | null
     autoUpdate: boolean | null
     autoUpdateHour: number | null
@@ -6406,6 +6410,8 @@ export namespace Prisma {
     sftpPort: number | null
     tunnelEnabled: boolean | null
     tunnelUrl: string | null
+    tunnelClaimUrl: string | null
+    tunnelPid: number | null
     enableUpnp: boolean | null
     autoUpdate: boolean | null
     autoUpdateHour: number | null
@@ -6443,6 +6449,8 @@ export namespace Prisma {
     sftpPort: number
     tunnelEnabled: number
     tunnelUrl: number
+    tunnelClaimUrl: number
+    tunnelPid: number
     enableUpnp: number
     autoUpdate: number
     autoUpdateHour: number
@@ -6469,6 +6477,7 @@ export namespace Prisma {
     pid?: true
     rconPort?: true
     sftpPort?: true
+    tunnelPid?: true
     autoUpdateHour?: true
     port?: true
     cpuUsage?: true
@@ -6481,6 +6490,7 @@ export namespace Prisma {
     pid?: true
     rconPort?: true
     sftpPort?: true
+    tunnelPid?: true
     autoUpdateHour?: true
     port?: true
     cpuUsage?: true
@@ -6506,6 +6516,8 @@ export namespace Prisma {
     sftpPort?: true
     tunnelEnabled?: true
     tunnelUrl?: true
+    tunnelClaimUrl?: true
+    tunnelPid?: true
     enableUpnp?: true
     autoUpdate?: true
     autoUpdateHour?: true
@@ -6543,6 +6555,8 @@ export namespace Prisma {
     sftpPort?: true
     tunnelEnabled?: true
     tunnelUrl?: true
+    tunnelClaimUrl?: true
+    tunnelPid?: true
     enableUpnp?: true
     autoUpdate?: true
     autoUpdateHour?: true
@@ -6580,6 +6594,8 @@ export namespace Prisma {
     sftpPort?: true
     tunnelEnabled?: true
     tunnelUrl?: true
+    tunnelClaimUrl?: true
+    tunnelPid?: true
     enableUpnp?: true
     autoUpdate?: true
     autoUpdateHour?: true
@@ -6704,6 +6720,8 @@ export namespace Prisma {
     sftpPort: number | null
     tunnelEnabled: boolean
     tunnelUrl: string | null
+    tunnelClaimUrl: string | null
+    tunnelPid: number | null
     enableUpnp: boolean
     autoUpdate: boolean
     autoUpdateHour: number
@@ -6760,6 +6778,8 @@ export namespace Prisma {
     sftpPort?: boolean
     tunnelEnabled?: boolean
     tunnelUrl?: boolean
+    tunnelClaimUrl?: boolean
+    tunnelPid?: boolean
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: boolean
@@ -6810,6 +6830,8 @@ export namespace Prisma {
     sftpPort?: boolean
     tunnelEnabled?: boolean
     tunnelUrl?: boolean
+    tunnelClaimUrl?: boolean
+    tunnelPid?: boolean
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: boolean
@@ -6849,6 +6871,8 @@ export namespace Prisma {
     sftpPort?: boolean
     tunnelEnabled?: boolean
     tunnelUrl?: boolean
+    tunnelClaimUrl?: boolean
+    tunnelPid?: boolean
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: boolean
@@ -6922,6 +6946,8 @@ export namespace Prisma {
       sftpPort: number | null
       tunnelEnabled: boolean
       tunnelUrl: string | null
+      tunnelClaimUrl: string | null
+      tunnelPid: number | null
       enableUpnp: boolean
       autoUpdate: boolean
       autoUpdateHour: number
@@ -7361,6 +7387,8 @@ export namespace Prisma {
     readonly sftpPort: FieldRef<"Server", 'Int'>
     readonly tunnelEnabled: FieldRef<"Server", 'Boolean'>
     readonly tunnelUrl: FieldRef<"Server", 'String'>
+    readonly tunnelClaimUrl: FieldRef<"Server", 'String'>
+    readonly tunnelPid: FieldRef<"Server", 'Int'>
     readonly enableUpnp: FieldRef<"Server", 'Boolean'>
     readonly autoUpdate: FieldRef<"Server", 'Boolean'>
     readonly autoUpdateHour: FieldRef<"Server", 'Int'>
@@ -28726,6 +28754,8 @@ export namespace Prisma {
     sftpPort: 'sftpPort',
     tunnelEnabled: 'tunnelEnabled',
     tunnelUrl: 'tunnelUrl',
+    tunnelClaimUrl: 'tunnelClaimUrl',
+    tunnelPid: 'tunnelPid',
     enableUpnp: 'enableUpnp',
     autoUpdate: 'autoUpdate',
     autoUpdateHour: 'autoUpdateHour',
@@ -29352,6 +29382,8 @@ export namespace Prisma {
     sftpPort?: IntNullableFilter<"Server"> | number | null
     tunnelEnabled?: BoolFilter<"Server"> | boolean
     tunnelUrl?: StringNullableFilter<"Server"> | string | null
+    tunnelClaimUrl?: StringNullableFilter<"Server"> | string | null
+    tunnelPid?: IntNullableFilter<"Server"> | number | null
     enableUpnp?: BoolFilter<"Server"> | boolean
     autoUpdate?: BoolFilter<"Server"> | boolean
     autoUpdateHour?: IntFilter<"Server"> | number
@@ -29401,6 +29433,8 @@ export namespace Prisma {
     sftpPort?: SortOrderInput | SortOrder
     tunnelEnabled?: SortOrder
     tunnelUrl?: SortOrderInput | SortOrder
+    tunnelClaimUrl?: SortOrderInput | SortOrder
+    tunnelPid?: SortOrderInput | SortOrder
     enableUpnp?: SortOrder
     autoUpdate?: SortOrder
     autoUpdateHour?: SortOrder
@@ -29454,6 +29488,8 @@ export namespace Prisma {
     sftpPort?: IntNullableFilter<"Server"> | number | null
     tunnelEnabled?: BoolFilter<"Server"> | boolean
     tunnelUrl?: StringNullableFilter<"Server"> | string | null
+    tunnelClaimUrl?: StringNullableFilter<"Server"> | string | null
+    tunnelPid?: IntNullableFilter<"Server"> | number | null
     enableUpnp?: BoolFilter<"Server"> | boolean
     autoUpdate?: BoolFilter<"Server"> | boolean
     autoUpdateHour?: IntFilter<"Server"> | number
@@ -29502,6 +29538,8 @@ export namespace Prisma {
     sftpPort?: SortOrderInput | SortOrder
     tunnelEnabled?: SortOrder
     tunnelUrl?: SortOrderInput | SortOrder
+    tunnelClaimUrl?: SortOrderInput | SortOrder
+    tunnelPid?: SortOrderInput | SortOrder
     enableUpnp?: SortOrder
     autoUpdate?: SortOrder
     autoUpdateHour?: SortOrder
@@ -29547,6 +29585,8 @@ export namespace Prisma {
     sftpPort?: IntNullableWithAggregatesFilter<"Server"> | number | null
     tunnelEnabled?: BoolWithAggregatesFilter<"Server"> | boolean
     tunnelUrl?: StringNullableWithAggregatesFilter<"Server"> | string | null
+    tunnelClaimUrl?: StringNullableWithAggregatesFilter<"Server"> | string | null
+    tunnelPid?: IntNullableWithAggregatesFilter<"Server"> | number | null
     enableUpnp?: BoolWithAggregatesFilter<"Server"> | boolean
     autoUpdate?: BoolWithAggregatesFilter<"Server"> | boolean
     autoUpdateHour?: IntWithAggregatesFilter<"Server"> | number
@@ -31365,6 +31405,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -31413,6 +31455,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -31459,6 +31503,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -31507,6 +31553,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -31554,6 +31602,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -31590,6 +31640,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -31626,6 +31678,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -33745,6 +33799,8 @@ export namespace Prisma {
     sftpPort?: SortOrder
     tunnelEnabled?: SortOrder
     tunnelUrl?: SortOrder
+    tunnelClaimUrl?: SortOrder
+    tunnelPid?: SortOrder
     enableUpnp?: SortOrder
     autoUpdate?: SortOrder
     autoUpdateHour?: SortOrder
@@ -33769,6 +33825,7 @@ export namespace Prisma {
     pid?: SortOrder
     rconPort?: SortOrder
     sftpPort?: SortOrder
+    tunnelPid?: SortOrder
     autoUpdateHour?: SortOrder
     port?: SortOrder
     cpuUsage?: SortOrder
@@ -33794,6 +33851,8 @@ export namespace Prisma {
     sftpPort?: SortOrder
     tunnelEnabled?: SortOrder
     tunnelUrl?: SortOrder
+    tunnelClaimUrl?: SortOrder
+    tunnelPid?: SortOrder
     enableUpnp?: SortOrder
     autoUpdate?: SortOrder
     autoUpdateHour?: SortOrder
@@ -33831,6 +33890,8 @@ export namespace Prisma {
     sftpPort?: SortOrder
     tunnelEnabled?: SortOrder
     tunnelUrl?: SortOrder
+    tunnelClaimUrl?: SortOrder
+    tunnelPid?: SortOrder
     enableUpnp?: SortOrder
     autoUpdate?: SortOrder
     autoUpdateHour?: SortOrder
@@ -33855,6 +33916,7 @@ export namespace Prisma {
     pid?: SortOrder
     rconPort?: SortOrder
     sftpPort?: SortOrder
+    tunnelPid?: SortOrder
     autoUpdateHour?: SortOrder
     port?: SortOrder
     cpuUsage?: SortOrder
@@ -36493,6 +36555,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -36539,6 +36603,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -36845,6 +36911,8 @@ export namespace Prisma {
     sftpPort?: IntNullableFilter<"Server"> | number | null
     tunnelEnabled?: BoolFilter<"Server"> | boolean
     tunnelUrl?: StringNullableFilter<"Server"> | string | null
+    tunnelClaimUrl?: StringNullableFilter<"Server"> | string | null
+    tunnelPid?: IntNullableFilter<"Server"> | number | null
     enableUpnp?: BoolFilter<"Server"> | boolean
     autoUpdate?: BoolFilter<"Server"> | boolean
     autoUpdateHour?: IntFilter<"Server"> | number
@@ -37942,6 +38010,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -37989,6 +38059,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -38050,6 +38122,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -38097,6 +38171,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -38142,6 +38218,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -38189,6 +38267,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -38250,6 +38330,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -38297,6 +38379,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -38342,6 +38426,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -38389,6 +38475,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -38450,6 +38538,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -38497,6 +38587,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -38750,6 +38842,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -38797,6 +38891,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -38858,6 +38954,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -38905,6 +39003,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -38950,6 +39050,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -38997,6 +39099,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -39107,6 +39211,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -39154,6 +39260,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -39303,6 +39411,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -39350,6 +39460,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -39475,6 +39587,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -39522,6 +39636,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -39583,6 +39699,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -39630,6 +39748,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -39675,6 +39795,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -39722,6 +39844,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -39783,6 +39907,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -39830,6 +39956,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -39875,6 +40003,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -39922,6 +40052,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -39983,6 +40115,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -40030,6 +40164,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -40075,6 +40211,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -40122,6 +40260,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -40254,6 +40394,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -40301,6 +40443,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -41165,6 +41309,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -41212,6 +41358,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -41316,6 +41464,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -41363,6 +41513,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -41424,6 +41576,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -41565,6 +41719,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -41611,6 +41767,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -41657,6 +41815,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -42211,6 +42371,8 @@ export namespace Prisma {
     sftpPort?: number | null
     tunnelEnabled?: boolean
     tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
     enableUpnp?: boolean
     autoUpdate?: boolean
     autoUpdateHour?: number
@@ -42246,6 +42408,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -42293,6 +42457,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number
@@ -42339,6 +42505,8 @@ export namespace Prisma {
     sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
     tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
     tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
     enableUpnp?: BoolFieldUpdateOperationsInput | boolean
     autoUpdate?: BoolFieldUpdateOperationsInput | boolean
     autoUpdateHour?: IntFieldUpdateOperationsInput | number

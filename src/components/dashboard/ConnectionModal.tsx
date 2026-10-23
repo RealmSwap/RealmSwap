@@ -42,6 +42,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
   const [tunnelBusy, setTunnelBusy] = useState(false);
   const [inviteCode, setInviteCode] = useState<string | null>(server.inviteCode ?? null);
   const [inviteBusy, setInviteBusy] = useState(false);
+  const [inviteMappingWarning, setInviteMappingWarning] = useState(false);
 
   const toggleTunnel = async (enable: boolean) => {
     setTunnelBusy(true);
@@ -69,6 +70,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to generate invite");
       setInviteCode(json.inviteCode);
+      setInviteMappingWarning(json.syncMappingOk === false);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -84,6 +86,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to load connection info");
       setData(json);
+      if (json.tunnel) setTunnelOn(!!json.tunnel.enabled);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -102,7 +105,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
     QRCode.toDataURL(content, { width: 220, margin: 1, color: { dark: "#0f172a", light: "#ffffff" } })
       .then(setQrDataUrl)
       .catch(() => setQrDataUrl(null));
-  }, [data]);
+  }, [data, inviteCode]);
 
   const copy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -214,6 +217,11 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
                     </div>
                   </div>
                 )}
+                {inviteMappingWarning && (
+                  <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-bold">
+                    Your router wouldn't open TCP 3001 — this invite only works on your LAN. Forward TCP 3001 on the router for internet invites.
+                  </div>
+                )}
                 <button
                   onClick={() => copy(inviteText, "all")}
                   className="w-full mt-1 px-4 py-2 rounded-lg bg-accentPurple hover:bg-accentPurple/90 text-white text-xs font-bold transition-colors"
@@ -225,16 +233,19 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
           )}
 
           {/* Tunnel control — the troubleshooter's most common fix, one click away */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-950/60 border border-white/5">
-            <div>
-              <h4 className="text-sm font-bold text-slate-200">Playit tunnel</h4>
-              <p className="text-xs text-slate-500">
-                {tunnelOn
-                  ? "Active — friends can join without any router configuration."
-                  : "Off — lets friends join through the internet with zero router setup."}
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-slate-200">Playit tunnel</h4>
+                <p className="text-xs text-slate-500">
+                  {tunnelOn && data?.tunnel?.alive && data?.tunnel?.url
+                    ? `Agent running — claim & bind port ${server.port} on the playit dashboard if you haven't.`
+                    : tunnelOn
+                      ? "Agent starting — the tunnel only forwards once it's claimed and the port is bound on the playit dashboard."
+                      : "Off — lets friends join through the internet with zero router setup."}
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 className="sr-only peer"
@@ -244,6 +255,22 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
               />
               <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
             </label>
+            </div>
+            {tunnelOn && data?.tunnel?.claimUrl && !data?.tunnel?.url && (
+              <a
+                href={data.tunnel.claimUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="block px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-bold hover:bg-amber-500/20 transition-colors"
+              >
+                Claim this agent on playit.gg → then bind port {server.port} in the playit dashboard. Until then the tunnel forwards nothing.
+              </a>
+            )}
+            {tunnelOn && data?.tunnel?.url && !data?.tunnel?.alive && (
+              <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-bold">
+                Tunnel address saved but no agent is running — toggle off and on to restart it.
+              </div>
+            )}
           </div>
 
           {/* Diagnose section */}

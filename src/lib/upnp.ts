@@ -1,5 +1,6 @@
 import NatAPI from "nat-api";
 import https from "https";
+import os from "os";
 
 // Persist the NatAPI client globally across Next.js reloads
 const globalForUpnp = globalThis as unknown as {
@@ -63,10 +64,12 @@ export function unmapPort(port: number, protocol: "TCP" | "UDP" = "UDP"): Promis
   });
 }
 
-// Fetches the public WAN IP of this machine
+// Fetches the public WAN IP of this machine. Time-boxed: invite generation
+// and the sync-server bootstrap await this, and an ipify connection that
+// never answers would hang both forever.
 export function getPublicIP(): Promise<string | null> {
   return new Promise((resolve) => {
-    https.get("https://api.ipify.org?format=json", (res) => {
+    const req = https.get("https://api.ipify.org?format=json", (res) => {
       if (res.statusCode !== 200) {
         resolve(null);
         return;
@@ -81,8 +84,21 @@ export function getPublicIP(): Promise<string | null> {
           resolve(null);
         }
       });
-    }).on("error", () => {
+    });
+    req.setTimeout(5000, () => req.destroy(new Error("ipify request timed out")));
+    req.on("error", () => {
       resolve(null);
     });
   });
+}
+
+// First non-internal IPv4 address — the honest address when the router
+// refuses port mappings and only same-network play works.
+export function getLanIP(): string | null {
+  for (const ifaces of Object.values(os.networkInterfaces())) {
+    for (const iface of ifaces ?? []) {
+      if (iface.family === "IPv4" && !iface.internal) return iface.address;
+    }
+  }
+  return null;
 }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { generateInviteCodeParts } from "@/lib/realmsync";
-import { startRealmSyncServer, stopRealmSyncServer } from "@/lib/realmSyncHost";
+import { startRealmSyncServer, stopRealmSyncServer, getRealmSyncStatus } from "@/lib/realmSyncHost";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -35,7 +35,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           where: { id: server.id },
           data: { inviteCode }
         });
-        return NextResponse.json({ inviteCode: updated.inviteCode });
+        const { mappingOk } = getRealmSyncStatus();
+        return NextResponse.json({
+          inviteCode: updated.inviteCode,
+          // When the router refused the TCP 3001 mapping the deep link host
+          // is only reachable on the LAN — the UI warns instead of shipping
+          // an invite that dead-ends for everyone off-network.
+          syncMappingOk: mappingOk !== false,
+        });
       }
     }
     return NextResponse.json({ error: "Could not generate a unique invite code. Please try again." }, { status: 500 });

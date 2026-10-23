@@ -6,6 +6,8 @@ import { dataRoot } from "./appPaths";
 import { getSavePath as resolveSavePath } from "./backupPaths";
 import { verifyBackupFile } from "./backupVerify";
 import { cloudSync } from "./cloudSync";
+import { safeJoin } from "./safePath";
+import { swapDirIntoPlace, withServerLock } from "./atomicFs";
 import { reconcileInstalledMods } from "./mods/reconcile";
 
 // Get the local save path for each game type. Delegates to the pure resolver,
@@ -71,81 +73,127 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
   });
 
   const zipPath = path.join(backupDir, `${backup.id}.zip`);
-  const cleanZipPath = zipPath.replace(/\\/g, "/");
-  const cleanZipPattern = zipPattern.replace(/\\/g, "/");
+  // The archive is assembled in memory and written in one synchronous call —
+  // a disk-full or crash mid-write must never leave a truncated zip at the
+  // final path where a later `existsSync` would treat it as a backup.
+  const tmpZipPath = `${zipPath}.tmp`;
 
-  try {
-    const zip = new AdmZip();
-    if (server.game.toUpperCase() === "VALHEIM") {
-      const dbFile = path.join(srcDir, "Dedicated.db");
-      const fwlFile = path.join(srcDir, "Dedicated.fwl");
-      if (fs.existsSync(dbFile)) zip.addLocalFile(dbFile);
-      if (fs.existsSync(fwlFile)) zip.addLocalFile(fwlFile);
-    } else {
-      zip.addLocalFolder(srcDir);
-    }
-    
-    zip.writeZip(zipPath);
-
-    // Get the size of the zipped archive
-    if (!fs.existsSync(zipPath)) {
-      throw new Error("Failed to create zip archive.");
-    }
-    const stats = fs.statSync(zipPath);
-    const fileSizeMB = parseFloat((stats.size / (1024 * 1024)).toFixed(2));
-
-    // Update backup file details
-    const finalBackup = await prisma.backup.update({
-      where: { id: backup.id },
-      data: {
-        filePath: zipPath,
-        fileSizeMB
-      }
-    });
-
-    // Verify the archive we just wrote is actually restorable, and record the
-    // result on the row (a backup that can't inflate is worse than no backup —
-    // it looks safe). Fire-and-report: verification must not fail the snapshot.
+  return withServerLock(serverId, async () => {
     try {
-      const verification = verifyBackupFile(zipPath);
-      await prisma.backup.update({
-        where: { id: backup.id },
-        data: verification.ok
-          ? { verifiedAt: new Date(), verifyError: null }
-          : { verifiedAt: null, verifyError: verification.error ?? "Unknown verification error" },
-      });
-    } catch (verifyErr: any) {
-      console.error(`Backup verification error for ${backup.id}:`, verifyErr?.message);
-    }
-
-    // Update server's lastSnapshotAt
-    await prisma.server.update({
-      where: { id: serverId },
-      data: { lastSnapshotAt: new Date() }
-    });
-
-    // Write Activity Log
-    await prisma.activityLog.create({
-      data: {
-        userId: server.userId,
-        action: "RESTORE_SERVER", // Keep action name within original enum types for compatibility: RESTORE_SERVER or Stop/Start
-        details: `Created local ${backupType.toLowerCase()} backup '${backupName}' for server '${server.name}' (${fileSizeMB} MB).`
+      const zip = new AdmZip();
+      if (server.game.toUpperCase() === "VALHEIM") {
+        const dbFile = path.join(srcDir, "Dedicated.db");
+        const fwlFile = path.join(srcDir, "Dedicated.fwl");
+        if (fs.existsSync(dbFile)) zip.addLocalFile(dbFile);
+        if (fs.existsSync(fwlFile)) zip.addLocalFile(fwlFile);
+      } else {
+        zip.addLocalFolder(srcDir);
       }
-    });
 
-    // Asynchronously upload to S3 if configured
-    cloudSync.uploadSnapshot(serverId, zipPath).catch(err => {
-      console.error(`Failed to upload snapshot to S3: ${err.message}`);
-    });
+      zip.writeZip(tmpZipPath);
 
-    return finalBackup;
-  } catch (err: any) {
-    // Clean up DB record if zip creation failed
-    await prisma.backup.delete({ where: { id: backup.id } }).catch(() => {});
-    import("./notifications").then(({ sendNotification }) => {
-      sendNotification(server.userId, "❌ Backup Failed", `Failed to generate snapshot for '${server.name}': ${err.message}`);
-    }).catch(e => console.error("Failed to load notifications module:", e));
-    throw new Error(`Failed to generate snapshot: ${err.message}`);
+      if (!fs.existsSync(tmpZipPath)) {
+        throw new Error("Failed to create zip archive.");
+      }
+      fs.renameSync(tmpZipPath, zipPath);
+      const stats = fs.statSync(zipPath);
+      const fileSizeMB = parseFloat((stats.size / (1024 * 1024)).toFixed(2));
+
+      // Update backup file details
+      const finalBackup = await prisma.backup.update({
+        where: { id: backup.id },
+        data: {
+          filePath: zipPath,
+          fileSizeMB
+        }
+      });
+
+      // Verify the archive we just wrote is actually restorable, and record the
+      // result on the row (a backup that can't inflate is worse than no backup —
+      // it looks safe). Fire-and-report: verification must not fail the snapshot.
+      try {
+        const verification = verifyBackupFile(zipPath, server.game);
+        await prisma.backup.update({
+          where: { id: backup.id },
+          data: verification.ok
+            ? { verifiedAt: new Date(), verifyError: null }
+            : { verifiedAt: null, verifyError: verification.error ?? "Unknown verification error" },
+        });
+      } catch (verifyErr: any) {
+        console.error(`Backup verification error for ${backup.id}:`, verifyErr?.message);
+      }
+
+      // Update server's lastSnapshotAt
+      await prisma.server.update({
+        where: { id: serverId },
+        data: { lastSnapshotAt: new Date() }
+      });
+
+      // Write Activity Log
+      await prisma.activityLog.create({
+        data: {
+          userId: server.userId,
+          serverId,
+          action: "CREATE_BACKUP",
+          details: `Created local ${backupType.toLowerCase()} backup '${backupName}' for server '${server.name}' (${fileSizeMB} MB).`
+        }
+      });
+
+      // Asynchronously upload to S3 if configured
+      cloudSync.uploadSnapshot(serverId, zipPath).catch(err => {
+        console.error(`Failed to upload snapshot to S3: ${err.message}`);
+      });
+
+      return finalBackup;
+    } catch (err: any) {
+      // Clean up partial archive and DB record so a failed backup leaves
+      // nothing behind that could be mistaken for a restorable snapshot.
+      for (const p of [tmpZipPath, zipPath]) {
+        try { if (fs.existsSync(p)) fs.unlinkSync(p); } catch (_) {}
+      }
+      await prisma.backup.delete({ where: { id: backup.id } }).catch(() => {});
+      import("./notifications").then(({ sendNotification }) => {
+        sendNotification(server.userId, "❌ Backup Failed", `Failed to generate snapshot for '${server.name}': ${err.message}`);
+      }).catch(e => console.error("Failed to load notifications module:", e));
+      throw new Error(`Failed to generate snapshot: ${err.message}`);
+    }
+  });
+}
+
+/**
+ * Overlay the staged Valheim save files onto the live worlds folder.
+ * Valheim backups hold only the Dedicated.* files at the archive root while
+ * the destination folder may contain other local worlds, so the folder is
+ * never replaced wholesale — each staged file swaps in with the previous
+ * copy kept aside until every file has landed.
+ */
+function overlayValheimFiles(stagingDir: string, destDir: string): void {
+  fs.mkdirSync(destDir, { recursive: true });
+  const saved: { tmp: string; dest: string }[] = [];
+  try {
+    for (const name of fs.readdirSync(stagingDir)) {
+      const staged = path.join(stagingDir, name);
+      if (fs.statSync(staged).isDirectory()) continue; // dedicated saves are flat files
+      const dest = safeJoin(destDir, name);
+      if (fs.existsSync(dest)) {
+        const tmp = `${dest}.pre-restore`;
+        fs.rmSync(tmp, { force: true });
+        fs.renameSync(dest, tmp);
+        saved.push({ tmp, dest });
+      }
+      fs.copyFileSync(staged, dest);
+    }
+  } catch (err) {
+    // Put back every file that was moved aside before the failure.
+    for (const s of saved) {
+      try {
+        if (!fs.existsSync(s.dest)) fs.renameSync(s.tmp, s.dest);
+      } catch (_) {}
+    }
+    throw err;
+  }
+  for (const s of saved) {
+    try { fs.rmSync(s.tmp, { force: true }); } catch (_) {}
   }
 }
 
@@ -169,26 +217,42 @@ export async function restoreBackup(backupId: string): Promise<void> {
     throw new Error(`Backup zip file was not found on disk at: ${backup.filePath}`);
   }
 
-  const { destExtractDir } = getSavePath(backup.game, backup.serverId);
-  const cleanZipPath = backup.filePath.replace(/\\/g, "/");
-  const cleanDestDir = destExtractDir.replace(/\\/g, "/");
-
-  // For Minecraft, Enshrouded, Zomboid, ARK, we clear out the existing directory first to ensure a clean restore
-  if (backup.game.toUpperCase() !== "VALHEIM") {
-    if (fs.existsSync(destExtractDir)) {
-      fs.rmSync(destExtractDir, { recursive: true, force: true });
-    }
-    fs.mkdirSync(destExtractDir, { recursive: true });
+  // A restore that dies mid-extract must never take the live world with it,
+  // so the archive is proven restorable BEFORE the live directory is touched.
+  const verification = verifyBackupFile(backup.filePath, backup.game);
+  if (!verification.ok) {
+    throw new Error(
+      `Backup archive failed verification (${verification.error ?? "unknown error"}). Restore refused — the current world was not modified. Re-verify or delete this backup.`
+    );
   }
 
-  // Expand archive using AdmZip
-  const zip = new AdmZip(backup.filePath);
-  zip.extractAllTo(destExtractDir, true);
+  const { destExtractDir } = getSavePath(backup.game, backup.serverId);
+
+  await withServerLock(backup.serverId, async () => {
+    const stagingDir = `${destExtractDir}.restore-staging`;
+    fs.rmSync(stagingDir, { recursive: true, force: true });
+    fs.mkdirSync(stagingDir, { recursive: true });
+    try {
+      // Extract into staging first: a corrupt archive or full disk fails
+      // here with the live world still intact.
+      const zip = new AdmZip(backup.filePath);
+      zip.extractAllTo(stagingDir, true);
+
+      if (backup.game.toUpperCase() === "VALHEIM") {
+        overlayValheimFiles(stagingDir, destExtractDir);
+      } else {
+        swapDirIntoPlace(stagingDir, destExtractDir);
+      }
+    } finally {
+      fs.rmSync(stagingDir, { recursive: true, force: true });
+    }
+  });
 
   // Write Activity Log
   await prisma.activityLog.create({
     data: {
       userId: backup.userId,
+      serverId: backup.serverId,
       action: "RESTORE_SERVER",
       details: `Restored local backup '${backup.name}' to server '${backup.server.name}'.`
     }

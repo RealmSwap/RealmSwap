@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
-import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
+import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import {
   detectMinecraftVersion, installFabricServer, installForgeServer, installNeoForgeServer,
@@ -115,7 +115,7 @@ export async function POST(
       });
     } catch (err: any) {
       await restoreSnapshot(snapshot.id);
-      await prisma.serverSnapshot.delete({ where: { id: snapshot.id } });
+      await discardSnapshot(snapshot.id);
       return NextResponse.json({
         error: `Loader installation failed and was rolled back. Cause: ${err.message}`,
         ...(err instanceof SandboxBootError ? { bootOutput: err.output } : {}),

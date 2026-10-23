@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
+import { swapDirIntoPlace, withServerLock } from "@/lib/atomicFs";
 import fs from "fs";
 import path from "path";
 
@@ -21,6 +22,48 @@ function copyFolderRecursiveSync(from: string, to: string) {
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
+  }
+}
+
+// Copy a directory into a staging sibling, then swap it into place so a
+// failed copy can never destroy the existing world.
+function copyDirViaStaging(source: string, targetDir: string) {
+  const staging = `${targetDir}.import-staging`;
+  fs.rmSync(staging, { recursive: true, force: true });
+  try {
+    copyFolderRecursiveSync(source, staging);
+    swapDirIntoPlace(staging, targetDir);
+  } finally {
+    fs.rmSync(staging, { recursive: true, force: true });
+  }
+}
+
+// Directory import where a single file is allowed: stage the copy either way.
+function importIntoTarget(source: string, targetDir: string, isDir: boolean) {
+  if (isDir) {
+    copyDirViaStaging(source, targetDir);
+    return;
+  }
+  const staging = `${targetDir}.import-staging`;
+  fs.rmSync(staging, { recursive: true, force: true });
+  try {
+    fs.mkdirSync(staging, { recursive: true });
+    fs.copyFileSync(source, path.join(staging, path.basename(source)));
+    swapDirIntoPlace(staging, targetDir);
+  } finally {
+    fs.rmSync(staging, { recursive: true, force: true });
+  }
+}
+
+// Copy a file via temp+rename so an interrupted copy can't leave a truncated
+// world file at the destination.
+function copyFileAtomic(src: string, dest: string) {
+  const tmp = `${dest}.importing`;
+  try {
+    fs.copyFileSync(src, tmp);
+    fs.renameSync(tmp, dest);
+  } finally {
+    try { if (fs.existsSync(tmp)) fs.unlinkSync(tmp); } catch (_) {}
   }
 }
 
@@ -55,7 +98,7 @@ export async function POST(
     }
 
     // Find and verify server access
-    const access = await verifyServerAccess(serverId, user.id);
+    const access = await verifyServerAccess(serverId, user.id, "ADMIN");
     if (!access) {
       return NextResponse.json({ error: "Server not found" }, { status: 404 });
     }
@@ -84,13 +127,9 @@ export async function POST(
       }
 
       const targetDir = path.join(dataRoot(), "local-servers", serverId, "world");
-      
-      // Clear old world folder
-      if (fs.existsSync(targetDir)) {
-        fs.rmSync(targetDir, { recursive: true, force: true });
-      }
-
-      copyFolderRecursiveSync(resolvedSource, targetDir);
+      await withServerLock(serverId, async () => {
+        copyDirViaStaging(resolvedSource, targetDir);
+      });
 
     } else if (game === "VALHEIM") {
       const userProfile = process.env.USERPROFILE || "";
@@ -106,7 +145,7 @@ export async function POST(
         let copied = 0;
         for (const file of files) {
           if (file.endsWith(".db") || file.endsWith(".fwl")) {
-            fs.copyFileSync(path.join(resolvedSource, file), path.join(valheimSavesDir, file));
+            copyFileAtomic(path.join(resolvedSource, file), path.join(valheimSavesDir, file));
             copied++;
           }
         }
@@ -120,57 +159,36 @@ export async function POST(
           return NextResponse.json({ error: "Valheim saves must have a .db or .fwl extension." }, { status: 400 });
         }
         const basename = path.basename(resolvedSource, ext);
-        fs.copyFileSync(resolvedSource, path.join(valheimSavesDir, path.basename(resolvedSource)));
+        copyFileAtomic(resolvedSource, path.join(valheimSavesDir, path.basename(resolvedSource)));
 
         // Try to copy paired file
         const otherExt = ext === ".db" ? ".fwl" : ".db";
         const pairedFile = path.join(path.dirname(resolvedSource), basename + otherExt);
         if (fs.existsSync(pairedFile)) {
-          fs.copyFileSync(pairedFile, path.join(valheimSavesDir, basename + otherExt));
+          copyFileAtomic(pairedFile, path.join(valheimSavesDir, basename + otherExt));
         }
       }
 
     } else if (game === "ENSHROUDED") {
       const targetDir = path.join(dataRoot(), "local-servers", serverId, "enshrouded-server", "savegame");
-      
-      if (fs.existsSync(targetDir)) {
-        fs.rmSync(targetDir, { recursive: true, force: true });
-      }
-      fs.mkdirSync(targetDir, { recursive: true });
-
-      if (isDir) {
-        copyFolderRecursiveSync(resolvedSource, targetDir);
-      } else {
-        fs.copyFileSync(resolvedSource, path.join(targetDir, path.basename(resolvedSource)));
-      }
+      await withServerLock(serverId, async () => {
+        importIntoTarget(resolvedSource, targetDir, isDir);
+      });
 
     } else if (game === "ZOMBOID") {
       const targetDir = path.join(dataRoot(), "local-servers", serverId, "zomboid-server", "zomboid-data", "Saves", "Multiplayer", "servertest");
-
-      if (fs.existsSync(targetDir)) {
-        fs.rmSync(targetDir, { recursive: true, force: true });
-      }
-      fs.mkdirSync(targetDir, { recursive: true });
-
-      if (isDir) {
-        copyFolderRecursiveSync(resolvedSource, targetDir);
-      } else {
+      if (!isDir) {
         return NextResponse.json({ error: "Project Zomboid saves require a folder containing sandbox configurations and map files." }, { status: 400 });
       }
+      await withServerLock(serverId, async () => {
+        copyDirViaStaging(resolvedSource, targetDir);
+      });
 
     } else if (game === "ARK") {
       const targetDir = path.join(dataRoot(), "local-servers", serverId, "ark-server", "ShooterGame", "Saved", "SavedArksLocal");
-
-      if (fs.existsSync(targetDir)) {
-        fs.rmSync(targetDir, { recursive: true, force: true });
-      }
-      fs.mkdirSync(targetDir, { recursive: true });
-
-      if (isDir) {
-        copyFolderRecursiveSync(resolvedSource, targetDir);
-      } else {
-        fs.copyFileSync(resolvedSource, path.join(targetDir, path.basename(resolvedSource)));
-      }
+      await withServerLock(serverId, async () => {
+        importIntoTarget(resolvedSource, targetDir, isDir);
+      });
 
     } else {
       return NextResponse.json({ error: `Map imports are not supported for game: ${server.game}` }, { status: 400 });
@@ -180,7 +198,7 @@ export async function POST(
     await prisma.activityLog.create({
       data: {
         userId: user.id,
-        action: "RESTORE_SERVER",
+        action: "IMPORT_WORLD",
         details: `Imported local map files from '${resolvedSource}' into server '${server.name}' (${server.game}).`,
       },
     });

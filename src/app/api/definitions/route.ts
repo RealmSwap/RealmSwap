@@ -34,12 +34,11 @@ function serialize(d: {
 // Returns built-in definitions + the authenticated user's own custom definitions.
 export async function GET(_req: NextRequest) {
   try {
-    await ensureBuiltinsSeeded();
-
     const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    await ensureBuiltinsSeeded();
 
     const definitions = await prisma.gameDefinition.findMany({
       where: {
