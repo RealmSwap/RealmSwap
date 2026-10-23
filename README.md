@@ -31,7 +31,7 @@ RealmSwap currently supports single-click deployment for the following dedicated
 - **Game Settings**: Change the settings that matter — max players, difficulty, world name, MOTD, and more — through friendly typed forms instead of raw config files. Saved settings re-render config files and launch arguments automatically (games that launch with command-line arguments are no longer locked to their creation-time settings).
 - **Server Config Editor**: Edit raw server configurations (`.ini`, `.json`, `.properties`) directly from the dashboard. Hand edits are preserved: managed keys are merge-written on restart, and a `.rsbak` backup is kept of your last saved file.
 - **Backup & Restore**: Easily take snapshot backups of your world data and restore them with a single click.
-- **Mod Manager**: Built-in support for searching, installing, and managing mods for supported games.
+- **Mod Manager**: Search (Modrinth/Thunderstore/Workshop), install with automatic dependency resolution, and update mods — with snapshot + sandbox-test + auto-rollback on every change. Minecraft servers get first-class Fabric loader support (one-click install); client-only mods are refused with a clear reason instead of silently not loading.
 - **RealmSync Integration**: Generate deep links (`realmsync://`) for your friends to use with the RealmSync companion app. RealmSync automatically downloads required mods and configurations to the player's client and connects them directly to your server in one click!
 
 ## Technology & Architecture

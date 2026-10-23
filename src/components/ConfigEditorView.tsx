@@ -51,7 +51,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"general" | "game" | "files">("general");
+  const [activeTab, setActiveTab] = useState<"game" | "files">("game");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Game Settings tab state (schema-driven, from the server's game definition)
@@ -431,9 +431,6 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
               {/* Editor Header */}
               <div className="p-4 border-b border-white/5 bg-slate-950/30 flex items-center justify-between">
                 <div className="flex items-center gap-6">
-                  <button onClick={() => setActiveTab("general")} className={`font-bold text-sm ${activeTab === 'general' ? 'text-accentPurple border-b-2 border-accentPurple' : 'text-slate-400 border-b-2 border-transparent hover:text-slate-200'} pb-4 -mb-4 transition-colors`}>
-                    General Settings
-                  </button>
                   <button onClick={() => setActiveTab("game")} className={`font-bold text-sm ${activeTab === 'game' ? 'text-accentPurple border-b-2 border-accentPurple' : 'text-slate-400 border-b-2 border-transparent hover:text-slate-200'} pb-4 -mb-4 transition-colors flex items-center gap-2`}>
                     <SlidersHorizontal className="w-4 h-4" />
                     Game Settings

@@ -400,7 +400,6 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
 
 
   // Aggregate Vault metrics
-  const totalVaultSize = data.archives.reduce((acc, cur) => acc + cur.saveSizeGB, 0).toFixed(2);
 
   return (
     <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
@@ -418,45 +417,6 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
             {/* Center Column: KPI, Servers */}
             <div className="flex-1 max-w-7xl space-y-8 min-w-0">
               
-              {/* KPI Cards */}
-              <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] p-5 shadow-xl hover:-translate-y-1 transition-transform group">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 mb-1">Local Servers</div>
-                    <div className="text-2xl font-black text-white">{data.servers.filter((s:any) => s.runnerType === "LOCAL").length}</div>
-                    <div className="text-xs text-emerald-400 font-bold mt-2 flex items-center gap-1"><Check className="w-3 h-3"/> Running Smooth</div>
-                  </div>
-                  <div className="p-2 bg-accentPurple/10 text-accentPurple rounded-xl group-hover:scale-110 transition-transform">
-                    <ServerIcon className="w-5 h-5" />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] p-5 shadow-xl hover:-translate-y-1 transition-transform group">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 mb-1">Vaulted Worlds</div>
-                    <div className="text-2xl font-black text-white">{data.archives.length}</div>
-                    <div className="text-xs text-blue-400 font-bold mt-2 flex items-center gap-1"><Archive className="w-3 h-3"/> Safely Archived</div>
-                  </div>
-                  <div className="p-2 bg-blue-500/10 text-blue-400 rounded-xl group-hover:scale-110 transition-transform">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] p-5 shadow-xl hover:-translate-y-1 transition-transform group">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 mb-1">Vault Size</div>
-                    <div className="text-2xl font-black text-white">{totalVaultSize} GB</div>
-                    <div className="text-xs text-slate-400 font-bold mt-2 flex items-center gap-1"><Database className="w-3 h-3"/> Local Storage</div>
-                  </div>
-                  <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl group-hover:scale-110 transition-transform">
-                    <Database className="w-5 h-5" />
-                  </div>
-                </div>
-              </div>
-            </section>
 
             {/* Error Message */}
             {errorMessage && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
+import { toast } from "sonner";
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,6 +13,7 @@ import {
   Download,
   Info,
   Check,
+  RefreshCw,
   AlertTriangle,
   Settings,
   Upload,
@@ -336,6 +338,9 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [installedMods, setInstalledMods] = useState<any[]>([]);
+  const [loaderInfo, setLoaderInfo] = useState<{ supported: boolean; loader: { type: string; loaderVersion: string; minecraftVersion: string } | null } | null>(null);
+  const [loaderBusy, setLoaderBusy] = useState(false);
+  const [updatingModId, setUpdatingModId] = useState<string | null>(null);
 
   /* Tabs */
   const [activeTab, setActiveTab] = useState<TabId>("discover");
@@ -407,6 +412,10 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   /** Fetch installed mods when server changes */
   React.useEffect(() => {
     if (selectedServer) {
+      fetch(`/api/servers/${selectedServer.id}/mods/loader`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => d && setLoaderInfo(d))
+        .catch(() => {});
       fetch(`/api/servers/${selectedServer.id}/mods`)
         .then((res) => res.json())
         .then((data) => {
@@ -552,6 +561,46 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       setDepModalMod(null);
       setDepModalDeps([]);
       setDepModalSelected(new Set());
+    }
+  };
+
+  const handleInstallLoader = async () => {
+    if (!selectedServer) return;
+    setLoaderBusy(true);
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/mods/loader`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loader: "fabric" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to install Fabric");
+      toast.success(data.message || "Fabric installed.");
+      const lres = await fetch(`/api/servers/${selectedServer.id}/mods/loader`);
+      if (lres.ok) setLoaderInfo(await lres.json());
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setLoaderBusy(false);
+    }
+  };
+
+  const handleUpdateMod = async (mod: any) => {
+    if (!selectedServer) return;
+    setUpdatingModId(mod.id);
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/mods/${mod.packageId}/update`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Update failed");
+      toast[data.updated ? "success" : "info"](data.message);
+      if (data.updated) {
+        const fresh = await fetch(`/api/servers/${selectedServer.id}/mods`).then((r) => r.json());
+        setInstalledMods(fresh.mods || fresh || []);
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setUpdatingModId(null);
     }
   };
 
@@ -1453,6 +1502,29 @@ export default function ModsView({ servers, user }: ModsViewProps) {
             {/* ─── INSTALLED TAB ─────────────────────────────── */}
             {activeTab === "installed" && (
               <div className="space-y-4 animate-fade-in">
+                {game === "MINECRAFT" && loaderInfo?.supported && (
+                  loaderInfo.loader ? (
+                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300">
+                      <Check className="w-4 h-4" />
+                      <span className="font-bold">
+                        Fabric {loaderInfo.loader.loaderVersion} active (Minecraft {loaderInfo.loader.minecraftVersion}) — jars in mods/ load on boot.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300">
+                      <span className="font-bold">
+                        This is a vanilla server — Fabric mods won't load until you install a mod loader.
+                      </span>
+                      <button
+                        onClick={handleInstallLoader}
+                        disabled={loaderBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                        className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-amber-200 font-bold transition-colors disabled:opacity-50"
+                      >
+                        {loaderBusy ? "Installing…" : "Install Fabric"}
+                      </button>
+                    </div>
+                  )
+                )}
                 {/* Header row */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -1579,6 +1651,17 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                           </div>
 
                           <div className="flex items-center gap-2">
+                            {game === "MINECRAFT" && mod.provider === "modrinth" && (
+                              <button
+                                onClick={() => handleUpdateMod(mod)}
+                                disabled={loading || updatingModId === mod.id || selectedServer.status === "RUNNING"}
+                                className="px-3 py-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-xs font-bold text-sky-400 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                title="Check for and install a newer version"
+                              >
+                                <RefreshCw className={`w-3 h-3 ${updatingModId === mod.id ? "animate-spin" : ""}`} />
+                                {updatingModId === mod.id ? "Updating…" : "Update"}
+                              </button>
+                            )}
                             <button
                               onClick={() => handleDeleteMod(mod)}
                               disabled={loading || selectedServer.status === "RUNNING"}
