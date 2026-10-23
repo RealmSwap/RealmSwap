@@ -24,11 +24,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       }
     }
 
-    // Fetch the last 60 records (~10 minutes if polling every 10 seconds)
+    // Last 360 points (~1 hour at 10s sampling). Retention beyond 7 days is
+    // handled by src/lib/telemetryRetention.ts; this window is chart-sized.
     const telemetry = await prisma.serverTelemetry.findMany({
       where: { serverId },
       orderBy: { createdAt: "desc" },
-      take: 60,
+      take: 360,
     });
 
     // Return in chronological order

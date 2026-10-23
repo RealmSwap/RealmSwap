@@ -75,6 +75,10 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   // Selected server for Health Sidebar
   const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
 
+  // The first-run wizard stays mounted through its post-deploy step even once
+  // the server exists, until the user clicks Finish.
+  const [wizardActive, setWizardActive] = useState(false);
+
   // Initialize selected server on first load
   useEffect(() => {
     if (!selectedServerId && data.servers.length > 0) {
@@ -470,13 +474,16 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                     }}
                   />
                 ))}
-                {data.servers.length === 0 && (
+                {(data.servers.length === 0 || wizardActive) && (
                   <FirstServerWizard
-                    onDeployed={() => {
+                    onDeployed={(deployed: any) => {
+                      setWizardActive(true);
                       fetch("/api/servers", { cache: "no-store" })
                         .then((r) => r.ok && r.json())
                         .then((fresh) => fresh && setData(fresh));
                     }}
+                    onDone={() => setWizardActive(false)}
+                    onOpenConnection={(server: any) => setConnectionServer(server)}
                   />
                 )}
               </div>

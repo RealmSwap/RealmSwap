@@ -12,8 +12,10 @@ import {
   Share2,
   BadgeCent,
   AlertTriangle,
-  X
+  X,
+  CalendarClock
 } from "lucide-react";
+import { formatSessionStart, PlannedSessionSummary } from "@/lib/sessions";
 import {
   LineChart,
   Line,
@@ -30,6 +32,7 @@ export function HealthSidebar({
   server: any
 }) {
   const [telemetry, setTelemetry] = React.useState<any[]>([]);
+  const [sessions, setSessions] = React.useState<PlannedSessionSummary[] | null>(null);
   const [crashOpen, setCrashOpen] = React.useState(false);
   const [crashData, setCrashData] = React.useState<{ crashes: any[]; weekCount: number } | null>(null);
   const [latestBackup, setLatestBackup] = React.useState<any | null>(null);
@@ -67,10 +70,11 @@ export function HealthSidebar({
         const res = await fetch(`/api/servers/${server.id}/telemetry`);
         if (res.ok) {
           const data = await res.json();
-          // Format the created dates for the chart X-axis
+          // Format the created dates for the chart X-axis (minute resolution —
+          // the window is the last hour, so seconds are noise)
           const formatted = data.map((d: any) => ({
             ...d,
-            time: new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(new Date(d.createdAt))
+            time: new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(new Date(d.createdAt))
           }));
           setTelemetry(formatted);
         }
@@ -82,6 +86,27 @@ export function HealthSidebar({
     fetchTelemetry();
     const interval = setInterval(fetchTelemetry, 10000);
     return () => clearInterval(interval);
+  }, [server?.id]);
+
+  // Planned sessions come from the Discord bot's /plan command. Rosters change
+  // when people click "I'm In" on Discord, so poll gently for freshness.
+  React.useEffect(() => {
+    if (!server) return;
+    let cancelled = false;
+    async function fetchSessions() {
+      try {
+        const res = await fetch(`/api/servers/${server.id}/sessions`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled) setSessions(data.sessions ?? []);
+        }
+      } catch {
+        // Leave the previous state — transient fetch errors shouldn't blank the panel.
+      }
+    }
+    fetchSessions();
+    const interval = setInterval(fetchSessions, 60000);
+    return () => { cancelled = true; clearInterval(interval); };
   }, [server?.id]);
 
   if (!server) return <div className="w-80 shrink-0"></div>;
@@ -156,13 +181,15 @@ export function HealthSidebar({
 
           {/* Telemetry Chart */}
           <div className="mt-4 pt-4 border-t border-white/5">
-            <h4 className="text-xs font-bold text-slate-400 mb-2">Live Performance</h4>
+            <h4 className="text-xs font-bold text-slate-400 mb-2">
+              Live Performance <span className="font-medium text-slate-600">· last hour</span>
+            </h4>
             <div className="h-32 w-full">
               {telemetry.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={telemetry} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                    <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} minTickGap={48} />
                     <YAxis yAxisId="left" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
                     <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} tickLine={false} />
                     <Tooltip 
@@ -180,6 +207,44 @@ export function HealthSidebar({
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Planned Sessions (Discord /plan) */}
+      <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] shadow-xl overflow-hidden">
+        <div className="p-4 border-b border-white/5 bg-slate-950/40">
+          <h3 className="text-sm font-extrabold text-white tracking-wide flex items-center gap-2">
+            <CalendarClock className="w-4 h-4 text-emerald-400" />
+            Planned Sessions
+          </h3>
+          <p className="text-[10px] text-slate-500 mt-0.5">Scheduled with /plan in Discord</p>
+        </div>
+        <div className="p-2">
+          {sessions === null ? (
+            <div className="px-3 py-4 text-xs text-slate-500 text-center">Loading…</div>
+          ) : sessions.length === 0 ? (
+            <div className="px-3 py-4 text-xs text-slate-500 text-center leading-relaxed">
+              No sessions planned. Run <span className="font-mono text-slate-400">/plan</span> in your
+              Discord server and they'll show up here.
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {sessions.map((s) => (
+                <div key={s.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors">
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-200 truncate">{s.title}</div>
+                    <div className="text-[10px] text-slate-500">{formatSessionStart(s.startTime)}</div>
+                  </div>
+                  <span
+                    className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex-shrink-0"
+                    title={`${s.rosterCount} player${s.rosterCount === 1 ? "" : "s"} clicked I'm In on Discord`}
+                  >
+                    {s.rosterCount} in
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

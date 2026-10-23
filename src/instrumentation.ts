@@ -12,6 +12,18 @@ export async function register() {
     // agents may be orphaned — reset both before anything trusts them.
     const { reconcileTunnelsOnBoot } = await import("@/lib/tunnels");
     reconcileTunnelsOnBoot();
+
+    // Clear any ServerTelemetry backlog from before the 7-day retention
+    // prune existed (throttled inside; the boot call is the forced first run).
+    const { maybePruneTelemetry } = await import("@/lib/telemetryRetention");
+    maybePruneTelemetry();
+
+    // Docker containers outlive this process — reattach log followers, exit
+    // watchers, and monitoring (or mark containers that are gone as stopped).
+    const { getRunner } = await import("@/lib/runners");
+    (getRunner("DOCKER") as import("@/lib/runners/DockerRunner").DockerRunner)
+      .reconcileOnBoot()
+      .catch((err: any) => console.error("[Docker] boot reconcile failed:", err?.message));
   }
   if (!process.env.SENTRY_DSN) return;
   const Sentry = await import("@sentry/nextjs");

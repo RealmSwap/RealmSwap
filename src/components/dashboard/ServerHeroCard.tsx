@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Sparkline } from "./Sparkline";
 import { statusLabel } from "@/lib/gameDisplay";
+import { formatSessionStart } from "@/lib/sessions";
 import { motion } from "framer-motion";
 import {
   Play,
@@ -24,7 +25,8 @@ import {
   Sparkles,
   RotateCw,
   MemoryStick,
-  QrCode
+  QrCode,
+  CalendarClock
 } from "lucide-react";
 
 export function ServerHeroCard({
@@ -155,6 +157,17 @@ export function ServerHeroCard({
         
         <div className="relative z-10">
           <h2 className="text-2xl font-extrabold text-white drop-shadow-md truncate">{server.name}</h2>
+          {server.plannedSessions?.length > 0 && (
+            <div
+              className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-300/90 mt-1 w-fit"
+              title={`Planned in Discord: ${server.plannedSessions[0].title} — ${server.plannedSessions[0].rosterCount} in${server.plannedSessions.length > 1 ? ` (+${server.plannedSessions.length - 1} more scheduled)` : ""}`}
+            >
+              <CalendarClock className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate max-w-[320px]">
+                {formatSessionStart(server.plannedSessions[0].startTime)} · {server.plannedSessions[0].rosterCount} in
+              </span>
+            </div>
+          )}
           {server.ramHint && (
             <div
               className="flex items-center gap-1.5 text-[11px] font-medium text-sky-300/90 mt-1 w-fit"
