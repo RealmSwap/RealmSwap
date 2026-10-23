@@ -370,11 +370,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   const [customModId, setCustomModId] = useState("");
 
   /* Dependency modal */
-  const [depModalOpen, setDepModalOpen] = useState(false);
-  const [depModalMod, setDepModalMod] = useState<any | null>(null);
-  const [depModalDeps, setDepModalDeps] = useState<any[]>([]);
-  const [depModalSelected, setDepModalSelected] = useState<Set<string>>(new Set());
-  const [resolvingDeps, setResolvingDeps] = useState(false);
+
 
   /* ── Derived ─────────────────────────────────────────────────── */
 
@@ -480,88 +476,14 @@ export default function ModsView({ servers, user }: ModsViewProps) {
 
   /* ── Handlers ────────────────────────────────────────────────── */
 
-  const handlePreInstallMod = async (mod: any) => {
-    if (!selectedServer) return;
-    
-    // Only Thunderstore & Modrinth support resolving dependencies right now
-    if (mod.provider === "thunderstore" || mod.provider === "modrinth") {
-      setResolvingDeps(true);
-      try {
-        const res = await fetch(`/api/servers/${selectedServer.id}/mods/${mod.packageId || mod.modId}/dependencies?provider=${mod.provider}&version=${mod.version || "latest"}`);
-        const data = await res.json();
-        if (data.dependencies && data.dependencies.length > 0) {
-          setDepModalMod(mod);
-          setDepModalDeps(data.dependencies);
-          
-          // Pre-select dependencies that are NOT already installed
-          const selected = new Set<string>();
-          data.dependencies.forEach((d: any) => {
-            if (!isInstalled(d.packageId)) {
-              selected.add(d.packageId);
-            }
-          });
-          setDepModalSelected(selected);
-          setDepModalOpen(true);
-        } else {
-          // No dependencies, just install
-          handleInstallMod(mod);
-        }
-      } catch (err) {
-        console.error("Failed to resolve dependencies", err);
-        handleInstallMod(mod); // fallback
-      } finally {
-        setResolvingDeps(false);
-      }
-    } else {
-      handleInstallMod(mod);
-    }
-  };
-
-  const handleBulkInstall = async () => {
-    if (!depModalMod || !selectedServer) return;
-    
-    setDepModalOpen(false);
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-    
-    const modsToInstall = depModalDeps.filter(d => depModalSelected.has(d.packageId));
-    // The main mod itself doesn't need to be in depModalDeps, we add it at the end
-    // But we must construct it properly
-    modsToInstall.push(depModalMod);
-    
-    let installedCount = 0;
-    try {
-      for (const m of modsToInstall) {
-        const res = await fetch(`/api/servers/${selectedServer.id}/mods/install`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            modType: m.modType || "PLUGIN",
-            modId: m.packageId || m.modId,
-            modName: m.name,
-            downloadUrl: m.downloadUrl,
-            workshopId: m.workshopId,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(`Failed to install ${m.name}: ${data.error}`);
-        installedCount++;
-      }
-      setSuccess(`Successfully installed ${installedCount} mods!`);
-      
-      // Refresh
-      const modsRes = await fetch(`/api/servers/${selectedServer.id}/mods`);
-      const modsData = await modsRes.json();
-      if (modsData.mods) setInstalledMods(modsData.mods);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-      setDepModalMod(null);
-      setDepModalDeps([]);
-      setDepModalSelected(new Set());
-    }
+  // The install API validates modType against a fixed enum; search results
+  // carry a provider instead. The server only uses modType to tell the
+  // BepInEx core install apart from normal package installs.
+  const installModType = (mod: { modType?: string; provider?: string; workshopId?: string }): string => {
+    if (mod.modType === "BEPINEX") return "BEPINEX";
+    if (mod.provider === "modrinth") return "MODRINTH";
+    if (mod.workshopId) return "STEAM_WORKSHOP";
+    return "THUNDERSTORE";
   };
 
   const handleInstallLoader = async (loader: "fabric" | "forge" | "neoforge") => {
@@ -634,10 +556,13 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   };
 
   const handleInstallMod = async (mod: {
-    modId: string;
+    modId?: string;
+    packageId?: string;
     name: string;
+    version?: string;
     downloadUrl?: string;
     modType?: string;
+    provider?: string;
     workshopId?: string;
   }) => {
     if (!selectedServer) return;
@@ -652,9 +577,10 @@ export default function ModsView({ servers, user }: ModsViewProps) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            modType: mod.modType || "PLUGIN",
-            modId: mod.modId,
+            modType: installModType(mod),
+            modId: mod.modId || mod.packageId,
             modName: mod.name,
+            version: mod.version,
             downloadUrl: mod.downloadUrl,
             workshopId: mod.workshopId,
           }),
@@ -664,7 +590,8 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       if (!res.ok) throw new Error(data.error || "Failed to install mod");
 
       setSuccess(
-        `Successfully installed '${mod.name}' to server '${selectedServer.name}'!`
+        data.message ||
+          `Successfully installed '${mod.name}' to server '${selectedServer.name}'!`
       );
       // Refresh installed mods
       const modsRes = await fetch(
@@ -803,7 +730,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   const handleZomboidSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customWorkshopId || !customModId) return;
-    handlePreInstallMod({
+    handleInstallMod({
       name: `Workshop ID ${customWorkshopId} (${customModId})`,
       modId: customModId,
       workshopId: customWorkshopId,
@@ -1102,7 +1029,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                                 </span>
                               ) : (
                                 <button
-                                  onClick={() => handlePreInstallMod(mod)}
+                                  onClick={() => handleInstallMod(mod)}
                                   disabled={
                                     loading ||
                                     selectedServer.status === "RUNNING"
@@ -1175,7 +1102,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                           loading={loading}
                           serverStatus={selectedServer.status}
                           isInstalled={isInstalled(mod.packageId)}
-                          onInstall={handlePreInstallMod}
+                          onInstall={handleInstallMod}
                           onDetail={setDetailMod}
                           animationDelay={idx * 50}
                         />
@@ -1463,7 +1390,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                                 loading={loading}
                                 serverStatus={selectedServer.status}
                                 isInstalled={isInstalled(mod.packageId)}
-                                onInstall={handlePreInstallMod}
+                                onInstall={handleInstallMod}
                                 onDetail={setDetailMod}
                                 animationDelay={idx * 30}
                               />
@@ -1658,7 +1585,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {game === "MINECRAFT" && mod.provider === "modrinth" && (
+                            {mod.provider === "modrinth" || mod.provider === "thunderstore" ? (
                               <button
                                 onClick={() => handleUpdateMod(mod)}
                                 disabled={loading || updatingModId === mod.id || selectedServer.status === "RUNNING"}
@@ -1668,7 +1595,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                                 <RefreshCw className={`w-3 h-3 ${updatingModId === mod.id ? "animate-spin" : ""}`} />
                                 {updatingModId === mod.id ? "Updating…" : "Update"}
                               </button>
-                            )}
+                            ) : null}
                             <button
                               onClick={() => handleDeleteMod(mod)}
                               disabled={loading || selectedServer.status === "RUNNING"}
@@ -1824,12 +1751,12 @@ export default function ModsView({ servers, user }: ModsViewProps) {
               ) : (
                 <button
                   onClick={() => {
-                    handlePreInstallMod({
+                    handleInstallMod({
                       name: detailMod.name,
                       modId: detailMod.packageId,
+                      version: detailMod.version,
                       downloadUrl: detailMod.downloadUrl,
-                      modType:
-                        game === "VALHEIM" ? "PLUGIN" : undefined,
+                      provider: detailMod.provider,
                     });
                     setDetailMod(null);
                   }}
@@ -1842,126 +1769,6 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                   Install Mod
                 </button>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Dependency Modal ─────────────────────────────── */}
-      {depModalOpen && depModalMod && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#0b101a] border border-white/10 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-scale-up">
-            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
-                  <Layers className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Missing Dependencies</h3>
-                  <p className="text-xs text-mutedText mt-0.5">
-                    {depModalMod.name} requires additional mods to function properly.
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setDepModalOpen(false);
-                  setDepModalMod(null);
-                  setDepModalDeps([]);
-                }}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-slate-950/30">
-              <div className="space-y-3">
-                {depModalDeps.map((dep, idx) => {
-                  const alreadyInstalled = isInstalled(dep.packageId);
-                  const isChecked = depModalSelected.has(dep.packageId);
-
-                  return (
-                    <div
-                      key={dep.packageId}
-                      className={`flex items-start gap-4 p-4 rounded-xl border transition-colors ${
-                        alreadyInstalled
-                          ? "bg-slate-900/40 border-emerald-500/20 opacity-70"
-                          : isChecked
-                          ? "bg-blue-500/10 border-blue-500/30"
-                          : "bg-slate-900 border-white/5 hover:border-white/10"
-                      }`}
-                    >
-                      <button
-                        className="mt-1 flex-shrink-0 focus:outline-none"
-                        disabled={alreadyInstalled}
-                        onClick={() => {
-                          const newSet = new Set(depModalSelected);
-                          if (newSet.has(dep.packageId)) {
-                            newSet.delete(dep.packageId);
-                          } else {
-                            newSet.add(dep.packageId);
-                          }
-                          setDepModalSelected(newSet);
-                        }}
-                      >
-                        <div
-                          className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
-                            alreadyInstalled
-                              ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
-                              : isChecked
-                              ? "bg-blue-500 border-blue-500 text-white"
-                              : "bg-slate-800 border-slate-600 text-transparent"
-                          }`}
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                        </div>
-                      </button>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-semibold text-sm text-slate-200 truncate">
-                            {dep.name}
-                          </span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 whitespace-nowrap">
-                            v{dep.version}
-                          </span>
-                        </div>
-                        <p className="text-xs text-mutedText mt-1 line-clamp-1">
-                          {dep.description || dep.packageId}
-                        </p>
-                        {alreadyInstalled && (
-                          <div className="mt-2 inline-flex items-center gap-1 text-[10px] text-emerald-400 font-medium bg-emerald-500/10 px-2 py-0.5 rounded">
-                            <Check className="w-3 h-3" />
-                            Already Installed
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="p-5 border-t border-white/5 bg-slate-900/50 flex justify-end gap-3">
-              <button
-                onClick={() => {
-                  setDepModalOpen(false);
-                  setDepModalMod(null);
-                  setDepModalDeps([]);
-                }}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-800 hover:bg-slate-700 text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleBulkInstall}
-                disabled={loading}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-500 text-white transition-colors flex items-center gap-2 shadow-lg shadow-blue-500/20 disabled:opacity-50"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <DownloadCloud className="w-4 h-4" />}
-                Install Selected ({depModalSelected.size} + 1)
-              </button>
             </div>
           </div>
         </div>
@@ -2233,9 +2040,9 @@ function ModCard({
               onInstall({
                 name: mod.name,
                 modId: mod.packageId,
+                version: mod.version,
                 downloadUrl: mod.downloadUrl,
                 provider: mod.provider,
-                modType: game === "VALHEIM" ? "PLUGIN" : undefined,
               });
             }}
             disabled={loading || serverStatus === "RUNNING"}

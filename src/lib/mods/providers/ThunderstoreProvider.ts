@@ -1,68 +1,51 @@
 import { ModProvider, ModSearchResult, SearchOptions } from "./types";
-import path from "path";
-import fs from "fs";
+import {
+  communityForGame,
+  fetchCommunityIndex,
+  newestVersion,
+  ThunderstorePackage,
+} from "@/lib/mods/thunderstore";
 
 /**
- * Maps game slugs to Thunderstore community identifiers.
  * Thunderstore hosts mod communities for many games — each with a public
- * package index API at https://{community}.thunderstore.io/api/v1/package/.
+ * package index at https://{community}.thunderstore.io/api/v1/package/.
+ * Index fetching/caching is shared with the install-time dependency
+ * resolver in src/lib/mods/thunderstore.ts.
  */
-const THUNDERSTORE_COMMUNITIES: Record<string, string> = {
-  VALHEIM: "valheim",
-  VRISING: "v-rising",
-  PALWORLD: "palworld",
-};
-
 export class ThunderstoreProvider implements ModProvider {
   id = "thunderstore";
-
-  /** Per-community package cache to avoid refetching the full index */
-  private cache: Record<string, { packages: any[]; fetchedAt: number }> = {};
-  private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
   /**
    * Returns true if the given game has a known Thunderstore community.
    */
   static supportsGame(game: string): boolean {
-    return game.toUpperCase() in THUNDERSTORE_COMMUNITIES;
+    return communityForGame(game) !== null;
   }
 
   async search(query: string, game: string, options?: SearchOptions): Promise<ModSearchResult[]> {
-    const community = THUNDERSTORE_COMMUNITIES[game.toUpperCase()];
+    const community = communityForGame(game);
     if (!community) return [];
+
+    let packages: ThunderstorePackage[] = [];
+    try {
+      packages = await fetchCommunityIndex(community);
+    } catch (err) {
+      console.error(`[Thunderstore] Failed to fetch packages for ${community}`, err);
+      return [];
+    }
 
     const offset = options?.offset || 0;
     const sort = options?.sort || "relevance";
     const categoryFilter = options?.category || "";
     const limit = 20;
 
-    // Fetch and cache the full package index for this community
-    const cached = this.cache[community];
-    if (!cached || Date.now() - cached.fetchedAt > this.CACHE_TTL) {
-      console.log(`[Thunderstore] Fetching package index for ${community}...`);
-      try {
-        const response = await fetch(
-          `https://${community}.thunderstore.io/api/v1/package/`
-        );
-        if (response.ok) {
-          this.cache[community] = {
-            packages: await response.json(),
-            fetchedAt: Date.now(),
-          };
-        }
-      } catch (err) {
-        console.error(`[Thunderstore] Failed to fetch packages for ${community}`, err);
-      }
-    }
-
-    const packages = this.cache[community]?.packages || [];
-    let filtered = [...packages];
+    let filtered = packages.filter((pkg) => !pkg.is_deprecated);
 
     // Text search filter
     const q = query.toLowerCase();
     if (q.length > 0) {
       filtered = filtered.filter(
-        (pkg: any) =>
+        (pkg) =>
           pkg.name.toLowerCase().includes(q) ||
           pkg.owner.toLowerCase().includes(q) ||
           pkg.full_name.toLowerCase().includes(q)
@@ -71,15 +54,10 @@ export class ThunderstoreProvider implements ModProvider {
 
     // Category filter
     if (categoryFilter) {
-      filtered = filtered.filter((pkg: any) =>
-        pkg.categories?.some(
-          (c: string) => c.toLowerCase() === categoryFilter.toLowerCase()
-        )
+      filtered = filtered.filter((pkg) =>
+        pkg.categories?.some((c) => c.toLowerCase() === categoryFilter.toLowerCase())
       );
     }
-
-    // Filter out deprecated
-    filtered = filtered.filter((pkg: any) => !pkg.is_deprecated);
 
     // Sorting
     switch (sort) {
@@ -90,8 +68,7 @@ export class ThunderstoreProvider implements ModProvider {
       case "updated":
         filtered.sort(
           (a, b) =>
-            new Date(b.date_updated).getTime() -
-            new Date(a.date_updated).getTime()
+            new Date(b.date_updated).getTime() - new Date(a.date_updated).getTime()
         );
         break;
       default:
@@ -103,111 +80,22 @@ export class ThunderstoreProvider implements ModProvider {
     }
 
     // Paginate and map
-    const results = filtered.slice(offset, offset + limit).map((pkg: any) => {
-      const latestVersion = pkg.versions[0];
+    return filtered.slice(offset, offset + limit).map((pkg) => {
+      const latestVersion = newestVersion(pkg);
       return {
         provider: this.id,
         packageId: pkg.full_name,
         name: pkg.name,
         author: pkg.owner,
-        description: latestVersion.description,
-        version: latestVersion.version_number,
-        downloadUrl: latestVersion.download_url,
-        iconUrl: latestVersion.icon || undefined,
+        description: latestVersion?.description ?? "",
+        version: latestVersion?.version_number ?? "",
+        downloadUrl: latestVersion?.download_url ?? "",
+        iconUrl: latestVersion?.icon || undefined,
         rating: pkg.rating_score || 0,
         categories: pkg.categories || [],
         updatedAt: pkg.date_updated,
         websiteUrl: `https://thunderstore.io/c/${community}/p/${pkg.owner}/${pkg.name}/`,
       };
     });
-
-    return results;
-  }
-
-  async resolveDependenciesFull(packageId: string, version: string, game: string): Promise<ModSearchResult[]> {
-    const community = THUNDERSTORE_COMMUNITIES[game.toUpperCase()];
-    if (!community) return [];
-
-    // Ensure cache is loaded
-    const cached = this.cache[community];
-    if (!cached || Date.now() - cached.fetchedAt > this.CACHE_TTL) {
-      // Trigger a search just to warm the cache, we can just fetch the index directly
-      try {
-        const response = await fetch(`https://${community}.thunderstore.io/api/v1/package/`);
-        if (response.ok) {
-          this.cache[community] = {
-            packages: await response.json(),
-            fetchedAt: Date.now(),
-          };
-        }
-      } catch (err) {
-        console.error(`[Thunderstore] Failed to fetch packages for ${community}`, err);
-        return [];
-      }
-    }
-
-    const packages = this.cache[community]?.packages || [];
-    const packageMap = new Map(packages.map((p: any) => [p.full_name, p]));
-    
-    const results: ModSearchResult[] = [];
-    const visited = new Set<string>();
-
-    const resolveRecursive = (currentId: string) => {
-      console.log("[Thunderstore] resolveRecursive called with:", currentId);
-      if (visited.has(currentId)) return;
-      visited.add(currentId);
-
-      const pkg = packageMap.get(currentId);
-      if (!pkg) {
-        console.log(`[Thunderstore] packageMap.get(${currentId}) returned undefined!`);
-        return;
-      }
-      if (!pkg.versions || pkg.versions.length === 0) {
-        console.log(`[Thunderstore] pkg.versions is empty for ${currentId}!`);
-        return;
-      }
-
-      const latestVersion = pkg.versions[0];
-      const deps: string[] = latestVersion.dependencies || [];
-      console.log(`[Thunderstore] ${currentId} has deps:`, deps);
-
-      for (const depString of deps) {
-        const lastDash = depString.lastIndexOf("-");
-        if (lastDash === -1) continue;
-        const depId = depString.substring(0, lastDash);
-        console.log(`[Thunderstore] parsed depId:`, depId);
-
-        if (depId.includes("BepInExPack")) continue;
-
-        if (!visited.has(depId)) {
-          const depPkg = packageMap.get(depId);
-          if (depPkg) {
-            const depLatest = depPkg.versions[0];
-            results.push({
-              provider: this.id,
-              packageId: depPkg.full_name,
-              name: depPkg.name,
-              author: depPkg.owner,
-              description: depLatest.description,
-              version: depLatest.version_number,
-              downloadUrl: depLatest.download_url,
-              iconUrl: depLatest.icon || undefined,
-              rating: depPkg.rating_score || 0,
-              categories: depPkg.categories || [],
-              updatedAt: depPkg.date_updated,
-              websiteUrl: `https://thunderstore.io/c/${community}/p/${depPkg.owner}/${depPkg.name}/`,
-            });
-            resolveRecursive(depId);
-          } else {
-            console.log(`[Thunderstore] dependency ${depId} NOT FOUND in packageMap!`);
-          }
-        }
-      }
-    };
-
-    console.log(`[Thunderstore] Starting resolution for packageId: ${packageId}, packageMap size: ${packageMap.size}`);
-    resolveRecursive(packageId);
-    console.log("[Thunderstore] resolveDependenciesFull returning deps:", results.map(r => r.packageId));
-    return results;
   }
 }

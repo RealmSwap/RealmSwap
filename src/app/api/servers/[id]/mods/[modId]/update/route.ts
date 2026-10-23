@@ -9,11 +9,15 @@ import { testServerBoot } from "@/lib/runners/sandbox";
 import { downloadFile } from "@/lib/download";
 import { detectMinecraftVersion, readLoaderMarker } from "@/lib/mods/mcLoaders";
 import { resolveInstallCandidate } from "@/lib/mods/modrinth";
+import { communityForGame, fetchCommunityIndex, isBepInExCore, newestVersion, extractThunderstorePackage } from "@/lib/mods/thunderstore";
+import fs from "fs";
 import path from "path";
+import AdmZip from "adm-zip";
 
-// POST: check for and install a newer version of an installed Modrinth mod.
-// Snapshot -> replace jar -> sandbox test -> rollback on failure, same
-// contract as installs. Currently Minecraft/Modrinth installations only.
+// POST: check for and install a newer version of an installed mod.
+// Snapshot -> replace files -> sandbox test -> rollback on failure, same
+// contract as installs. Supports Minecraft/Modrinth jars and
+// Valheim/Thunderstore packages.
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string; modId: string } }
@@ -28,29 +32,96 @@ export async function POST(
     }
     const { server } = access;
     const serverId = server.id;
+    const game = server.game.toUpperCase();
 
-    if (server.game.toUpperCase() !== "MINECRAFT") {
-      return NextResponse.json({ error: "Mod updates are currently supported for Minecraft servers only." }, { status: 400 });
-    }
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json({ error: "Stop the server before updating mods." }, { status: 400 });
     }
 
     const installation = await prisma.modInstallation.findFirst({
-      where: { serverId, packageId: params.modId, provider: "modrinth" },
+      where: { serverId, packageId: params.modId },
     });
     if (!installation) {
-      return NextResponse.json({ error: "Installed Modrinth mod not found." }, { status: 404 });
+      return NextResponse.json({ error: "Installed mod not found." }, { status: 404 });
     }
 
-    const installDir = path.join(dataRoot(), "local-servers", serverId);
-    const marker = readLoaderMarker(installDir);
-    const candidate = await resolveInstallCandidate(installation.packageId, {
-      gameVersion: detectMinecraftVersion(installDir),
-      loader: marker?.type ?? null,
-    });
+    const serverRoot = path.join(dataRoot(), "local-servers", serverId);
 
-    if (candidate.version.version_number === installation.version) {
+    // Resolve the newest available version before taking a snapshot, so an
+    // up-to-date mod never touches the server.
+    let newVersionNumber: string;
+    let downloadUrl: string;
+    let applyUpdate: () => Promise<void>;
+
+    if (installation.provider === "modrinth") {
+      if (game !== "MINECRAFT") {
+        return NextResponse.json({ error: "Modrinth mod updates are supported for Minecraft servers only." }, { status: 400 });
+      }
+      const marker = readLoaderMarker(serverRoot);
+      const candidate = await resolveInstallCandidate(installation.packageId, {
+        gameVersion: detectMinecraftVersion(serverRoot),
+        loader: marker?.type ?? null,
+      });
+      newVersionNumber = candidate.version.version_number;
+      downloadUrl = candidate.file.url;
+      const dest = safeJoin(path.join(serverRoot, "mods"), `${installation.packageId}.jar`);
+      applyUpdate = async () => { await downloadFile(downloadUrl, dest); };
+    } else if (installation.provider === "thunderstore") {
+      if (game !== "VALHEIM") {
+        return NextResponse.json({ error: "Thunderstore mod updates are supported for Valheim servers only." }, { status: 400 });
+      }
+      const community = communityForGame(game);
+      if (!community) {
+        return NextResponse.json({ error: "Mods are not supported for this game." }, { status: 400 });
+      }
+      const index = await fetchCommunityIndex(community);
+      const pkg = index.find((p) => p.full_name === installation.packageId);
+      if (!pkg) {
+        return NextResponse.json({ error: `Package '${installation.packageId}' not found on Thunderstore.` }, { status: 404 });
+      }
+      const latest = newestVersion(pkg);
+      if (!latest) {
+        return NextResponse.json({ error: `Package '${installation.packageId}' has no published versions.` }, { status: 404 });
+      }
+      newVersionNumber = latest.version_number;
+      downloadUrl = latest.download_url;
+      const pluginsDir = path.join(serverRoot, "valheim-server", "BepInEx", "plugins");
+      const modDir = safeJoin(pluginsDir, installation.packageId);
+      if (isBepInExCore(installation.packageId)) {
+        // The core pack installs over the server root, not the plugins dir —
+        // same as the install route's auto-provisioning.
+        const serverDir = path.join(serverRoot, "valheim-server");
+        const tempZip = safeJoin(serverDir, ".bepinex-core.staging.zip");
+        applyUpdate = async () => {
+          await downloadFile(downloadUrl, tempZip);
+          try {
+            const zip = new AdmZip(tempZip);
+            zip.extractAllTo(serverDir, true);
+          } finally {
+            try { fs.unlinkSync(tempZip); } catch (_) {}
+          }
+        };
+      } else {
+        applyUpdate = async () => {
+          const tempZip = safeJoin(pluginsDir, `.${installation.packageId}.staging.zip`);
+          await downloadFile(downloadUrl, tempZip);
+          try {
+            const zip = new AdmZip(tempZip);
+            fs.rmSync(modDir, { recursive: true, force: true });
+            extractThunderstorePackage(zip, modDir);
+          } finally {
+            try { fs.unlinkSync(tempZip); } catch (_) {}
+          }
+        };
+      }
+    } else {
+      return NextResponse.json(
+        { error: `Updates are not supported for provider '${installation.provider}'.` },
+        { status: 400 }
+      );
+    }
+
+    if (newVersionNumber === installation.version) {
       return NextResponse.json({
         success: true,
         updated: false,
@@ -60,19 +131,18 @@ export async function POST(
 
     const snapshot = await createSnapshot(serverId, user.id, `Pre-update: ${installation.name}`);
     try {
-      const dest = safeJoin(path.join(installDir, "mods"), `${installation.packageId}.jar`);
-      await downloadFile(candidate.file.url, dest);
-      await testServerBoot(serverId, "MINECRAFT");
+      await applyUpdate();
+      await testServerBoot(serverId, game);
 
       await prisma.modInstallation.update({
         where: { id: installation.id },
-        data: { version: candidate.version.version_number, updatedAt: new Date() },
+        data: { version: newVersionNumber, updatedAt: new Date() },
       });
       await prisma.activityLog.create({
         data: {
           userId: user.id,
           action: "UPDATE_MOD",
-          details: `Updated mod '${installation.name}' ${installation.version} → ${candidate.version.version_number} on server '${server.name}'.`,
+          details: `Updated mod '${installation.name}' ${installation.version} → ${newVersionNumber} on server '${server.name}'.`,
         },
       });
 
@@ -80,8 +150,8 @@ export async function POST(
         success: true,
         updated: true,
         from: installation.version,
-        to: candidate.version.version_number,
-        message: `${installation.name} updated to ${candidate.version.version_number} and passed sandbox testing.`,
+        to: newVersionNumber,
+        message: `${installation.name} updated to ${newVersionNumber} and passed sandbox testing.`,
       });
     } catch (err: any) {
       await restoreSnapshot(snapshot.id);
