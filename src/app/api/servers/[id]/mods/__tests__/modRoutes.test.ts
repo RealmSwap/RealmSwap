@@ -24,6 +24,7 @@ const bag = vi.hoisted(() => ({
   audit: [] as any[],
   bootError: null as Error | null,
   restored: [] as string[],
+  discarded: [] as string[],
 }));
 
 vi.mock("@/lib/auth", () => ({ getAuthenticatedUser: async () => ({ id: "user1" }) }));
@@ -67,6 +68,9 @@ vi.mock("@/lib/snapshots", () => ({
   createSnapshot: async () => ({ id: "snap1" }),
   restoreSnapshot: async (id: string) => {
     bag.restored.push(id);
+  },
+  discardSnapshot: async (id: string) => {
+    bag.discarded.push(id);
   },
 }));
 vi.mock("@/lib/runners/sandbox", () => ({
@@ -115,6 +119,7 @@ beforeEach(() => {
   bag.audit = [];
   bag.bootError = null;
   bag.restored = [];
+  bag.discarded = [];
   iniPath = path.join(dir, "local-servers", "s1", "zomboid-server", "zomboid-data", "Server", "servertest.ini");
 });
 

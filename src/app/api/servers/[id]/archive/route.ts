@@ -6,6 +6,7 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
 import path from "path";
+import * as crypto from "crypto";
 
 export async function POST(
   req: NextRequest,
@@ -54,43 +55,61 @@ export async function POST(
       }
     }
 
-    // Archive and delete in transaction
-    const archive = await prisma.$transaction(async (tx) => {
-      // 1. Create the Vault Archive record
-      const arc = await tx.archive.create({
-        data: {
-          userId: user.id,
-          serverName: server.name,
-          game: server.game,
-          saveSizeGB,
-        },
-      });
-
-      // 2. Delete the active server slot
-      await tx.server.delete({
-        where: { id: serverId },
-      });
-
-      // 3. Log activity
-      await tx.activityLog.create({
-        data: {
-          userId: user.id,
-          action: "ARCHIVE_SERVER",
-          details: `Vaulted ${server.runnerType.toLowerCase()} server '${server.name}' (${server.game}) - Size: ${saveSizeGB} GB.`,
-        },
-      });
-
-      return arc;
-    });
-
-    // Move filesystem folder for local servers
-    if (server.runnerType === "LOCAL" && fs.existsSync(serverDir)) {
-      const archiveDir = path.join(dataRoot(), "local-archives", archive.id);
+    // The folder move happens BEFORE any DB change: if the move fails, the
+    // server row still exists and the world stays reachable. The move is
+    // rolled back if the transaction below fails. (The reverse order —
+    // delete the row first, rename afterwards — strands the world on any
+    // rename failure with no server row and no archive pointing at it.)
+    const archiveId = crypto.randomUUID();
+    const isLocalServer = server.runnerType === "LOCAL" && fs.existsSync(serverDir);
+    const archiveFolderPath = path.join(dataRoot(), "local-archives", archiveId);
+    if (isLocalServer) {
       const parentArchiveDir = path.join(dataRoot(), "local-archives");
       if (!fs.existsSync(parentArchiveDir)) {
         fs.mkdirSync(parentArchiveDir, { recursive: true });
       }
-      fs.renameSync(serverDir, archiveDir);
+      fs.renameSync(serverDir, archiveFolderPath);
+    }
+
+    let archive;
+    try {
+      archive = await prisma.$transaction(async (tx) => {
+        // 1. Create the Vault Archive record (id pre-generated for the folder name)
+        const arc = await tx.archive.create({
+          data: {
+            id: archiveId,
+            userId: user.id,
+            serverName: server.name,
+            game: server.game,
+            saveSizeGB,
+          },
+        });
+
+        // 2. Delete the active server slot
+        await tx.server.delete({
+          where: { id: serverId },
+        });
+
+        // 3. Log activity
+        await tx.activityLog.create({
+          data: {
+            userId: user.id,
+            action: "ARCHIVE_SERVER",
+            details: `Vaulted ${server.runnerType.toLowerCase()} server '${server.name}' (${server.game}) - Size: ${saveSizeGB} GB.`,
+          },
+        });
+
+        return arc;
+      });
+    } catch (txErr) {
+      if (isLocalServer) {
+        try {
+          fs.renameSync(archiveFolderPath, serverDir);
+        } catch (rollbackErr) {
+          console.error(`CRITICAL: archive transaction failed and folder rollback failed — world is at ${archiveFolderPath} with no server row:`, rollbackErr);
+        }
+      }
+      throw txErr;
     }
 
     return NextResponse.json(archive);

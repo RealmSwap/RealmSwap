@@ -21,6 +21,12 @@ export default {
   async execute(interaction: ChatInputCommandInteraction) {
     const subcommand = interaction.options.getSubcommand();
     const role = interaction.options.getRole("role", true);
+
+    // @everyone's id IS the guild id — granting it hands every member of the
+    // guild access, which is never what "grant a role" means.
+    if (role.id === interaction.guildId) {
+      return interaction.reply({ content: "That's the @everyone role — it would give every guild member access to your servers. Grant a specific role instead.", ephemeral: true });
+    }
     const gameQuery = interaction.options.getString("game", true).toLowerCase();
 
     // 1. Verify the user running this command has GameVault permissions

@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from "discord.js";
 import { findAuthorizedServer } from "../utils/auth";
 import { getRunner } from "../../lib/runners/factory";
+import { advertisedGameAddress } from "../../lib/advertisedAddress";
 
 export default {
   data: new SlashCommandBuilder()
@@ -46,7 +47,7 @@ export default {
     if (subcommand === "status") {
       const statusIcon = server.status === "RUNNING" ? "🟢" : server.status === "STARTING" ? "⏳" : "🔴";
       return interaction.reply({
-        content: `${statusIcon} **${server.name}**\n\n**Status:** ${server.status}\n**RAM:** ${server.ramAllocation} GB\n**Join IP:** \`${server.ipAddress}:${server.port}\``,
+        content: `${statusIcon} **${server.name}**\n\n**Status:** ${server.status}\n**RAM:** ${server.ramAllocation} GB\n**Join IP:** \`${advertisedGameAddress(server, !!server.tunnelUrl)}\``,
       });
     }
 
@@ -133,8 +134,9 @@ export default {
     if (subcommand === "restart") {
       if (server.status !== "RUNNING") return interaction.reply({ content: `**${server.name}** is not running.`, ephemeral: true });
       
-      await interaction.reply({ content: `🔄 Restarting **${server.name}** in 5 minutes (Auto-warning players)...` });
-      // In a real implementation, we would send an RCON command to warn players here.
+      await interaction.reply({ content: `🔄 Restarting **${server.name}** now...` });
+      // Note: players are NOT warned before this restart — there is no RCON
+      // warning implemented. Stop first if the session needs a heads-up.
       setTimeout(async () => {
         try {
           await callApi("restart");

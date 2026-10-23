@@ -14,12 +14,13 @@ function server(over: Partial<ServerLike> = {}): ServerLike {
   };
 }
 
-type DepsLike = { connect: (port: number) => Promise<boolean>; publicIP: () => Promise<string | null>; platform: NodeJS.Platform };
+type DepsLike = { connect: (port: number) => Promise<boolean>; publicIP: () => Promise<string | null>; platform: NodeJS.Platform; tunnelAlive: (serverId: string) => boolean };
 
 const deps = (over: Partial<DepsLike> = {}): DepsLike => ({
   connect: async () => true,
   publicIP: async () => "203.0.113.10",
   platform: "win32" as NodeJS.Platform,
+  tunnelAlive: () => true,
   ...over,
 });
 
@@ -59,6 +60,15 @@ describe("runConnectivityChecks", () => {
       deps({ publicIP: async () => null })
     );
     expect(r.checks.find((c) => c.id === "router")?.status).toBe("ok");
+  });
+
+  it("stale tunnel address (no live agent) warns instead of claiming ready", async () => {
+    const r = await runConnectivityChecks(
+      server({ enableUpnp: false, tunnelUrl: "x.playit.gg:1234" }),
+      mc.spec,
+      deps({ publicIP: async () => null, tunnelAlive: () => false })
+    );
+    expect(r.checks.find((c) => c.id === "router")?.status).toBe("warn");
   });
 
   it("game not listening while running is a fail", async () => {

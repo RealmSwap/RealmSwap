@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from "discord.js";
 import { prisma } from "../../lib/db";
 import { findAuthorizedServer } from "../utils/auth";
+import { advertisedGameAddress } from "../../lib/advertisedAddress";
 
 export default {
   data: new SlashCommandBuilder()
@@ -22,13 +23,15 @@ export default {
     }
 
     if (server.status === "RUNNING") {
-      let joinInfo = `\`${server.ipAddress}:${server.port}\``;
+      let joinInfo = `\`${advertisedGameAddress(server, !!server.tunnelUrl)}\``;
       if (server.inviteCode) {
         joinInfo += `\n**Invite Code:** \`${server.inviteCode}\` *(Use with RealmSync)*`;
       }
 
+      // Ephemeral: the invite code is the full credential payload.
       return interaction.reply({
         content: `🟢 **${server.name}** is already running!\n**Join:** ${joinInfo}`,
+        ephemeral: true,
       });
     }
 
@@ -82,12 +85,12 @@ export default {
         const { prisma } = require("../../lib/db");
         const updatedServer = await prisma.server.findUnique({ where: { id: server.id } });
 
-        let joinInfo = `\`${updatedServer.ipAddress}:${updatedServer.port}\``;
+        let joinInfo = `\`${advertisedGameAddress(updatedServer, !!updatedServer.tunnelUrl)}\``;
         if (updatedServer.inviteCode) {
           joinInfo += `\n**Invite Code:** \`${updatedServer.inviteCode}\` *(Use with RealmSync)*`;
         }
 
-        await interaction.followUp(`🟢 **${updatedServer.name} Ready**\n\nJoin: ${joinInfo}`);
+        await interaction.followUp({ content: `🟢 **${updatedServer.name} Ready**\n\nJoin: ${joinInfo}`, ephemeral: true });
       } catch (error) {
         console.error("Failed to start server:", error);
         await prisma.server.update({

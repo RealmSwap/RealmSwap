@@ -21,6 +21,7 @@ export interface ConnectivityDeps {
   connect?: (port: number) => Promise<boolean>; // can we open a local TCP connection?
   publicIP?: () => Promise<string | null>;
   platform?: NodeJS.Platform;
+  tunnelAlive?: (serverId: string) => boolean; // live playit agent for this server
 }
 
 /** Real local TCP probe — resolves true when something listens on 127.0.0.1:port. */
@@ -50,6 +51,9 @@ export async function runConnectivityChecks(
   const connect = deps.connect ?? defaultConnect;
   const publicIP = deps.publicIP ?? getPublicIP;
   const platform = deps.platform ?? process.platform;
+  // Live liveness is injected (the tunnels module owns the agent map); the
+  // DB flag alone is not proof the tunnel still forwards.
+  const tunnelAlive = deps.tunnelAlive ?? (() => false);
   const checks: ConnectivityCheck[] = [];
 
   // 1. Server running
@@ -93,11 +97,14 @@ export async function runConnectivityChecks(
 
   // 3. Router path: tunnel wins (works regardless of router), else UPnP
   if (server.tunnelUrl) {
+    const alive = tunnelAlive(server.id);
     checks.push({
       id: "router",
       label: "Router / outside access",
-      status: "ok",
-      detail: `Playit tunnel active (${server.tunnelUrl}) — friends can join even with no port forwarding.`,
+      status: alive ? "ok" : "warn",
+      detail: alive
+        ? `Playit tunnel active (${server.tunnelUrl}) — friends can join even with no port forwarding.`
+        : `A tunnel address is saved (${server.tunnelUrl}) but no playit agent is running. Toggle the tunnel off and on in Join Info — until then this address is unreachable.`,
     });
   } else if (server.enableUpnp) {
     const ip = await publicIP().catch(() => null);

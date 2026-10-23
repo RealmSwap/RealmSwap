@@ -35,6 +35,7 @@ export default {
       .setFooter({ text: `Showing last ${lines} lines` })
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    // Ephemeral: raw console output can contain IPs, tokens and stack traces.
+    await interaction.reply({ embeds: [embed], ephemeral: true });
   },
 };

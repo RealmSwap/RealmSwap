@@ -176,13 +176,19 @@ export async function POST(
       });
 
       if (enable && server.status === "RUNNING") {
-        startTunnel(server.id, server.port);
+        // Await and report: an unconfigured/failed spawn used to return
+        // success unconditionally while the UI claimed friends could join.
+        const result = await startTunnel(server.id, server.port);
+        if (!result.ok) {
+          await prisma.server.update({
+            where: { id: server.id },
+            data: { tunnelEnabled: false }
+          });
+          return NextResponse.json({ success: false, error: `Tunnel failed to start: ${result.error}` }, { status: 500 });
+        }
       } else if (!enable) {
-        stopTunnel(server.id);
-        await prisma.server.update({
-          where: { id: server.id },
-          data: { tunnelUrl: null }
-        });
+        // stopTunnel clears tunnelUrl/claimUrl/pid itself
+        await stopTunnel(server.id);
       }
 
       return NextResponse.json({ success: true, tunnelEnabled: enable });

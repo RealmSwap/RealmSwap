@@ -7,6 +7,12 @@
  * activate crash reporting for a deployment.
  */
 export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    // After a crash/force-quit the DB still claims live tunnels and playit
+    // agents may be orphaned — reset both before anything trusts them.
+    const { reconcileTunnelsOnBoot } = await import("@/lib/tunnels");
+    reconcileTunnelsOnBoot();
+  }
   if (!process.env.SENTRY_DSN) return;
   const Sentry = await import("@sentry/nextjs");
   Sentry.init({

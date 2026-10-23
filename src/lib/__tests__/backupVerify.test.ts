@@ -54,3 +54,34 @@ describe("verifyBackupFile", () => {
     expect(result.error).toBeTruthy();
   });
 });
+
+describe("verifyBackupFile game sentinels", () => {
+  it("Minecraft: archive without level.dat fails when game is passed", () => {
+    const p = makeZip("wrong-mc.zip", { "something-else.txt": "oops" });
+    const result = verifyBackupFile(p, "MINECRAFT");
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/level\.dat/);
+  });
+
+  it("Minecraft: level.dat at entry root passes", () => {
+    const p = makeZip("good-mc.zip", { "level.dat": "abc" });
+    expect(verifyBackupFile(p, "MINECRAFT").ok).toBe(true);
+  });
+
+  it("Minecraft: level.dat nested in a folder passes", () => {
+    const p = makeZip("nested-mc.zip", { "world/level.dat": "abc" });
+    expect(verifyBackupFile(p, "minecraft").ok).toBe(true); // case-insensitive game
+  });
+
+  it("Valheim: requires Dedicated.db or Dedicated.fwl", () => {
+    const bad = makeZip("bad-vh.zip", { "random.txt": "x" });
+    expect(verifyBackupFile(bad, "VALHEIM").ok).toBe(false);
+    const good = makeZip("good-vh.zip", { "Dedicated.db": "x", "Dedicated.fwl": "y" });
+    expect(verifyBackupFile(good, "VALHEIM").ok).toBe(true);
+  });
+
+  it("unknown games keep the generic check (no sentinel guessing)", () => {
+    const p = makeZip("zomboid.zip", { "some-save": "x" });
+    expect(verifyBackupFile(p, "ZOMBOID").ok).toBe(true);
+  });
+});

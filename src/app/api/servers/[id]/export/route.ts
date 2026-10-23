@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { getRunner } from "@/lib/runners/factory";
 import path from "path";
 import * as tar from "tar";
 import fs from "fs";
@@ -27,10 +26,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     if (!server) return new NextResponse("Server not found", { status: 404 });
 
-    const runner = getRunner(server.runnerType);
-    if (server.status === "RUNNING") {
-      await runner.stop(server);
-      await prisma.server.update({ where: { id: server.id }, data: { status: "STOPPED" } });
+    // A GET must never stop a running server as a side effect (a prefetch or
+    // link preview could kill someone's session). Export requires a stopped
+    // server, same as backup restore.
+    if (server.status === "RUNNING" || server.status === "STARTING") {
+      return new NextResponse("Stop the server before exporting it.", { status: 409 });
     }
 
     const dataDir = process.env.GAMEVAULT_DATA_DIR || process.cwd();

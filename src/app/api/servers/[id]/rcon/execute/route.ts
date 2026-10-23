@@ -13,11 +13,18 @@ export async function POST(
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const serverId = params.id;
-    const access = await verifyServerAccess(serverId, user.id);
-    if (!access) return NextResponse.json({ error: "Server not found" }, { status: 404 });
+    // kick/ban/broadcast are moderation writes — same tier as the console.
+    const access = await verifyServerAccess(serverId, user.id, "MODERATOR");
+    if (!access) return NextResponse.json({ error: "Server not found or insufficient permissions (Requires MODERATOR)" }, { status: 403 });
 
     const body = await req.json();
-    const { action, playerName, message } = body;
+    const { action } = body;
+    // Player names and messages are interpolated into RCON command strings,
+    // some inside quotes — strip control characters and quote chars so a
+    // crafted name can't reshape the command.
+    const clean = (v: unknown) => (typeof v === "string" ? v.replace(/[\r\n"'`]/g, "").trim() : "");
+    const playerName = clean(body.playerName);
+    const message = clean(body.message);
 
     const server = await prisma.server.findUnique({
       where: { id: serverId },

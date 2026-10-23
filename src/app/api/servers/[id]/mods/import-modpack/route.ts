@@ -4,7 +4,7 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { prisma } from "@/lib/db";
 import { dataRoot } from "@/lib/appPaths";
 import { safeJoin } from "@/lib/safePath";
-import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
+import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { downloadFile } from "@/lib/download";
 import {
@@ -211,7 +211,7 @@ export async function POST(
       // 5. Automatic Rollback
       console.error(`[Sandbox] Error detected. Rolling back ${serverId} to snapshot ${snapshot.id}`);
       await restoreSnapshot(snapshot.id);
-      await prisma.serverSnapshot.delete({ where: { id: snapshot.id } });
+      await discardSnapshot(snapshot.id);
 
       return NextResponse.json({
         error: `Modpack import failed. Safe Rollback completed. Cause: ${installError.message}`,

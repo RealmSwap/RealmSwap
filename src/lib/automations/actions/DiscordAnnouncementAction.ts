@@ -14,6 +14,14 @@ export class DiscordAnnouncementAction implements AutomationActionInterface {
       return;
     }
 
+    // The URL is owner-configured and the app POSTs to it from the server —
+    // anything other than a Discord webhook would turn this action into an
+    // internal-network request primitive.
+    if (!/^https:\/\/discord\.com\/api\/webhooks\//.test(webhookUrl)) {
+      await context.log("Skipping Discord announcement: webhookUrl must be a https://discord.com/api/webhooks/… URL.");
+      return;
+    }
+
     await context.log(`Sending Discord announcement via webhook...`);
     
     try {

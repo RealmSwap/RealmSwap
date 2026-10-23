@@ -14,7 +14,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const access = await verifyServerAccess(params.id, user.id);
+    const access = await verifyServerAccess(params.id, user.id, "ADMIN");
     if (!access) {
       return NextResponse.json({ error: "Server not found" }, { status: 404 });
     }

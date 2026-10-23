@@ -5,6 +5,8 @@ import fs from "fs";
 import * as tar from "tar";
 import { prisma } from "@/lib/db";
 import { mapPort, unmapPort, getPublicIP } from "@/lib/upnp";
+import { isTunnelAlive } from "@/lib/tunnels";
+import { advertisedGameAddress } from "@/lib/advertisedAddress";
 import {
   REALMSYNC_PROTOCOL_VERSION,
   CODE_ID_LENGTH,
@@ -19,10 +21,14 @@ const globalForSyncServer = globalThis as unknown as {
   syncServer: http.Server | null;
   syncPort: number | null;
   publicIp: string | null;
+  publicIpResolvedAt: number | null;
+  syncMappingOk: boolean | null;
   syncStartPromise: Promise<{ publicIp: string; port: number }> | null;
   syncRenewalTimer: NodeJS.Timeout | null;
   syncFailureLimiter: FailureLimiter | null;
 };
+
+const PUBLIC_IP_TTL_MS = 5 * 60 * 1000; // dynamic-IP hosts go stale fast; re-resolve per invite window
 
 const MAX_ARCHIVE_BYTES = 256 * 1024 * 1024;
 const UPNP_RENEWAL_MS = 30 * 60 * 1000; // mappings default to a 1h TTL — renew at half-life
@@ -36,8 +42,21 @@ function getLimiter(): FailureLimiter {
 }
 
 export async function startRealmSyncServer(): Promise<{ publicIp: string, port: number }> {
-  // If already running, return existing info
+  // If already running, return existing info — but re-resolve the public IP
+  // when the cached value is stale: a process-lifetime cache keeps minting
+  // dead invites for hosts whose dynamic IP changed since first listen.
   if (globalForSyncServer.syncServer && globalForSyncServer.publicIp && globalForSyncServer.syncPort) {
+    const cacheAge = globalForSyncServer.publicIpResolvedAt ? Date.now() - globalForSyncServer.publicIpResolvedAt : Infinity;
+    if (cacheAge > PUBLIC_IP_TTL_MS) {
+      const fresh = await getPublicIP();
+      if (fresh) {
+        if (fresh !== globalForSyncServer.publicIp) {
+          console.log(`[RealmSync] Public IP changed: ${globalForSyncServer.publicIp} -> ${fresh}`);
+        }
+        globalForSyncServer.publicIp = fresh;
+        globalForSyncServer.publicIpResolvedAt = Date.now();
+      }
+    }
     return { publicIp: globalForSyncServer.publicIp, port: globalForSyncServer.syncPort };
   }
   // Concurrent invite creations must share one listen() attempt (EADDRINUSE race)
@@ -110,7 +129,10 @@ export async function startRealmSyncServer(): Promise<{ publicIp: string, port: 
                 serverName: dbServer.name,
                 game: dbServer.game,
                 gameVersion: "latest",
-                address: `${publicIp}:${dbServer.port}`, // Important: use the public IP and the game port for the client to connect
+                // Honest reachability: a live playit tunnel is the only
+                // address guaranteed routable for tunneled servers; a public
+                // IP here would mint dead invites behind CGNAT.
+                address: advertisedGameAddress(dbServer, isTunnelAlive(dbServer.id)),
                 mods: dbServer.mods.map(m => ({
                   provider: m.provider,
                   packageId: m.packageId,
@@ -210,6 +232,7 @@ export async function startRealmSyncServer(): Promise<{ publicIp: string, port: 
 
           // UPnP Map Port
           const mapped = await mapPort(port, "TCP", "RealmSync Host");
+          globalForSyncServer.syncMappingOk = mapped;
           if (!mapped) {
             console.warn(`[RealmSync] Failed to UPnP port forward. Manual port forwarding for TCP ${port} is required.`);
             // We do NOT reject here anymore. We allow the server to run so the user can manually port forward.
@@ -218,15 +241,25 @@ export async function startRealmSyncServer(): Promise<{ publicIp: string, port: 
           if (globalForSyncServer.syncRenewalTimer) {
             clearInterval(globalForSyncServer.syncRenewalTimer);
           }
-          // Router mappings lapse after ~1h; keep the invite alive while any is active
+          // Router mappings lapse after ~1h; keep the invite alive while any
+          // is active, and refresh the public IP alongside so renewals don't
+          // faithfully renew a mapping for an address the host no longer has.
           globalForSyncServer.syncRenewalTimer = setInterval(() => {
             mapPort(port, "TCP", "RealmSync Host").catch(() => {});
+            getPublicIP().then((ip) => {
+              if (ip && ip !== globalForSyncServer.publicIp) {
+                console.log(`[RealmSync] Public IP changed: ${globalForSyncServer.publicIp} -> ${ip}`);
+                globalForSyncServer.publicIp = ip;
+              }
+              if (ip) globalForSyncServer.publicIpResolvedAt = Date.now();
+            }).catch(() => {});
           }, UPNP_RENEWAL_MS);
           globalForSyncServer.syncRenewalTimer.unref?.();
 
           globalForSyncServer.syncServer = server;
           globalForSyncServer.syncPort = port;
           globalForSyncServer.publicIp = publicIp;
+          globalForSyncServer.publicIpResolvedAt = Date.now();
 
           console.log(`[RealmSync] Host Server running on ${publicIp}:${port}`);
           resolve({ publicIp, port });
@@ -278,7 +311,21 @@ export async function stopRealmSyncServer() {
   globalForSyncServer.syncServer = null;
   globalForSyncServer.syncPort = null;
   globalForSyncServer.publicIp = null;
+  globalForSyncServer.publicIpResolvedAt = null;
+  globalForSyncServer.syncMappingOk = null;
   globalForSyncServer.syncStartPromise = null;
 
   console.log(`[RealmSync] Host Server stopped`);
+}
+
+/** Listener status for invite honesty: whether the sync port is actually
+ *  reachable from outside (UPnP mapped) — an invite minted without a route
+ *  is a dead link and the UI should say so. */
+export function getRealmSyncStatus(): { running: boolean; publicIp: string | null; port: number | null; mappingOk: boolean | null } {
+  return {
+    running: !!globalForSyncServer.syncServer,
+    publicIp: globalForSyncServer.publicIp,
+    port: globalForSyncServer.syncPort,
+    mappingOk: globalForSyncServer.syncMappingOk,
+  };
 }

@@ -13,7 +13,7 @@ export async function POST(
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const access = await verifyServerAccess(params.id, user.id);
+    const access = await verifyServerAccess(params.id, user.id, "ADMIN");
     if (!access) return NextResponse.json({ error: "Server not found" }, { status: 404 });
 
     const backup = await prisma.backup.findFirst({
@@ -24,7 +24,7 @@ export async function POST(
       return NextResponse.json({ error: "Backup file path is missing" }, { status: 400 });
     }
 
-    const result = verifyBackupFile(backup.filePath);
+    const result = verifyBackupFile(backup.filePath, backup.game);
     const updated = await prisma.backup.update({
       where: { id: backup.id },
       data: result.ok

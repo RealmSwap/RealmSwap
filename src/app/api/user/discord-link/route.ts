@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Codes are 6 digits with a 15-minute expiry — without a per-user cap an
+    // attacker can simply try every code and attach someone's Discord id to
+    // their own account. 5 tries per window is generous for a copy-paste.
+    if (!checkRateLimit(`discord_link_${user.id}`, { limit: 5, windowMs: 15 * 60 * 1000 })) {
+      return NextResponse.json({ error: "Too many attempts. Try again in 15 minutes." }, { status: 429 });
+    }
 
     const body = await req.json();
     const { code } = body;

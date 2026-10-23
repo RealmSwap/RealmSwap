@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getRunner } from "@/lib/runners/factory";
 import { serverEventBus } from "@/lib/eventBus";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { secureSecretEquals } from "@/lib/secureCompare";
 import { z } from "zod";
 
 const botActionSchema = z.object({
@@ -18,8 +19,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
+    // Service auth: a dedicated BOT_API_SECRET is preferred so the API
+    // credential can differ from the live Discord token; the token remains
+    // accepted for existing setups. Fails closed when NEITHER is configured
+    // (an unset env var must never turn "Bearer undefined" into a valid
+    // credential), and compares constant-time so the secret can't be timed
+    // out.
+    const apiSecrets = [process.env.BOT_API_SECRET, process.env.DISCORD_BOT_TOKEN].filter(
+      (s): s is string => typeof s === "string" && s.length > 0
+    );
+    if (apiSecrets.length === 0) {
+      return NextResponse.json(
+        { error: "Bot API is disabled: configure BOT_API_SECRET (or DISCORD_BOT_TOKEN) to enable it." },
+        { status: 503 }
+      );
+    }
     const authHeader = req.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.DISCORD_BOT_TOKEN}`) {
+    const bearer = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    if (!bearer || !apiSecrets.some((secret) => secureSecretEquals(secret, bearer))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -61,6 +78,18 @@ export async function POST(req: NextRequest) {
     } else {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
+
+    // Discord-triggered actions must be attributable like their dashboard
+    // counterparts, or the audit trail can't explain a server that stopped
+    // itself.
+    await prisma.activityLog.create({
+      data: {
+        userId: server.userId,
+        serverId: server.id,
+        action: `BOT_${action.toUpperCase()}`,
+        details: `Discord bot ${action}${action === "stop" ? "ped" : "ed"} server '${server.name}'.`,
+      },
+    }).catch((err) => console.error("Failed to log bot action:", err));
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

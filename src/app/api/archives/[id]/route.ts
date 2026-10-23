@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { dataRoot } from "@/lib/appPaths";
+import fs from "fs";
+import path from "path";
 
 export async function DELETE(
   req: NextRequest,
@@ -29,6 +32,18 @@ export async function DELETE(
     await prisma.archive.delete({
       where: { id: archiveId },
     });
+
+    // "Permanently deleted" must mean the world data is gone too — without
+    // this, every deleted vault world accumulated in local-archives forever.
+    const archiveFolder = path.join(dataRoot(), "local-archives", archiveId);
+    try {
+      if (fs.existsSync(archiveFolder)) {
+        fs.rmSync(archiveFolder, { recursive: true, force: true });
+      }
+    } catch (err) {
+      console.error(`Archive row deleted but folder removal failed (${archiveFolder}):`, err);
+      return NextResponse.json({ success: true, warning: "Archive removed, but its folder could not be deleted from disk." });
+    }
 
     await prisma.activityLog.create({
       data: {

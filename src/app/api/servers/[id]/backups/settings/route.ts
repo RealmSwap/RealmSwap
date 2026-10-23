@@ -26,9 +26,9 @@ export async function POST(
     }
 
     // Find and verify server access
-    const access = await verifyServerAccess(serverId, user.id);
+    const access = await verifyServerAccess(serverId, user.id, "ADMIN");
     if (!access) {
-      return NextResponse.json({ error: "Server not found" }, { status: 404 });
+      return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
 

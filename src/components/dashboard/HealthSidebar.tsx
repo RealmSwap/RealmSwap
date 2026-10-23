@@ -24,28 +24,44 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-export function HealthSidebar({ 
-  server 
-}: { 
+export function HealthSidebar({
+  server
+}: {
   server: any
 }) {
-  if (!server) return <div className="w-80 shrink-0"></div>;
-
   const [telemetry, setTelemetry] = React.useState<any[]>([]);
   const [crashOpen, setCrashOpen] = React.useState(false);
   const [crashData, setCrashData] = React.useState<{ crashes: any[]; weekCount: number } | null>(null);
+  const [latestBackup, setLatestBackup] = React.useState<any | null>(null);
+
+  // Latest backup row (desc by createdAt) — feeds the Last Backup card and
+  // its verification status.
+  React.useEffect(() => {
+    let cancelled = false;
+    setLatestBackup(null);
+    fetch(`/api/servers/${server?.id}/backups`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !Array.isArray(data)) return;
+        setLatestBackup(data[0] ?? null);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [server?.id]);
 
   // Loads on mount (for the badge) and again on every open (for freshness)
   React.useEffect(() => {
+    if (!server) return;
     let cancelled = false;
     fetch(`/api/servers/${server.id}/crashes`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => !cancelled && data && setCrashData(data))
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [crashOpen, server.id]);
+  }, [crashOpen, server?.id]);
 
   React.useEffect(() => {
+    if (!server) return;
     async function fetchTelemetry() {
       try {
         const res = await fetch(`/api/servers/${server.id}/telemetry`);
@@ -66,14 +82,34 @@ export function HealthSidebar({
     fetchTelemetry();
     const interval = setInterval(fetchTelemetry, 10000);
     return () => clearInterval(interval);
-  }, [server.id]);
+  }, [server?.id]);
+
+  if (!server) return <div className="w-80 shrink-0"></div>;
 
   const isHealthy = server.healthStatus !== "DEGRADED" && server.status !== "CRASHED";
   
-  // Format last backup date if it exists
-  const lastBackupStr = server.lastSnapshotAt 
-    ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(server.lastSnapshotAt))
+  // Format last backup date if it exists (prefer the newest Backup row;
+  // fall back to server.lastSnapshotAt while the list is loading)
+  const backupDate = latestBackup?.createdAt ?? server.lastSnapshotAt;
+  const lastBackupStr = backupDate
+    ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(backupDate))
     : "No backups yet";
+
+  const relAge = (d: string | Date) => {
+    const mins = Math.max(0, Math.floor((Date.now() - new Date(d).getTime()) / 60000));
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  };
+  const verify = latestBackup
+    ? latestBackup.verifyError
+      ? { text: "Verify failed", detail: latestBackup.verifyError, cls: "text-amber-400" }
+      : latestBackup.verifiedAt
+        ? { text: `Verified ${relAge(latestBackup.verifiedAt)}`, detail: "Archive opened and entries decompressed", cls: "text-emerald-400" }
+        : { text: "Not verified yet", detail: "Run Verify from the Backups page", cls: "text-slate-500" }
+    : null;
 
   return (
     <div className="w-80 shrink-0 flex flex-col gap-6">
@@ -104,12 +140,17 @@ export function HealthSidebar({
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-accentPurple/10 text-accentPurple">
+            <div className={`p-2 rounded-xl ${verify?.cls === "text-amber-400" ? "bg-amber-500/10 text-amber-400" : verify?.cls === "text-emerald-400" ? "bg-emerald-500/10 text-emerald-400" : "bg-accentPurple/10 text-accentPurple"}`}>
               <Save className="w-4 h-4" />
             </div>
             <div>
               <div className="text-sm font-bold text-slate-200">Last Backup</div>
               <div className="text-xs text-slate-400">{lastBackupStr}</div>
+              {verify && (
+                <div className={`text-[10px] font-bold mt-0.5 ${verify.cls}`} title={verify.detail}>
+                  {verify.text}
+                </div>
+              )}
             </div>
           </div>
 
