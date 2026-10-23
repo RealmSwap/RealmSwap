@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
-import crypto from "crypto";
+import { generateInviteCodeParts } from "@/lib/realmsync";
 import { startRealmSyncServer, stopRealmSyncServer } from "@/lib/realmSyncHost";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
@@ -18,18 +18,27 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     // Start the dedicated sync server
     const { publicIp, port } = await startRealmSyncServer();
 
-    // Generate a random 6-character alphanumeric code
-    const rawCode = crypto.randomBytes(3).toString("hex").toUpperCase();
-    
-    // Store the full connection string so the dashboard can reconstruct the link on reload
-    const inviteCode = `${publicIp}:${port}/${rawCode}`;
-
-    const updated = await prisma.server.update({
-      where: { id: server.id },
-      data: { inviteCode }
-    });
-
-    return NextResponse.json({ inviteCode: updated.inviteCode });
+    // v2 invite: public 8-hex codeId (HTTP path / lookup key) + 128-bit secret
+    // that only ever travels inside the realmsync:// deep link, never over HTTP.
+    // Retry on the (unlikely) codeId collision with another active invite.
+    let codeId = "";
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const parts = generateInviteCodeParts();
+      const clash = await prisma.server.findFirst({
+        where: { inviteCode: { contains: `/${parts.codeId}` } },
+        select: { id: true }
+      });
+      if (!clash) {
+        codeId = parts.codeId;
+        const inviteCode = `${publicIp}:${port}/${parts.codeId}${parts.secret}`;
+        const updated = await prisma.server.update({
+          where: { id: server.id },
+          data: { inviteCode }
+        });
+        return NextResponse.json({ inviteCode: updated.inviteCode });
+      }
+    }
+    return NextResponse.json({ error: "Could not generate a unique invite code. Please try again." }, { status: 500 });
   } catch (err: any) {
     console.error(err);
     return NextResponse.json({ error: err.message }, { status: 500 });

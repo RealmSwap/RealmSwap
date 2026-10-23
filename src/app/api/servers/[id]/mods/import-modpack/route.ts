@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { dataRoot } from "@/lib/appPaths";
 import { safeJoin } from "@/lib/safePath";
 import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
-import { testServerBoot } from "@/lib/runners/sandbox";
+import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { downloadFile } from "@/lib/download";
 import {
   readLoaderMarker, detectMinecraftVersion,
@@ -214,7 +214,8 @@ export async function POST(
       await prisma.serverSnapshot.delete({ where: { id: snapshot.id } });
 
       return NextResponse.json({
-        error: `Modpack import failed. Safe Rollback completed. Cause: ${installError.message}`
+        error: `Modpack import failed. Safe Rollback completed. Cause: ${installError.message}`,
+        ...(installError instanceof SandboxBootError ? { bootOutput: installError.output } : {}),
       }, { status: 500 });
     }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getRunner } from "@/lib/runners";
 import { stopAllRunningServers } from "./stopAll";
+import { stopRealmSyncServer } from "@/lib/realmSyncHost";
 
 export async function POST(req: NextRequest) {
   const token = req.headers.get("x-internal-token");
@@ -25,6 +26,13 @@ export async function POST(req: NextRequest) {
       }
     }
   );
+
+  // Release the RealmSync listener + its UPnP mapping so invites don't outlive the app
+  try {
+    await stopRealmSyncServer();
+  } catch (err) {
+    console.error("[Shutdown] Failed to stop RealmSync server:", err);
+  }
 
   return NextResponse.json({ stopped });
 }

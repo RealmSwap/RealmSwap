@@ -164,9 +164,13 @@ model ActivityLog {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  action    String // "CREATE_SERVER", "START_SERVER", "STOP_SERVER", "RESTART_SERVER", "ARCHIVE_SERVER", "RESTORE_SERVER", "DELETE_ARCHIVE"
+  serverId  String? // server-scoped events (SERVER_CRASH); null for account-level actions
+  action    String // "CREATE_SERVER", "START_SERVER", "STOP_SERVER", "SERVER_CRASH", "RESTART_SERVER", "ARCHIVE_SERVER", "RESTORE_SERVER", "DELETE_ARCHIVE"
   details   String
+  metadata  String? // JSON extras for machine reading (exit codes, signals, retry counts)
   createdAt DateTime @default(now())
+
+  @@index([serverId, createdAt])
 }
 
 model Backup {

@@ -343,11 +343,22 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorBootOutput, setErrorBootOutput] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [installedMods, setInstalledMods] = useState<any[]>([]);
   const [loaderInfo, setLoaderInfo] = useState<{ supported: boolean; loader: { type: string; loaderVersion: string; minecraftVersion: string } | null } | null>(null);
   const [loaderBusy, setLoaderBusy] = useState(false);
   const [updatingModId, setUpdatingModId] = useState<string | null>(null);
+  const [syncingDisk, setSyncingDisk] = useState(false);
+  const [updatesInfo, setUpdatesInfo] = useState<{ updates: any[]; unknown: any[] } | null>(null);
+  const [staleOnly, setStaleOnly] = useState(false);
+
+  /** Surface a mod-flow failure; bootOutput carries the sandbox server's own
+   *  output when a snapshot->install->boot-test cycle rolled back. */
+  const showError = (message: string | null, bootOutput?: string) => {
+    setError(message);
+    setErrorBootOutput(bootOutput ?? null);
+  };
 
   /* Tabs */
   const [activeTab, setActiveTab] = useState<TabId>("discover");
@@ -433,6 +444,54 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     }
   }, [selectedServer]);
 
+  /**
+   * Reconcile mod rows with disk whenever the Installed tab loads, so drift
+   * from hand-deleted files or manual edits is caught from every direction —
+   * not just after snapshot/backup restores. Silent unless it found drift;
+   * viewers without ADMIN get a quiet 403 that we ignore.
+   */
+  React.useEffect(() => {
+    if (activeTab !== "installed" || !selectedServer) return;
+    const serverId = selectedServer.id;
+    fetch(`/api/servers/${serverId}/mods/reconcile`, { method: "POST" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data) return;
+        if (data.mods) setInstalledMods(data.mods);
+        const { removed, added, repaired } = data.result || {};
+        if (removed || added || repaired) {
+          toast.info(
+            `Synced with disk: ${[
+              removed ? `${removed} stale row${removed === 1 ? "" : "s"} removed` : null,
+              added ? `${added} mod${added === 1 ? "" : "s"} found on disk added` : null,
+              repaired ? `${repaired} row${repaired === 1 ? "" : "s"} repaired` : null,
+            ].filter(Boolean).join(", ")}.`
+          );
+        }
+      })
+      .catch(() => {});
+  }, [activeTab, selectedServer]);
+
+  /** Installed-mod rows with a newer provider version, keyed for card badges */
+  const staleByPackage = useMemo(
+    () => new Map((updatesInfo?.updates || []).map((u: any) => [u.packageId, u])),
+    [updatesInfo]
+  );
+
+  /** Check installed mods against provider latests when the Installed tab loads */
+  React.useEffect(() => {
+    setStaleOnly(false);
+    if (activeTab !== "installed" || !selectedServer) {
+      setUpdatesInfo(null);
+      return;
+    }
+    const serverId = selectedServer.id;
+    fetch(`/api/servers/${serverId}/mods/updates`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data && setUpdatesInfo(data))
+      .catch(() => {});
+  }, [activeTab, selectedServer]);
+
   /** Fetch popular / trending mods on mount (for Discover tab) */
   React.useEffect(() => {
     if (!selectedServer || !supportsSearch) return;
@@ -448,8 +507,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   }, [selectedServer]);
 
   /** Debounced search (Browse tab) */
-  React.useEffect(() => {
-    if (!selectedServer) {
+  React.useEffect(() => {    if (!selectedServer) {
       setSearchResults([]);
       setHasMore(true);
       return;
@@ -504,12 +562,13 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         body: JSON.stringify({ loader }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Failed to install ${label}`);
+      if (!res.ok) { const e = new Error(data.error || `Failed to install ${label}`); (e as any).bootOutput = data.bootOutput; throw e; }
       toast.success(data.message || `${label} installed.`);
       const lres = await fetch(`/api/servers/${selectedServer.id}/mods/loader`);
       if (lres.ok) setLoaderInfo(await lres.json());
     } catch (err: any) {
-      toast.error(err.message);
+      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
+      else toast.error(err.message);
     } finally {
       setLoaderBusy(false);
     }
@@ -521,16 +580,43 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     try {
       const res = await fetch(`/api/servers/${selectedServer.id}/mods/${mod.packageId}/update`, { method: "POST" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Update failed");
+      if (!res.ok) { const e = new Error(data.error || "Update failed"); (e as any).bootOutput = data.bootOutput; throw e; }
       toast[data.updated ? "success" : "info"](data.message);
       if (data.updated) {
         const fresh = await fetch(`/api/servers/${selectedServer.id}/mods`).then((r) => r.json());
         setInstalledMods(fresh.mods || fresh || []);
       }
     } catch (err: any) {
-      toast.error(err.message);
+      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
+      else toast.error(err.message);
     } finally {
       setUpdatingModId(null);
+    }
+  };
+
+  const handleSyncWithDisk = async () => {
+    if (!selectedServer || syncingDisk) return;
+    setSyncingDisk(true);
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/mods/reconcile`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) { const e = new Error(data.error || "Sync failed"); (e as any).bootOutput = data.bootOutput; throw e; }
+      if (data.mods) setInstalledMods(data.mods);
+      const { removed, added, repaired } = data.result || {};
+      const drifted = removed || added || repaired;
+      toast[drifted ? "success" : "info"](
+        drifted
+          ? `Synced with disk: ${[
+              removed ? `${removed} stale row${removed === 1 ? "" : "s"} removed` : null,
+              added ? `${added} mod${added === 1 ? "" : "s"} found on disk added` : null,
+              repaired ? `${repaired} row${repaired === 1 ? "" : "s"} repaired` : null,
+            ].filter(Boolean).join(", ")}.`
+          : "Installed mods already match disk."
+      );
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSyncingDisk(false);
     }
   };
 
@@ -539,7 +625,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     if (!confirm(`Are you sure you want to uninstall ${mod.name}?`)) return;
 
     setLoading(true);
-    setError(null);
+    showError(null);
     setSuccess(null);
 
     try {
@@ -547,7 +633,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         method: "DELETE",
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to uninstall mod");
+      if (!res.ok) { const e = new Error(data.error || "Failed to uninstall mod"); (e as any).bootOutput = data.bootOutput; throw e; }
 
       setSuccess(`Successfully uninstalled ${mod.name}`);
       
@@ -556,7 +642,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       const modsData = await modsRes.json();
       if (modsData.mods) setInstalledMods(modsData.mods);
     } catch (err: any) {
-      setError(err.message);
+      showError(err.message, (err as any).bootOutput);
     } finally {
       setLoading(false);
     }
@@ -574,7 +660,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   }) => {
     if (!selectedServer) return;
     setLoading(true);
-    setError(null);
+    showError(null);
     setSuccess(null);
 
     try {
@@ -594,7 +680,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         }
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to install mod");
+      if (!res.ok) { const e = new Error(data.error || "Failed to install mod"); (e as any).bootOutput = data.bootOutput; throw e; }
 
       setSuccess(
         data.message ||
@@ -607,7 +693,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       const modsData = await modsRes.json();
       if (modsData.mods) setInstalledMods(modsData.mods);
     } catch (err: any) {
-      setError(err.message);
+      showError(err.message, (err as any).bootOutput);
     } finally {
       setLoading(false);
     }
@@ -662,7 +748,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     const file = e.target.files[0];
 
     setLoading(true);
-    setError(null);
+    showError(null);
     setSuccess(null);
 
     const formData = new FormData();
@@ -675,7 +761,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       );
       const data = await res.json();
       if (!res.ok)
-        throw new Error(data.error || "Failed to import collection");
+        { const e = new Error(data.error || "Failed to import collection"); (e as any).bootOutput = data.bootOutput; throw e; }
 
       setSuccess(data.message || "Collection imported successfully!");
       const modsRes = await fetch(
@@ -684,7 +770,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       const modsData = await modsRes.json();
       if (modsData.mods) setInstalledMods(modsData.mods);
     } catch (err: any) {
-      setError(err.message);
+      showError(err.message, (err as any).bootOutput);
     } finally {
       setLoading(false);
     }
@@ -704,7 +790,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     const file = e.target.files[0];
 
     setLoading(true);
-    setError(null);
+    showError(null);
     setSuccess(null);
 
     const formData = new FormData();
@@ -717,7 +803,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       );
       const data = await res.json();
       if (!res.ok)
-        throw new Error(data.error || "Failed to import modpack");
+        { const e = new Error(data.error || "Failed to import modpack"); (e as any).bootOutput = data.bootOutput; throw e; }
 
       setSuccess(data.message || "Modpack imported successfully!");
       const modsRes = await fetch(
@@ -726,7 +812,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       const modsData = await modsRes.json();
       if (modsData.mods) setInstalledMods(modsData.mods);
     } catch (err: any) {
-      setError(err.message);
+      showError(err.message, (err as any).bootOutput);
     } finally {
       setLoading(false);
     }
@@ -866,7 +952,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                       (srv) => srv.id === e.target.value
                     );
                     setSelectedServer(s || null);
-                    setError(null);
+                    showError(null);
                     setSuccess(null);
                     setSearchQuery("");
                     setSearchResults([]);
@@ -889,15 +975,27 @@ export default function ModsView({ servers, user }: ModsViewProps) {
 
         {/* Notifications */}
         {error && (
-          <div className="p-4 mb-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3 animate-slide-down">
-            <Info className="w-5 h-5 flex-shrink-0" />
-            <span>{error}</span>
-            <button
-              onClick={() => setError(null)}
-              className="ml-auto text-red-400/60 hover:text-red-400"
-            >
-              <X className="w-4 h-4" />
-            </button>
+          <div className="p-4 mb-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-slide-down">
+            <div className="flex items-center gap-3">
+              <Info className="w-5 h-5 flex-shrink-0" />
+              <span className="whitespace-pre-wrap">{error}</span>
+              <button
+                onClick={() => showError(null)}
+                className="ml-auto text-red-400/60 hover:text-red-400"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {errorBootOutput && (
+              <details className="mt-3 rounded-lg bg-black/30 border border-red-500/10">
+                <summary className="px-3 py-2 text-xs font-bold text-red-300/80 cursor-pointer select-none">
+                  Sandbox boot output
+                </summary>
+                <pre className="px-3 pb-3 text-[11px] leading-relaxed text-slate-300 font-mono whitespace-pre-wrap max-h-64 overflow-y-auto custom-scrollbar">
+                  {errorBootOutput}
+                </pre>
+              </details>
+            )}
           </div>
         )}
 
@@ -1437,6 +1535,36 @@ export default function ModsView({ servers, user }: ModsViewProps) {
             {/* ─── INSTALLED TAB ─────────────────────────────── */}
             {activeTab === "installed" && (
               <div className="space-y-4 animate-fade-in">
+                {updatesInfo && (updatesInfo.updates.length > 0 || staleOnly) && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-sky-500/10 border border-sky-500/25 text-xs text-sky-300">
+                    <span className="font-bold flex items-center gap-2">
+                      <RefreshCw className="w-4 h-4" />
+                      {staleOnly ? (
+                        <>
+                          Showing {updatesInfo.updates.length} mod{updatesInfo.updates.length === 1 ? "" : "s"} with available updates
+                          {updatesInfo.unknown.length > 0
+                            ? ` · ${updatesInfo.unknown.length} with unknown versions (use Update to pin them)`
+                            : ""}
+                          .
+                        </>
+                      ) : (
+                        <>
+                          {updatesInfo.updates.length} mod{updatesInfo.updates.length === 1 ? " has" : "s have"} updates available
+                          {updatesInfo.unknown.length > 0
+                            ? ` · ${updatesInfo.unknown.length} with unknown versions`
+                            : ""}
+                          .
+                        </>
+                      )}
+                    </span>
+                    <button
+                      onClick={() => setStaleOnly((v) => !v)}
+                      className="px-3 py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 text-sky-200 font-bold transition-colors"
+                    >
+                      {staleOnly ? "Show all mods" : "Review updates"}
+                    </button>
+                  </div>
+                )}
                 {game === "MINECRAFT" && loaderInfo?.supported && (
                   loaderInfo.loader ? (
                     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300">
@@ -1486,6 +1614,16 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleSyncWithDisk}
+                      disabled={syncingDisk}
+                      title="Re-check installed mods against the server's files on disk"
+                      className="px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 hover:bg-white/5 text-xs font-bold text-slate-300 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${syncingDisk ? "animate-spin" : ""}`} />
+                      <span>Sync with disk</span>
+                    </button>
+
                     <label className="px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 hover:bg-white/5 text-xs font-bold text-slate-300 transition-colors cursor-pointer flex items-center gap-1.5">
                       <Upload className="w-3.5 h-3.5" />
                       <span>Import Collection</span>
@@ -1553,7 +1691,10 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {installedMods.map((mod: any, idx: number) => (
+                    {(staleOnly
+                      ? installedMods.filter((mod: any) => staleByPackage.has(mod.packageId))
+                      : installedMods
+                    ).map((mod: any, idx: number) => (
                       <div
                         key={mod.id}
                         className="p-4 rounded-xl border border-white/5 bg-slate-950/40 hover:border-white/10 transition-all group"
@@ -1578,6 +1719,11 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                               </h4>
                               <span className="text-[9px] text-mutedText font-mono flex-shrink-0">
                                 {mod.version}
+                                {staleByPackage.has(mod.packageId) && (
+                                  <span className="text-amber-400" title="Newer version available">
+                                    {" → "}{staleByPackage.get(mod.packageId).latest}
+                                  </span>
+                                )}
                               </span>
                             </div>
                             <p className="text-[10px] text-mutedText truncate font-mono mt-0.5">

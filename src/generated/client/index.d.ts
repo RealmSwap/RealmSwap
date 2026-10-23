@@ -11891,24 +11891,30 @@ export namespace Prisma {
   export type ActivityLogMinAggregateOutputType = {
     id: string | null
     userId: string | null
+    serverId: string | null
     action: string | null
     details: string | null
+    metadata: string | null
     createdAt: Date | null
   }
 
   export type ActivityLogMaxAggregateOutputType = {
     id: string | null
     userId: string | null
+    serverId: string | null
     action: string | null
     details: string | null
+    metadata: string | null
     createdAt: Date | null
   }
 
   export type ActivityLogCountAggregateOutputType = {
     id: number
     userId: number
+    serverId: number
     action: number
     details: number
+    metadata: number
     createdAt: number
     _all: number
   }
@@ -11917,24 +11923,30 @@ export namespace Prisma {
   export type ActivityLogMinAggregateInputType = {
     id?: true
     userId?: true
+    serverId?: true
     action?: true
     details?: true
+    metadata?: true
     createdAt?: true
   }
 
   export type ActivityLogMaxAggregateInputType = {
     id?: true
     userId?: true
+    serverId?: true
     action?: true
     details?: true
+    metadata?: true
     createdAt?: true
   }
 
   export type ActivityLogCountAggregateInputType = {
     id?: true
     userId?: true
+    serverId?: true
     action?: true
     details?: true
+    metadata?: true
     createdAt?: true
     _all?: true
   }
@@ -12014,8 +12026,10 @@ export namespace Prisma {
   export type ActivityLogGroupByOutputType = {
     id: string
     userId: string
+    serverId: string | null
     action: string
     details: string
+    metadata: string | null
     createdAt: Date
     _count: ActivityLogCountAggregateOutputType | null
     _min: ActivityLogMinAggregateOutputType | null
@@ -12039,8 +12053,10 @@ export namespace Prisma {
   export type ActivityLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     userId?: boolean
+    serverId?: boolean
     action?: boolean
     details?: boolean
+    metadata?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["activityLog"]>
@@ -12048,8 +12064,10 @@ export namespace Prisma {
   export type ActivityLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     userId?: boolean
+    serverId?: boolean
     action?: boolean
     details?: boolean
+    metadata?: boolean
     createdAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["activityLog"]>
@@ -12057,8 +12075,10 @@ export namespace Prisma {
   export type ActivityLogSelectScalar = {
     id?: boolean
     userId?: boolean
+    serverId?: boolean
     action?: boolean
     details?: boolean
+    metadata?: boolean
     createdAt?: boolean
   }
 
@@ -12077,8 +12097,10 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       userId: string
+      serverId: string | null
       action: string
       details: string
+      metadata: string | null
       createdAt: Date
     }, ExtArgs["result"]["activityLog"]>
     composites: {}
@@ -12476,8 +12498,10 @@ export namespace Prisma {
   interface ActivityLogFieldRefs {
     readonly id: FieldRef<"ActivityLog", 'String'>
     readonly userId: FieldRef<"ActivityLog", 'String'>
+    readonly serverId: FieldRef<"ActivityLog", 'String'>
     readonly action: FieldRef<"ActivityLog", 'String'>
     readonly details: FieldRef<"ActivityLog", 'String'>
+    readonly metadata: FieldRef<"ActivityLog", 'String'>
     readonly createdAt: FieldRef<"ActivityLog", 'DateTime'>
   }
     
@@ -28785,8 +28809,10 @@ export namespace Prisma {
   export const ActivityLogScalarFieldEnum: {
     id: 'id',
     userId: 'userId',
+    serverId: 'serverId',
     action: 'action',
     details: 'details',
+    metadata: 'metadata',
     createdAt: 'createdAt'
   };
 
@@ -29841,8 +29867,10 @@ export namespace Prisma {
     NOT?: ActivityLogWhereInput | ActivityLogWhereInput[]
     id?: StringFilter<"ActivityLog"> | string
     userId?: StringFilter<"ActivityLog"> | string
+    serverId?: StringNullableFilter<"ActivityLog"> | string | null
     action?: StringFilter<"ActivityLog"> | string
     details?: StringFilter<"ActivityLog"> | string
+    metadata?: StringNullableFilter<"ActivityLog"> | string | null
     createdAt?: DateTimeFilter<"ActivityLog"> | Date | string
     user?: XOR<UserRelationFilter, UserWhereInput>
   }
@@ -29850,8 +29878,10 @@ export namespace Prisma {
   export type ActivityLogOrderByWithRelationInput = {
     id?: SortOrder
     userId?: SortOrder
+    serverId?: SortOrderInput | SortOrder
     action?: SortOrder
     details?: SortOrder
+    metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     user?: UserOrderByWithRelationInput
   }
@@ -29862,8 +29892,10 @@ export namespace Prisma {
     OR?: ActivityLogWhereInput[]
     NOT?: ActivityLogWhereInput | ActivityLogWhereInput[]
     userId?: StringFilter<"ActivityLog"> | string
+    serverId?: StringNullableFilter<"ActivityLog"> | string | null
     action?: StringFilter<"ActivityLog"> | string
     details?: StringFilter<"ActivityLog"> | string
+    metadata?: StringNullableFilter<"ActivityLog"> | string | null
     createdAt?: DateTimeFilter<"ActivityLog"> | Date | string
     user?: XOR<UserRelationFilter, UserWhereInput>
   }, "id">
@@ -29871,8 +29903,10 @@ export namespace Prisma {
   export type ActivityLogOrderByWithAggregationInput = {
     id?: SortOrder
     userId?: SortOrder
+    serverId?: SortOrderInput | SortOrder
     action?: SortOrder
     details?: SortOrder
+    metadata?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: ActivityLogCountOrderByAggregateInput
     _max?: ActivityLogMaxOrderByAggregateInput
@@ -29885,8 +29919,10 @@ export namespace Prisma {
     NOT?: ActivityLogScalarWhereWithAggregatesInput | ActivityLogScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"ActivityLog"> | string
     userId?: StringWithAggregatesFilter<"ActivityLog"> | string
+    serverId?: StringNullableWithAggregatesFilter<"ActivityLog"> | string | null
     action?: StringWithAggregatesFilter<"ActivityLog"> | string
     details?: StringWithAggregatesFilter<"ActivityLog"> | string
+    metadata?: StringNullableWithAggregatesFilter<"ActivityLog"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ActivityLog"> | Date | string
   }
 
@@ -31929,8 +31965,10 @@ export namespace Prisma {
 
   export type ActivityLogCreateInput = {
     id?: string
+    serverId?: string | null
     action: string
     details: string
+    metadata?: string | null
     createdAt?: Date | string
     user: UserCreateNestedOneWithoutLogsInput
   }
@@ -31938,15 +31976,19 @@ export namespace Prisma {
   export type ActivityLogUncheckedCreateInput = {
     id?: string
     userId: string
+    serverId?: string | null
     action: string
     details: string
+    metadata?: string | null
     createdAt?: Date | string
   }
 
   export type ActivityLogUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
     action?: StringFieldUpdateOperationsInput | string
     details?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutLogsNestedInput
   }
@@ -31954,31 +31996,39 @@ export namespace Prisma {
   export type ActivityLogUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
     action?: StringFieldUpdateOperationsInput | string
     details?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ActivityLogCreateManyInput = {
     id?: string
     userId: string
+    serverId?: string | null
     action: string
     details: string
+    metadata?: string | null
     createdAt?: Date | string
   }
 
   export type ActivityLogUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
     action?: StringFieldUpdateOperationsInput | string
     details?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ActivityLogUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
     action?: StringFieldUpdateOperationsInput | string
     details?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -34025,24 +34075,30 @@ export namespace Prisma {
   export type ActivityLogCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
+    serverId?: SortOrder
     action?: SortOrder
     details?: SortOrder
+    metadata?: SortOrder
     createdAt?: SortOrder
   }
 
   export type ActivityLogMaxOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
+    serverId?: SortOrder
     action?: SortOrder
     details?: SortOrder
+    metadata?: SortOrder
     createdAt?: SortOrder
   }
 
   export type ActivityLogMinOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
+    serverId?: SortOrder
     action?: SortOrder
     details?: SortOrder
+    metadata?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -36550,15 +36606,19 @@ export namespace Prisma {
 
   export type ActivityLogCreateWithoutUserInput = {
     id?: string
+    serverId?: string | null
     action: string
     details: string
+    metadata?: string | null
     createdAt?: Date | string
   }
 
   export type ActivityLogUncheckedCreateWithoutUserInput = {
     id?: string
+    serverId?: string | null
     action: string
     details: string
+    metadata?: string | null
     createdAt?: Date | string
   }
 
@@ -36855,8 +36915,10 @@ export namespace Prisma {
     NOT?: ActivityLogScalarWhereInput | ActivityLogScalarWhereInput[]
     id?: StringFilter<"ActivityLog"> | string
     userId?: StringFilter<"ActivityLog"> | string
+    serverId?: StringNullableFilter<"ActivityLog"> | string | null
     action?: StringFilter<"ActivityLog"> | string
     details?: StringFilter<"ActivityLog"> | string
+    metadata?: StringNullableFilter<"ActivityLog"> | string | null
     createdAt?: DateTimeFilter<"ActivityLog"> | Date | string
   }
 
@@ -41392,8 +41454,10 @@ export namespace Prisma {
 
   export type ActivityLogCreateManyUserInput = {
     id?: string
+    serverId?: string | null
     action: string
     details: string
+    metadata?: string | null
     createdAt?: Date | string
   }
 
@@ -41641,22 +41705,28 @@ export namespace Prisma {
 
   export type ActivityLogUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
     action?: StringFieldUpdateOperationsInput | string
     details?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ActivityLogUncheckedUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
     action?: StringFieldUpdateOperationsInput | string
     details?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ActivityLogUncheckedUpdateManyWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
+    serverId?: NullableStringFieldUpdateOperationsInput | string | null
     action?: StringFieldUpdateOperationsInput | string
     details?: StringFieldUpdateOperationsInput | string
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

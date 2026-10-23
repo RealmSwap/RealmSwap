@@ -797,8 +797,15 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
       await prisma.activityLog.create({
         data: {
           userId: serverRec.userId,
-          action: "STOP_SERVER",
+          serverId,
+          action: "SERVER_CRASH",
           details: `Server '${serverRec.name}' (${serverRec.game}) CRASHED (Code: ${code}). Auto-restart attempt ${counter.count}/${CRASH_MAX_RETRIES}.`,
+          metadata: JSON.stringify({
+            exitCode: code,
+            signal: signal ?? null,
+            attempt: counter.count,
+            maxRetries: CRASH_MAX_RETRIES,
+          }),
         }
       });
 

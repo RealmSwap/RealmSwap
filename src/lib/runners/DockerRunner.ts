@@ -185,6 +185,21 @@ export class DockerRunner implements ServerRunner {
       crashCounters.set(serverId, counter);
       appendLog(serverId, `[Crash Detection] Container exited with code ${code} (Attempt ${counter.count}/${CRASH_MAX_RETRIES})`);
 
+      // Persist the crash for per-server crash history, matching the Local runner.
+      await prisma.activityLog.create({
+        data: {
+          userId: rec.userId,
+          serverId,
+          action: "SERVER_CRASH",
+          details: `Container '${rec.name}' (${rec.game}) exited with code ${code}. Auto-restart attempt ${counter.count}/${CRASH_MAX_RETRIES}.`,
+          metadata: JSON.stringify({
+            exitCode: code,
+            attempt: counter.count,
+            maxRetries: CRASH_MAX_RETRIES,
+          }),
+        }
+      }).catch(err => console.error("Failed to write crash activity log:", err));
+
       // Alert on every crash, matching the Local runner's behavior.
       import("../notifications").then(({ sendNotification }) => {
         sendNotification(

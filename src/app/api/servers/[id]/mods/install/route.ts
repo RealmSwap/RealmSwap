@@ -5,7 +5,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
-import { testServerBoot } from "@/lib/runners/sandbox";
+import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { downloadFile } from "@/lib/download";
 import {
   installMinecraftMod, installValheimThunderstore, installZomboidWorkshopMod,
@@ -163,7 +163,8 @@ export async function POST(
       await prisma.serverSnapshot.delete({ where: { id: snapshot.id } });
 
       return NextResponse.json({
-        error: `Installation failed or crashed the server. Safe Rollback completed. Cause: ${installError.message}`
+        error: `Installation failed or crashed the server. Safe Rollback completed. Cause: ${installError.message}`,
+        ...(installError instanceof SandboxBootError ? { bootOutput: installError.output } : {}),
       }, { status: 500 });
     }
 

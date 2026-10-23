@@ -237,8 +237,10 @@ exports.Prisma.ArchiveScalarFieldEnum = {
 exports.Prisma.ActivityLogScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  serverId: 'serverId',
   action: 'action',
   details: 'details',
+  metadata: 'metadata',
   createdAt: 'createdAt'
 };
 

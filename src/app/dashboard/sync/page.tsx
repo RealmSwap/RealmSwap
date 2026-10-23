@@ -1,8 +1,21 @@
 import { redirect } from "next/navigation";
 import { getAuthenticatedUser } from "@/lib/auth";
 import SyncClientView from "@/components/SyncClientView";
+import { parseInviteLink, isLegacyInviteLink, fetchVerifiedManifest } from "@/lib/realmsync";
 
 export const dynamic = "force-dynamic";
+
+function InvalidLinkScreen({ title, message }: { title: string; message: string }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background text-slate-100 px-4">
+      <div className="glass-panel-purple p-8 rounded-2xl max-w-md text-center">
+        <h1 className="text-xl font-bold text-red-400 mb-2">{title}</h1>
+        <p className="text-sm text-slate-400 mb-6">{message}</p>
+        <a href="/dashboard" className="px-4 py-2 bg-accentPurple text-white rounded-lg font-bold">Return to Dashboard</a>
+      </div>
+    </div>
+  );
+}
 
 export default async function SyncPage({ searchParams }: { searchParams: { link?: string } }) {
   const user = await getAuthenticatedUser();
@@ -14,57 +27,51 @@ export default async function SyncPage({ searchParams }: { searchParams: { link?
   const link = searchParams.link;
   if (!link || !link.startsWith("realmsync://")) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-slate-100 px-4">
-        <div className="glass-panel-purple p-8 rounded-2xl max-w-md text-center">
-          <h1 className="text-xl font-bold text-red-400 mb-2">Invalid Invite Link</h1>
-          <p className="text-sm text-slate-400 mb-6">The invite link provided is invalid or missing.</p>
-          <a href="/dashboard" className="px-4 py-2 bg-accentPurple text-white rounded-lg font-bold">Return to Dashboard</a>
-        </div>
-      </div>
+      <InvalidLinkScreen
+        title="Invalid Invite Link"
+        message="The invite link provided is invalid or missing."
+      />
     );
   }
 
-  // Parse realmsync://1.2.3.4:3000/CODE
-  const urlPart = link.replace("realmsync://", "");
-  const [host, inviteCode] = urlPart.split("/");
+  // Parse realmsync://1.2.3.4:3000/<codeId><secret>
+  const parsed = parseInviteLink(link);
 
-  if (!host || !inviteCode) {
+  if (!parsed) {
+    if (isLegacyInviteLink(link)) {
+      return (
+        <InvalidLinkScreen
+          title="Invite Link Needs Refreshing"
+          message="This invite link was created by an older version of RealmSwap. Ask the host to regenerate the invite and send the new link."
+        />
+      );
+    }
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-slate-100 px-4">
-        <div className="glass-panel-purple p-8 rounded-2xl max-w-md text-center">
-          <h1 className="text-xl font-bold text-red-400 mb-2">Malformed Invite Link</h1>
-          <p className="text-sm text-slate-400 mb-6">The invite link format is incorrect. Ensure it includes the host and code.</p>
-          <a href="/dashboard" className="px-4 py-2 bg-accentPurple text-white rounded-lg font-bold">Return to Dashboard</a>
-        </div>
-      </div>
+      <InvalidLinkScreen
+        title="Malformed Invite Link"
+        message="The invite link format is incorrect. Ensure it includes the host and code."
+      />
     );
   }
 
-  // Fetch manifest from host
+  // Fetch the manifest from the host with the HMAC proof and verify the
+  // response signature before trusting anything it says.
   let manifest = null;
   let errorMsg = null;
   try {
-    const res = await fetch(`http://${host}/sync/${inviteCode}/manifest`, {
-      // 10 second timeout
-      signal: AbortSignal.timeout(10000)
-    });
-    
-    if (!res.ok) {
-      errorMsg = await res.text();
-    } else {
-      manifest = await res.json();
-    }
+    manifest = await fetchVerifiedManifest(parsed.host, parsed.codeId, parsed.secret);
   } catch (err: any) {
     errorMsg = err.message || "Failed to reach the host server. They may be offline.";
   }
 
   return (
-    <SyncClientView 
+    <SyncClientView
       link={link}
-      host={host} 
-      inviteCode={inviteCode} 
-      manifest={manifest} 
-      error={errorMsg} 
+      host={parsed.host}
+      codeId={parsed.codeId}
+      secret={parsed.secret}
+      manifest={manifest}
+      error={errorMsg}
     />
   );
 }

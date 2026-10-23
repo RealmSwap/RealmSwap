@@ -16,23 +16,34 @@ export async function GET(req: NextRequest) {
   }
 
   const task = getTask(taskId);
-  if (!task) {
+  if (!task || task.userId !== user.id) {
+    // 404 for both: don't reveal whether a task id exists
     return new Response("Task not found", { status: 404 });
   }
 
   const stream = new ReadableStream({
     start(controller) {
+      let closed = false;
+      const safeClose = () => {
+        if (closed) return;
+        closed = true;
+        try { controller.close(); } catch { /* already closed by the other path */ }
+      };
+
       const sendUpdate = () => {
-        const payload = JSON.stringify({
-          status: task.status,
-          percent: task.percent,
-          done: task.isDone,
-          error: task.error
-        });
-        controller.enqueue(`data: ${payload}\n\n`);
-        
+        if (closed) return;
+        try {
+          const payload = JSON.stringify({
+            status: task.status,
+            percent: task.percent,
+            done: task.isDone,
+            error: task.error
+          });
+          controller.enqueue(`data: ${payload}\n\n`);
+        } catch { /* client went away */ }
+
         if (task.isDone || task.error) {
-          controller.close();
+          safeClose();
           cleanup();
         }
       };
@@ -42,13 +53,13 @@ export async function GET(req: NextRequest) {
       };
 
       task.on("update", sendUpdate);
-      
+
       // Send initial state
       sendUpdate();
 
       req.signal.addEventListener("abort", () => {
         cleanup();
-        controller.close();
+        safeClose();
       });
     }
   });
