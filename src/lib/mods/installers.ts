@@ -9,6 +9,7 @@ import {
 } from "@/lib/mods/mcLoaders";
 import {
   resolveInstallCandidate, fetchVersions, pickCompatibleVersion, primaryFile,
+  collectRequiredDependencies,
 } from "@/lib/mods/modrinth";
 import {
   communityForGame, fetchCommunityIndex, findVersionEntry, newestVersion,
@@ -68,45 +69,36 @@ export async function installMinecraftMod(args: {
     );
   }
 
-  // Required dependencies first (BFS over the Modrinth graph).
+  // Required dependencies first: BFS over the Modrinth graph, skipping
+  // anything already installed. Unresolvable deps warn, not fail.
   const installedProjectIds = new Set(
     (await prisma.modInstallation.findMany({ where: { serverId }, select: { packageId: true } }))
       .map((m) => m.packageId)
   );
-  // Required dependencies first: async BFS over the Modrinth graph,
-  // skipping anything already installed. Unresolvable deps warn, not fail.
-  const toInstall: { projectId: string; title: string; versionNumber: string; url: string; filename: string }[] = [];
-  const seen = new Set<string>([candidate.version.project_id]);
-  let level: any[] = [candidate.version];
-  for (let depth = 0; level.length > 0 && depth < 12; depth++) {
-    const next: any[] = [];
-    for (const version of level) {
-      for (const dep of version.dependencies ?? []) {
-        if (dep.dependency_type !== "required") continue;
-        if (seen.has(dep.project_id)) continue;
-        seen.add(dep.project_id);
-        if (installedProjectIds.has(dep.project_id)) continue;
-        const depVersions = await fetchVersions(dep.project_id);
-        const depVersion = pickCompatibleVersion(depVersions, { gameVersion, loader });
-        const depFile = depVersion ? primaryFile(depVersion) : null;
-        if (!depVersion || !depFile) {
-          warnings.push(
-            `Dependency ${dep.project_id} has no compatible version${gameVersion ? ` for Minecraft ${gameVersion}` : ""} — the mod may not work without it.`
-          );
-          continue;
-        }
-        toInstall.push({
-          projectId: dep.project_id,
-          title: dep.project_id,
-          versionNumber: depVersion.version_number,
-          url: depFile.url,
-          filename: depFile.filename,
-        });
-        next.push(depVersion);
-      }
-    }
-    level = next;
+  const { order: depVersions, missingProjects } = await collectRequiredDependencies(
+    candidate.version,
+    async (projectId) => {
+      const depVersions = await fetchVersions(projectId);
+      const depVersion = pickCompatibleVersion(depVersions, { gameVersion, loader });
+      return depVersion && primaryFile(depVersion) ? depVersion : null;
+    },
+    (id) => installedProjectIds.has(id)
+  );
+  for (const depId of missingProjects) {
+    warnings.push(
+      `Dependency ${depId} has no compatible version${gameVersion ? ` for Minecraft ${gameVersion}` : ""} — the mod may not work without it.`
+    );
   }
+  const toInstall = depVersions.map((v) => {
+    const file = primaryFile(v)!;
+    return {
+      projectId: v.project_id,
+      title: v.project_id,
+      versionNumber: v.version_number,
+      url: file.url,
+      filename: file.filename,
+    };
+  });
   for (const dep of toInstall) {
     const dest = safeJoin(modsDir, `${dep.projectId}.jar`);
     await downloadFile(dep.url, dest);
