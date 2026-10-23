@@ -114,3 +114,11 @@ export class SteamWorkshopProvider implements ModProvider {
   }
 
 }
+
+/** Display name for a curated Zomboid workshop file id, or null. Pure data lookup. */
+export function curatedZomboidWorkshopName(workshopId: string): string | null {
+  for (const mod of CURATED_MODS.ZOMBOID ?? []) {
+    if (mod.packageId === workshopId) return mod.name;
+  }
+  return null;
+}

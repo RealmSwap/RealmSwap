@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { dataRoot } from "./appPaths";
 import AdmZip from "adm-zip";
+import { stampUntimestampedLines } from "./consoleFormat";
 
 function rotateLogFile(serverId: string, filePath: string) {
   try {
@@ -60,7 +61,7 @@ export function appendLog(serverId: string, message: string): void {
       }
     }
 
-    fs.appendFileSync(file, message.replace(/\r?\n$/, "") + "\n");
+    fs.appendFileSync(file, stampUntimestampedLines(message.replace(/\r?\n$/, "")) + "\n");
   } catch {
     // best-effort logging; never let a log write crash the runner
   }
@@ -84,4 +85,65 @@ export function getServerLogTail(serverId: string, lines = 150): string {
   // Drop trailing empty string produced by a file that ends with "\n"
   const trimmed = allLines.at(-1) === "" ? allLines.slice(0, -1) : allLines;
   return trimmed.slice(-lines).join("\n") + "\n";
+}
+
+// Rotated archives written by rotateLogFile: server-log-<ISO-timestamp>.zip,
+// each holding the pre-rotation server.log.
+const ARCHIVE_NAME_RE = /^server-log-[\w-]+\.zip$/;
+
+export interface LogArchiveMeta {
+  name: string;
+  sizeBytes: number;
+  createdAt: string; // ISO — file mtime, which is the rotation moment
+}
+
+/** List a server's rotated log archives, newest first. */
+export function listLogArchives(serverId: string): LogArchiveMeta[] {
+  const dir = path.dirname(serverLogFile(serverId));
+  let files: string[];
+  try {
+    files = fs.readdirSync(dir);
+  } catch {
+    return [];
+  }
+  return files
+    .filter((f) => ARCHIVE_NAME_RE.test(f))
+    .map((name) => {
+      try {
+        const stats = fs.statSync(path.join(dir, name));
+        return { name, sizeBytes: stats.size, createdAt: stats.mtime.toISOString() };
+      } catch {
+        return null; // deleted between readdir and stat (30-day cleanup race)
+      }
+    })
+    .filter((a): a is LogArchiveMeta => a !== null)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+const MAX_ARCHIVE_CHARS = 2 * 1024 * 1024;
+
+/**
+ * Read the log text inside one rotated archive. Oversized archives keep their
+ * most recent tail (`truncated: true`) — this feeds a viewer, not an export.
+ */
+export function readLogArchive(serverId: string, archiveName: string): { content: string; truncated: boolean } {
+  if (!ARCHIVE_NAME_RE.test(archiveName)) {
+    throw new Error("Invalid log archive name");
+  }
+  const zipPath = path.join(path.dirname(serverLogFile(serverId)), archiveName);
+  if (!fs.existsSync(zipPath)) {
+    throw new Error("Log archive not found");
+  }
+  const zip = new AdmZip(zipPath);
+  const entry =
+    zip.getEntries().find((e) => !e.isDirectory && e.entryName === "server.log") ??
+    zip.getEntries().find((e) => !e.isDirectory);
+  if (!entry) {
+    throw new Error("Log archive is empty");
+  }
+  const text = zip.readAsText(entry);
+  if (text.length > MAX_ARCHIVE_CHARS) {
+    return { content: text.slice(-MAX_ARCHIVE_CHARS), truncated: true };
+  }
+  return { content: text, truncated: false };
 }
