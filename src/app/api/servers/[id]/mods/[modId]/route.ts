@@ -19,9 +19,9 @@ export async function DELETE(
     const serverId = params.id;
     const modId = params.modId;
 
-    const access = await verifyServerAccess(serverId, user.id);
+    const access = await verifyServerAccess(serverId, user.id, "ADMIN");
     if (!access) {
-      return NextResponse.json({ error: "Server not found" }, { status: 404 });
+      return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
 
     const game = access.server.game.toUpperCase();
@@ -46,10 +46,15 @@ export async function DELETE(
         fs.unlinkSync(dllPath);
       }
       
-      // Also try to find any zip if it was a BepInEx pack
       const zipPath = path.join(pluginsDir, `${modId}.zip`);
       if (fs.existsSync(zipPath)) {
         fs.unlinkSync(zipPath);
+      }
+
+      // Zip installs extract into a per-mod folder — remove it too
+      const modDir = path.join(pluginsDir, modId);
+      if (fs.existsSync(modDir) && fs.statSync(modDir).isDirectory()) {
+        fs.rmSync(modDir, { recursive: true, force: true });
       }
     } else if (game === "MINECRAFT") {
       const modsDir = path.join(dataRoot(), "local-servers", serverId, "mods");
@@ -93,6 +98,14 @@ export async function DELETE(
         }
       }
     });
+
+    await prisma.activityLog.create({
+      data: {
+        userId: user.id,
+        action: "UNINSTALL_MOD",
+        details: `Uninstalled mod '${installation.name}' from server '${access.server.name}' (${access.server.game}).`,
+      },
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

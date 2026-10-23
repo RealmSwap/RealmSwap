@@ -19,7 +19,7 @@ export function VaultSection({
         <div className="p-4 border-b border-white/5 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 shrink-0">
           <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
             <Archive className="w-4 h-4 text-accentPurple" />
-            <span>Game History Vault</span>
+            <span>RealmSwap Vault</span>
           </h2>
         </div>
         <div className="px-12 pt-8 pb-24 flex flex-col items-center justify-center text-center flex-1">
@@ -48,7 +48,7 @@ export function VaultSection({
       <div className="p-4 border-b border-white/5 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 shrink-0">
         <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
           <Archive className="w-4 h-4 text-accentPurple" />
-          <span>Game History Vault</span>
+          <span>RealmSwap Vault</span>
         </h2>
         <div className="text-xs font-bold text-slate-400 bg-slate-900/50 px-3 py-1 rounded-full border border-white/5">
           {archives.length} items
