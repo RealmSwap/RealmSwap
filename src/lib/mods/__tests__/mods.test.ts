@@ -456,7 +456,7 @@ describe("modrinth helpers", () => {
     expect(primaryFile(v)?.url).toBe("primary");
   });
 
-  it("walks required dependencies breadth-first, skipping optional, installed, and cyclic", () => {
+  it("walks required dependencies breadth-first, skipping optional, installed, and cyclic", async () => {
     const root = version({ id: "root", project_id: "root", dependencies: [
       { project_id: "liba", dependency_type: "required" },
       { project_id: "libb", dependency_type: "optional" },        // skipped
@@ -469,16 +469,23 @@ describe("modrinth helpers", () => {
     const deep = version({ id: "vd", project_id: "deep" });
 
     const lookup = (id: string) => ({ root, liba, deep, installed: version({ id: "vi", project_id: "installed" }) })[id] ?? null;
-    const { order, missingProjects } = collectRequiredDependencies(root, lookup, (id) => id === "installed");
+    const { order, missingProjects } = await collectRequiredDependencies(root, lookup, (id) => id === "installed");
 
     expect(order.map((v) => v.project_id)).toEqual(["liba", "deep"]); // deps before deeper deps
     expect(missingProjects).toEqual([]);
   });
 
-  it("records unresolvable dependencies instead of failing", () => {
+  it("records unresolvable dependencies instead of failing", async () => {
     const root = version({ id: "r", project_id: "r", dependencies: [{ project_id: "ghost", dependency_type: "required" }] });
-    const { order, missingProjects } = collectRequiredDependencies(root, () => null, () => false);
+    const { order, missingProjects } = await collectRequiredDependencies(root, () => null, () => false);
     expect(order).toEqual([]);
     expect(missingProjects).toEqual(["ghost"]);
+  });
+
+  it("accepts an async lookup (fetch + compatibility pick)", async () => {
+    const root = version({ id: "r", project_id: "r", dependencies: [{ project_id: "liba", dependency_type: "required" }] });
+    const liba = version({ id: "va", project_id: "liba" });
+    const { order } = await collectRequiredDependencies(root, async (id) => (id === "liba" ? liba : null), () => false);
+    expect(order.map((v) => v.project_id)).toEqual(["liba"]);
   });
 });

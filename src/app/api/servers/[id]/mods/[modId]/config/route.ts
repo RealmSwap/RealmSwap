@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
@@ -8,29 +9,42 @@ import { dataRoot } from "@/lib/appPaths";
 import path from "path";
 import fs from "fs";
 
-function getConfigPath(serverId: string, packageId: string): string {
-  // Map packageId to its likely .cfg filename.
-  // E.g., 'ValheimPlus-ValheimPlus' -> 'valheim_plus.cfg' 
-  // In a real app, this mapping would be stored in the ModProvider or database.
-  const valheimDir = path.join(dataRoot(), "local-servers", serverId, "valheim-server");
-  const configDir = path.join(valheimDir, "BepInEx", "config");
-  
+/**
+ * Find the BepInEx .cfg file that belongs to a Thunderstore package.
+ * Package id → cfg filename has no reliable mapping (plugins name their own
+ * cfg files at first boot), so: an exact filename-stem match wins, a UNIQUE
+ * substring match is accepted, and zero or several matches refuse honestly —
+ * substring guessing across several candidates would silently edit another
+ * mod's config.
+ */
+function findConfigFile(configDir: string, packageId: string): string | null {
   if (packageId === "ValheimPlus-ValheimPlus") {
-    return path.join(configDir, "valheim_plus.cfg");
+    const fixed = path.join(configDir, "valheim_plus.cfg");
+    if (fs.existsSync(fixed)) return fixed;
   }
-  
-  // Fallback heuristic: try to find a .cfg file that matches part of the packageId
-  if (fs.existsSync(configDir)) {
-    const files = fs.readdirSync(configDir);
-    const searchStr = packageId.split("-").pop()?.toLowerCase() || "";
-    for (const file of files) {
-      if (file.toLowerCase().includes(searchStr) && file.endsWith(".cfg")) {
-        return path.join(configDir, file);
-      }
-    }
-  }
+  if (!fs.existsSync(configDir)) return null;
+  const files = fs.readdirSync(configDir).filter((f) => f.toLowerCase().endsWith(".cfg"));
+  const stem = packageId.split("-").pop()?.toLowerCase() || "";
+  if (!stem) return null;
 
-  return path.join(configDir, `${packageId}.cfg`);
+  const exact = files.filter((f) => f.toLowerCase().replace(/\.cfg$/, "") === stem);
+  if (exact.length === 1) return path.join(configDir, exact[0]);
+
+  const partial = files.filter((f) => f.toLowerCase().includes(stem));
+  if (partial.length === 1) return path.join(configDir, partial[0]);
+  return null;
+}
+
+function getConfigDir(serverId: string): string {
+  return path.join(dataRoot(), "local-servers", serverId, "valheim-server", "BepInEx", "config");
+}
+
+/** Look up the mod row scoped to this server — a bare id lookup would let a
+ *  member of server A read/write server B's config by row id. */
+async function findServerMod(serverId: string, rowId: string) {
+  const mod = await prisma.modInstallation.findUnique({ where: { id: rowId } });
+  if (!mod || mod.serverId !== serverId) return null;
+  return mod;
 }
 
 // GET /api/servers/[id]/mods/[modId]/config
@@ -46,24 +60,23 @@ export async function GET(
     const access = await verifyServerAccess(serverId, user.id);
     if (!access) return NextResponse.json({ error: "Server not found" }, { status: 404 });
 
-    const mod = await prisma.modInstallation.findUnique({
-      where: { id: params.modId }
-    });
-
+    const mod = await findServerMod(serverId, params.modId);
     if (!mod) return NextResponse.json({ error: "Mod not found" }, { status: 404 });
 
     if (mod.provider !== "thunderstore") {
       return NextResponse.json({ error: "Config UI is currently only supported for Thunderstore/BepInEx mods." }, { status: 400 });
     }
 
-    const cfgPath = getConfigPath(serverId, mod.packageId);
-
-    if (!fs.existsSync(cfgPath)) {
-      return NextResponse.json({ error: "Configuration file not found. Have you started the server with the mod installed at least once?" }, { status: 404 });
+    const cfgPath = findConfigFile(getConfigDir(serverId), mod.packageId);
+    if (!cfgPath || !fs.existsSync(cfgPath)) {
+      return NextResponse.json(
+        { error: `Couldn't determine which .cfg file belongs to '${mod.name}'. Start the server with the mod once, or edit it under BepInEx/config on disk.` },
+        { status: 404 }
+      );
     }
 
     const sections = parseBepInExConfig(cfgPath);
-    return NextResponse.json({ sections });
+    return NextResponse.json({ sections, file: path.basename(cfgPath) });
   } catch (error: any) {
     console.error("GET config error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
@@ -80,31 +93,54 @@ export async function POST(
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const serverId = params.id;
-    const access = await verifyServerAccess(serverId, user.id);
-    if (!access) return NextResponse.json({ error: "Server not found" }, { status: 404 });
+    const access = await verifyServerAccess(serverId, user.id, "ADMIN");
+    if (!access) {
+      return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
+    }
 
     const { server } = access;
-    if (server.status === "RUNNING") {
+    if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json({ error: "Please stop the server before modifying configurations." }, { status: 400 });
     }
 
-    const mod = await prisma.modInstallation.findUnique({
-      where: { id: params.modId }
-    });
-
+    const mod = await findServerMod(serverId, params.modId);
     if (!mod) return NextResponse.json({ error: "Mod not found" }, { status: 404 });
 
-    const { sections } = await req.json() as { sections: ConfigSection[] };
-    if (!sections || !Array.isArray(sections)) {
-      return NextResponse.json({ error: "Invalid payload: 'sections' array is required." }, { status: 400 });
+    if (mod.provider !== "thunderstore") {
+      return NextResponse.json({ error: "Config UI is currently only supported for Thunderstore/BepInEx mods." }, { status: 400 });
     }
 
-    const cfgPath = getConfigPath(serverId, mod.packageId);
-    
-    // Backup the old config just in case
-    if (fs.existsSync(cfgPath)) {
-      fs.copyFileSync(cfgPath, `${cfgPath}.bak`);
+    // Newlines would inject extra lines into the .cfg — keys, values and
+    // section names must each stay on one line.
+    const propertySchema = z.object({
+      key: z.string().min(1).max(200).regex(/^[^\r\n]+$/, "no newlines"),
+      value: z.string().max(2000).regex(/^[^\r\n]*$/, "no newlines"),
+      type: z.string().max(50).optional().default("String"),
+      defaultValue: z.string().max(2000).optional().default(""),
+      description: z.string().max(2000).optional().default(""),
+    });
+    const bodySchema = z.object({
+      sections: z.array(z.object({
+        name: z.string().min(1).max(200).regex(/^[^\r\n]+$/, "no newlines"),
+        properties: z.array(propertySchema).max(500),
+      })).max(50),
+    });
+    const parsed = bodySchema.safeParse(await req.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid config payload.", details: parsed.error.format() }, { status: 400 });
     }
+    const sections: ConfigSection[] = parsed.data.sections;
+
+    const cfgPath = findConfigFile(getConfigDir(serverId), mod.packageId);
+    if (!cfgPath || !fs.existsSync(cfgPath)) {
+      return NextResponse.json(
+        { error: `Couldn't determine which .cfg file belongs to '${mod.name}'. Start the server with the mod once, or edit it under BepInEx/config on disk.` },
+        { status: 404 }
+      );
+    }
+
+    // Backup the old config just in case
+    fs.copyFileSync(cfgPath, `${cfgPath}.bak`);
 
     const newConfigStr = serializeBepInExConfig(sections);
     fs.writeFileSync(cfgPath, newConfigStr, "utf-8");
@@ -113,7 +149,7 @@ export async function POST(
     await prisma.activityLog.create({
       data: {
         userId: user.id,
-        action: "RESTORE_SERVER", // We should probably add a "UPDATE_CONFIG" action
+        action: "UPDATE_CONFIG",
         details: `Updated configuration for mod '${mod.name}' on server '${server.name}'.`,
       },
     });

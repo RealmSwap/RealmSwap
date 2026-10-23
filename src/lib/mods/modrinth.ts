@@ -70,14 +70,15 @@ export function primaryFile(version: ModrinthVersion): ModrinthVersionFile | nul
 /**
  * Walk the REQUIRED dependency graph from a root version and return the
  * versions that still need installing, in dependency-first order. The lookup
- * and alreadyInstalled predicates are injected so the walk is unit-testable
- * without network. Depth-capped and cycle-safe.
+ * (which resolves a project to the version to install — possibly async, e.g.
+ * fetch + compatibility pick) and alreadyInstalled predicates are injected so
+ * the walk is unit-testable without network. Depth-capped and cycle-safe.
  */
-export function collectRequiredDependencies(
+export async function collectRequiredDependencies(
   root: ModrinthVersion,
-  lookup: (projectId: string) => ModrinthVersion | null,
+  lookup: (projectId: string) => ModrinthVersion | null | Promise<ModrinthVersion | null>,
   alreadyInstalled: (projectId: string) => boolean
-): { order: ModrinthVersion[]; missingProjects: string[] } {
+): Promise<{ order: ModrinthVersion[]; missingProjects: string[] }> {
   const order: ModrinthVersion[] = [];
   const seen = new Set<string>([root.project_id]);
   const missingProjects: string[] = [];
@@ -93,7 +94,7 @@ export function collectRequiredDependencies(
         if (seen.has(dep.project_id)) continue;
         seen.add(dep.project_id);
         if (alreadyInstalled(dep.project_id)) continue;
-        const depVersion = lookup(dep.project_id);
+        const depVersion = await lookup(dep.project_id);
         if (!depVersion) {
           missingProjects.push(dep.project_id);
           continue;

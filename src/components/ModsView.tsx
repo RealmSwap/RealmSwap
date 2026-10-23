@@ -1439,12 +1439,20 @@ export default function ModsView({ servers, user }: ModsViewProps) {
               <div className="space-y-4 animate-fade-in">
                 {game === "MINECRAFT" && loaderInfo?.supported && (
                   loaderInfo.loader ? (
-                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300">
-                      <Check className="w-4 h-4" />
-                      <span className="font-bold">
+                    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300">
+                      <span className="font-bold flex items-center gap-2">
+                        <Check className="w-4 h-4" />
                         {LOADER_LABELS[loaderInfo.loader.type] || loaderInfo.loader.type}{" "}
                         {loaderInfo.loader.loaderVersion} active (Minecraft {loaderInfo.loader.minecraftVersion}) — jars in mods/ load on boot.
                       </span>
+                      <button
+                        onClick={() => handleInstallLoader(loaderInfo.loader!.type as "fabric" | "quilt" | "forge" | "neoforge")}
+                        disabled={loaderBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/30 text-emerald-200 font-bold transition-colors disabled:opacity-50"
+                        title="Snapshot-backed reinstall of the newest loader version. To switch loaders, restore a pre-loader snapshot (Backups) first."
+                      >
+                        {loaderBusy ? "Updating…" : "Update Loader"}
+                      </button>
                     </div>
                   ) : (
                     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300">
@@ -1611,13 +1619,15 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                               <Trash className="w-3 h-3" />
                               Uninstall
                             </button>
-                            <button
-                              onClick={() => handleConfigureClick(mod)}
-                              className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-colors flex items-center gap-1.5"
-                            >
-                              <Settings className="w-3 h-3" />
-                              Configure
-                            </button>
+                            {mod.provider === "thunderstore" && (
+                              <button
+                                onClick={() => handleConfigureClick(mod)}
+                                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-colors flex items-center gap-1.5"
+                              >
+                                <Settings className="w-3 h-3" />
+                                Configure
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
