@@ -18,7 +18,7 @@ import { buildContext } from "../definitions/context";
 import { planInstall, planLaunch, planPorts, resolveCommand, resolveExecutablePath } from "../definitions/plan";
 import { ensureJava, parseRequiredJavaMajor } from "../runtimes/javaRuntime";
 import { applyConfigFiles } from "../definitions/applyConfigFiles";
-import { readLoaderMarker } from "../mods/mcLoaders";
+import { readLoaderMarker, applyLoaderLaunch } from "../mods/mcLoaders";
 import { parseWindroseInviteCode } from "../definitions/windrose";
 import type { GameDefinitionSpec } from "../definitions/types";
 import { setProgress, clearProgress, parseSteamProgress, computePercent, isMissingConfigError } from "../downloadProgress";
@@ -602,12 +602,11 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
   // the mods/ directory actually load.
   if (server.game.toUpperCase() === "MINECRAFT") {
     const marker = readLoaderMarker(installDir);
-    if (marker?.type === "fabric") {
-      const jarArg = launch.args.indexOf("server.jar");
-      if (jarArg !== -1 && fs.existsSync(path.join(installDir, "fabric-server-launch.jar"))) {
-        launch.args[jarArg] = "fabric-server-launch.jar";
-        logWriter(`[Loader] Using Fabric ${marker.loaderVersion} (Minecraft ${marker.minecraftVersion})`);
-      }
+    launch.args = applyLoaderLaunch(launch.args, marker, (rel) =>
+      fs.existsSync(path.join(installDir, rel))
+    );
+    if (marker && !launch.args.includes("server.jar")) {
+      logWriter(`[Loader] Using ${marker.type} ${marker.loaderVersion} (Minecraft ${marker.minecraftVersion})`);
     }
   }
 

@@ -129,7 +129,7 @@ export function extractMrpackOverrides(zip: AdmZip, serverRoot: string): number 
 }
 
 export interface MrpackLoaderRequirement {
-  type: "fabric" | "quilt" | "forge";
+  type: "fabric" | "quilt" | "forge" | "neoforge";
   version: string;
 }
 
@@ -138,6 +138,7 @@ export function loaderRequirement(index: MrpackIndex): MrpackLoaderRequirement |
   const deps = index.dependencies ?? {};
   if (deps["fabric-loader"]) return { type: "fabric", version: deps["fabric-loader"] };
   if (deps["quilt-loader"]) return { type: "quilt", version: deps["quilt-loader"] };
+  if (deps["neoforge"]) return { type: "neoforge", version: deps["neoforge"] };
   if (deps["forge"]) return { type: "forge", version: deps["forge"] };
   return null;
 }

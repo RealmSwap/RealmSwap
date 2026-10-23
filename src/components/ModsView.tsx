@@ -564,18 +564,19 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     }
   };
 
-  const handleInstallLoader = async () => {
+  const handleInstallLoader = async (loader: "fabric" | "forge" | "neoforge") => {
     if (!selectedServer) return;
+    const label = loader === "neoforge" ? "NeoForge" : loader === "forge" ? "Forge" : "Fabric";
     setLoaderBusy(true);
     try {
       const res = await fetch(`/api/servers/${selectedServer.id}/mods/loader`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ loader: "fabric" }),
+        body: JSON.stringify({ loader }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to install Fabric");
-      toast.success(data.message || "Fabric installed.");
+      if (!res.ok) throw new Error(data.error || `Failed to install ${label}`);
+      toast.success(data.message || `${label} installed.`);
       const lres = await fetch(`/api/servers/${selectedServer.id}/mods/loader`);
       if (lres.ok) setLoaderInfo(await lres.json());
     } catch (err: any) {
@@ -1192,9 +1193,9 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                     </span>
                     <div className="text-xs text-slate-400 leading-normal space-y-3">
                       <p>
-                        💡 <strong>Fabric/Forge support:</strong> For Minecraft,
-                        make sure you install a fabric-compatible loader JAR or
-                        download Fabric plugins if you use Paper/Spigot.
+                        💡 <strong>Mod loaders:</strong> Fabric, Forge, and
+                        NeoForge mods need their loader installed first — a
+                        vanilla server silently ignores the mods/ folder.
                       </p>
                       <p>
                         🛠️ <strong>BepInEx requirement:</strong> Valheim plugins
@@ -1507,21 +1508,27 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                     <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300">
                       <Check className="w-4 h-4" />
                       <span className="font-bold">
-                        Fabric {loaderInfo.loader.loaderVersion} active (Minecraft {loaderInfo.loader.minecraftVersion}) — jars in mods/ load on boot.
+                        {loaderInfo.loader.type === "neoforge" ? "NeoForge" : loaderInfo.loader.type === "forge" ? "Forge" : "Fabric"}{" "}
+                        {loaderInfo.loader.loaderVersion} active (Minecraft {loaderInfo.loader.minecraftVersion}) — jars in mods/ load on boot.
                       </span>
                     </div>
                   ) : (
                     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300">
                       <span className="font-bold">
-                        This is a vanilla server — Fabric mods won't load until you install a mod loader.
+                        This is a vanilla server — mods won't load until you install a mod loader.
                       </span>
-                      <button
-                        onClick={handleInstallLoader}
-                        disabled={loaderBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
-                        className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-amber-200 font-bold transition-colors disabled:opacity-50"
-                      >
-                        {loaderBusy ? "Installing…" : "Install Fabric"}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {(["fabric", "forge", "neoforge"] as const).map((l) => (
+                          <button
+                            key={l}
+                            onClick={() => handleInstallLoader(l)}
+                            disabled={loaderBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                            className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-amber-200 font-bold transition-colors disabled:opacity-50"
+                          >
+                            Install {l === "neoforge" ? "NeoForge" : l === "forge" ? "Forge" : "Fabric"}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )
                 )}
