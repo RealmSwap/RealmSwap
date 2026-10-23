@@ -456,18 +456,6 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                   </div>
                 </div>
               </div>
-              <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] p-5 shadow-xl hover:-translate-y-1 transition-transform group">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 mb-1">Global Ping</div>
-                    <div className="text-2xl font-black text-white">12ms</div>
-                    <div className="text-xs text-emerald-400 font-bold mt-2 flex items-center gap-1"><Activity className="w-3 h-3"/> Excellent</div>
-                  </div>
-                  <div className="p-2 bg-orange-500/10 text-orange-400 rounded-xl group-hover:scale-110 transition-transform">
-                    <Activity className="w-5 h-5" />
-                  </div>
-                </div>
-              </div>
             </section>
 
             {/* Error Message */}
