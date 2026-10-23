@@ -320,11 +320,48 @@ export class DockerRunner implements ServerRunner {
       ["stats", containerName(server.id), "--no-stream", "--format", "{{.CPUPerc}},{{.MemUsage}}"],
       { timeoutMs: 8000 },
     );
-    if (res.code !== 0 || !res.stdout.trim()) return { cpuPercent: 0, memoryMB: 0 };
+    if (res.code !== 0) {
+      // Match the Local runner: a daemon/container failure must reach the
+      // monitor's error path (healthStatus DEGRADED after 3 misses) instead
+      // of silently recording fake 0% / 0 MB telemetry.
+      throw new Error(`Docker stats failed: ${res.stderr || res.stdout || "unknown error"}`);
+    }
+    if (!res.stdout.trim()) return { cpuPercent: 0, memoryMB: 0 };
     return parseDockerStats(res.stdout);
   }
 
   async getLogs(server: Server): Promise<string> {
     return getServerLogTail(server.id);
+  }
+
+  // Containers survive an app restart; this process's log follower, exit
+  // watcher, and monitor do not. Without this, a container that exits after
+  // the restart keeps status RUNNING forever and crashes go unnoticed.
+  // Mirrors reconcileTunnelsOnBoot for the tunnel world.
+  async reconcileOnBoot(): Promise<void> {
+    const servers = await prisma.server.findMany({
+      where: { runnerType: "DOCKER", status: { in: ["RUNNING", "STARTING"] } },
+    });
+    for (const server of servers) {
+      try {
+        const res = await docker(["inspect", "-f", "{{.State.Running}}", containerName(server.id)]);
+        if (res.code === 0 && res.stdout.trim() === "true") {
+          const record = await prisma.server.findUnique({ where: { id: server.id } });
+          if (!record) continue;
+          const { spec } = await resolveDefinition(record);
+          appendLog(server.id, "[Docker] Reattached to running container after app restart.");
+          this.attachFollower(server.id, spec);
+          this.attachExitWatcher(server.id, record.game, record.ramAllocation);
+          startMonitoring(record);
+        } else {
+          await setStatus(server.id, "STOPPED", { pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 });
+          appendLog(server.id, "[Docker] Container not found after app restart — marked stopped.");
+        }
+      } catch (err: any) {
+        // Never block boot on reconcile problems; the container itself is
+        // untouched either way.
+        console.error(`[Docker] Boot reconcile failed for ${server.id}:`, err?.message);
+      }
+    }
   }
 }

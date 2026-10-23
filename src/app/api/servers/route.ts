@@ -13,6 +13,7 @@ import { isPortAvailable, getFreeDiskSpaceGB, isSteamCmdInstalled } from "@/lib/
 import { dataRoot } from "@/lib/appPaths";
 import { resolveRunnerType } from "@/lib/runners/resolveRunnerType";
 import { isDockerAvailable } from "@/lib/runners/docker/dockerCli";
+import { summarizePlannedSession } from "@/lib/sessions";
 import * as crypto from "crypto";
 
 // GET /api/servers
@@ -44,7 +45,13 @@ export async function GET(req: NextRequest) {
                 select: { name: true, email: true }
               }
             }
-          }
+          },
+          // Next Discord-planned sessions, for the "Next session" hero chip.
+          plannedSessions: {
+            where: { startTime: { gte: new Date() } },
+            orderBy: { startTime: "asc" },
+            take: 3,
+          },
         },
         orderBy: { createdAt: "desc" },
       }),
@@ -87,9 +94,14 @@ export async function GET(req: NextRequest) {
         }
         // Secrets (password/rcon/sftp) never ride in the shared list payload —
         // team members see servers too. The SFTP panel fetches them per-server
-        // via /api/servers/[id]/secrets (ADMIN only).
+        // via /api/servers/[id]/secrets (ADMIN only). Planned sessions go out
+        // summarized (no raw Discord IDs in the roster JSON).
         const { password: _pw, rconPassword: _rcon, sftpPassword: _sftp, ...safe } = s;
-        return { ...safe, ramHint };
+        return {
+          ...safe,
+          ramHint,
+          plannedSessions: (s.plannedSessions ?? []).map(summarizePlannedSession),
+        };
       }),
       archives,
       activityLogs: logs,

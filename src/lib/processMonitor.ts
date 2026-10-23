@@ -2,6 +2,7 @@ import { prisma } from "./db";
 import { getRunner } from "./runners";
 import { Server } from "@/generated/client";
 import { serverEventBus } from "./eventBus";
+import { maybePruneTelemetry } from "./telemetryRetention";
 
 // Global store for process monitoring intervals and history
 const globalForMonitor = globalThis as unknown as {
@@ -91,6 +92,10 @@ export function startMonitoring(server: Server): void {
           ramMB: stats.memoryMB
         }
       }).catch(() => {});
+
+      // Rows past the 7-day retention window are deleted here (throttled to
+      // at most one prune per hour) so the table can't grow forever.
+      maybePruneTelemetry();
     } catch (e: any) {
       // Handle sampling errors
       const fails = (errorCounts.get(serverId) || 0) + 1;
