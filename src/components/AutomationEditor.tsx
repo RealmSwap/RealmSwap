@@ -38,6 +38,8 @@ const AVAILABLE_CONDITIONS = [
   { id: "SERVER_STATE", name: "Server State" }
 ];
 
+const DAYS_OF_WEEK = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
 export default function AutomationEditor({ server, automation, onSave, onClose }: AutomationEditorProps) {
   const [name, setName] = useState(automation?.name || "New Automation");
   const [enabled, setEnabled] = useState(automation?.enabled ?? true);
@@ -63,11 +65,19 @@ export default function AutomationEditor({ server, automation, onSave, onClose }
 
   const handleSave = async () => {
     setSaving(true);
+    // Fill the picker defaults so a fresh WEEKLY/MONTHLY save is always complete.
+    const config = { ...triggerConfig };
+    if (triggerType === "WEEKLY" && (config.dayOfWeek === undefined || config.dayOfWeek === null)) {
+      config.dayOfWeek = 1;
+    }
+    if (triggerType === "MONTHLY" && (config.dayOfMonth === undefined || config.dayOfMonth === null)) {
+      config.dayOfMonth = 1;
+    }
     await onSave({
       name,
       enabled,
       triggerType,
-      triggerConfig,
+      triggerConfig: config,
       conditions,
       actions
     });
@@ -168,8 +178,7 @@ export default function AutomationEditor({ server, automation, onSave, onClose }
                     { id: "WEEKLY", label: "Weekly", desc: "Specific day/time" },
                     { id: "MONTHLY", label: "Monthly", desc: "Specific date/time" },
                     { id: "ONE_TIME", label: "One-Time", desc: "Run once" },
-                    { id: "SERVER_CRASH", label: "On Crash", desc: "When server halts" },
-                    { id: "PLAYER_JOINED", label: "On Join", desc: "When player logs in" }
+                    { id: "SERVER_CRASH", label: "On Crash", desc: "After auto-restart retries fail" }
                   ].map(t => (
                     <div 
                       key={t.id} 
@@ -198,15 +207,56 @@ export default function AutomationEditor({ server, automation, onSave, onClose }
                   />
                 </div>
               )}
-              {["DAILY", "WEEKLY", "MONTHLY"].includes(triggerType) && (
+              {triggerType === "ONE_TIME" && (
                 <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase mb-1.5 block">Time of Day (HH:MM)</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase mb-1.5 block">Run At</label>
                   <input
-                    type="time"
-                    value={triggerConfig.timeOfDay || ""}
-                    onChange={e => setTriggerConfig({ ...triggerConfig, timeOfDay: e.target.value })}
+                    type="datetime-local"
+                    value={triggerConfig.runAt || ""}
+                    onChange={e => setTriggerConfig({ ...triggerConfig, runAt: e.target.value })}
                     className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-accentPurple outline-none"
                   />
+                  <p className="text-[10px] text-slate-500 mt-1.5">Runs once at this time, then switches itself off.</p>
+                </div>
+              )}
+              {["DAILY", "WEEKLY", "MONTHLY"].includes(triggerType) && (
+                <div className={`grid gap-3 ${triggerType === "DAILY" ? "" : "md:grid-cols-2"}`}>
+                  {triggerType === "WEEKLY" && (
+                    <div>
+                      <label className="text-xs font-bold text-slate-400 uppercase mb-1.5 block">Day of Week</label>
+                      <select
+                        value={triggerConfig.dayOfWeek ?? 1}
+                        onChange={e => setTriggerConfig({ ...triggerConfig, dayOfWeek: Number(e.target.value) })}
+                        className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-accentPurple outline-none"
+                      >
+                        {DAYS_OF_WEEK.map((day, i) => (
+                          <option key={day} value={i}>{day}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {triggerType === "MONTHLY" && (
+                    <div>
+                      <label className="text-xs font-bold text-slate-400 uppercase mb-1.5 block">Day of Month (1-31)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={31}
+                        value={triggerConfig.dayOfMonth ?? ""}
+                        onChange={e => setTriggerConfig({ ...triggerConfig, dayOfMonth: Number(e.target.value) })}
+                        className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-accentPurple outline-none"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className="text-xs font-bold text-slate-400 uppercase mb-1.5 block">Time of Day (HH:MM)</label>
+                    <input
+                      type="time"
+                      value={triggerConfig.timeOfDay || ""}
+                      onChange={e => setTriggerConfig({ ...triggerConfig, timeOfDay: e.target.value })}
+                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-accentPurple outline-none"
+                    />
+                  </div>
                 </div>
               )}
             </div>

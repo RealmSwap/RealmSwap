@@ -834,6 +834,10 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
               data: { status: "CRASHED", pid: null, cpuUsage: 0, memoryUsage: 0 },
             }).catch(() => {});
             serverEventBus.emit("status_update", { serverId, status: "CRASHED" });
+            // Dynamic import — actionScheduler pulls the runner chain via the action registry.
+            import("../actionScheduler").then(({ fireServerCrashAutomations }) =>
+              fireServerCrashAutomations(serverId)
+            ).catch(err => console.error("Failed to fire crash automations:", err));
             import("../notifications").then(({ sendNotification }) => {
               sendNotification(
                 serverRec.userId,
@@ -852,6 +856,10 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
           data: { status: "CRASHED", pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 },
         });
         serverEventBus.emit("status_update", { serverId, status: "CRASHED" });
+        // Dynamic import — actionScheduler pulls the runner chain via the action registry.
+        import("../actionScheduler").then(({ fireServerCrashAutomations }) =>
+          fireServerCrashAutomations(serverId)
+        ).catch(err => console.error("Failed to fire crash automations:", err));
         return; // notification already sent in the shared crash-alert block above
       }
     }

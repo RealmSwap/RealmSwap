@@ -13,11 +13,12 @@ import {
   AlertTriangle,
   CalendarDays,
   List,
-  Power
+  Power,
+  History,
+  X
 } from "lucide-react";
 import AutomationEditor from "./AutomationEditor";
-import { TriggerConfig } from "@/lib/automations/types";
-import { CronExpressionParser } from "cron-parser";
+import { expandOccurrences, EVENT_TRIGGER_TYPES } from "@/lib/automations/schedule";
 
 interface AutomationsViewProps {
   servers: any[];
@@ -34,6 +35,7 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
   const [viewMode, setViewMode] = useState<"LIST" | "CALENDAR">("LIST");
   const [editingAutomation, setEditingAutomation] = useState<any | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [historyAutomation, setHistoryAutomation] = useState<any | null>(null);
 
   useEffect(() => {
     if (selectedServer) fetchAutomations(selectedServer.id);
@@ -128,24 +130,57 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
     return "bg-slate-700 text-white border-slate-600";
   };
   
-  const getNextRun = (triggerType: string, configStr: string) => {
-    if (triggerType === "ONE_TIME") return "Manual / Once";
-    if (triggerType === "SERVER_CRASH") return "On Crash";
-    if (triggerType === "PLAYER_JOINED") return "On Join";
-    
-    try {
-      const config: TriggerConfig = JSON.parse(configStr || "{}");
-      if (triggerType === "CRON" && config.cronExpression) {
-        return CronExpressionParser.parse(config.cronExpression).next().toDate().toLocaleString();
-      }
-      if (["DAILY", "WEEKLY", "MONTHLY"].includes(triggerType) && config.timeOfDay) {
-         return `Next at ${config.timeOfDay}`;
-      }
-    } catch (e) {}
-    return "Unknown";
+  // The engine's own nextRunAt is the source of truth — the view never
+  // re-derives a schedule the scheduler might not honor.
+  const describeNextRun = (a: any) => {
+    if (a.triggerType === "SERVER_CRASH") return "When the server crashes";
+    if (a.triggerType === "PLAYER_JOINED") return "When a player joins";
+    if (a.triggerType === "PLAYER_LEFT") return "When a player leaves";
+    if (a.triggerType === "ONE_TIME" && a.lastRunAt && !a.enabled) return "Ran once — switched off";
+    if (a.nextRunAt) return new Date(a.nextRunAt).toLocaleString();
+    return a.enabled ? "Not scheduled" : "Disabled";
   };
 
-  const upcomingAutomations = automations.filter(a => a.enabled && a.triggerType === "CRON" || a.triggerType === "DAILY");
+  // Real 7-day calendar: actual occurrences the scheduler would fire, plus a
+  // separate strip for event triggers (they have no calendar dates).
+  const buildCalendar = () => {
+    const now = new Date();
+    const dayStart = new Date(now);
+    dayStart.setHours(0, 0, 0, 0);
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(dayStart);
+      d.setDate(d.getDate() + i);
+      return d;
+    });
+    const byDay: Map<number, { name: string; time: string }[]> = new Map();
+    for (const a of automations) {
+      if (!a.enabled) continue;
+      if ((EVENT_TRIGGER_TYPES as readonly string[]).includes(a.triggerType)) continue;
+      let config = {};
+      try { config = a.triggerConfig ? JSON.parse(a.triggerConfig) : {}; } catch {}
+      let occurrences: Date[] = [];
+      try { occurrences = expandOccurrences(a.triggerType, config, now, 7); } catch {}
+      for (const occ of occurrences) {
+        const idx = days.findIndex(d =>
+          d.getFullYear() === occ.getFullYear() && d.getMonth() === occ.getMonth() && d.getDate() === occ.getDate()
+        );
+        if (idx < 0) continue;
+        if (!byDay.has(idx)) byDay.set(idx, []);
+        byDay.get(idx)!.push({
+          name: a.name,
+          time: occ.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        });
+      }
+    }
+    return {
+      days,
+      byDay,
+      eventTriggered: automations.filter(
+        a => a.enabled && (EVENT_TRIGGER_TYPES as readonly string[]).includes(a.triggerType)
+      ),
+    };
+  };
+  const calendar = buildCalendar();
 
   return (
     <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
@@ -245,6 +280,9 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
                      <button onClick={() => handleRunNow(a.id)} className="p-1.5 text-slate-400 hover:text-green-400 bg-slate-800 rounded-lg" title="Run Now">
                        <Play className="w-4 h-4" />
                      </button>
+                    <button onClick={() => setHistoryAutomation(a)} className="p-1.5 text-slate-400 hover:text-accentPurple bg-slate-800 rounded-lg" title="Execution History">
+                      <History className="w-4 h-4" />
+                    </button>
                      <button onClick={() => { setEditingAutomation(a); setShowEditor(true); }} className="p-1.5 text-slate-400 hover:text-white bg-slate-800 rounded-lg" title="Edit">
                        <Settings2 className="w-4 h-4" />
                      </button>
@@ -264,7 +302,7 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
                   </div>
                   <div className="flex justify-between text-xs border-b border-white/5 pb-2">
                     <span className="text-slate-500">Next Run</span>
-                    <span className="font-bold text-slate-300">{getNextRun(a.triggerType, a.triggerConfig)}</span>
+                    <span className="font-bold text-slate-300">{describeNextRun(a)}</span>
                   </div>
                   <div className="flex justify-between text-xs border-white/5 pb-2">
                     <span className="text-slate-500">Last Executed</span>
@@ -284,24 +322,40 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
         ) : (
           <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 overflow-x-auto">
              <div className="min-w-[800px]">
-                <h3 className="text-xl font-bold text-white mb-6">Upcoming Schedule (Estimated)</h3>
+                <h3 className="text-xl font-bold text-white mb-1">Next 7 Days</h3>
+                <p className="text-xs text-slate-500 mb-6">Actual scheduled runs the automation engine will fire (today shows only what's still ahead).</p>
                 <div className="grid grid-cols-7 gap-4">
-                  {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(day => (
-                    <div key={day} className="font-bold text-xs text-slate-500 uppercase tracking-wider pb-2 border-b border-white/5">{day}</div>
+                  {calendar.days.map((day, i) => (
+                    <div key={i} className="font-bold text-xs text-slate-500 uppercase tracking-wider pb-2 border-b border-white/5 flex items-center gap-1.5">
+                      {i === 0 && <span className="text-accentPurple">Today</span>}
+                      <span>{day.toLocaleDateString([], { weekday: "short" })} {day.getMonth() + 1}/{day.getDate()}</span>
+                    </div>
                   ))}
-                  
-                  {/* Mock calendar grid mapping items by day. Since it's estimated, we just render cards arbitrarily for the demo or base them on CRON */}
-                  {Array.from({ length: 7 }).map((_, i) => (
+
+                  {calendar.days.map((_, i) => (
                     <div key={i} className="min-h-[120px] bg-slate-950/50 rounded-lg p-2 space-y-2 border border-white/5">
-                       {upcomingAutomations.map(a => (
-                         <div key={a.id} className="bg-accentPurple/10 border border-accentPurple/20 p-2 rounded text-xs">
-                           <strong className="text-accentPurple block">{a.name}</strong>
-                           <span className="text-slate-400">{a.triggerType}</span>
+                       {(calendar.byDay.get(i) || []).map((item, j) => (
+                         <div key={j} className="bg-accentPurple/10 border border-accentPurple/20 p-2 rounded text-xs">
+                           <strong className="text-accentPurple block">{item.name}</strong>
+                           <span className="text-slate-400">{item.time}</span>
                          </div>
                        ))}
                     </div>
                   ))}
                 </div>
+
+                {calendar.eventTriggered.length > 0 && (
+                  <div className="mt-6 pt-4 border-t border-white/5">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Event-triggered (not on the calendar)</span>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {calendar.eventTriggered.map(a => (
+                        <span key={a.id} className="px-3 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 text-xs font-bold">
+                          {a.triggerType === "SERVER_CRASH" ? "On Crash" : a.triggerType} · {a.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
              </div>
           </div>
         )}
@@ -316,6 +370,59 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
           onSave={handleSaveAutomation}
           onClose={() => setShowEditor(false)}
         />
+      )}
+
+      {/* Execution History Modal */}
+      {historyAutomation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6 overflow-y-auto">
+          <div className="bg-[#030712] border border-white/10 rounded-2xl w-full max-w-2xl max-h-full flex flex-col shadow-2xl">
+            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-black text-white">Execution History</h2>
+                <p className="text-slate-400 text-sm mt-1">{historyAutomation.name}</p>
+              </div>
+              <button onClick={() => setHistoryAutomation(null)} className="p-2 hover:bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto space-y-4">
+              {(historyAutomation.executions || []).length === 0 ? (
+                <p className="text-sm text-slate-500 italic py-8 text-center">This automation has never run.</p>
+              ) : (
+                historyAutomation.executions.map((e: any) => {
+                  let lines: string[] = [];
+                  try {
+                    lines = e.logs ? JSON.parse(e.logs) : [];
+                  } catch {
+                    lines = e.logs ? [e.logs] : [];
+                  }
+                  const duration = e.finishedAt
+                    ? `${((new Date(e.finishedAt).getTime() - new Date(e.startedAt).getTime()) / 1000).toFixed(1)}s`
+                    : "—";
+                  const chip =
+                    e.status === "SUCCESS" ? "bg-green-500/20 text-green-400 border-green-500/30"
+                    : e.status === "RUNNING" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                    : e.status === "FAILED" ? "bg-red-500/20 text-red-400 border-red-500/30"
+                    : "bg-slate-700 text-white border-slate-600";
+                  return (
+                    <div key={e.id} className="bg-slate-900/60 border border-white/5 rounded-xl p-4">
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${chip}`}>{e.status}</span>
+                          <span className="text-xs text-slate-400">{new Date(e.startedAt).toLocaleString()}</span>
+                        </div>
+                        <span className="text-xs text-slate-500 font-mono">{duration}</span>
+                      </div>
+                      {lines.length > 0 && (
+                        <pre className="text-[11px] leading-relaxed font-mono text-slate-400 bg-black/40 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap">{lines.join("\n")}</pre>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
