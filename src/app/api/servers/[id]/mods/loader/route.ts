@@ -6,7 +6,9 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
 import { testServerBoot } from "@/lib/runners/sandbox";
-import { detectMinecraftVersion, installFabricServer, readLoaderMarker } from "@/lib/mods/mcLoaders";
+import {
+  detectMinecraftVersion, installFabricServer, installForgeServer, installNeoForgeServer, readLoaderMarker,
+} from "@/lib/mods/mcLoaders";
 import path from "path";
 
 // GET: current loader state for the Mod Manager UI.
@@ -31,8 +33,7 @@ export async function GET(
   }
 }
 
-// POST: install a mod loader on a Minecraft server (Fabric supported;
-// Forge deliberately refused until its installer flow is built).
+// POST: install a mod loader (Fabric, Forge, or NeoForge) on a Minecraft server.
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -55,15 +56,10 @@ export async function POST(
       return NextResponse.json({ error: "Stop the server before installing a mod loader." }, { status: 400 });
     }
 
-    const bodySchema = z.object({ loader: z.enum(["fabric", "forge"]) });
+    const bodySchema = z.object({ loader: z.enum(["fabric", "forge", "neoforge"]) });
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
-    if (parsed.data.loader === "forge") {
-      return NextResponse.json(
-        { error: "Forge server installation isn't supported yet — coming soon. Fabric works today." },
-        { status: 400 }
-      );
-    }
+    const loaderName = parsed.data.loader === "neoforge" ? "NeoForge" : parsed.data.loader === "forge" ? "Forge" : "Fabric";
 
     const installDir = path.join(dataRoot(), "local-servers", serverId);
     const minecraftVersion = detectMinecraftVersion(installDir);
@@ -74,23 +70,42 @@ export async function POST(
       );
     }
 
-    const snapshot = await createSnapshot(serverId, user.id, "Pre-install: Fabric loader");
+    // Switching loaders means removing the old one's files — restore a
+    // pre-loader snapshot instead of layering loaders on top of each other.
+    const existing = readLoaderMarker(installDir);
+    if (existing && existing.type !== parsed.data.loader) {
+      const existingName = existing.type === "neoforge" ? "NeoForge" : existing.type === "forge" ? "Forge" : "Fabric";
+      return NextResponse.json(
+        { error: `This server already runs the ${existingName} loader. To switch loaders, restore a snapshot from before it was installed (Backups), then install ${loaderName}.` },
+        { status: 400 }
+      );
+    }
+
+    const snapshot = await createSnapshot(serverId, user.id, `Pre-install: ${loaderName} loader`);
     try {
-      const marker = await installFabricServer(installDir, minecraftVersion);
+      const onLog = (msg: string) => console.log(`[Loader ${serverId}] ${msg}`);
+      let marker;
+      if (parsed.data.loader === "forge") {
+        marker = await installForgeServer(installDir, minecraftVersion, { onLog });
+      } else if (parsed.data.loader === "neoforge") {
+        marker = await installNeoForgeServer(installDir, minecraftVersion, { onLog });
+      } else {
+        marker = await installFabricServer(installDir, minecraftVersion, onLog);
+      }
       await testServerBoot(serverId, "MINECRAFT");
 
       await prisma.activityLog.create({
         data: {
           userId: user.id,
           action: "INSTALL_MOD",
-          details: `Installed Fabric ${marker.loaderVersion} loader (Minecraft ${minecraftVersion}) on server '${server.name}'.`,
+          details: `Installed ${loaderName} ${marker.loaderVersion} loader (Minecraft ${minecraftVersion}) on server '${server.name}'.`,
         },
       });
 
       return NextResponse.json({
         success: true,
         loader: marker,
-        message: `Fabric ${marker.loaderVersion} installed. The server now loads jars from mods/.`,
+        message: `${loaderName} ${marker.loaderVersion} installed. The server now loads jars from mods/.`,
       });
     } catch (err: any) {
       await restoreSnapshot(snapshot.id);

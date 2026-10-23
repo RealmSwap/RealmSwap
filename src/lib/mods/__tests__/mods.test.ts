@@ -5,6 +5,9 @@ import path from "path";
 import AdmZip from "adm-zip";
 import {
   detectModLoader, detectMinecraftVersion, readLoaderMarker, writeLoaderMarker,
+  javaMajorForMinecraft, pickForgeVersion, forgeArtifact, forgeInstallerUrl,
+  neoforgeStreamFor, pickNeoforgeVersion, neoforgeInstallerUrl,
+  applyLoaderLaunch, findLoaderLaunch, installForgeServer, installNeoForgeServer,
 } from "../mcLoaders";
 import {
   pickCompatibleVersion, primaryFile, collectRequiredDependencies,
@@ -28,10 +31,16 @@ function makeJar(name: string, entries: Record<string, string>): string {
 }
 
 describe("mcLoaders", () => {
-  it("detects Fabric, Quilt, and Forge jars by manifest", () => {
+  it("detects Fabric, Quilt, Forge, and NeoForge jars by manifest", () => {
     expect(detectModLoader(makeJar("fabric.jar", { "fabric.mod.json": "{}" }))).toBe("fabric");
     expect(detectModLoader(makeJar("quilt.jar", { "quilt.mod.json": "{}" }))).toBe("quilt");
     expect(detectModLoader(makeJar("forge.jar", { "META-INF/mods.toml": 'loader="javafml"' }))).toBe("forge");
+    expect(detectModLoader(makeJar("neoforge.jar", { "META-INF/neoforge.mods.toml": 'loaderVersion="[21,)"' }))).toBe("neoforge");
+    // neoforge.mods.toml wins even when a legacy mods.toml is also present
+    expect(detectModLoader(makeJar("both.jar", {
+      "META-INF/mods.toml": 'loader="javafml"',
+      "META-INF/neoforge.mods.toml": 'loaderVersion="[21,)"',
+    }))).toBe("neoforge");
   });
 
   it("returns null for loader-less jars", () => {
@@ -47,6 +56,271 @@ describe("mcLoaders", () => {
     expect(readLoaderMarker(dir)).toBeNull();
     writeLoaderMarker(dir, { type: "fabric", loaderVersion: "0.16.0", minecraftVersion: "1.20.4", installedAt: "now" });
     expect(readLoaderMarker(dir)).toMatchObject({ type: "fabric", loaderVersion: "0.16.0" });
+  });
+
+  it("normalizes pre-launch-field fabric markers", () => {
+    fs.writeFileSync(
+      path.join(dir, "realmswap-loader.json"),
+      JSON.stringify({ type: "fabric", loaderVersion: "0.16.0", minecraftVersion: "1.20.4", installedAt: "old" })
+    );
+    expect(readLoaderMarker(dir)?.launch).toEqual({ kind: "jar", file: "fabric-server-launch.jar" });
+  });
+});
+
+describe("javaMajorForMinecraft", () => {
+  it("maps Minecraft versions to their Java major", () => {
+    expect(javaMajorForMinecraft("1.12.2")).toBe(8);
+    expect(javaMajorForMinecraft("1.16.5")).toBe(8);
+    expect(javaMajorForMinecraft("1.17.1")).toBe(17);
+    expect(javaMajorForMinecraft("1.20.4")).toBe(17);
+    expect(javaMajorForMinecraft("1.20.5")).toBe(21);
+    expect(javaMajorForMinecraft("1.20.6")).toBe(21);
+    expect(javaMajorForMinecraft("1.21")).toBe(21);
+    expect(javaMajorForMinecraft("1.21.4")).toBe(21);
+  });
+
+  it("fails open to a modern Java on unparseable versions", () => {
+    expect(javaMajorForMinecraft("latest")).toBe(21);
+    expect(javaMajorForMinecraft("")).toBe(21);
+  });
+});
+
+describe("Forge version resolution", () => {
+  const promos = {
+    "1.20.1-recommended": "47.2.0",
+    "1.20.1-latest": "47.3.0",
+    "1.12.2-latest": "14.23.5.2860",
+  };
+
+  it("prefers recommended over latest and falls back to latest", () => {
+    expect(pickForgeVersion(promos, "1.20.1")).toBe("47.2.0");
+    expect(pickForgeVersion(promos, "1.12.2")).toBe("14.23.5.2860");
+    expect(pickForgeVersion(promos, "1.19.4")).toBeNull();
+  });
+
+  it("builds the maven artifact and installer URL", () => {
+    expect(forgeArtifact("1.20.1", "47.2.0")).toBe("1.20.1-47.2.0");
+    expect(forgeInstallerUrl("1.20.1", "47.2.0")).toBe(
+      "https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.1-47.2.0/forge-1.20.1-47.2.0-installer.jar"
+    );
+    // the double-suffixed legacy form keeps working
+    expect(forgeArtifact("1.7.10", "10.13.4.1614-1.7.10")).toBe("1.7.10-10.13.4.1614-1.7.10");
+  });
+});
+
+describe("NeoForge version resolution", () => {
+  const versions = ["20.4.237", "21.0.3", "21.1.9", "21.1.57", "21.1.60-beta"];
+
+  it("maps Minecraft versions onto their NeoForge stream", () => {
+    expect(neoforgeStreamFor("1.21.1")).toBe("21.1");
+    expect(neoforgeStreamFor("1.21")).toBe("21.0");
+    expect(neoforgeStreamFor("1.20.4")).toBe("20.4");
+    expect(neoforgeStreamFor("2.0")).toBeNull();
+  });
+
+  it("picks the newest stable build in the stream, excluding prereleases", () => {
+    expect(pickNeoforgeVersion(versions, "1.21.1")).toBe("21.1.57");
+    expect(pickNeoforgeVersion(versions, "1.21")).toBe("21.0.3");
+    expect(pickNeoforgeVersion(versions, "1.20.4")).toBe("20.4.237");
+    expect(pickNeoforgeVersion(versions, "1.16.5")).toBeNull();
+  });
+
+  it("builds the installer URL", () => {
+    expect(neoforgeInstallerUrl("21.1.57")).toBe(
+      "https://maven.neoforged.net/releases/net/neoforged/neoforge/21.1.57/neoforge-21.1.57-installer.jar"
+    );
+  });
+});
+
+describe("applyLoaderLaunch", () => {
+  const vanilla = ["-Xms512M", "-Xmx4G", "-jar", "server.jar", "nogui"];
+  const exists = (f: string) => f.startsWith("fabric") || f.startsWith("libraries/");
+
+  it("swaps in the loader jar for fabric markers", () => {
+    const marker = { type: "fabric" as const, loaderVersion: "0.16", minecraftVersion: "1.20.4", installedAt: "", launch: { kind: "jar" as const, file: "fabric-server-launch.jar" } };
+    expect(applyLoaderLaunch(vanilla, marker, exists)).toEqual([
+      "-Xms512M", "-Xmx4G", "-jar", "fabric-server-launch.jar", "nogui",
+    ]);
+  });
+
+  it("replaces the -jar pair with an @args file for modern forge markers", () => {
+    const argsFile = "libraries/net/minecraftforge/forge/1.20.1-47.2.0/win_args.txt";
+    const marker = { type: "forge" as const, loaderVersion: "47.2.0", minecraftVersion: "1.20.1", installedAt: "", launch: { kind: "argsFile" as const, file: argsFile } };
+    expect(applyLoaderLaunch(vanilla, marker, exists)).toEqual([
+      "-Xms512M", "-Xmx4G", `@${argsFile}`, "nogui",
+    ]);
+  });
+
+  it("handles a bare server.jar without -jar", () => {
+    const marker = { type: "neoforge" as const, loaderVersion: "21.1.57", minecraftVersion: "1.21.1", installedAt: "", launch: { kind: "argsFile" as const, file: "libraries/x" } };
+    expect(applyLoaderLaunch(["java-arg", "server.jar"], marker, () => true)).toEqual(["java-arg", "@libraries/x"]);
+  });
+
+  it("keeps vanilla launch when the artifact is missing, the marker is absent, or there is no server.jar arg", () => {
+    const marker = { type: "fabric" as const, loaderVersion: "0.16", minecraftVersion: "1.20.4", installedAt: "", launch: { kind: "jar" as const, file: "fabric-server-launch.jar" } };
+    expect(applyLoaderLaunch(vanilla, marker, () => false)).toEqual(vanilla);
+    expect(applyLoaderLaunch(vanilla, null, exists)).toEqual(vanilla);
+    expect(applyLoaderLaunch(["-Xmx4G"], marker, exists)).toEqual(["-Xmx4G"]);
+  });
+});
+
+describe("findLoaderLaunch", () => {
+  it("finds modern args files (platform-named) and legacy universal jars", () => {
+    const argsName = process.platform === "win32" ? "win_args.txt" : "unix_args.txt";
+    const forgeLibs = path.join(dir, "find-modern", "libraries", "net", "minecraftforge", "forge", "1.20.1-47.2.0");
+    fs.mkdirSync(forgeLibs, { recursive: true });
+    fs.writeFileSync(path.join(forgeLibs, argsName), "-p libraries");
+    const found = findLoaderLaunch("forge", path.join(dir, "find-modern"));
+    expect(found).toEqual({ kind: "argsFile", file: path.join("libraries", "net", "minecraftforge", "forge", "1.20.1-47.2.0", argsName) });
+
+    const legacyDir = path.join(dir, "find-legacy");
+    fs.mkdirSync(legacyDir, { recursive: true });
+    fs.writeFileSync(path.join(legacyDir, "forge-1.12.2-14.23.5.2860-universal.jar"), "jar");
+    expect(findLoaderLaunch("forge", legacyDir)).toEqual({
+      kind: "jar",
+      file: "forge-1.12.2-14.23.5.2860-universal.jar",
+    });
+  });
+
+  it("returns null when the installer produced nothing recognizable", () => {
+    const empty = path.join(dir, "find-empty");
+    fs.mkdirSync(empty, { recursive: true });
+    expect(findLoaderLaunch("forge", empty)).toBeNull();
+    expect(findLoaderLaunch("neoforge", empty)).toBeNull();
+  });
+});
+
+describe("installer flows (dependency-injected)", () => {
+  const stubDeps = (effects: {
+    promos?: Record<string, string>;
+    neoforgeVersions?: string[];
+    onRun?: (installerPath: string) => void;
+    exitCode?: number;
+  } = {}) => {
+    const downloads: string[] = [];
+    const javaMajors: number[] = [];
+    return {
+      deps: {
+        fetchJson: async (url: string) => {
+          if (url.includes("promotions")) return { promos: effects.promos ?? { "1.20.1-recommended": "47.2.0" } };
+          if (url.includes("neoforged")) return { versions: effects.neoforgeVersions ?? ["21.1.9", "21.1.57"] };
+          throw new Error(`unexpected fetch: ${url}`);
+        },
+        download: async (_url: string, dest: string) => {
+          downloads.push(path.basename(dest));
+          fs.writeFileSync(dest, "installer-jar");
+        },
+        ensureJava: async (major: number) => {
+          javaMajors.push(major);
+          return `/fake/java-${major}/bin/java`;
+        },
+        runInstaller: async (_javaExe: string, installerPath: string, _installDir: string) => {
+          effects.onRun?.(installerPath);
+          if (effects.exitCode !== undefined && effects.exitCode !== 0) {
+            throw new Error("Loader installer exited with code 1");
+          }
+        },
+      },
+      downloads,
+      javaMajors,
+    };
+  };
+
+  it("installs modern Forge end-to-end and records the args-file launch", async () => {
+    const installDir = path.join(dir, "forge-modern");
+    fs.mkdirSync(installDir, { recursive: true });
+    const argsName = process.platform === "win32" ? "win_args.txt" : "unix_args.txt";
+    const { deps, javaMajors } = stubDeps({
+      onRun: () => {
+        const libs = path.join(installDir, "libraries", "net", "minecraftforge", "forge", "1.20.1-47.2.0");
+        fs.mkdirSync(libs, { recursive: true });
+        fs.writeFileSync(path.join(libs, argsName), "-p libraries");
+      },
+    });
+    const marker = await installForgeServer(installDir, "1.20.1", {}, deps);
+    expect(marker).toMatchObject({ type: "forge", loaderVersion: "47.2.0", minecraftVersion: "1.20.1" });
+    expect(marker.launch).toEqual({
+      kind: "argsFile",
+      file: path.join("libraries", "net", "minecraftforge", "forge", "1.20.1-47.2.0", argsName),
+    });
+    expect(readLoaderMarker(installDir)).toMatchObject(marker);
+    expect(javaMajors).toEqual([17]); // 1.20.1 installer runs on Java 17
+    expect(fs.existsSync(path.join(installDir, "forge-1.20.1-47.2.0-installer.jar"))).toBe(false); // cleaned up
+  });
+
+  it("supports legacy Forge via the universal jar and Java 8", async () => {
+    const installDir = path.join(dir, "forge-legacy");
+    fs.mkdirSync(installDir, { recursive: true });
+    const { deps, javaMajors } = stubDeps({
+      promos: { "1.12.2-latest": "14.23.5.2860" },
+      onRun: () => {
+        fs.writeFileSync(path.join(installDir, "forge-1.12.2-14.23.5.2860-universal.jar"), "jar");
+      },
+    });
+    const marker = await installForgeServer(installDir, "1.12.2", {}, deps);
+    expect(marker.launch).toEqual({ kind: "jar", file: "forge-1.12.2-14.23.5.2860-universal.jar" });
+    expect(javaMajors).toEqual([8]);
+  });
+
+  it("uses the pack-pinned Forge version without consulting promotions", async () => {
+    const installDir = path.join(dir, "forge-pinned");
+    fs.mkdirSync(installDir, { recursive: true });
+    const argsName = process.platform === "win32" ? "win_args.txt" : "unix_args.txt";
+    let fetched = false;
+    const { deps } = stubDeps({
+      onRun: () => {
+        const libs = path.join(installDir, "libraries", "net", "minecraftforge", "forge", "1.20.1-47.3.0");
+        fs.mkdirSync(libs, { recursive: true });
+        fs.writeFileSync(path.join(libs, argsName), "-p libraries");
+      },
+    });
+    const origFetch = deps.fetchJson;
+    deps.fetchJson = async (url: string) => {
+      fetched = true;
+      return origFetch!(url);
+    };
+    const marker = await installForgeServer(installDir, "1.20.1", { pinnedVersion: "47.3.0" }, deps);
+    expect(marker.loaderVersion).toBe("47.3.0");
+    expect(fetched).toBe(false);
+  });
+
+  it("installs NeoForge from the maven version list and records the args-file launch", async () => {
+    const installDir = path.join(dir, "neoforge");
+    fs.mkdirSync(installDir, { recursive: true });
+    const argsName = process.platform === "win32" ? "win_args.txt" : "unix_args.txt";
+    const { deps, javaMajors } = stubDeps({
+      neoforgeVersions: ["21.1.9", "21.1.57", "21.1.60-beta"],
+      onRun: () => {
+        const libs = path.join(installDir, "libraries", "net", "neoforged", "neoforge", "21.1.57");
+        fs.mkdirSync(libs, { recursive: true });
+        fs.writeFileSync(path.join(libs, argsName), "-p libraries");
+      },
+    });
+    const marker = await installNeoForgeServer(installDir, "1.21.1", {}, deps);
+    expect(marker).toMatchObject({ type: "neoforge", loaderVersion: "21.1.57" });
+    expect(marker.launch?.kind).toBe("argsFile");
+    expect(javaMajors).toEqual([21]);
+  });
+
+  it("rolls the error up when the installer fails or produces nothing", async () => {
+    const installDir = path.join(dir, "forge-fail");
+    fs.mkdirSync(installDir, { recursive: true });
+
+    const failing = stubDeps({ exitCode: 1 });
+    await expect(installForgeServer(installDir, "1.20.1", {}, failing.deps)).rejects.toThrow(/exited with code 1/);
+
+    const silent = stubDeps({}); // succeeds but writes nothing
+    await expect(installForgeServer(installDir, "1.20.1", {}, silent.deps)).rejects.toThrow(/no recognizable launch files/);
+  });
+
+  it("refuses Minecraft versions with no Forge/NeoForge build", async () => {
+    const installDir = path.join(dir, "forge-none");
+    fs.mkdirSync(installDir, { recursive: true });
+    const { deps } = stubDeps({ promos: {} });
+    await expect(installForgeServer(installDir, "1.19.4", {}, deps)).rejects.toThrow(/No Forge build/);
+
+    const noneo = stubDeps({ neoforgeVersions: ["20.4.237"] });
+    await expect(installNeoForgeServer(installDir, "1.16.5", {}, noneo.deps)).rejects.toThrow(/No NeoForge build/);
   });
 });
 

@@ -162,16 +162,19 @@ export async function POST(
 
         const needsLoader = detectModLoader(tempJar);
         if (needsLoader) {
-          if (needsLoader === "forge") {
+          // NeoForge also loads jars whose manifest is the legacy Forge
+          // META-INF/mods.toml, so a neoforge server satisfies "forge" mods.
+          const satisfied =
+            !!marker &&
+            (marker.type === needsLoader || (marker.type === "neoforge" && needsLoader === "forge"));
+          if (!satisfied) {
             fs.unlinkSync(tempJar);
+            const where =
+              needsLoader === "quilt"
+                ? "Quilt loader installation isn't supported yet."
+                : `Install ${needsLoader === "neoforge" ? "NeoForge" : needsLoader} first (Installed tab → Install Loader).`;
             throw new Error(
-              `'${candidate.project.title}' requires the Forge loader. Forge server installation isn't supported yet — coming soon.`
-            );
-          }
-          if (!marker || marker.type !== needsLoader) {
-            fs.unlinkSync(tempJar);
-            throw new Error(
-              `'${candidate.project.title}' requires the ${needsLoader} loader, which isn't installed on this server. Install ${needsLoader} first (Mod Manager → Install Fabric).`
+              `'${candidate.project.title}' requires the ${needsLoader} loader, which isn't installed on this server. ${where}`
             );
           }
         }
