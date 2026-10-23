@@ -1554,10 +1554,10 @@ export default function ModsView({ servers, user }: ModsViewProps) {
 
                     <label className="px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 hover:bg-white/5 text-xs font-bold text-slate-300 transition-colors cursor-pointer flex items-center gap-1.5">
                       <Package className="w-3.5 h-3.5 text-accentPurple" />
-                      <span>Import Modpack (.zip)</span>
+                      <span>Import Modpack (.mrpack)</span>
                       <input
                         type="file"
-                        accept=".zip"
+                        accept=".mrpack,.zip"
                         className="hidden"
                         onChange={handleImportModpack}
                         disabled={
