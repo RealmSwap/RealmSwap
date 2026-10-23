@@ -96,6 +96,7 @@ model Server {
   updatedAt        DateTime             @updatedAt
   snapshotInterval Int                  @default(0) // 0 = disabled, 1, 6, 12, 24 hours
   lastSnapshotAt   DateTime?
+  backupRetention  Int                  @default(20) // keep last N snapshot zips per server; 0 = keep everything
   backups          Backup[]
   collaborators    Collaborator[]
   mods             ModInstallation[]

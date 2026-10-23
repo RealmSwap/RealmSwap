@@ -239,10 +239,12 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
                 <h4 className="text-sm font-bold text-slate-200">Playit tunnel</h4>
                 <p className="text-xs text-slate-500">
                   {tunnelOn && data?.tunnel?.alive && data?.tunnel?.url
-                    ? `Agent running — claim & bind port ${server.port} on the playit dashboard if you haven't.`
-                    : tunnelOn
-                      ? "Agent starting — the tunnel only forwards once it's claimed and the port is bound on the playit dashboard."
-                      : "Off — lets friends join through the internet with zero router setup."}
+                    ? `Tunnel live — friends connect through ${data.tunnel.url}.`
+                    : tunnelOn && data?.tunnel?.claimUrl
+                      ? "Waiting for you to claim the agent below — RealmSwap then creates the tunnel and writes your address automatically."
+                      : tunnelOn
+                        ? "Agent starting — the public address appears here as soon as playit reports one."
+                        : "Off — lets friends join through the internet with zero router setup."}
                 </p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -263,7 +265,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
                 rel="noreferrer"
                 className="block px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-bold hover:bg-amber-500/20 transition-colors"
               >
-                Claim this agent on playit.gg → then bind port {server.port} in the playit dashboard. Until then the tunnel forwards nothing.
+                Claim this agent on playit.gg → RealmSwap then creates the tunnel for port {server.port} and writes your address automatically. No dashboard work needed.
               </a>
             )}
             {tunnelOn && data?.tunnel?.url && !data?.tunnel?.alive && (

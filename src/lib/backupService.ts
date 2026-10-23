@@ -9,6 +9,8 @@ import { cloudSync } from "./cloudSync";
 import { safeJoin } from "./safePath";
 import { swapDirIntoPlace, withServerLock } from "./atomicFs";
 import { reconcileInstalledMods } from "./mods/reconcile";
+import { rconManager } from "./rconManager";
+import { beginSaveFlush, getSaveFlushPlan, pickBackupsToPrune, SaveFlushSession } from "./saveFlush";
 
 // Get the local save path for each game type. Delegates to the pure resolver,
 // injecting the live filesystem roots.
@@ -78,8 +80,25 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
   // final path where a later `existsSync` would treat it as a backup.
   const tmpZipPath = `${zipPath}.tmp`;
 
+  // A RUNNING server keeps writing its world while we zip. Games with a save
+  // command over RCON get quiesced first (see saveFlush.ts); without it the
+  // archive can verify fine yet hold a torn world.
+  const flushPlan =
+    server.status === "RUNNING" || server.status === "STARTING"
+      ? getSaveFlushPlan(server.game)
+      : null;
+  let flush: SaveFlushSession | null = null;
+  let flushNote = "";
+
   return withServerLock(serverId, async () => {
     try {
+      if (flushPlan) {
+        flush = await beginSaveFlush(flushPlan, (cmd) => rconManager.execute(serverId, cmd));
+        flushNote = flush.flushed
+          ? " World saves flushed via RCON before archiving."
+          : ` (RCON save flush failed: ${flush.error} — archive may race live writes.)`;
+      }
+
       const zip = new AdmZip();
       if (server.game.toUpperCase() === "VALHEIM") {
         const dbFile = path.join(srcDir, "Dedicated.db");
@@ -135,9 +154,17 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
           userId: server.userId,
           serverId,
           action: "CREATE_BACKUP",
-          details: `Created local ${backupType.toLowerCase()} backup '${backupName}' for server '${server.name}' (${fileSizeMB} MB).`
+          details: `Created local ${backupType.toLowerCase()} backup '${backupName}' for server '${server.name}' (${fileSizeMB} MB).${flushNote}`
         }
       });
+
+      // Enforce keep-last-N retention now that the new snapshot is safely on
+      // disk. Prune failure must not fail the snapshot it runs after.
+      try {
+        await pruneBackups(serverId);
+      } catch (pruneErr: any) {
+        console.error(`Backup retention prune failed for ${serverId}:`, pruneErr?.message);
+      }
 
       // Asynchronously upload to S3 if configured
       cloudSync.uploadSnapshot(serverId, zipPath).catch(err => {
@@ -156,8 +183,56 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
         sendNotification(server.userId, "❌ Backup Failed", `Failed to generate snapshot for '${server.name}': ${err.message}`);
       }).catch(e => console.error("Failed to load notifications module:", e));
       throw new Error(`Failed to generate snapshot: ${err.message}`);
+    } finally {
+      // Resume the server's world writes no matter how the zip went —
+      // Minecraft's autosave must never be left turned off.
+      await flush?.resume();
     }
   });
+}
+
+/**
+ * Enforce the server's keep-last-N snapshot retention, deleting each excess
+ * backup's file and row together. The newest verified backup always survives
+ * (see pickBackupsToPrune) — retention may never remove the only restore point
+ * proven restorable. Returns how many backups were removed.
+ */
+export async function pruneBackups(serverId: string): Promise<number> {
+  const server = await prisma.server.findUnique({
+    where: { id: serverId },
+    select: { backupRetention: true, userId: true, name: true },
+  });
+  if (!server) return 0;
+
+  const backups = await prisma.backup.findMany({
+    where: { serverId },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, verifiedAt: true },
+  });
+
+  const doomed = pickBackupsToPrune(backups, server.backupRetention);
+  let deleted = 0;
+  for (const b of doomed) {
+    try {
+      await deleteBackup(b.id);
+      deleted++;
+    } catch (err: any) {
+      // One undeletable file (locked by AV, etc.) must not strand the rest.
+      console.error(`Retention could not delete backup ${b.id}:`, err?.message);
+    }
+  }
+
+  if (deleted > 0) {
+    await prisma.activityLog.create({
+      data: {
+        userId: server.userId,
+        serverId,
+        action: "DELETE_BACKUP",
+        details: `Backup retention for server '${server.name}' removed ${deleted} old snapshot(s) (keep last ${server.backupRetention}).`,
+      },
+    }).catch(() => {});
+  }
+  return deleted;
 }
 
 /**
