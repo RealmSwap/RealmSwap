@@ -9,12 +9,13 @@ import { useToast } from "@/components/ToastProvider";
 interface SyncClientViewProps {
   link: string;
   host: string;
-  inviteCode: string;
+  codeId: string;
+  secret: string;
   manifest: any | null;
   error: string | null;
 }
 
-export default function SyncClientView({ link, host, inviteCode, manifest, error }: SyncClientViewProps) {
+export default function SyncClientView({ link, host, codeId, secret, manifest, error }: SyncClientViewProps) {
   const { addToast } = useToast();
   const [syncing, setSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
@@ -31,7 +32,7 @@ export default function SyncClientView({ link, host, inviteCode, manifest, error
       const res = await fetch("/api/client/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ host, inviteCode, manifest, gamePath })
+        body: JSON.stringify({ host, codeId, secret, gamePath })
       });
       
       const data = await res.json();

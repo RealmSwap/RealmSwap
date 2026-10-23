@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
-import { testServerBoot } from "@/lib/runners/sandbox";
+import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
 import path from "path";
@@ -218,7 +218,8 @@ export async function POST(
       await prisma.serverSnapshot.delete({ where: { id: snapshot.id } });
 
       return NextResponse.json({
-        error: `Import failed or crashed the server. Safe Rollback completed. Cause: ${importError.message}`
+        error: `Import failed or crashed the server. Safe Rollback completed. Cause: ${importError.message}`,
+        ...(importError instanceof SandboxBootError ? { bootOutput: importError.output } : {}),
       }, { status: 500 });
     }
 

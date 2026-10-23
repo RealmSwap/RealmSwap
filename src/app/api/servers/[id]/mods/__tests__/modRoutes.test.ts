@@ -74,10 +74,19 @@ vi.mock("@/lib/runners/sandbox", () => ({
     if (bag.bootError) throw bag.bootError;
     return true;
   },
+  SandboxBootError: class SandboxBootError extends Error {
+    output: string;
+    constructor(message: string, output: string) {
+      super(message);
+      this.name = "SandboxBootError";
+      this.output = output;
+    }
+  },
 }));
 vi.mock("@/lib/appPaths", () => ({ dataRoot: () => bag.dataRoot }));
 
 import { POST as installMod } from "@/app/api/servers/[id]/mods/install/route";
+import { SandboxBootError } from "@/lib/runners/sandbox";
 import { DELETE as uninstallMod } from "@/app/api/servers/[id]/mods/[modId]/route";
 import { GET as getConfig, POST as postConfig } from "@/app/api/servers/[id]/mods/[modId]/config/route";
 
@@ -164,6 +173,22 @@ describe("Zomboid install route", () => {
     expect(res.status).toBe(500);
     expect(bag.restored).toEqual(["snap1"]);
     expect((await res.json()).error).toContain("Safe Rollback");
+  });
+
+  it("includes the sandbox boot output when the boot failure carries it", async () => {
+    bag.bootError = new SandboxBootError("Server crashed immediately with exit code 1.", "--- stderr ---\nFATAL");
+    const res = await installMod(
+      jsonReq("/api/servers/s1/mods/install", "POST", {
+        modType: "STEAM_WORKSHOP",
+        modId: "BB_CommonSense",
+        workshopId: "2875848298",
+      }),
+      { params: { id: "s1" } }
+    );
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toContain("exit code 1");
+    expect(data.bootOutput).toContain("FATAL");
   });
 });
 

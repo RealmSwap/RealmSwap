@@ -5,7 +5,7 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import { safeJoin } from "@/lib/safePath";
 import { createSnapshot, restoreSnapshot } from "@/lib/snapshots";
-import { testServerBoot } from "@/lib/runners/sandbox";
+import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { downloadFile } from "@/lib/download";
 import { detectMinecraftVersion, readLoaderMarker } from "@/lib/mods/mcLoaders";
 import { resolveInstallCandidate } from "@/lib/mods/modrinth";
@@ -158,6 +158,7 @@ export async function POST(
       await prisma.serverSnapshot.delete({ where: { id: snapshot.id } });
       return NextResponse.json({
         error: `Update failed and was rolled back. Cause: ${err.message}`,
+        ...(err instanceof SandboxBootError ? { bootOutput: err.output } : {}),
       }, { status: 500 });
     }
   } catch (error: any) {

@@ -38,7 +38,7 @@ RealmSwap currently supports single-click deployment for the following dedicated
 - **Frontend**: Next.js 14 (App Router), React, Tailwind CSS, Lucide Icons
 - **Backend API**: Next.js API Routes, Node.js (`child_process`), Prisma ORM
 - **E2E Smoke Tests**: Playwright suite (`npm run e2e`) covering the public surface in CI, with an env-gated authenticated flow (login → create server → edit Game Settings)
-- **RealmSync Engine**: Standalone Node.js WebSocket server (`realmSyncHost.ts`) for real-time mod synchronization, file hashing, and UPnP-powered public IP discovery.
+- **RealmSync Engine**: HTTP invite server (`realmSyncHost.ts`) that serves a signed manifest + config bundle to joining players, authenticated by an invite-code HMAC handshake, with UPnP-powered public IP discovery.
 - **Desktop Wrapper**: Electron builder with embedded standalone Node server
 - **Database**: SQLite (Local file-based, zero configuration)
 - **Runner Abstraction Layer**: RealmSwap abstracts server execution behind a `ServerRunner` interface. Currently powered by `LocalWindowsRunner` for native execution, with `DockerRunner` and containerized deployments in the works!

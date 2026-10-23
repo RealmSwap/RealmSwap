@@ -70,6 +70,20 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
   const pendingLinesRef = useRef<string[]>([]);
   const logContainerRef = useRef<HTMLDivElement | null>(null);
   const autoScrollRef = useRef(true);
+  const filterInputRef = useRef<HTMLInputElement | null>(null);
+
+  // ⌘F / Ctrl+F jumps to the filter box — hosts live in this view
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        filterInputRef.current?.focus();
+        filterInputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const MAX_CONSOLE_LINES = 5000;
   const ARCHIVE_VIEW_MAX_LINES = 2000;
@@ -338,13 +352,47 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
             
             {/* Console Toolbar */}
             <div className="flex items-center gap-2 mb-3">
+              {!viewingArchive && (
+                <span
+                  className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[10px] font-black tracking-wider border flex-shrink-0 ${
+                    consoleConn === "live" && !consolePaused
+                      ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
+                      : consolePaused
+                        ? "bg-amber-500/10 border-amber-500/25 text-amber-400"
+                        : "bg-white/5 border-white/10 text-slate-400"
+                  }`}
+                  title={
+                    consoleConn === "live"
+                      ? consolePaused
+                        ? "Live stream paused — new lines are buffered"
+                        : "Tailing the server log in real time"
+                      : "Connecting to the live stream"
+                  }
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      consoleConn === "live" && !consolePaused
+                        ? "bg-emerald-400 animate-pulse"
+                        : consolePaused
+                          ? "bg-amber-400"
+                          : "bg-slate-400 animate-pulse"
+                    }`}
+                  />
+                  {consoleConn === "live" && !consolePaused
+                    ? "LIVE"
+                    : consolePaused
+                      ? `PAUSED${pendingCount > 0 ? ` (+${pendingCount})` : ""}`
+                      : "CONNECTING"}
+                </span>
+              )}
               <div className="relative flex-1">
                 <Search className="w-3.5 h-3.5 text-mutedText absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
+                  ref={filterInputRef}
                   type="text"
                   value={consoleSearch}
                   onChange={(e) => setConsoleSearch(e.target.value)}
-                  placeholder="Filter logs…"
+                  placeholder="Filter logs… (⌘F)"
                   className="w-full pl-9 pr-3 py-2 rounded-lg bg-black/40 border border-white/10 focus:border-accentPurple/40 outline-none text-xs text-slate-200 placeholder:text-mutedText"
                 />
               </div>

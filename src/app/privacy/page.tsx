@@ -39,7 +39,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">3. Data Storage and Security</h2>
             <p>
-              The majority of your game server data, including save files and configuration files, is stored locally on your machine. Any data synced with our cloud services (such as backups or RealmSync archives) is encrypted in transit. However, remember that no method of transmission over the internet or method of electronic storage is 100% secure.
+              The majority of your game server data, including save files and configuration files, is stored locally on your machine. Any data synced with our cloud services (such as backups) is encrypted in transit. RealmSync transfers run directly between the host and the joining player: they are authenticated and integrity-protected with cryptographic signatures, but they are not encrypted. However, remember that no method of transmission over the internet or method of electronic storage is 100% secure.
             </p>
           </section>
 
