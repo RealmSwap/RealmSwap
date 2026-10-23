@@ -26,6 +26,9 @@ class RconManager {
         host: "127.0.0.1",
         port: server.rconPort,
         password: server.rconPassword,
+        // Default 2000ms rejects `save-all flush` on large Minecraft worlds
+        // mid-write, which reads as a failed backup flush.
+        timeout: 10000,
       });
 
       rcon.on("error", (err) => {

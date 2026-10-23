@@ -48,9 +48,8 @@ export async function GET(
         enabled: server.tunnelEnabled,
         url: server.tunnelUrl ?? null,
         claimUrl: server.tunnelClaimUrl ?? null,
-        // The playit agent must be claimed and its port bound on the playit
-        // dashboard before it forwards anything — "url set" alone is not
-        // "friends can join".
+        // The playit agent must be claimed and its tunnel live before it
+        // forwards anything — "url set" alone is not "friends can join".
         alive: tunnelAlive,
       },
     });

@@ -5,16 +5,31 @@ import * as https from "https";
 import { spawn, ChildProcess } from "child_process";
 import { dataRoot } from "./appPaths";
 import { prisma } from "./db";
+import {
+  PlayitApi,
+  findTunnelForPort,
+  isPlayitFailure,
+  TunnelForPort,
+} from "./playitApi";
 
 const BIN_DIR = path.join(dataRoot(), "bin");
 const DOWNLOAD_TIMEOUT_MS = 60_000;
+// The playit daemon refreshes rundata every 3s; matching that cadence keeps
+// our mirror of the tunnel state honest without meaningful extra load.
+const RUNDATA_POLL_MS = 3_000;
+const CLAIM_POLL_MS = 2_000;
+const CLAIM_CODE_REGENERATIONS_MAX = 3;
 
 // Map of running tunnels (serverId -> ChildProcess)
 const runningTunnels = new Map<string, ChildProcess>();
-// Spawns in flight (download + claim) — guards the double-spawn race between
-// e.g. the start route and the settings toggle.
+// ServerIds with a lifecycle in flight (download, claim, spawn) — guards the
+// double-start race between e.g. the start route and the settings toggle.
 const startingTunnels = new Set<string>();
-// ServerIds whose stop was requested — distinguishes an expected exit from a crash.
+// ServerIds whose stop was requested — cancels the background lifecycle
+// (claim polling, rundata sync) even before any agent process exists.
+const lifecycleCancelled = new Set<string>();
+// ServerIds whose agent exit was requested — distinguishes an expected exit
+// from a crash so the close handler only alerts on the latter.
 const intentionalStops = new Set<string>();
 
 /** True when a playit agent process for this server is alive in THIS process.
@@ -41,16 +56,16 @@ export async function downloadPlayitBinary(): Promise<string> {
   let downloadUrl = "";
   let binName = "";
 
-  if (platform === "win32") {
+  if (platform === "win32" && (arch === "x64" || arch === "arm64")) {
     downloadUrl = "https://github.com/playit-cloud/playit-agent/releases/latest/download/playit-windows-x86_64.exe";
     binName = "playit.exe";
   } else if (platform === "linux" && arch === "x64") {
     downloadUrl = "https://github.com/playit-cloud/playit-agent/releases/latest/download/playit-linux-amd64";
     binName = "playit";
-  } else if (platform === "darwin" && arch === "arm64") {
-    downloadUrl = "https://github.com/playit-cloud/playit-agent/releases/latest/download/playit-darwin-aarch64";
-    binName = "playit";
   } else {
+    // No macOS build is published on GitHub releases (checked against every
+    // release object of playit-cloud/playit-agent) — refuse instead of
+    // downloading an error page and trusting it as a binary.
     throw new Error(`Unsupported OS/Arch for Playit auto-tunneling: ${platform}/${arch}`);
   }
 
@@ -101,72 +116,166 @@ export interface TunnelStartResult {
   error?: string;
 }
 
+function tunnelDir(serverId: string): string {
+  return path.join(dataRoot(), "playit", serverId);
+}
+
+function secretPath(serverId: string): string {
+  return path.join(tunnelDir(serverId), "playit.toml");
+}
+
+/** The daemon defaults to a system-wide named pipe / /run socket that would
+ *  collide with any independently installed playit — isolate per server. */
+function agentSocketPath(serverId: string): string {
+  return os.platform() === "win32"
+    ? `\\\\.\\pipe\\realmswap-playitd-${serverId}`
+    : path.join(tunnelDir(serverId), "playitd.sock");
+}
+
+function readPlayitSecret(serverId: string): string | null {
+  try {
+    const raw = fs.readFileSync(secretPath(serverId), "utf8");
+    const toml = raw.match(/secret_key\s*=\s*"([^"]+)"/);
+    const secret = (toml ? toml[1] : raw).trim();
+    return /^[A-Za-z0-9_-]{16,}$/.test(secret) ? secret : null;
+  } catch {
+    return null;
+  }
+}
+
+function writePlayitSecret(serverId: string, secret: string): void {
+  const dir = tunnelDir(serverId);
+  fs.mkdirSync(dir, { recursive: true });
+  // The daemon's own config format: a single-field TOML file (SecretConfig).
+  fs.writeFileSync(secretPath(serverId), `secret_key = "${secret}"\n`, { mode: 0o600 });
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
- * Spawn the playit agent for a server. The agent does not bind the game port
- * by itself: the user must claim it (claim link stored on the server row and
- * shown in Join Info) and configure the port on the playit dashboard, so
- * callers must treat "started" as "agent running", NOT "tunnel forwarding".
+ * Spawn the playit agent for a server and drive its whole setup over the
+ * playit REST API: an unclaimed agent gets a claim link (stored on the server
+ * row and shown in Join Info); once the user approves it RealmSwap exchanges
+ * the claim for an agent secret, spawns playitd with that secret, creates the
+ * tunnel bound to the game port, and mirrors the assigned public address into
+ * `tunnelUrl`. The address is only ever written when playit itself reports a
+ * live forwarding address for our port.
  */
 export async function startTunnel(serverId: string, port: number): Promise<TunnelStartResult> {
   if (runningTunnels.has(serverId) || startingTunnels.has(serverId)) {
     return { ok: true };
   }
   startingTunnels.add(serverId);
+  lifecycleCancelled.delete(serverId);
   intentionalStops.delete(serverId);
   try {
     const binPath = await downloadPlayitBinary();
 
-    const playitProcess = spawn(binPath, [], {
-      cwd: BIN_DIR,
-      env: process.env
+    // Runs detached: the claim can take minutes (it waits for a human to click
+    // the claim link), and callers must not block on that.
+    void runTunnelLifecycle(serverId, port, binPath).catch((err) => {
+      console.error(`[Tunnel] Lifecycle failed for ${serverId}:`, err?.message || err);
     });
+    return { ok: true };
+  } catch (err: any) {
+    startingTunnels.delete(serverId);
+    lifecycleCancelled.delete(serverId);
+    console.error("[Tunnel] Failed to start tunnel:", err);
+    return { ok: false, error: err.message || String(err) };
+  }
+}
 
-    runningTunnels.set(serverId, playitProcess);
+async function runTunnelLifecycle(serverId: string, port: number, binPath: string): Promise<void> {
+  const api = new PlayitApi();
+  const cancelled = () => lifecycleCancelled.has(serverId);
+  let secret = readPlayitSecret(serverId);
+
+  try {
+    // ---- Phase 1: claim (only when no agent secret exists yet) ----
+    if (!secret) {
+      let code = api.generateClaimCode();
+      let regenerations = 0;
+      await prisma.server.update({
+        where: { id: serverId },
+        data: { tunnelClaimUrl: api.claimUrl(code) },
+      }).catch(() => {});
+      console.log(`[Tunnel] Server ${serverId} waiting for claim: ${api.claimUrl(code)}`);
+
+      let accepted = false;
+      while (!cancelled()) {
+        let state: string;
+        try {
+          state = await api.claimSetup(code);
+        } catch (err) {
+          if (isPlayitFailure(err, "CodeExpired") && regenerations < CLAIM_CODE_REGENERATIONS_MAX) {
+            regenerations++;
+            code = api.generateClaimCode();
+            await prisma.server.update({
+              where: { id: serverId },
+              data: { tunnelClaimUrl: api.claimUrl(code) },
+            }).catch(() => {});
+            continue;
+          }
+          console.error(`[Tunnel] Claim poll failed for ${serverId}:`, (err as Error)?.message || err);
+          await sleep(5_000);
+          continue;
+        }
+        if (state === "UserAccepted") { accepted = true; break; }
+        if (state === "UserRejected") {
+          await notify(serverId, "🚫 Tunnel Setup Rejected", `The playit claim for '${serverId}' was rejected in the browser. Toggle the tunnel off and on to try again.`);
+          await prisma.server.update({ where: { id: serverId }, data: { tunnelClaimUrl: null } }).catch(() => {});
+          return;
+        }
+        await sleep(CLAIM_POLL_MS);
+      }
+      if (cancelled() || !accepted) return;
+
+      let exchanged = false;
+      while (!cancelled()) {
+        try {
+          secret = await api.claimExchange(code);
+          exchanged = true;
+          break;
+        } catch (err) {
+          if (isPlayitFailure(err, "UserRejected")) break;
+          // NotAccepted right after approval is the normal race — keep polling.
+          await sleep(CLAIM_POLL_MS);
+        }
+      }
+      if (cancelled() || !exchanged || !secret) return;
+
+      writePlayitSecret(serverId, secret);
+      await prisma.server.update({ where: { id: serverId }, data: { tunnelClaimUrl: null } }).catch(() => {});
+    }
+
+    // ---- Phase 2: spawn the daemon with the secret ----
+    const dir = tunnelDir(serverId);
+    fs.mkdirSync(dir, { recursive: true });
+    const proc = spawn(binPath, [
+      "--secret-path", secretPath(serverId),
+      "--socket-path", agentSocketPath(serverId),
+    ], { cwd: dir, env: process.env });
+
+    runningTunnels.set(serverId, proc);
+    let exited = false;
+    proc.on("close", () => { exited = true; });
     await prisma.server.update({
       where: { id: serverId },
-      data: { tunnelPid: playitProcess.pid ?? null }
+      data: { tunnelPid: proc.pid ?? null },
     }).catch(() => {});
 
-    let sawTunnelUrl = false;
-    let sawClaimUrl = false;
-
-    playitProcess.stdout.on("data", async (data) => {
-      const output = data.toString();
-
-      // Assigned tunnel address (e.g. xxx.auto.playit.gg) — write once.
-      const match = output.match(/([a-z0-9-]+\.auto\.playit\.gg(?::\d+)?)/);
-      if (match && !sawTunnelUrl) {
-        sawTunnelUrl = true;
-        const tunnelUrl = match[1];
-        await prisma.server.update({
-          where: { id: serverId },
-          data: { tunnelUrl }
-        }).catch(() => {});
-      }
-
-      // Claim link for an unclaimed agent — surfaced to the user via Join Info.
-      const claimMatch = output.match(/(https:\/\/playit\.gg\/claim\/[a-zA-Z0-9]+)/);
-      if (claimMatch && !sawClaimUrl) {
-        sawClaimUrl = true;
-        const claimUrl = claimMatch[1];
-        console.log(`[Tunnel] Server ${serverId} claim link: ${claimUrl}`);
-        await prisma.server.update({
-          where: { id: serverId },
-          data: { tunnelClaimUrl: claimUrl }
-        }).catch(() => {});
-      }
-    });
-
-    playitProcess.stderr.on("data", (data) => {
+    proc.stderr.on("data", (data) => {
       console.error(`[Tunnel] ${serverId} stderr: ${data.toString().trim()}`);
     });
 
-    playitProcess.on("close", async (code) => {
+    proc.on("close", async (code) => {
       console.log(`[Tunnel] Playit process for ${serverId} exited (code ${code}).`);
       runningTunnels.delete(serverId);
       await prisma.server.update({
         where: { id: serverId },
-        data: { tunnelUrl: null, tunnelClaimUrl: null, tunnelPid: null }
+        data: { tunnelUrl: null, tunnelClaimUrl: null, tunnelPid: null },
       }).catch(() => {});
 
       if (!intentionalStops.has(serverId)) {
@@ -193,16 +302,86 @@ export async function startTunnel(serverId: string, port: number): Promise<Tunne
       intentionalStops.delete(serverId);
     });
 
-    return { ok: true };
-  } catch (err: any) {
-    console.error("[Tunnel] Failed to start tunnel:", err);
-    return { ok: false, error: err.message || String(err) };
+    // ---- Phase 3: mirror the tunnel state for as long as the agent lives ----
+    // The daemon learns tunnels from the playit API; this loop mirrors the
+    // same source of truth into the DB: creates the binding for our game port
+    // once, writes the assigned address, and clears it again if playit stops
+    // forwarding. No deadline: a slow allocation must still land.
+    let createAttempted = false;
+    let lastAddress: string | null = null;
+    let lastDisabledNotice: string | null = null;
+
+    while (!cancelled() && !exited) {
+      await sleep(RUNDATA_POLL_MS);
+      if (cancelled() || exited) break;
+
+      try {
+        const runData = await api.getRunData(secret);
+        const tunnel: TunnelForPort | null = findTunnelForPort(runData, port);
+
+        if (!tunnel) {
+          // Bind the game port exactly once per run — retrying create on every
+          // poll would stack duplicate tunnels while the first is pending.
+          if (!createAttempted && runData.agent_id) {
+            createAttempted = true;
+            try {
+              await api.createTcpTunnel(secret, runData.agent_id, port);
+              console.log(`[Tunnel] Created tunnel for ${serverId} bound to 127.0.0.1:${port}.`);
+            } catch (err) {
+              console.error(`[Tunnel] Could not auto-create tunnel for ${serverId}:`, (err as Error)?.message || err);
+              await notify(serverId, "⚠️ Tunnel needs one manual step", `RealmSwap couldn't create the playit tunnel for '${serverId}' automatically (${err instanceof Error ? err.message : err}). Create a TCP tunnel for local port ${port} on playit.gg — the address will appear here once done.`);
+            }
+          }
+          if (lastAddress) {
+            lastAddress = null;
+            await prisma.server.update({ where: { id: serverId }, data: { tunnelUrl: null } }).catch(() => {});
+          }
+          continue;
+        }
+
+        if (tunnel.disabled) {
+          if (lastDisabledNotice !== tunnel.disabledReason) {
+            lastDisabledNotice = tunnel.disabledReason;
+            console.error(`[Tunnel] Tunnel for ${serverId} is disabled: ${tunnel.disabledReason}`);
+            await prisma.server.update({ where: { id: serverId }, data: { tunnelUrl: null } }).catch(() => {});
+          }
+          continue;
+        }
+        lastDisabledNotice = null;
+
+        if (tunnel.displayAddress && tunnel.displayAddress !== lastAddress) {
+          lastAddress = tunnel.displayAddress;
+          await prisma.server.update({
+            where: { id: serverId },
+            data: { tunnelUrl: tunnel.displayAddress },
+          }).catch(() => {});
+          console.log(`[Tunnel] Server ${serverId} live at ${tunnel.displayAddress}.`);
+        }
+      } catch (err) {
+        console.error(`[Tunnel] Rundata poll failed for ${serverId}:`, (err as Error)?.message || err);
+      }
+    }
   } finally {
     startingTunnels.delete(serverId);
+    lifecycleCancelled.delete(serverId);
+  }
+}
+
+async function notify(serverId: string, title: string, body: string): Promise<void> {
+  try {
+    const server = await prisma.server.findUnique({ where: { id: serverId } });
+    if (!server) return;
+    const { sendNotification } = await import("./notifications");
+    await sendNotification(server.userId, title, body);
+  } catch (err) {
+    console.error("[Tunnel] Failed to send notification:", err);
   }
 }
 
 export async function stopTunnel(serverId: string): Promise<void> {
+  // Cancels the claim/rundata loops on their next tick even when no agent
+  // process exists yet (user toggles off while the claim is pending).
+  lifecycleCancelled.add(serverId);
   const proc = runningTunnels.get(serverId);
   // DB state is cleared here (not only in the close handler) so a stalled
   // child can't leave a tunnelUrl that connectivity checks would trust.
@@ -236,6 +415,7 @@ export async function stopAllTunnels(): Promise<void> {
  * claims tunnels that no longer exist, and playit agents orphaned by the dead
  * process may still be running. Kill what we can by recorded pid, then reset
  * the stale columns — "active" must never outlive the process that ran it.
+ * Per-server secrets persist on disk, so the next start skips the claim.
  */
 export async function reconcileTunnelsOnBoot(): Promise<void> {
   try {

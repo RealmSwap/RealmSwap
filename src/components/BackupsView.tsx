@@ -46,6 +46,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
   const [backups, setBackups] = useState<any[]>([]);
   const [customBackupName, setCustomBackupName] = useState("");
   const [snapshotInterval, setSnapshotInterval] = useState<number>(0);
+  const [backupRetention, setBackupRetention] = useState<number>(20);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +72,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
     if (selectedServer) {
       loadBackups(selectedServer.id);
       setSnapshotInterval(selectedServer.snapshotInterval || 0);
+      setBackupRetention(selectedServer.backupRetention ?? 20);
       setError(null);
       setSuccess(null);
     }
@@ -98,14 +100,16 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
       const res = await fetch(`/api/servers/${selectedServer.id}/backups/settings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ snapshotInterval }),
+        body: JSON.stringify({ snapshotInterval, backupRetention: Number.isFinite(backupRetention) ? backupRetention : 20 }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update backup interval");
+      if (!res.ok) throw new Error(data.error || "Failed to update backup settings");
 
-      setSuccess("Backup schedule updated successfully!");
+      setSuccess(`Backup settings updated successfully!${data.prunedBackups > 0 ? ` Retention removed ${data.prunedBackups} old snapshot(s).` : ""}`);
       // Update selectedServer state
       selectedServer.snapshotInterval = snapshotInterval;
+      selectedServer.backupRetention = backupRetention;
+      loadBackups(selectedServer.id);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -225,6 +229,9 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
       }
     });
   };
+
+  // Per-server snapshot disk usage, derived from the rows already loaded.
+  const totalBackupMB = backups.reduce((sum, b) => sum + (Number(b.fileSizeMB) || 0), 0);
 
   return (
     <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
@@ -470,6 +477,19 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                     </select>
                   </div>
 
+                  <div>
+                    <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Keep Last N Snapshots</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={500}
+                      value={backupRetention}
+                      onChange={(e) => setBackupRetention(parseInt(e.target.value, 10) || 0)}
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors font-bold"
+                    />
+                    <p className="text-[10px] text-mutedText mt-1.5 leading-normal">When more snapshots exist, the oldest are deleted automatically. 0 keeps everything. The newest verified snapshot is never deleted.</p>
+                  </div>
+
                   <div className="flex justify-end pt-2">
                     <button
                       type="submit"
@@ -575,11 +595,12 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
               {/* Instructions */}
               <div className="glass-panel rounded-2xl border border-white/5 p-6 space-y-3">
                 <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider block">Local Storage Info</span>
-                
+
                 <div className="text-xs text-slate-400 leading-normal space-y-3">
+                  <p>💾 **Disk used:** <span className="font-bold text-slate-200">{totalBackupMB.toFixed(1)} MB</span> across {backups.length} snapshot{backups.length === 1 ? "" : "s"} for this server.</p>
+                  <p>✂️ **Auto-cleanup:** {backupRetention > 0 ? `Only the last ${backupRetention} snapshots are kept — the oldest are deleted after each new snapshot, and the newest verified snapshot always survives.` : "Snapshots are kept forever (no limit set)."}</p>
                   <p>📁 **Local path:** Backups are compressed into `.zip` files and stored inside `local-backups/[serverId]` in your RealmSwap folder.</p>
                   <p>⏱️ **Scheduler requirements:** Automated snapshots only execute while the local runner app is running and the target server is active.</p>
-                  <p>💾 **Space efficiency:** Backups are compressed to save disk space. Old backups can be deleted at any time to clear up storage.</p>
                 </div>
               </div>
 

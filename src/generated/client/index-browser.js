@@ -187,6 +187,7 @@ exports.Prisma.ServerScalarFieldEnum = {
   updatedAt: 'updatedAt',
   snapshotInterval: 'snapshotInterval',
   lastSnapshotAt: 'lastSnapshotAt',
+  backupRetention: 'backupRetention',
   inviteCode: 'inviteCode'
 };
 
