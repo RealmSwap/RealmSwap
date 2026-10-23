@@ -27,8 +27,4 @@ export class AklizProvider implements HostingProvider {
   async getRegions() { return ["North America", "Europe"]; }
   async getLatencyEstimate(region: string) { return region === "North America" ? 25 : 85; }
   async getFeatures() { return ["Automated Backups", "1-Click Modpacks", "Managed Panel", "High Clock Speed CPUs"]; }
-
-  async migrateRealm(serverId: string, planId: string) {
-    return { success: true, estimatedDowntimeMinutes: 3, instructions: "Akliz migration is fully automated via FTP." };
-  }
 }

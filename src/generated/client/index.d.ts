@@ -64,6 +64,11 @@ export type ActivityLog = $Result.DefaultSelection<Prisma.$ActivityLogPayload>
  */
 export type Backup = $Result.DefaultSelection<Prisma.$BackupPayload>
 /**
+ * Model S3Setting
+ * 
+ */
+export type S3Setting = $Result.DefaultSelection<Prisma.$S3SettingPayload>
+/**
  * Model Collaborator
  * 
  */
@@ -361,6 +366,16 @@ export class PrismaClient<
     * ```
     */
   get backup(): Prisma.BackupDelegate<ExtArgs>;
+
+  /**
+   * `prisma.s3Setting`: Exposes CRUD operations for the **S3Setting** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more S3Settings
+    * const s3Settings = await prisma.s3Setting.findMany()
+    * ```
+    */
+  get s3Setting(): Prisma.S3SettingDelegate<ExtArgs>;
 
   /**
    * `prisma.collaborator`: Exposes CRUD operations for the **Collaborator** model.
@@ -962,6 +977,7 @@ export namespace Prisma {
     Archive: 'Archive',
     ActivityLog: 'ActivityLog',
     Backup: 'Backup',
+    S3Setting: 'S3Setting',
     Collaborator: 'Collaborator',
     GameDefinition: 'GameDefinition',
     ModInstallation: 'ModInstallation',
@@ -992,7 +1008,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "serverTelemetry" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription" | "player" | "playerServerAccess" | "playerAuditLog"
+      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "s3Setting" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "serverTelemetry" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription" | "player" | "playerServerAccess" | "playerAuditLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1693,6 +1709,76 @@ export namespace Prisma {
           count: {
             args: Prisma.BackupCountArgs<ExtArgs>
             result: $Utils.Optional<BackupCountAggregateOutputType> | number
+          }
+        }
+      }
+      S3Setting: {
+        payload: Prisma.$S3SettingPayload<ExtArgs>
+        fields: Prisma.S3SettingFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.S3SettingFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$S3SettingPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.S3SettingFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$S3SettingPayload>
+          }
+          findFirst: {
+            args: Prisma.S3SettingFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$S3SettingPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.S3SettingFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$S3SettingPayload>
+          }
+          findMany: {
+            args: Prisma.S3SettingFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$S3SettingPayload>[]
+          }
+          create: {
+            args: Prisma.S3SettingCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$S3SettingPayload>
+          }
+          createMany: {
+            args: Prisma.S3SettingCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.S3SettingCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$S3SettingPayload>[]
+          }
+          delete: {
+            args: Prisma.S3SettingDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$S3SettingPayload>
+          }
+          update: {
+            args: Prisma.S3SettingUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$S3SettingPayload>
+          }
+          deleteMany: {
+            args: Prisma.S3SettingDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.S3SettingUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.S3SettingUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$S3SettingPayload>
+          }
+          aggregate: {
+            args: Prisma.S3SettingAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateS3Setting>
+          }
+          groupBy: {
+            args: Prisma.S3SettingGroupByArgs<ExtArgs>
+            result: $Utils.Optional<S3SettingGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.S3SettingCountArgs<ExtArgs>
+            result: $Utils.Optional<S3SettingCountAggregateOutputType> | number
           }
         }
       }
@@ -3466,6 +3552,7 @@ export namespace Prisma {
     templateVotes?: boolean | User$templateVotesArgs<ExtArgs>
     PushSubscription?: boolean | User$PushSubscriptionArgs<ExtArgs>
     players?: boolean | User$playersArgs<ExtArgs>
+    s3Setting?: boolean | User$s3SettingArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -3507,6 +3594,7 @@ export namespace Prisma {
     templateVotes?: boolean | User$templateVotesArgs<ExtArgs>
     PushSubscription?: boolean | User$PushSubscriptionArgs<ExtArgs>
     players?: boolean | User$playersArgs<ExtArgs>
+    s3Setting?: boolean | User$s3SettingArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -3523,6 +3611,7 @@ export namespace Prisma {
       templateVotes: Prisma.$TemplateVotePayload<ExtArgs>[]
       PushSubscription: Prisma.$PushSubscriptionPayload<ExtArgs>[]
       players: Prisma.$PlayerPayload<ExtArgs>[]
+      s3Setting: Prisma.$S3SettingPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -3909,6 +3998,7 @@ export namespace Prisma {
     templateVotes<T extends User$templateVotesArgs<ExtArgs> = {}>(args?: Subset<T, User$templateVotesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TemplateVotePayload<ExtArgs>, T, "findMany"> | Null>
     PushSubscription<T extends User$PushSubscriptionArgs<ExtArgs> = {}>(args?: Subset<T, User$PushSubscriptionArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PushSubscriptionPayload<ExtArgs>, T, "findMany"> | Null>
     players<T extends User$playersArgs<ExtArgs> = {}>(args?: Subset<T, User$playersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlayerPayload<ExtArgs>, T, "findMany"> | Null>
+    s3Setting<T extends User$s3SettingArgs<ExtArgs> = {}>(args?: Subset<T, User$s3SettingArgs<ExtArgs>>): Prisma__S3SettingClient<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4433,6 +4523,21 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: PlayerScalarFieldEnum | PlayerScalarFieldEnum[]
+  }
+
+  /**
+   * User.s3Setting
+   */
+  export type User$s3SettingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
+    where?: S3SettingWhereInput
   }
 
   /**
@@ -12908,6 +13013,9 @@ export namespace Prisma {
     backupType: string | null
     verifiedAt: Date | null
     verifyError: string | null
+    offsiteStatus: string | null
+    offsiteError: string | null
+    offsiteUploadedAt: Date | null
     createdAt: Date | null
   }
 
@@ -12922,6 +13030,9 @@ export namespace Prisma {
     backupType: string | null
     verifiedAt: Date | null
     verifyError: string | null
+    offsiteStatus: string | null
+    offsiteError: string | null
+    offsiteUploadedAt: Date | null
     createdAt: Date | null
   }
 
@@ -12936,6 +13047,9 @@ export namespace Prisma {
     backupType: number
     verifiedAt: number
     verifyError: number
+    offsiteStatus: number
+    offsiteError: number
+    offsiteUploadedAt: number
     createdAt: number
     _all: number
   }
@@ -12960,6 +13074,9 @@ export namespace Prisma {
     backupType?: true
     verifiedAt?: true
     verifyError?: true
+    offsiteStatus?: true
+    offsiteError?: true
+    offsiteUploadedAt?: true
     createdAt?: true
   }
 
@@ -12974,6 +13091,9 @@ export namespace Prisma {
     backupType?: true
     verifiedAt?: true
     verifyError?: true
+    offsiteStatus?: true
+    offsiteError?: true
+    offsiteUploadedAt?: true
     createdAt?: true
   }
 
@@ -12988,6 +13108,9 @@ export namespace Prisma {
     backupType?: true
     verifiedAt?: true
     verifyError?: true
+    offsiteStatus?: true
+    offsiteError?: true
+    offsiteUploadedAt?: true
     createdAt?: true
     _all?: true
   }
@@ -13089,6 +13212,9 @@ export namespace Prisma {
     backupType: string
     verifiedAt: Date | null
     verifyError: string | null
+    offsiteStatus: string | null
+    offsiteError: string | null
+    offsiteUploadedAt: Date | null
     createdAt: Date
     _count: BackupCountAggregateOutputType | null
     _avg: BackupAvgAggregateOutputType | null
@@ -13122,6 +13248,9 @@ export namespace Prisma {
     backupType?: boolean
     verifiedAt?: boolean
     verifyError?: boolean
+    offsiteStatus?: boolean
+    offsiteError?: boolean
+    offsiteUploadedAt?: boolean
     createdAt?: boolean
     server?: boolean | ServerDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["backup"]>
@@ -13137,6 +13266,9 @@ export namespace Prisma {
     backupType?: boolean
     verifiedAt?: boolean
     verifyError?: boolean
+    offsiteStatus?: boolean
+    offsiteError?: boolean
+    offsiteUploadedAt?: boolean
     createdAt?: boolean
     server?: boolean | ServerDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["backup"]>
@@ -13152,6 +13284,9 @@ export namespace Prisma {
     backupType?: boolean
     verifiedAt?: boolean
     verifyError?: boolean
+    offsiteStatus?: boolean
+    offsiteError?: boolean
+    offsiteUploadedAt?: boolean
     createdAt?: boolean
   }
 
@@ -13178,6 +13313,9 @@ export namespace Prisma {
       backupType: string
       verifiedAt: Date | null
       verifyError: string | null
+      offsiteStatus: string | null
+      offsiteError: string | null
+      offsiteUploadedAt: Date | null
       createdAt: Date
     }, ExtArgs["result"]["backup"]>
     composites: {}
@@ -13583,6 +13721,9 @@ export namespace Prisma {
     readonly backupType: FieldRef<"Backup", 'String'>
     readonly verifiedAt: FieldRef<"Backup", 'DateTime'>
     readonly verifyError: FieldRef<"Backup", 'String'>
+    readonly offsiteStatus: FieldRef<"Backup", 'String'>
+    readonly offsiteError: FieldRef<"Backup", 'String'>
+    readonly offsiteUploadedAt: FieldRef<"Backup", 'DateTime'>
     readonly createdAt: FieldRef<"Backup", 'DateTime'>
   }
     
@@ -13911,6 +14052,997 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: BackupInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model S3Setting
+   */
+
+  export type AggregateS3Setting = {
+    _count: S3SettingCountAggregateOutputType | null
+    _min: S3SettingMinAggregateOutputType | null
+    _max: S3SettingMaxAggregateOutputType | null
+  }
+
+  export type S3SettingMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    endpoint: string | null
+    region: string | null
+    bucket: string | null
+    accessKey: string | null
+    secretKey: string | null
+    enabled: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type S3SettingMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    endpoint: string | null
+    region: string | null
+    bucket: string | null
+    accessKey: string | null
+    secretKey: string | null
+    enabled: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type S3SettingCountAggregateOutputType = {
+    id: number
+    userId: number
+    endpoint: number
+    region: number
+    bucket: number
+    accessKey: number
+    secretKey: number
+    enabled: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type S3SettingMinAggregateInputType = {
+    id?: true
+    userId?: true
+    endpoint?: true
+    region?: true
+    bucket?: true
+    accessKey?: true
+    secretKey?: true
+    enabled?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type S3SettingMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    endpoint?: true
+    region?: true
+    bucket?: true
+    accessKey?: true
+    secretKey?: true
+    enabled?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type S3SettingCountAggregateInputType = {
+    id?: true
+    userId?: true
+    endpoint?: true
+    region?: true
+    bucket?: true
+    accessKey?: true
+    secretKey?: true
+    enabled?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type S3SettingAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which S3Setting to aggregate.
+     */
+    where?: S3SettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of S3Settings to fetch.
+     */
+    orderBy?: S3SettingOrderByWithRelationInput | S3SettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: S3SettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` S3Settings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` S3Settings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned S3Settings
+    **/
+    _count?: true | S3SettingCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: S3SettingMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: S3SettingMaxAggregateInputType
+  }
+
+  export type GetS3SettingAggregateType<T extends S3SettingAggregateArgs> = {
+        [P in keyof T & keyof AggregateS3Setting]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateS3Setting[P]>
+      : GetScalarType<T[P], AggregateS3Setting[P]>
+  }
+
+
+
+
+  export type S3SettingGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: S3SettingWhereInput
+    orderBy?: S3SettingOrderByWithAggregationInput | S3SettingOrderByWithAggregationInput[]
+    by: S3SettingScalarFieldEnum[] | S3SettingScalarFieldEnum
+    having?: S3SettingScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: S3SettingCountAggregateInputType | true
+    _min?: S3SettingMinAggregateInputType
+    _max?: S3SettingMaxAggregateInputType
+  }
+
+  export type S3SettingGroupByOutputType = {
+    id: string
+    userId: string
+    endpoint: string | null
+    region: string
+    bucket: string
+    accessKey: string
+    secretKey: string
+    enabled: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: S3SettingCountAggregateOutputType | null
+    _min: S3SettingMinAggregateOutputType | null
+    _max: S3SettingMaxAggregateOutputType | null
+  }
+
+  type GetS3SettingGroupByPayload<T extends S3SettingGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<S3SettingGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof S3SettingGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], S3SettingGroupByOutputType[P]>
+            : GetScalarType<T[P], S3SettingGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type S3SettingSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    endpoint?: boolean
+    region?: boolean
+    bucket?: boolean
+    accessKey?: boolean
+    secretKey?: boolean
+    enabled?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["s3Setting"]>
+
+  export type S3SettingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    endpoint?: boolean
+    region?: boolean
+    bucket?: boolean
+    accessKey?: boolean
+    secretKey?: boolean
+    enabled?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["s3Setting"]>
+
+  export type S3SettingSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    endpoint?: boolean
+    region?: boolean
+    bucket?: boolean
+    accessKey?: boolean
+    secretKey?: boolean
+    enabled?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type S3SettingInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type S3SettingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $S3SettingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "S3Setting"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      endpoint: string | null
+      region: string
+      bucket: string
+      accessKey: string
+      secretKey: string
+      enabled: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["s3Setting"]>
+    composites: {}
+  }
+
+  type S3SettingGetPayload<S extends boolean | null | undefined | S3SettingDefaultArgs> = $Result.GetResult<Prisma.$S3SettingPayload, S>
+
+  type S3SettingCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<S3SettingFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: S3SettingCountAggregateInputType | true
+    }
+
+  export interface S3SettingDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['S3Setting'], meta: { name: 'S3Setting' } }
+    /**
+     * Find zero or one S3Setting that matches the filter.
+     * @param {S3SettingFindUniqueArgs} args - Arguments to find a S3Setting
+     * @example
+     * // Get one S3Setting
+     * const s3Setting = await prisma.s3Setting.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends S3SettingFindUniqueArgs>(args: SelectSubset<T, S3SettingFindUniqueArgs<ExtArgs>>): Prisma__S3SettingClient<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one S3Setting that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {S3SettingFindUniqueOrThrowArgs} args - Arguments to find a S3Setting
+     * @example
+     * // Get one S3Setting
+     * const s3Setting = await prisma.s3Setting.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends S3SettingFindUniqueOrThrowArgs>(args: SelectSubset<T, S3SettingFindUniqueOrThrowArgs<ExtArgs>>): Prisma__S3SettingClient<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first S3Setting that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {S3SettingFindFirstArgs} args - Arguments to find a S3Setting
+     * @example
+     * // Get one S3Setting
+     * const s3Setting = await prisma.s3Setting.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends S3SettingFindFirstArgs>(args?: SelectSubset<T, S3SettingFindFirstArgs<ExtArgs>>): Prisma__S3SettingClient<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first S3Setting that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {S3SettingFindFirstOrThrowArgs} args - Arguments to find a S3Setting
+     * @example
+     * // Get one S3Setting
+     * const s3Setting = await prisma.s3Setting.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends S3SettingFindFirstOrThrowArgs>(args?: SelectSubset<T, S3SettingFindFirstOrThrowArgs<ExtArgs>>): Prisma__S3SettingClient<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more S3Settings that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {S3SettingFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all S3Settings
+     * const s3Settings = await prisma.s3Setting.findMany()
+     * 
+     * // Get first 10 S3Settings
+     * const s3Settings = await prisma.s3Setting.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const s3SettingWithIdOnly = await prisma.s3Setting.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends S3SettingFindManyArgs>(args?: SelectSubset<T, S3SettingFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a S3Setting.
+     * @param {S3SettingCreateArgs} args - Arguments to create a S3Setting.
+     * @example
+     * // Create one S3Setting
+     * const S3Setting = await prisma.s3Setting.create({
+     *   data: {
+     *     // ... data to create a S3Setting
+     *   }
+     * })
+     * 
+     */
+    create<T extends S3SettingCreateArgs>(args: SelectSubset<T, S3SettingCreateArgs<ExtArgs>>): Prisma__S3SettingClient<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many S3Settings.
+     * @param {S3SettingCreateManyArgs} args - Arguments to create many S3Settings.
+     * @example
+     * // Create many S3Settings
+     * const s3Setting = await prisma.s3Setting.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends S3SettingCreateManyArgs>(args?: SelectSubset<T, S3SettingCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many S3Settings and returns the data saved in the database.
+     * @param {S3SettingCreateManyAndReturnArgs} args - Arguments to create many S3Settings.
+     * @example
+     * // Create many S3Settings
+     * const s3Setting = await prisma.s3Setting.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many S3Settings and only return the `id`
+     * const s3SettingWithIdOnly = await prisma.s3Setting.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends S3SettingCreateManyAndReturnArgs>(args?: SelectSubset<T, S3SettingCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a S3Setting.
+     * @param {S3SettingDeleteArgs} args - Arguments to delete one S3Setting.
+     * @example
+     * // Delete one S3Setting
+     * const S3Setting = await prisma.s3Setting.delete({
+     *   where: {
+     *     // ... filter to delete one S3Setting
+     *   }
+     * })
+     * 
+     */
+    delete<T extends S3SettingDeleteArgs>(args: SelectSubset<T, S3SettingDeleteArgs<ExtArgs>>): Prisma__S3SettingClient<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one S3Setting.
+     * @param {S3SettingUpdateArgs} args - Arguments to update one S3Setting.
+     * @example
+     * // Update one S3Setting
+     * const s3Setting = await prisma.s3Setting.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends S3SettingUpdateArgs>(args: SelectSubset<T, S3SettingUpdateArgs<ExtArgs>>): Prisma__S3SettingClient<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more S3Settings.
+     * @param {S3SettingDeleteManyArgs} args - Arguments to filter S3Settings to delete.
+     * @example
+     * // Delete a few S3Settings
+     * const { count } = await prisma.s3Setting.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends S3SettingDeleteManyArgs>(args?: SelectSubset<T, S3SettingDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more S3Settings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {S3SettingUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many S3Settings
+     * const s3Setting = await prisma.s3Setting.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends S3SettingUpdateManyArgs>(args: SelectSubset<T, S3SettingUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one S3Setting.
+     * @param {S3SettingUpsertArgs} args - Arguments to update or create a S3Setting.
+     * @example
+     * // Update or create a S3Setting
+     * const s3Setting = await prisma.s3Setting.upsert({
+     *   create: {
+     *     // ... data to create a S3Setting
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the S3Setting we want to update
+     *   }
+     * })
+     */
+    upsert<T extends S3SettingUpsertArgs>(args: SelectSubset<T, S3SettingUpsertArgs<ExtArgs>>): Prisma__S3SettingClient<$Result.GetResult<Prisma.$S3SettingPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of S3Settings.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {S3SettingCountArgs} args - Arguments to filter S3Settings to count.
+     * @example
+     * // Count the number of S3Settings
+     * const count = await prisma.s3Setting.count({
+     *   where: {
+     *     // ... the filter for the S3Settings we want to count
+     *   }
+     * })
+    **/
+    count<T extends S3SettingCountArgs>(
+      args?: Subset<T, S3SettingCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], S3SettingCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a S3Setting.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {S3SettingAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends S3SettingAggregateArgs>(args: Subset<T, S3SettingAggregateArgs>): Prisma.PrismaPromise<GetS3SettingAggregateType<T>>
+
+    /**
+     * Group by S3Setting.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {S3SettingGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends S3SettingGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: S3SettingGroupByArgs['orderBy'] }
+        : { orderBy?: S3SettingGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, S3SettingGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetS3SettingGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the S3Setting model
+   */
+  readonly fields: S3SettingFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for S3Setting.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__S3SettingClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the S3Setting model
+   */ 
+  interface S3SettingFieldRefs {
+    readonly id: FieldRef<"S3Setting", 'String'>
+    readonly userId: FieldRef<"S3Setting", 'String'>
+    readonly endpoint: FieldRef<"S3Setting", 'String'>
+    readonly region: FieldRef<"S3Setting", 'String'>
+    readonly bucket: FieldRef<"S3Setting", 'String'>
+    readonly accessKey: FieldRef<"S3Setting", 'String'>
+    readonly secretKey: FieldRef<"S3Setting", 'String'>
+    readonly enabled: FieldRef<"S3Setting", 'Boolean'>
+    readonly createdAt: FieldRef<"S3Setting", 'DateTime'>
+    readonly updatedAt: FieldRef<"S3Setting", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * S3Setting findUnique
+   */
+  export type S3SettingFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
+    /**
+     * Filter, which S3Setting to fetch.
+     */
+    where: S3SettingWhereUniqueInput
+  }
+
+  /**
+   * S3Setting findUniqueOrThrow
+   */
+  export type S3SettingFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
+    /**
+     * Filter, which S3Setting to fetch.
+     */
+    where: S3SettingWhereUniqueInput
+  }
+
+  /**
+   * S3Setting findFirst
+   */
+  export type S3SettingFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
+    /**
+     * Filter, which S3Setting to fetch.
+     */
+    where?: S3SettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of S3Settings to fetch.
+     */
+    orderBy?: S3SettingOrderByWithRelationInput | S3SettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for S3Settings.
+     */
+    cursor?: S3SettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` S3Settings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` S3Settings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of S3Settings.
+     */
+    distinct?: S3SettingScalarFieldEnum | S3SettingScalarFieldEnum[]
+  }
+
+  /**
+   * S3Setting findFirstOrThrow
+   */
+  export type S3SettingFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
+    /**
+     * Filter, which S3Setting to fetch.
+     */
+    where?: S3SettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of S3Settings to fetch.
+     */
+    orderBy?: S3SettingOrderByWithRelationInput | S3SettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for S3Settings.
+     */
+    cursor?: S3SettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` S3Settings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` S3Settings.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of S3Settings.
+     */
+    distinct?: S3SettingScalarFieldEnum | S3SettingScalarFieldEnum[]
+  }
+
+  /**
+   * S3Setting findMany
+   */
+  export type S3SettingFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
+    /**
+     * Filter, which S3Settings to fetch.
+     */
+    where?: S3SettingWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of S3Settings to fetch.
+     */
+    orderBy?: S3SettingOrderByWithRelationInput | S3SettingOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing S3Settings.
+     */
+    cursor?: S3SettingWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` S3Settings from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` S3Settings.
+     */
+    skip?: number
+    distinct?: S3SettingScalarFieldEnum | S3SettingScalarFieldEnum[]
+  }
+
+  /**
+   * S3Setting create
+   */
+  export type S3SettingCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
+    /**
+     * The data needed to create a S3Setting.
+     */
+    data: XOR<S3SettingCreateInput, S3SettingUncheckedCreateInput>
+  }
+
+  /**
+   * S3Setting createMany
+   */
+  export type S3SettingCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many S3Settings.
+     */
+    data: S3SettingCreateManyInput | S3SettingCreateManyInput[]
+  }
+
+  /**
+   * S3Setting createManyAndReturn
+   */
+  export type S3SettingCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many S3Settings.
+     */
+    data: S3SettingCreateManyInput | S3SettingCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * S3Setting update
+   */
+  export type S3SettingUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
+    /**
+     * The data needed to update a S3Setting.
+     */
+    data: XOR<S3SettingUpdateInput, S3SettingUncheckedUpdateInput>
+    /**
+     * Choose, which S3Setting to update.
+     */
+    where: S3SettingWhereUniqueInput
+  }
+
+  /**
+   * S3Setting updateMany
+   */
+  export type S3SettingUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update S3Settings.
+     */
+    data: XOR<S3SettingUpdateManyMutationInput, S3SettingUncheckedUpdateManyInput>
+    /**
+     * Filter which S3Settings to update
+     */
+    where?: S3SettingWhereInput
+  }
+
+  /**
+   * S3Setting upsert
+   */
+  export type S3SettingUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
+    /**
+     * The filter to search for the S3Setting to update in case it exists.
+     */
+    where: S3SettingWhereUniqueInput
+    /**
+     * In case the S3Setting found by the `where` argument doesn't exist, create a new S3Setting with this data.
+     */
+    create: XOR<S3SettingCreateInput, S3SettingUncheckedCreateInput>
+    /**
+     * In case the S3Setting was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<S3SettingUpdateInput, S3SettingUncheckedUpdateInput>
+  }
+
+  /**
+   * S3Setting delete
+   */
+  export type S3SettingDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
+    /**
+     * Filter which S3Setting to delete.
+     */
+    where: S3SettingWhereUniqueInput
+  }
+
+  /**
+   * S3Setting deleteMany
+   */
+  export type S3SettingDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which S3Settings to delete
+     */
+    where?: S3SettingWhereInput
+  }
+
+  /**
+   * S3Setting without action
+   */
+  export type S3SettingDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the S3Setting
+     */
+    select?: S3SettingSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: S3SettingInclude<ExtArgs> | null
   }
 
 
@@ -28877,10 +30009,29 @@ export namespace Prisma {
     backupType: 'backupType',
     verifiedAt: 'verifiedAt',
     verifyError: 'verifyError',
+    offsiteStatus: 'offsiteStatus',
+    offsiteError: 'offsiteError',
+    offsiteUploadedAt: 'offsiteUploadedAt',
     createdAt: 'createdAt'
   };
 
   export type BackupScalarFieldEnum = (typeof BackupScalarFieldEnum)[keyof typeof BackupScalarFieldEnum]
+
+
+  export const S3SettingScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    endpoint: 'endpoint',
+    region: 'region',
+    bucket: 'bucket',
+    accessKey: 'accessKey',
+    secretKey: 'secretKey',
+    enabled: 'enabled',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type S3SettingScalarFieldEnum = (typeof S3SettingScalarFieldEnum)[keyof typeof S3SettingScalarFieldEnum]
 
 
   export const CollaboratorScalarFieldEnum: {
@@ -29174,6 +30325,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteListRelationFilter
     PushSubscription?: PushSubscriptionListRelationFilter
     players?: PlayerListRelationFilter
+    s3Setting?: XOR<S3SettingNullableRelationFilter, S3SettingWhereInput> | null
   }
 
   export type UserOrderByWithRelationInput = {
@@ -29197,6 +30349,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteOrderByRelationAggregateInput
     PushSubscription?: PushSubscriptionOrderByRelationAggregateInput
     players?: PlayerOrderByRelationAggregateInput
+    s3Setting?: S3SettingOrderByWithRelationInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -29223,6 +30376,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteListRelationFilter
     PushSubscription?: PushSubscriptionListRelationFilter
     players?: PlayerListRelationFilter
+    s3Setting?: XOR<S3SettingNullableRelationFilter, S3SettingWhereInput> | null
   }, "id" | "email" | "discordId">
 
   export type UserOrderByWithAggregationInput = {
@@ -30002,6 +31156,9 @@ export namespace Prisma {
     backupType?: StringFilter<"Backup"> | string
     verifiedAt?: DateTimeNullableFilter<"Backup"> | Date | string | null
     verifyError?: StringNullableFilter<"Backup"> | string | null
+    offsiteStatus?: StringNullableFilter<"Backup"> | string | null
+    offsiteError?: StringNullableFilter<"Backup"> | string | null
+    offsiteUploadedAt?: DateTimeNullableFilter<"Backup"> | Date | string | null
     createdAt?: DateTimeFilter<"Backup"> | Date | string
     server?: XOR<ServerRelationFilter, ServerWhereInput>
   }
@@ -30017,6 +31174,9 @@ export namespace Prisma {
     backupType?: SortOrder
     verifiedAt?: SortOrderInput | SortOrder
     verifyError?: SortOrderInput | SortOrder
+    offsiteStatus?: SortOrderInput | SortOrder
+    offsiteError?: SortOrderInput | SortOrder
+    offsiteUploadedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     server?: ServerOrderByWithRelationInput
   }
@@ -30035,6 +31195,9 @@ export namespace Prisma {
     backupType?: StringFilter<"Backup"> | string
     verifiedAt?: DateTimeNullableFilter<"Backup"> | Date | string | null
     verifyError?: StringNullableFilter<"Backup"> | string | null
+    offsiteStatus?: StringNullableFilter<"Backup"> | string | null
+    offsiteError?: StringNullableFilter<"Backup"> | string | null
+    offsiteUploadedAt?: DateTimeNullableFilter<"Backup"> | Date | string | null
     createdAt?: DateTimeFilter<"Backup"> | Date | string
     server?: XOR<ServerRelationFilter, ServerWhereInput>
   }, "id">
@@ -30050,6 +31213,9 @@ export namespace Prisma {
     backupType?: SortOrder
     verifiedAt?: SortOrderInput | SortOrder
     verifyError?: SortOrderInput | SortOrder
+    offsiteStatus?: SortOrderInput | SortOrder
+    offsiteError?: SortOrderInput | SortOrder
+    offsiteUploadedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: BackupCountOrderByAggregateInput
     _avg?: BackupAvgOrderByAggregateInput
@@ -30072,7 +31238,90 @@ export namespace Prisma {
     backupType?: StringWithAggregatesFilter<"Backup"> | string
     verifiedAt?: DateTimeNullableWithAggregatesFilter<"Backup"> | Date | string | null
     verifyError?: StringNullableWithAggregatesFilter<"Backup"> | string | null
+    offsiteStatus?: StringNullableWithAggregatesFilter<"Backup"> | string | null
+    offsiteError?: StringNullableWithAggregatesFilter<"Backup"> | string | null
+    offsiteUploadedAt?: DateTimeNullableWithAggregatesFilter<"Backup"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Backup"> | Date | string
+  }
+
+  export type S3SettingWhereInput = {
+    AND?: S3SettingWhereInput | S3SettingWhereInput[]
+    OR?: S3SettingWhereInput[]
+    NOT?: S3SettingWhereInput | S3SettingWhereInput[]
+    id?: StringFilter<"S3Setting"> | string
+    userId?: StringFilter<"S3Setting"> | string
+    endpoint?: StringNullableFilter<"S3Setting"> | string | null
+    region?: StringFilter<"S3Setting"> | string
+    bucket?: StringFilter<"S3Setting"> | string
+    accessKey?: StringFilter<"S3Setting"> | string
+    secretKey?: StringFilter<"S3Setting"> | string
+    enabled?: BoolFilter<"S3Setting"> | boolean
+    createdAt?: DateTimeFilter<"S3Setting"> | Date | string
+    updatedAt?: DateTimeFilter<"S3Setting"> | Date | string
+    user?: XOR<UserRelationFilter, UserWhereInput>
+  }
+
+  export type S3SettingOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    endpoint?: SortOrderInput | SortOrder
+    region?: SortOrder
+    bucket?: SortOrder
+    accessKey?: SortOrder
+    secretKey?: SortOrder
+    enabled?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type S3SettingWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId?: string
+    AND?: S3SettingWhereInput | S3SettingWhereInput[]
+    OR?: S3SettingWhereInput[]
+    NOT?: S3SettingWhereInput | S3SettingWhereInput[]
+    endpoint?: StringNullableFilter<"S3Setting"> | string | null
+    region?: StringFilter<"S3Setting"> | string
+    bucket?: StringFilter<"S3Setting"> | string
+    accessKey?: StringFilter<"S3Setting"> | string
+    secretKey?: StringFilter<"S3Setting"> | string
+    enabled?: BoolFilter<"S3Setting"> | boolean
+    createdAt?: DateTimeFilter<"S3Setting"> | Date | string
+    updatedAt?: DateTimeFilter<"S3Setting"> | Date | string
+    user?: XOR<UserRelationFilter, UserWhereInput>
+  }, "id" | "userId">
+
+  export type S3SettingOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    endpoint?: SortOrderInput | SortOrder
+    region?: SortOrder
+    bucket?: SortOrder
+    accessKey?: SortOrder
+    secretKey?: SortOrder
+    enabled?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: S3SettingCountOrderByAggregateInput
+    _max?: S3SettingMaxOrderByAggregateInput
+    _min?: S3SettingMinOrderByAggregateInput
+  }
+
+  export type S3SettingScalarWhereWithAggregatesInput = {
+    AND?: S3SettingScalarWhereWithAggregatesInput | S3SettingScalarWhereWithAggregatesInput[]
+    OR?: S3SettingScalarWhereWithAggregatesInput[]
+    NOT?: S3SettingScalarWhereWithAggregatesInput | S3SettingScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"S3Setting"> | string
+    userId?: StringWithAggregatesFilter<"S3Setting"> | string
+    endpoint?: StringNullableWithAggregatesFilter<"S3Setting"> | string | null
+    region?: StringWithAggregatesFilter<"S3Setting"> | string
+    bucket?: StringWithAggregatesFilter<"S3Setting"> | string
+    accessKey?: StringWithAggregatesFilter<"S3Setting"> | string
+    secretKey?: StringWithAggregatesFilter<"S3Setting"> | string
+    enabled?: BoolWithAggregatesFilter<"S3Setting"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"S3Setting"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"S3Setting"> | Date | string
   }
 
   export type CollaboratorWhereInput = {
@@ -31172,6 +32421,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
     players?: PlayerCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -31195,6 +32445,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     players?: PlayerUncheckedCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -31218,6 +32469,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
     players?: PlayerUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -31241,6 +32493,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -32125,6 +33378,9 @@ export namespace Prisma {
     backupType: string
     verifiedAt?: Date | string | null
     verifyError?: string | null
+    offsiteStatus?: string | null
+    offsiteError?: string | null
+    offsiteUploadedAt?: Date | string | null
     createdAt?: Date | string
     server: ServerCreateNestedOneWithoutBackupsInput
   }
@@ -32140,6 +33396,9 @@ export namespace Prisma {
     backupType: string
     verifiedAt?: Date | string | null
     verifyError?: string | null
+    offsiteStatus?: string | null
+    offsiteError?: string | null
+    offsiteUploadedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -32153,6 +33412,9 @@ export namespace Prisma {
     backupType?: StringFieldUpdateOperationsInput | string
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifyError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteUploadedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     server?: ServerUpdateOneRequiredWithoutBackupsNestedInput
   }
@@ -32168,6 +33430,9 @@ export namespace Prisma {
     backupType?: StringFieldUpdateOperationsInput | string
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifyError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteUploadedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -32182,6 +33447,9 @@ export namespace Prisma {
     backupType: string
     verifiedAt?: Date | string | null
     verifyError?: string | null
+    offsiteStatus?: string | null
+    offsiteError?: string | null
+    offsiteUploadedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -32195,6 +33463,9 @@ export namespace Prisma {
     backupType?: StringFieldUpdateOperationsInput | string
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifyError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteUploadedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -32209,7 +33480,100 @@ export namespace Prisma {
     backupType?: StringFieldUpdateOperationsInput | string
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifyError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteUploadedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type S3SettingCreateInput = {
+    id?: string
+    endpoint?: string | null
+    region?: string
+    bucket: string
+    accessKey: string
+    secretKey: string
+    enabled?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutS3SettingInput
+  }
+
+  export type S3SettingUncheckedCreateInput = {
+    id?: string
+    userId: string
+    endpoint?: string | null
+    region?: string
+    bucket: string
+    accessKey: string
+    secretKey: string
+    enabled?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type S3SettingUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    endpoint?: NullableStringFieldUpdateOperationsInput | string | null
+    region?: StringFieldUpdateOperationsInput | string
+    bucket?: StringFieldUpdateOperationsInput | string
+    accessKey?: StringFieldUpdateOperationsInput | string
+    secretKey?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutS3SettingNestedInput
+  }
+
+  export type S3SettingUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    endpoint?: NullableStringFieldUpdateOperationsInput | string | null
+    region?: StringFieldUpdateOperationsInput | string
+    bucket?: StringFieldUpdateOperationsInput | string
+    accessKey?: StringFieldUpdateOperationsInput | string
+    secretKey?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type S3SettingCreateManyInput = {
+    id?: string
+    userId: string
+    endpoint?: string | null
+    region?: string
+    bucket: string
+    accessKey: string
+    secretKey: string
+    enabled?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type S3SettingUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    endpoint?: NullableStringFieldUpdateOperationsInput | string | null
+    region?: StringFieldUpdateOperationsInput | string
+    bucket?: StringFieldUpdateOperationsInput | string
+    accessKey?: StringFieldUpdateOperationsInput | string
+    secretKey?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type S3SettingUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    endpoint?: NullableStringFieldUpdateOperationsInput | string | null
+    region?: StringFieldUpdateOperationsInput | string
+    bucket?: StringFieldUpdateOperationsInput | string
+    accessKey?: StringFieldUpdateOperationsInput | string
+    secretKey?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CollaboratorCreateInput = {
@@ -33458,6 +34822,11 @@ export namespace Prisma {
     none?: PlayerWhereInput
   }
 
+  export type S3SettingNullableRelationFilter = {
+    is?: S3SettingWhereInput | null
+    isNot?: S3SettingWhereInput | null
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -34209,6 +35578,9 @@ export namespace Prisma {
     backupType?: SortOrder
     verifiedAt?: SortOrder
     verifyError?: SortOrder
+    offsiteStatus?: SortOrder
+    offsiteError?: SortOrder
+    offsiteUploadedAt?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -34227,6 +35599,9 @@ export namespace Prisma {
     backupType?: SortOrder
     verifiedAt?: SortOrder
     verifyError?: SortOrder
+    offsiteStatus?: SortOrder
+    offsiteError?: SortOrder
+    offsiteUploadedAt?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -34241,11 +35616,53 @@ export namespace Prisma {
     backupType?: SortOrder
     verifiedAt?: SortOrder
     verifyError?: SortOrder
+    offsiteStatus?: SortOrder
+    offsiteError?: SortOrder
+    offsiteUploadedAt?: SortOrder
     createdAt?: SortOrder
   }
 
   export type BackupSumOrderByAggregateInput = {
     fileSizeMB?: SortOrder
+  }
+
+  export type S3SettingCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    endpoint?: SortOrder
+    region?: SortOrder
+    bucket?: SortOrder
+    accessKey?: SortOrder
+    secretKey?: SortOrder
+    enabled?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type S3SettingMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    endpoint?: SortOrder
+    region?: SortOrder
+    bucket?: SortOrder
+    accessKey?: SortOrder
+    secretKey?: SortOrder
+    enabled?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type S3SettingMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    endpoint?: SortOrder
+    region?: SortOrder
+    bucket?: SortOrder
+    accessKey?: SortOrder
+    secretKey?: SortOrder
+    enabled?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type CollaboratorServerIdUserIdCompoundUniqueInput = {
@@ -34923,6 +36340,12 @@ export namespace Prisma {
     connect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
   }
 
+  export type S3SettingCreateNestedOneWithoutUserInput = {
+    create?: XOR<S3SettingCreateWithoutUserInput, S3SettingUncheckedCreateWithoutUserInput>
+    connectOrCreate?: S3SettingCreateOrConnectWithoutUserInput
+    connect?: S3SettingWhereUniqueInput
+  }
+
   export type GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput = {
     create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
@@ -34983,6 +36406,12 @@ export namespace Prisma {
     connectOrCreate?: PlayerCreateOrConnectWithoutUserInput | PlayerCreateOrConnectWithoutUserInput[]
     createMany?: PlayerCreateManyUserInputEnvelope
     connect?: PlayerWhereUniqueInput | PlayerWhereUniqueInput[]
+  }
+
+  export type S3SettingUncheckedCreateNestedOneWithoutUserInput = {
+    create?: XOR<S3SettingCreateWithoutUserInput, S3SettingUncheckedCreateWithoutUserInput>
+    connectOrCreate?: S3SettingCreateOrConnectWithoutUserInput
+    connect?: S3SettingWhereUniqueInput
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -35123,6 +36552,16 @@ export namespace Prisma {
     deleteMany?: PlayerScalarWhereInput | PlayerScalarWhereInput[]
   }
 
+  export type S3SettingUpdateOneWithoutUserNestedInput = {
+    create?: XOR<S3SettingCreateWithoutUserInput, S3SettingUncheckedCreateWithoutUserInput>
+    connectOrCreate?: S3SettingCreateOrConnectWithoutUserInput
+    upsert?: S3SettingUpsertWithoutUserInput
+    disconnect?: S3SettingWhereInput | boolean
+    delete?: S3SettingWhereInput | boolean
+    connect?: S3SettingWhereUniqueInput
+    update?: XOR<XOR<S3SettingUpdateToOneWithWhereWithoutUserInput, S3SettingUpdateWithoutUserInput>, S3SettingUncheckedUpdateWithoutUserInput>
+  }
+
   export type GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput = {
     create?: XOR<GameDefinitionCreateWithoutOwnerInput, GameDefinitionUncheckedCreateWithoutOwnerInput> | GameDefinitionCreateWithoutOwnerInput[] | GameDefinitionUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: GameDefinitionCreateOrConnectWithoutOwnerInput | GameDefinitionCreateOrConnectWithoutOwnerInput[]
@@ -35243,6 +36682,16 @@ export namespace Prisma {
     update?: PlayerUpdateWithWhereUniqueWithoutUserInput | PlayerUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: PlayerUpdateManyWithWhereWithoutUserInput | PlayerUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: PlayerScalarWhereInput | PlayerScalarWhereInput[]
+  }
+
+  export type S3SettingUncheckedUpdateOneWithoutUserNestedInput = {
+    create?: XOR<S3SettingCreateWithoutUserInput, S3SettingUncheckedCreateWithoutUserInput>
+    connectOrCreate?: S3SettingCreateOrConnectWithoutUserInput
+    upsert?: S3SettingUpsertWithoutUserInput
+    disconnect?: S3SettingWhereInput | boolean
+    delete?: S3SettingWhereInput | boolean
+    connect?: S3SettingWhereUniqueInput
+    update?: XOR<XOR<S3SettingUpdateToOneWithWhereWithoutUserInput, S3SettingUpdateWithoutUserInput>, S3SettingUncheckedUpdateWithoutUserInput>
   }
 
   export type UserCreateNestedOneWithoutSubscriptionInput = {
@@ -35809,6 +37258,20 @@ export namespace Prisma {
     upsert?: ServerUpsertWithoutBackupsInput
     connect?: ServerWhereUniqueInput
     update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutBackupsInput, ServerUpdateWithoutBackupsInput>, ServerUncheckedUpdateWithoutBackupsInput>
+  }
+
+  export type UserCreateNestedOneWithoutS3SettingInput = {
+    create?: XOR<UserCreateWithoutS3SettingInput, UserUncheckedCreateWithoutS3SettingInput>
+    connectOrCreate?: UserCreateOrConnectWithoutS3SettingInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutS3SettingNestedInput = {
+    create?: XOR<UserCreateWithoutS3SettingInput, UserUncheckedCreateWithoutS3SettingInput>
+    connectOrCreate?: UserCreateOrConnectWithoutS3SettingInput
+    upsert?: UserUpsertWithoutS3SettingInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutS3SettingInput, UserUpdateWithoutS3SettingInput>, UserUncheckedUpdateWithoutS3SettingInput>
   }
 
   export type ServerCreateNestedOneWithoutCollaboratorsInput = {
@@ -36845,6 +38308,35 @@ export namespace Prisma {
     data: PlayerCreateManyUserInput | PlayerCreateManyUserInput[]
   }
 
+  export type S3SettingCreateWithoutUserInput = {
+    id?: string
+    endpoint?: string | null
+    region?: string
+    bucket: string
+    accessKey: string
+    secretKey: string
+    enabled?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type S3SettingUncheckedCreateWithoutUserInput = {
+    id?: string
+    endpoint?: string | null
+    region?: string
+    bucket: string
+    accessKey: string
+    secretKey: string
+    enabled?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type S3SettingCreateOrConnectWithoutUserInput = {
+    where: S3SettingWhereUniqueInput
+    create: XOR<S3SettingCreateWithoutUserInput, S3SettingUncheckedCreateWithoutUserInput>
+  }
+
   export type GameDefinitionUpsertWithWhereUniqueWithoutOwnerInput = {
     where: GameDefinitionWhereUniqueInput
     update: XOR<GameDefinitionUpdateWithoutOwnerInput, GameDefinitionUncheckedUpdateWithoutOwnerInput>
@@ -37144,6 +38636,41 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Player"> | Date | string
   }
 
+  export type S3SettingUpsertWithoutUserInput = {
+    update: XOR<S3SettingUpdateWithoutUserInput, S3SettingUncheckedUpdateWithoutUserInput>
+    create: XOR<S3SettingCreateWithoutUserInput, S3SettingUncheckedCreateWithoutUserInput>
+    where?: S3SettingWhereInput
+  }
+
+  export type S3SettingUpdateToOneWithWhereWithoutUserInput = {
+    where?: S3SettingWhereInput
+    data: XOR<S3SettingUpdateWithoutUserInput, S3SettingUncheckedUpdateWithoutUserInput>
+  }
+
+  export type S3SettingUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    endpoint?: NullableStringFieldUpdateOperationsInput | string | null
+    region?: StringFieldUpdateOperationsInput | string
+    bucket?: StringFieldUpdateOperationsInput | string
+    accessKey?: StringFieldUpdateOperationsInput | string
+    secretKey?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type S3SettingUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    endpoint?: NullableStringFieldUpdateOperationsInput | string | null
+    region?: StringFieldUpdateOperationsInput | string
+    bucket?: StringFieldUpdateOperationsInput | string
+    accessKey?: StringFieldUpdateOperationsInput | string
+    secretKey?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserCreateWithoutSubscriptionInput = {
     id?: string
     email: string
@@ -37164,6 +38691,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
     players?: PlayerCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSubscriptionInput = {
@@ -37186,6 +38714,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     players?: PlayerUncheckedCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSubscriptionInput = {
@@ -37224,6 +38753,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
     players?: PlayerUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSubscriptionInput = {
@@ -37246,6 +38776,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutServersInput = {
@@ -37268,6 +38799,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
     players?: PlayerCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutServersInput = {
@@ -37290,6 +38822,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     players?: PlayerUncheckedCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutServersInput = {
@@ -37346,6 +38879,9 @@ export namespace Prisma {
     backupType: string
     verifiedAt?: Date | string | null
     verifyError?: string | null
+    offsiteStatus?: string | null
+    offsiteError?: string | null
+    offsiteUploadedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -37359,6 +38895,9 @@ export namespace Prisma {
     backupType: string
     verifiedAt?: Date | string | null
     verifyError?: string | null
+    offsiteStatus?: string | null
+    offsiteError?: string | null
+    offsiteUploadedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -37663,6 +39202,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
     players?: PlayerUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutServersInput = {
@@ -37685,6 +39225,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type GameDefinitionUpsertWithoutServersInput = {
@@ -37762,6 +39303,9 @@ export namespace Prisma {
     backupType?: StringFilter<"Backup"> | string
     verifiedAt?: DateTimeNullableFilter<"Backup"> | Date | string | null
     verifyError?: StringNullableFilter<"Backup"> | string | null
+    offsiteStatus?: StringNullableFilter<"Backup"> | string | null
+    offsiteError?: StringNullableFilter<"Backup"> | string | null
+    offsiteUploadedAt?: DateTimeNullableFilter<"Backup"> | Date | string | null
     createdAt?: DateTimeFilter<"Backup"> | Date | string
   }
 
@@ -38686,6 +40230,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
     players?: PlayerCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutArchivesInput = {
@@ -38708,6 +40253,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     players?: PlayerUncheckedCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutArchivesInput = {
@@ -38746,6 +40292,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
     players?: PlayerUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutArchivesInput = {
@@ -38768,6 +40315,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutLogsInput = {
@@ -38790,6 +40338,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
     players?: PlayerCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutLogsInput = {
@@ -38812,6 +40361,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     players?: PlayerUncheckedCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutLogsInput = {
@@ -38850,6 +40400,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
     players?: PlayerUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutLogsInput = {
@@ -38872,6 +40423,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type ServerCreateWithoutBackupsInput = {
@@ -39086,6 +40638,114 @@ export namespace Prisma {
     telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
   }
 
+  export type UserCreateWithoutS3SettingInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name: string
+    discordId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: string
+    notifyDiscord?: boolean
+    notifyEmail?: boolean
+    notifyWebPush?: boolean
+    definitions?: GameDefinitionCreateNestedManyWithoutOwnerInput
+    subscription?: SubscriptionCreateNestedOneWithoutUserInput
+    servers?: ServerCreateNestedManyWithoutUserInput
+    archives?: ArchiveCreateNestedManyWithoutUserInput
+    logs?: ActivityLogCreateNestedManyWithoutUserInput
+    collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
+    templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
+    PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+    players?: PlayerCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutS3SettingInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name: string
+    discordId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: string
+    notifyDiscord?: boolean
+    notifyEmail?: boolean
+    notifyWebPush?: boolean
+    definitions?: GameDefinitionUncheckedCreateNestedManyWithoutOwnerInput
+    subscription?: SubscriptionUncheckedCreateNestedOneWithoutUserInput
+    servers?: ServerUncheckedCreateNestedManyWithoutUserInput
+    archives?: ArchiveUncheckedCreateNestedManyWithoutUserInput
+    logs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
+    collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
+    templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
+    PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    players?: PlayerUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutS3SettingInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutS3SettingInput, UserUncheckedCreateWithoutS3SettingInput>
+  }
+
+  export type UserUpsertWithoutS3SettingInput = {
+    update: XOR<UserUpdateWithoutS3SettingInput, UserUncheckedUpdateWithoutS3SettingInput>
+    create: XOR<UserCreateWithoutS3SettingInput, UserUncheckedCreateWithoutS3SettingInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutS3SettingInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutS3SettingInput, UserUncheckedUpdateWithoutS3SettingInput>
+  }
+
+  export type UserUpdateWithoutS3SettingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    notifyDiscord?: BoolFieldUpdateOperationsInput | boolean
+    notifyEmail?: BoolFieldUpdateOperationsInput | boolean
+    notifyWebPush?: BoolFieldUpdateOperationsInput | boolean
+    definitions?: GameDefinitionUpdateManyWithoutOwnerNestedInput
+    subscription?: SubscriptionUpdateOneWithoutUserNestedInput
+    servers?: ServerUpdateManyWithoutUserNestedInput
+    archives?: ArchiveUpdateManyWithoutUserNestedInput
+    logs?: ActivityLogUpdateManyWithoutUserNestedInput
+    collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
+    templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
+    PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    players?: PlayerUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutS3SettingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    discordId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    notifyDiscord?: BoolFieldUpdateOperationsInput | boolean
+    notifyEmail?: BoolFieldUpdateOperationsInput | boolean
+    notifyWebPush?: BoolFieldUpdateOperationsInput | boolean
+    definitions?: GameDefinitionUncheckedUpdateManyWithoutOwnerNestedInput
+    subscription?: SubscriptionUncheckedUpdateOneWithoutUserNestedInput
+    servers?: ServerUncheckedUpdateManyWithoutUserNestedInput
+    archives?: ArchiveUncheckedUpdateManyWithoutUserNestedInput
+    logs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
+    collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
+    templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
+    PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+  }
+
   export type ServerCreateWithoutCollaboratorsInput = {
     id?: string
     name: string
@@ -39209,6 +40869,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
     players?: PlayerCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCollaboratorAccessInput = {
@@ -39231,6 +40892,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     players?: PlayerUncheckedCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCollaboratorAccessInput = {
@@ -39378,6 +41040,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
     players?: PlayerUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCollaboratorAccessInput = {
@@ -39400,6 +41063,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutDefinitionsInput = {
@@ -39422,6 +41086,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
     players?: PlayerCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutDefinitionsInput = {
@@ -39444,6 +41109,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     players?: PlayerUncheckedCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutDefinitionsInput = {
@@ -39589,6 +41255,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
     players?: PlayerUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutDefinitionsInput = {
@@ -39611,6 +41278,7 @@ export namespace Prisma {
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type ServerUpsertWithWhereUniqueWithoutDefinitionInput = {
@@ -40954,6 +42622,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
     players?: PlayerCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutTemplateVotesInput = {
@@ -40976,6 +42645,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
     players?: PlayerUncheckedCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutTemplateVotesInput = {
@@ -41057,6 +42727,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
     players?: PlayerUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutTemplateVotesInput = {
@@ -41079,6 +42750,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
     players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutPushSubscriptionInput = {
@@ -41101,6 +42773,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     players?: PlayerCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPushSubscriptionInput = {
@@ -41123,6 +42796,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     players?: PlayerUncheckedCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPushSubscriptionInput = {
@@ -41161,6 +42835,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     players?: PlayerUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPushSubscriptionInput = {
@@ -41183,6 +42858,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     players?: PlayerUncheckedUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type UserCreateWithoutPlayersInput = {
@@ -41205,6 +42881,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingCreateNestedOneWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPlayersInput = {
@@ -41227,6 +42904,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedCreateNestedManyWithoutUserInput
     templateVotes?: TemplateVoteUncheckedCreateNestedManyWithoutUserInput
     PushSubscription?: PushSubscriptionUncheckedCreateNestedManyWithoutUserInput
+    s3Setting?: S3SettingUncheckedCreateNestedOneWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPlayersInput = {
@@ -41290,6 +42968,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUpdateOneWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPlayersInput = {
@@ -41312,6 +42991,7 @@ export namespace Prisma {
     collaboratorAccess?: CollaboratorUncheckedUpdateManyWithoutUserNestedInput
     templateVotes?: TemplateVoteUncheckedUpdateManyWithoutUserNestedInput
     PushSubscription?: PushSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+    s3Setting?: S3SettingUncheckedUpdateOneWithoutUserNestedInput
   }
 
   export type PlayerServerAccessUpsertWithWhereUniqueWithoutPlayerInput = {
@@ -42096,6 +43776,9 @@ export namespace Prisma {
     backupType: string
     verifiedAt?: Date | string | null
     verifyError?: string | null
+    offsiteStatus?: string | null
+    offsiteError?: string | null
+    offsiteUploadedAt?: Date | string | null
     createdAt?: Date | string
   }
 
@@ -42182,6 +43865,9 @@ export namespace Prisma {
     backupType?: StringFieldUpdateOperationsInput | string
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifyError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteUploadedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -42195,6 +43881,9 @@ export namespace Prisma {
     backupType?: StringFieldUpdateOperationsInput | string
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifyError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteUploadedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -42208,6 +43897,9 @@ export namespace Prisma {
     backupType?: StringFieldUpdateOperationsInput | string
     verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     verifyError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteError?: NullableStringFieldUpdateOperationsInput | string | null
+    offsiteUploadedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -42829,6 +44521,10 @@ export namespace Prisma {
      * @deprecated Use BackupDefaultArgs instead
      */
     export type BackupArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = BackupDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use S3SettingDefaultArgs instead
+     */
+    export type S3SettingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = S3SettingDefaultArgs<ExtArgs>
     /**
      * @deprecated Use CollaboratorDefaultArgs instead
      */

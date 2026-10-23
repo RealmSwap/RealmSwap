@@ -23,7 +23,4 @@ export class DigitalOceanProvider implements HostingProvider {
   async getRegions() { return ["North America", "Europe", "Asia", "Australia"]; }
   async getLatencyEstimate(region: string) { return 30; }
   async getFeatures() { return ["Scalable Droplets", "VPC Networking", "API Access", "Block Storage"]; }
-  async migrateRealm(serverId: string, planId: string) {
-    return { success: true, estimatedDowntimeMinutes: 15, instructions: "Requires OS provisioning." };
-  }
 }

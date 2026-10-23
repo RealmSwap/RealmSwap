@@ -258,7 +258,23 @@ exports.Prisma.BackupScalarFieldEnum = {
   backupType: 'backupType',
   verifiedAt: 'verifiedAt',
   verifyError: 'verifyError',
+  offsiteStatus: 'offsiteStatus',
+  offsiteError: 'offsiteError',
+  offsiteUploadedAt: 'offsiteUploadedAt',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.S3SettingScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  endpoint: 'endpoint',
+  region: 'region',
+  bucket: 'bucket',
+  accessKey: 'accessKey',
+  secretKey: 'secretKey',
+  enabled: 'enabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.CollaboratorScalarFieldEnum = {
@@ -446,6 +462,7 @@ exports.Prisma.ModelName = {
   Archive: 'Archive',
   ActivityLog: 'ActivityLog',
   Backup: 'Backup',
+  S3Setting: 'S3Setting',
   Collaborator: 'Collaborator',
   GameDefinition: 'GameDefinition',
   ModInstallation: 'ModInstallation',

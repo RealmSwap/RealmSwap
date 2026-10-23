@@ -5,7 +5,7 @@ import { prisma } from "./db";
 import { dataRoot } from "./appPaths";
 import { getSavePath as resolveSavePath } from "./backupPaths";
 import { verifyBackupFile } from "./backupVerify";
-import { cloudSync } from "./cloudSync";
+import { startOffsiteUpload } from "./offsiteBackup";
 import { safeJoin } from "./safePath";
 import { swapDirIntoPlace, withServerLock } from "./atomicFs";
 import { reconcileInstalledMods } from "./mods/reconcile";
@@ -166,10 +166,10 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
         console.error(`Backup retention prune failed for ${serverId}:`, pruneErr?.message);
       }
 
-      // Asynchronously upload to S3 if configured
-      cloudSync.uploadSnapshot(serverId, zipPath).catch(err => {
-        console.error(`Failed to upload snapshot to S3: ${err.message}`);
-      });
+      // Offsite replication runs in the background and records its outcome on
+      // the backup row (offsiteStatus) — and notifies the owner on failure, so
+      // a broken upload never masquerades as a completed offsite copy.
+      startOffsiteUpload(finalBackup.id, serverId, server.userId, zipPath, server.name);
 
       return finalBackup;
     } catch (err: any) {
@@ -272,8 +272,10 @@ function overlayValheimFiles(stagingDir: string, destDir: string): void {
   }
 }
 
-// Restore a local server backup snapshot
-export async function restoreBackup(backupId: string): Promise<void> {
+// Restore a local server backup snapshot. `sourcePath` overrides the row's
+// local file — used when restoring from the offsite copy after the local file
+// is gone (the whole point of offsite backups).
+export async function restoreBackup(backupId: string, sourcePath?: string): Promise<void> {
   const backup = await prisma.backup.findUnique({
     where: { id: backupId },
     include: { server: true }
@@ -288,13 +290,15 @@ export async function restoreBackup(backupId: string): Promise<void> {
     throw new Error("Please stop the server before restoring a snapshot to avoid save data corruption.");
   }
 
-  if (!fs.existsSync(backup.filePath)) {
-    throw new Error(`Backup zip file was not found on disk at: ${backup.filePath}`);
+  const localPath = sourcePath ?? backup.filePath;
+
+  if (!fs.existsSync(localPath)) {
+    throw new Error(`Backup zip file was not found on disk at: ${backup.filePath}${backup.offsiteStatus === "UPLOADED" ? " — an offsite copy exists and can be restored instead." : ""}`);
   }
 
   // A restore that dies mid-extract must never take the live world with it,
   // so the archive is proven restorable BEFORE the live directory is touched.
-  const verification = verifyBackupFile(backup.filePath, backup.game);
+  const verification = verifyBackupFile(localPath, backup.game);
   if (!verification.ok) {
     throw new Error(
       `Backup archive failed verification (${verification.error ?? "unknown error"}). Restore refused — the current world was not modified. Re-verify or delete this backup.`
@@ -310,7 +314,7 @@ export async function restoreBackup(backupId: string): Promise<void> {
     try {
       // Extract into staging first: a corrupt archive or full disk fails
       // here with the live world still intact.
-      const zip = new AdmZip(backup.filePath);
+      const zip = new AdmZip(localPath);
       zip.extractAllTo(stagingDir, true);
 
       if (backup.game.toUpperCase() === "VALHEIM") {
@@ -329,7 +333,7 @@ export async function restoreBackup(backupId: string): Promise<void> {
       userId: backup.userId,
       serverId: backup.serverId,
       action: "RESTORE_SERVER",
-      details: `Restored local backup '${backup.name}' to server '${backup.server.name}'.`
+      details: `Restored ${sourcePath ? "the offsite copy of " : ""}backup '${backup.name}' to server '${backup.server.name}'.`
     }
   });
 

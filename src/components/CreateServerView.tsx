@@ -34,13 +34,6 @@ interface CreateServerViewProps {
   user: any;
 }
 
-const REGIONS = [
-  { id: "US_EAST", name: "US East (N. Virginia)", ping: "15ms", load: "Light" },
-  { id: "US_WEST", name: "US West (Oregon)", ping: "42ms", load: "Normal" },
-  { id: "EU_CENTRAL", name: "EU Central (Frankfurt)", ping: "85ms", load: "Light" },
-  { id: "ASIA", name: "Asia Pacific (Singapore)", ping: "148ms", load: "Heavy" }
-];
-
 export default function CreateServerView({ user }: CreateServerViewProps) {
   const router = useRouter();
 

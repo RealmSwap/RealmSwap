@@ -25,5 +25,4 @@ export interface HostingProvider {
   getRegions(): Promise<string[]>; // e.g. ["North America", "Europe"]
   getLatencyEstimate(userRegion: string): Promise<number>; // ms
   getFeatures(): Promise<string[]>; // e.g. ["Automatic Backups", "DDoS Protection"]
-  migrateRealm(serverId: string, planId: string): Promise<{ success: boolean; estimatedDowntimeMinutes: number; instructions?: string }>;
 }

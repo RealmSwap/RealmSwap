@@ -58,7 +58,7 @@ export async function POST(
           name: archive.serverName,
           game: archive.game,
           ramAllocation,
-          region: "US_EAST", // Default restored region
+          region: "LOCALHOST",
           status: "STOPPED", // Starts stopped so users can toggle it
           runnerType,
           ipAddress,
