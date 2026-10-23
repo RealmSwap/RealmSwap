@@ -226,6 +226,7 @@ model ModInstallation {
   version      String
   name         String
   dependencies String? // JSON array of required packageIds
+  workshopModId String? // Zomboid: the mod ID written to Mods= in servertest.ini (packageId is the Workshop ID)
   installedAt  DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -47,8 +47,14 @@ export async function fetchVersions(idOrSlug: string): Promise<ModrinthVersion[]
 /** Pick the newest version compatible with the server's game version and loader (null matchers accept anything). */
 export function pickCompatibleVersion(
   versions: ModrinthVersion[],
-  opts: { gameVersion?: string | null; loader?: string | null } = {}
+  opts: { gameVersion?: string | null; loader?: string | null; versionNumber?: string | null } = {}
 ): ModrinthVersion | null {
+  // An exact pinned version wins outright — it was exported from a working
+  // server, so it is trusted over the compatibility guesswork below.
+  if (opts.versionNumber) {
+    const pinned = versions.find((v) => v.version_number === opts.versionNumber);
+    if (pinned) return pinned;
+  }
   for (const v of versions) {
     if (opts.gameVersion && v.game_versions.length > 0 && !v.game_versions.includes(opts.gameVersion)) continue;
     if (opts.loader && v.loaders.length > 0 && !v.loaders.includes(opts.loader)) continue;
@@ -109,13 +115,13 @@ export function collectRequiredDependencies(
 /** Fetch latest versions and resolve a project to the best install candidate. */
 export async function resolveInstallCandidate(
   idOrSlug: string,
-  opts: { gameVersion?: string | null; loader?: string | null } = {}
+  opts: { gameVersion?: string | null; loader?: string | null; versionNumber?: string | null } = {}
 ): Promise<{ project: ModrinthProject; version: ModrinthVersion; file: ModrinthVersionFile }> {
   const [project, versions] = await Promise.all([fetchProject(idOrSlug), fetchVersions(idOrSlug)]);
   const version = pickCompatibleVersion(versions, opts);
   if (!version) {
     throw new Error(
-      `No version of ${project.title} matches${opts.gameVersion ? ` Minecraft ${opts.gameVersion}` : ""}${opts.loader ? ` (${opts.loader})` : ""}.`
+      `No version of ${project.title} matches${opts.versionNumber ? ` ${opts.versionNumber}` : ""}${opts.gameVersion ? ` (Minecraft ${opts.gameVersion})` : ""}${opts.loader ? ` (${opts.loader})` : ""}.`
     );
   }
   const file = primaryFile(version);

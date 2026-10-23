@@ -15919,6 +15919,7 @@ export namespace Prisma {
     version: string | null
     name: string | null
     dependencies: string | null
+    workshopModId: string | null
     installedAt: Date | null
     updatedAt: Date | null
   }
@@ -15931,6 +15932,7 @@ export namespace Prisma {
     version: string | null
     name: string | null
     dependencies: string | null
+    workshopModId: string | null
     installedAt: Date | null
     updatedAt: Date | null
   }
@@ -15943,6 +15945,7 @@ export namespace Prisma {
     version: number
     name: number
     dependencies: number
+    workshopModId: number
     installedAt: number
     updatedAt: number
     _all: number
@@ -15957,6 +15960,7 @@ export namespace Prisma {
     version?: true
     name?: true
     dependencies?: true
+    workshopModId?: true
     installedAt?: true
     updatedAt?: true
   }
@@ -15969,6 +15973,7 @@ export namespace Prisma {
     version?: true
     name?: true
     dependencies?: true
+    workshopModId?: true
     installedAt?: true
     updatedAt?: true
   }
@@ -15981,6 +15986,7 @@ export namespace Prisma {
     version?: true
     name?: true
     dependencies?: true
+    workshopModId?: true
     installedAt?: true
     updatedAt?: true
     _all?: true
@@ -16066,6 +16072,7 @@ export namespace Prisma {
     version: string
     name: string
     dependencies: string | null
+    workshopModId: string | null
     installedAt: Date
     updatedAt: Date
     _count: ModInstallationCountAggregateOutputType | null
@@ -16095,6 +16102,7 @@ export namespace Prisma {
     version?: boolean
     name?: boolean
     dependencies?: boolean
+    workshopModId?: boolean
     installedAt?: boolean
     updatedAt?: boolean
     server?: boolean | ServerDefaultArgs<ExtArgs>
@@ -16108,6 +16116,7 @@ export namespace Prisma {
     version?: boolean
     name?: boolean
     dependencies?: boolean
+    workshopModId?: boolean
     installedAt?: boolean
     updatedAt?: boolean
     server?: boolean | ServerDefaultArgs<ExtArgs>
@@ -16121,6 +16130,7 @@ export namespace Prisma {
     version?: boolean
     name?: boolean
     dependencies?: boolean
+    workshopModId?: boolean
     installedAt?: boolean
     updatedAt?: boolean
   }
@@ -16145,6 +16155,7 @@ export namespace Prisma {
       version: string
       name: string
       dependencies: string | null
+      workshopModId: string | null
       installedAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["modInstallation"]>
@@ -16548,6 +16559,7 @@ export namespace Prisma {
     readonly version: FieldRef<"ModInstallation", 'String'>
     readonly name: FieldRef<"ModInstallation", 'String'>
     readonly dependencies: FieldRef<"ModInstallation", 'String'>
+    readonly workshopModId: FieldRef<"ModInstallation", 'String'>
     readonly installedAt: FieldRef<"ModInstallation", 'DateTime'>
     readonly updatedAt: FieldRef<"ModInstallation", 'DateTime'>
   }
@@ -28837,6 +28849,7 @@ export namespace Prisma {
     version: 'version',
     name: 'name',
     dependencies: 'dependencies',
+    workshopModId: 'workshopModId',
     installedAt: 'installedAt',
     updatedAt: 'updatedAt'
   };
@@ -30140,6 +30153,7 @@ export namespace Prisma {
     version?: StringFilter<"ModInstallation"> | string
     name?: StringFilter<"ModInstallation"> | string
     dependencies?: StringNullableFilter<"ModInstallation"> | string | null
+    workshopModId?: StringNullableFilter<"ModInstallation"> | string | null
     installedAt?: DateTimeFilter<"ModInstallation"> | Date | string
     updatedAt?: DateTimeFilter<"ModInstallation"> | Date | string
     server?: XOR<ServerRelationFilter, ServerWhereInput>
@@ -30153,6 +30167,7 @@ export namespace Prisma {
     version?: SortOrder
     name?: SortOrder
     dependencies?: SortOrderInput | SortOrder
+    workshopModId?: SortOrderInput | SortOrder
     installedAt?: SortOrder
     updatedAt?: SortOrder
     server?: ServerOrderByWithRelationInput
@@ -30170,6 +30185,7 @@ export namespace Prisma {
     version?: StringFilter<"ModInstallation"> | string
     name?: StringFilter<"ModInstallation"> | string
     dependencies?: StringNullableFilter<"ModInstallation"> | string | null
+    workshopModId?: StringNullableFilter<"ModInstallation"> | string | null
     installedAt?: DateTimeFilter<"ModInstallation"> | Date | string
     updatedAt?: DateTimeFilter<"ModInstallation"> | Date | string
     server?: XOR<ServerRelationFilter, ServerWhereInput>
@@ -30183,6 +30199,7 @@ export namespace Prisma {
     version?: SortOrder
     name?: SortOrder
     dependencies?: SortOrderInput | SortOrder
+    workshopModId?: SortOrderInput | SortOrder
     installedAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ModInstallationCountOrderByAggregateInput
@@ -30201,6 +30218,7 @@ export namespace Prisma {
     version?: StringWithAggregatesFilter<"ModInstallation"> | string
     name?: StringWithAggregatesFilter<"ModInstallation"> | string
     dependencies?: StringNullableWithAggregatesFilter<"ModInstallation"> | string | null
+    workshopModId?: StringNullableWithAggregatesFilter<"ModInstallation"> | string | null
     installedAt?: DateTimeWithAggregatesFilter<"ModInstallation"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ModInstallation"> | Date | string
   }
@@ -32244,6 +32262,7 @@ export namespace Prisma {
     version: string
     name: string
     dependencies?: string | null
+    workshopModId?: string | null
     installedAt?: Date | string
     updatedAt?: Date | string
     server: ServerCreateNestedOneWithoutModsInput
@@ -32257,6 +32276,7 @@ export namespace Prisma {
     version: string
     name: string
     dependencies?: string | null
+    workshopModId?: string | null
     installedAt?: Date | string
     updatedAt?: Date | string
   }
@@ -32268,6 +32288,7 @@ export namespace Prisma {
     version?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    workshopModId?: NullableStringFieldUpdateOperationsInput | string | null
     installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     server?: ServerUpdateOneRequiredWithoutModsNestedInput
@@ -32281,6 +32302,7 @@ export namespace Prisma {
     version?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    workshopModId?: NullableStringFieldUpdateOperationsInput | string | null
     installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -32293,6 +32315,7 @@ export namespace Prisma {
     version: string
     name: string
     dependencies?: string | null
+    workshopModId?: string | null
     installedAt?: Date | string
     updatedAt?: Date | string
   }
@@ -32304,6 +32327,7 @@ export namespace Prisma {
     version?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    workshopModId?: NullableStringFieldUpdateOperationsInput | string | null
     installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -32316,6 +32340,7 @@ export namespace Prisma {
     version?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    workshopModId?: NullableStringFieldUpdateOperationsInput | string | null
     installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -34185,6 +34210,7 @@ export namespace Prisma {
     version?: SortOrder
     name?: SortOrder
     dependencies?: SortOrder
+    workshopModId?: SortOrder
     installedAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -34197,6 +34223,7 @@ export namespace Prisma {
     version?: SortOrder
     name?: SortOrder
     dependencies?: SortOrder
+    workshopModId?: SortOrder
     installedAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -34209,6 +34236,7 @@ export namespace Prisma {
     version?: SortOrder
     name?: SortOrder
     dependencies?: SortOrder
+    workshopModId?: SortOrder
     installedAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -37206,6 +37234,7 @@ export namespace Prisma {
     version: string
     name: string
     dependencies?: string | null
+    workshopModId?: string | null
     installedAt?: Date | string
     updatedAt?: Date | string
   }
@@ -37217,6 +37246,7 @@ export namespace Prisma {
     version: string
     name: string
     dependencies?: string | null
+    workshopModId?: string | null
     installedAt?: Date | string
     updatedAt?: Date | string
   }
@@ -37611,6 +37641,7 @@ export namespace Prisma {
     version?: StringFilter<"ModInstallation"> | string
     name?: StringFilter<"ModInstallation"> | string
     dependencies?: StringNullableFilter<"ModInstallation"> | string | null
+    workshopModId?: StringNullableFilter<"ModInstallation"> | string | null
     installedAt?: DateTimeFilter<"ModInstallation"> | Date | string
     updatedAt?: DateTimeFilter<"ModInstallation"> | Date | string
   }
@@ -41769,6 +41800,7 @@ export namespace Prisma {
     version: string
     name: string
     dependencies?: string | null
+    workshopModId?: string | null
     installedAt?: Date | string
     updatedAt?: Date | string
   }
@@ -41894,6 +41926,7 @@ export namespace Prisma {
     version?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    workshopModId?: NullableStringFieldUpdateOperationsInput | string | null
     installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -41905,6 +41938,7 @@ export namespace Prisma {
     version?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    workshopModId?: NullableStringFieldUpdateOperationsInput | string | null
     installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -41916,6 +41950,7 @@ export namespace Prisma {
     version?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     dependencies?: NullableStringFieldUpdateOperationsInput | string | null
+    workshopModId?: NullableStringFieldUpdateOperationsInput | string | null
     installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

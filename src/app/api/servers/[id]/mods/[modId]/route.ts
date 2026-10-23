@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import fs from "fs";
 import path from "path";
 import { dataRoot } from "@/lib/appPaths";
+import { removeZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
 
 export async function DELETE(
   req: NextRequest,
@@ -63,29 +64,13 @@ export async function DELETE(
         fs.unlinkSync(jarPath);
       }
     } else if (game === "ZOMBOID") {
-      const serverConfigDir = path.join(dataRoot(), "local-servers", serverId, "zomboid-server", "zomboid-data", "Server");
-      const iniPath = path.join(serverConfigDir, "servertest.ini");
-      if (fs.existsSync(iniPath)) {
-        let iniContent = fs.readFileSync(iniPath, "utf-8");
-        
-        // Remove from WorkshopItems
-        const workshopRegex = /^WorkshopItems=(.*)$/m;
-        const workshopMatch = iniContent.match(workshopRegex);
-        if (workshopMatch) {
-          const items = workshopMatch[1].split(";").filter(x => x.trim() !== "" && x.trim() !== modId);
-          iniContent = iniContent.replace(workshopRegex, `WorkshopItems=${items.join(";")}`);
-        }
-        
-        // Remove from Mods
-        const modsRegex = /^Mods=(.*)$/m;
-        const modsMatch = iniContent.match(modsRegex);
-        if (modsMatch) {
-          const mods = modsMatch[1].split(";").filter(x => x.trim() !== "" && x.trim() !== modId);
-          iniContent = iniContent.replace(modsRegex, `Mods=${mods.join(";")}`);
-        }
-        
-        fs.writeFileSync(iniPath, iniContent);
-      }
+      // packageId is the Workshop ID (WorkshopItems=); the ini mod ID for
+      // Mods= is stored on the row — the two id spaces are unrelated.
+      removeZomboidWorkshopMod(
+        zomboidServerIniPath(path.join(dataRoot(), "local-servers", serverId)),
+        installation.packageId,
+        installation.workshopModId ?? null
+      );
     }
 
     // Delete record
