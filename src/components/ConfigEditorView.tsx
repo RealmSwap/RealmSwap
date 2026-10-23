@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import DefinitionParamFields from "@/components/DefinitionParamFields";
+import { computeNextRunAt } from "@/lib/automations/schedule";
 import { gameIcon as getGameIcon } from "@/lib/gameDisplay";
 import { toast } from "sonner";
 
@@ -605,6 +606,18 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                                   </option>
                                 ))}
                               </select>
+                            </div>
+                          )}
+                          {selectedServer.autoUpdate && selectedServer.game !== "MINECRAFT" && (
+                            <div className="text-[11px] text-slate-500 mt-2">
+                              {selectedServer.lastAutoUpdateAt
+                                ? <>Last check: <span className="text-slate-400">{new Date(selectedServer.lastAutoUpdateAt).toLocaleString()}</span></>
+                                : "Never checked yet"}
+                              {" · "}
+                              Next window (while stopped):{" "}
+                              <span className="text-slate-400">
+                                {computeNextRunAt("DAILY", { timeOfDay: `${String(selectedServer.autoUpdateHour ?? 4).padStart(2, "0")}:00` })?.toLocaleString() ?? "—"}
+                              </span>
                             </div>
                           )}
                         </div>

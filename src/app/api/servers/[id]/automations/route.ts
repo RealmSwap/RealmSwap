@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
-import { z } from "zod";
-import parser from "cron-parser";
+import { computeNextRunAt } from "@/lib/automations/schedule";
+import { automationCreateSchema } from "@/lib/automations/schemas";
+import { TriggerConfig, TriggerType } from "@/lib/automations/types";
 
 // GET /api/servers/[id]/automations
 export async function GET(
@@ -24,7 +25,7 @@ export async function GET(
         conditions: true,
         executions: {
           orderBy: { startedAt: "desc" },
-          take: 5
+          take: 10
         }
       },
       orderBy: { createdAt: "desc" },
@@ -48,38 +49,24 @@ export async function POST(
     const access = await verifyServerAccess(params.id, user.id, "ADMIN");
     if (!access) return NextResponse.json({ error: "Requires ADMIN role" }, { status: 403 });
 
-    const automationSchema = z.object({
-      name: z.string().min(1, "Name is required"),
-      enabled: z.boolean().default(true),
-      triggerType: z.enum(["CRON", "ONE_TIME", "SERVER_CRASH", "DAILY"]),
-      triggerConfig: z.any().optional(),
-      actions: z.array(z.object({
-        type: z.string(),
-        config: z.any().optional()
-      })).min(1, "At least one action is required"),
-      conditions: z.array(z.object({
-        type: z.string(),
-        operator: z.string(),
-        value: z.string()
-      })).optional()
-    });
-
     const body = await req.json();
-    const parsed = automationSchema.safeParse(body);
+    const parsed = automationCreateSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid payload", details: parsed.error.format() }, { status: 400 });
+      return NextResponse.json({
+        error: `Invalid payload: ${parsed.error.issues[0]?.message ?? "check field values"}`,
+        details: parsed.error.format(),
+      }, { status: 400 });
     }
 
     const { name, enabled, triggerType, triggerConfig, actions, conditions } = parsed.data;
 
-    let nextRunAt: Date | undefined;
-    if (triggerType === "CRON" && triggerConfig && triggerConfig.expression) {
-      try {
-        const interval = parser.parse(triggerConfig.expression);
-        nextRunAt = interval.next().toDate();
-      } catch (err) {
-        return NextResponse.json({ error: "Invalid cron expression" }, { status: 400 });
-      }
+    // Every scheduled type gets a real nextRunAt or the save is rejected —
+    // a schedule the engine can't honor must never be stored silently.
+    let nextRunAt: Date | null = null;
+    try {
+      nextRunAt = computeNextRunAt(triggerType as TriggerType, (triggerConfig ?? {}) as TriggerConfig);
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message || "Invalid trigger configuration" }, { status: 400 });
     }
 
     const automation = await prisma.automation.create({

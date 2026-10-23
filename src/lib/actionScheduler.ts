@@ -1,7 +1,7 @@
 import { prisma } from "./db";
-import parser from "cron-parser";
 import { ActionRegistry } from "./automations/registry";
-import { AutomationContext, TriggerConfig } from "./automations/types";
+import { AutomationContext, TriggerConfig, TriggerType } from "./automations/types";
+import { computeNextRunAt } from "./automations/schedule";
 import { Automation, AutomationExecution } from "@/generated/client";
 import { startSFTPServer } from "./sftpServer";
 
@@ -137,25 +137,40 @@ export async function executeAutomation(automationId: string) {
     });
   }
 
-  // Update last run time and calculate next run time
+  // Update last run time and advance the schedule. Event triggers keep a null
+  // nextRunAt (nothing on the calendar); a fired ONE_TIME automation switches
+  // itself off so it can't silently sit "ready" forever.
   let newNextRunAt: Date | null = null;
-  if (automation.triggerType === "CRON" && automation.triggerConfig) {
-    try {
-      const config = JSON.parse(automation.triggerConfig);
-      if (config.expression) {
-        const interval = parser.parse(config.expression);
-        newNextRunAt = interval.next().toDate();
-      }
-    } catch(e) {}
-  }
+  try {
+    const config = automation.triggerConfig ? JSON.parse(automation.triggerConfig) : {};
+    newNextRunAt = computeNextRunAt(automation.triggerType as TriggerType, config);
+  } catch (e) {}
 
   await prisma.automation.update({
     where: { id: automation.id },
-    data: { 
+    data: {
       lastRunAt: new Date(),
-      nextRunAt: newNextRunAt 
+      nextRunAt: newNextRunAt,
+      ...(automation.triggerType === "ONE_TIME" ? { enabled: false } : {}),
     }
   });
+}
+
+/**
+ * Fired from the runner when a server is finally declared CRASHED (auto-
+ * restart retries exhausted, or the auto-restart itself failed). Conditions
+ * are still evaluated per execution, exactly like scheduled runs.
+ */
+export async function fireServerCrashAutomations(serverId: string) {
+  const automations = await prisma.automation.findMany({
+    where: { serverId, enabled: true, triggerType: "SERVER_CRASH" },
+  });
+  for (const automation of automations) {
+    console.log(`[Automation Engine] Firing crash-triggered automation '${automation.name}'`);
+    executeAutomation(automation.id).catch(e =>
+      console.error(`[Automation Engine] Crash-triggered execution failed for ${automation.name}:`, e)
+    );
+  }
 }
 
 // Check and execute scheduled automations

@@ -208,6 +208,10 @@ export class DockerRunner implements ServerRunner {
           } catch (e: any) {
             appendLog(serverId, `[Crash Detection] Auto-restart failed: ${e.message}`);
             await setStatus(serverId, "CRASHED", { pid: null });
+            // Dynamic import — actionScheduler pulls the runner chain via the action registry.
+            import("../actionScheduler").then(({ fireServerCrashAutomations }) =>
+              fireServerCrashAutomations(serverId)
+            ).catch(err => console.error("Failed to fire crash automations:", err));
             import("../notifications").then(({ sendNotification }) => {
               sendNotification(
                 rec.userId,
@@ -222,6 +226,10 @@ export class DockerRunner implements ServerRunner {
       }
       appendLog(serverId, `[Crash Detection] Max retries (${CRASH_MAX_RETRIES}) exhausted. Marking server as CRASHED.`);
       await setStatus(serverId, "CRASHED", { pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 });
+      // Dynamic import — actionScheduler pulls the runner chain via the action registry.
+      import("../actionScheduler").then(({ fireServerCrashAutomations }) =>
+        fireServerCrashAutomations(serverId)
+      ).catch(err => console.error("Failed to fire crash automations:", err));
       return; // notification already sent in the shared crash-alert block above
     }
 
