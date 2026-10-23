@@ -56,6 +56,17 @@ function resolveDeepLinkUrl(deepLinkArg) {
     // Return from Stripe Checkout / Customer Portal.
     return `${base}/dashboard/billing?checkout=success`;
   }
+  if (deepLinkArg && deepLinkArg.includes("auth-callback")) {
+    // Supabase email actions (password reset). The recovery link redirects to
+    // realmsync://auth-callback?code=…; pass the query through to the in-app
+    // PKCE exchange route.
+    try {
+      const search = new URL(deepLinkArg).search;
+      return `${base}/auth/callback${search}`;
+    } catch (_) {
+      return `${base}/auth/callback`;
+    }
+  }
   if (deepLinkArg) {
     // RealmSync invite links and other deep links go through /start.
     return `${base}/start?link=${encodeURIComponent(deepLinkArg)}`;

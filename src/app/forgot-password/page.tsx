@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
             Reset Password
           </h2>
           <p className="text-xs text-mutedText mb-6 text-center leading-relaxed">
-            Enter your registered email address below. We'll simulate sending a reset link and reconfigure your password.
+            Enter your registered email address below and we'll send you a secure link to set a new password.
           </p>
 
           {error && (

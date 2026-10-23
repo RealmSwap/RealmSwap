@@ -34,8 +34,4 @@ export class HetznerProvider implements HostingProvider {
   }
 
   async getFeatures() { return ["NVMe Storage", "Full Root Access", "DDoS Protection", "Instant Provisioning"]; }
-
-  async migrateRealm(serverId: string, planId: string) {
-    return { success: true, estimatedDowntimeMinutes: 12, instructions: "Hetzner requires manual OS setup. RealmSwap will attempt to provision a Debian 12 server via API." };
-  }
 }

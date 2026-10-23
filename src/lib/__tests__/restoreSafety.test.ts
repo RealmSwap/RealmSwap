@@ -16,6 +16,7 @@ const bag = vi.hoisted(() => ({
   dataRoot: "",
   backupRow: null as any,
   snapshotRow: null as any,
+  offsiteCalls: [] as any[][],
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -57,8 +58,10 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 vi.mock("@/lib/appPaths", () => ({ dataRoot: () => bag.dataRoot }));
-vi.mock("@/lib/cloudSync", () => ({
-  cloudSync: { uploadSnapshot: async () => {} },
+vi.mock("@/lib/offsiteBackup", () => ({
+  startOffsiteUpload: (...args: any[]) => {
+    bag.offsiteCalls.push(args);
+  },
 }));
 vi.mock("@/lib/mods/reconcile", () => ({
   reconcileInstalledMods: async () => {},
@@ -87,6 +90,7 @@ beforeEach(() => {
   fs.writeFileSync(path.join(worldDir, "players.json"), "[]");
   bag.backupRow = null;
   bag.snapshotRow = null;
+  bag.offsiteCalls = [];
 });
 
 function makeZip(name: string, files: Record<string, string>): string {
@@ -183,6 +187,17 @@ describe("createBackup -> restoreBackup round trip", () => {
     bag.backupRow = { ...backup, server: { id: "s1", status: "STOPPED", name: "S1" } };
     await restoreBackup(backup.id);
     expectWorldIntact();
+  });
+
+  it("hands every completed snapshot to the offsite uploader with its owner context", async () => {
+    const backup = await createBackup("s1", "MANUAL");
+    expect(bag.offsiteCalls.length).toBe(1);
+    const [backupId, serverId, ownerUserId, zipPath, serverName] = bag.offsiteCalls[0];
+    expect(backupId).toBe(backup.id);
+    expect(serverId).toBe("s1");
+    expect(ownerUserId).toBe("user1");
+    expect(zipPath).toBe(backup.filePath);
+    expect(serverName).toBe("S1");
   });
 });
 

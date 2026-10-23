@@ -23,7 +23,4 @@ export class BisectProvider implements HostingProvider {
   async getRegions() { return ["North America", "Europe", "Asia", "Australia", "South America"]; }
   async getLatencyEstimate(region: string) { return 20; }
   async getFeatures() { return ["20+ Locations", "DDoS Protection", "Free Modpack Updates", "Daily Backups"]; }
-  async migrateRealm(serverId: string, planId: string) {
-    return { success: true, estimatedDowntimeMinutes: 5, instructions: "Fully automated transfer." };
-  }
 }

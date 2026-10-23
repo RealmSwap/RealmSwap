@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import fs from "fs";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createBackup } from "@/lib/backupService";
@@ -28,7 +29,11 @@ export async function GET(
       orderBy: { createdAt: "desc" }
     });
 
-    return NextResponse.json(backups);
+    // fileAvailable lets the UI distinguish "restorable from local disk" from
+    // "only the offsite copy remains" without exposing server paths.
+    return NextResponse.json(
+      backups.map((b) => ({ ...b, fileAvailable: fs.existsSync(b.filePath) }))
+    );
   } catch (error: any) {
     console.error("GET /api/servers/[id]/backups error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });

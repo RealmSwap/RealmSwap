@@ -89,3 +89,6 @@ export function decryptSecret(value: string | null | undefined): string | null {
 
 /** The Server fields managed by the transparent Prisma-boundary encryption. */
 export const SERVER_SECRET_FIELDS = ["password", "rconPassword", "sftpPassword"] as const;
+
+/** The S3Setting fields managed by the same transparent encryption. */
+export const S3_SECRET_FIELDS = ["accessKey", "secretKey"] as const;

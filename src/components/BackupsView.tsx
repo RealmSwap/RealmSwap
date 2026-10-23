@@ -23,6 +23,7 @@ import {
   Settings,
   ShieldAlert,
   Terminal,
+  CloudUpload,
 } from "lucide-react";
 import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import { useModal } from "@/components/ModalProvider";
@@ -53,6 +54,14 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const { showModal } = useModal();
 
+  // Offsite (S3) settings — ADMIN-only. Blank credential inputs mean "keep saved".
+  const isAdmin = user?.role === "ADMIN";
+  const [s3Form, setS3Form] = useState({ endpoint: "", region: "us-east-1", bucket: "", accessKey: "", secretKey: "", enabled: true });
+  const [s3Configured, setS3Configured] = useState(false);
+  const [s3Loading, setS3Loading] = useState(false);
+  const [s3Saving, setS3Saving] = useState(false);
+  const [s3Testing, setS3Testing] = useState(false);
+
   // Fetch backups for the selected server
   const loadBackups = async (serverId: string) => {
     try {
@@ -77,6 +86,86 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
       setSuccess(null);
     }
   }, [selectedServer]);
+
+  // Load saved offsite settings once for ADMINs (secrets are never returned —
+  // credential inputs stay blank and mean "keep the saved value").
+  useEffect(() => {
+    if (!isAdmin) return;
+    setS3Loading(true);
+    fetch("/api/user/s3-settings")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        setS3Configured(!!data.configured);
+        setS3Form((f) => ({
+          ...f,
+          endpoint: data.endpoint || "",
+          region: data.region || "us-east-1",
+          bucket: data.bucket || "",
+          enabled: data.enabled !== false,
+        }));
+      })
+      .catch(() => {})
+      .finally(() => setS3Loading(false));
+  }, [isAdmin]);
+
+  // Save offsite settings
+  const handleSaveS3 = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setS3Saving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch("/api/user/s3-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          endpoint: s3Form.endpoint.trim() || null,
+          region: s3Form.region.trim() || "us-east-1",
+          bucket: s3Form.bucket.trim(),
+          accessKey: s3Form.accessKey.trim() || undefined,
+          secretKey: s3Form.secretKey.trim() || undefined,
+          enabled: s3Form.enabled,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save cloud settings");
+      setSuccess(data.message || "Cloud settings saved.");
+      setS3Configured(true);
+      setS3Form((f) => ({ ...f, accessKey: "", secretKey: "" }));
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setS3Saving(false);
+    }
+  };
+
+  // Test offsite credentials against the bucket without saving
+  const handleTestS3 = async () => {
+    setS3Testing(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch("/api/user/s3-settings/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          endpoint: s3Form.endpoint.trim() || null,
+          region: s3Form.region.trim() || "us-east-1",
+          bucket: s3Form.bucket.trim(),
+          accessKey: s3Form.accessKey.trim() || undefined,
+          secretKey: s3Form.secretKey.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Connection test failed");
+      setSuccess(data.message || "Connection succeeded.");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setS3Testing(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -168,13 +257,13 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
     }
   };
 
-  const handleRestore = (backup: any) => {
+  const handleRestore = (backup: any, offsite = false) => {
     if (!selectedServer) return;
-    
+
     showModal({
       type: "warning",
       title: "Restore Snapshot",
-      message: `WARNING: Restoring the snapshot '${backup.name}' will OVERWRITE the current world save of the server '${selectedServer.name}'.\n\nThis action cannot be undone. Are you sure you want to restore?`,
+      message: `WARNING: Restoring the snapshot '${backup.name}'${offsite ? " from its offsite cloud copy" : ""} will OVERWRITE the current world save of the server '${selectedServer.name}'.\n\nThis action cannot be undone. Are you sure you want to restore?`,
       confirmText: "Restore World",
       cancelText: "Cancel",
       onConfirm: async () => {
@@ -185,6 +274,8 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
         try {
           const res = await fetch(`/api/backups/${backup.id}/restore`, {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ offsite }),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || "Failed to restore snapshot");
@@ -347,6 +438,8 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                           const isRestoring = actionLoading === `${backup.id}-restore`;
                           const isDeleting = actionLoading === `${backup.id}-delete`;
                           const isVerifying = actionLoading === `${backup.id}-verify`;
+                          const localFileMissing = backup.fileAvailable === false;
+                          const canRestoreOffsite = localFileMissing && backup.offsiteStatus === "UPLOADED";
 
                           return (
                             <tr key={backup.id} className="hover:bg-white/[0.02] transition-colors">
@@ -386,6 +479,27 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                                     Unverified
                                   </span>
                                 )}
+                                {backup.offsiteStatus === "UPLOADED" && (
+                                  <span
+                                    className="ml-1 px-2 py-0.5 rounded font-extrabold text-[9px] uppercase tracking-wide bg-blue-500/20 text-blue-300 border border-blue-500/30 cursor-help"
+                                    title={`Offsite copy uploaded ${backup.offsiteUploadedAt ? new Date(backup.offsiteUploadedAt).toLocaleString() : ""}`}
+                                  >
+                                    ☁ Offsite
+                                  </span>
+                                )}
+                                {backup.offsiteStatus === "PENDING" && (
+                                  <span className="ml-1 px-2 py-0.5 rounded font-extrabold text-[9px] uppercase tracking-wide bg-slate-700/40 text-slate-300 border border-white/5">
+                                    ☁ Uploading…
+                                  </span>
+                                )}
+                                {backup.offsiteStatus === "FAILED" && (
+                                  <span
+                                    className="ml-1 px-2 py-0.5 rounded font-extrabold text-[9px] uppercase tracking-wide bg-red-500/20 text-red-400 border border-red-500/30 cursor-help"
+                                    title={backup.offsiteError || "Offsite upload failed"}
+                                  >
+                                    ☁ Upload failed
+                                  </span>
+                                )}
                               </td>
                               <td className="p-3 text-right space-x-2">
                                 <button
@@ -396,13 +510,25 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                                 >
                                   {isVerifying ? "Verifying..." : "Verify"}
                                 </button>
-                                <button
-                                  onClick={() => handleRestore(backup)}
-                                  disabled={loading || !!actionLoading || selectedServer.status === "RUNNING"}
-                                  className="px-3 py-1.5 rounded bg-accentPurple hover:bg-accentPurpleHover disabled:bg-accentPurple/40 disabled:cursor-not-allowed text-[10px] font-bold text-white transition-colors"
-                                >
-                                  {isRestoring ? "Restoring..." : "Restore"}
-                                </button>
+                                {canRestoreOffsite ? (
+                                  <button
+                                    onClick={() => handleRestore(backup, true)}
+                                    disabled={loading || !!actionLoading || selectedServer.status === "RUNNING"}
+                                    className="px-3 py-1.5 rounded bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/40 disabled:cursor-not-allowed text-[10px] font-bold text-white transition-colors"
+                                    title="The local file is gone — download the offsite copy and restore it"
+                                  >
+                                    {isRestoring ? "Restoring..." : "Restore from Cloud"}
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleRestore(backup)}
+                                    disabled={loading || !!actionLoading || selectedServer.status === "RUNNING" || localFileMissing}
+                                    title={localFileMissing ? "Local file missing and no offsite copy" : undefined}
+                                    className="px-3 py-1.5 rounded bg-accentPurple hover:bg-accentPurpleHover disabled:bg-accentPurple/40 disabled:cursor-not-allowed text-[10px] font-bold text-white transition-colors"
+                                  >
+                                    {isRestoring ? "Restoring..." : "Restore"}
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => handleDelete(backup)}
                                   disabled={loading || !!actionLoading}
@@ -502,62 +628,105 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                 </form>
               </div>
 
-              {/* Offsite Cloud Settings */}
+              {/* Offsite Cloud Settings (ADMIN only) */}
+              {isAdmin && (
               <div className="glass-panel rounded-2xl border border-white/5 p-6 space-y-4">
                 <div className="flex items-center gap-2">
                   <FolderSync className="w-4.5 h-4.5 text-blue-400" />
                   <h3 className="font-extrabold text-base text-white">Offsite Cloud Storage (S3)</h3>
                 </div>
-                <p className="text-xs text-mutedText leading-normal">Automatically replicate snapshot zip files to any S3-compatible cloud bucket (AWS, Cloudflare R2, Backblaze B2).</p>
+                <p className="text-xs text-mutedText leading-normal">Automatically replicate every snapshot zip to any S3-compatible cloud bucket (AWS, Cloudflare R2, Backblaze B2). Upload results are recorded per snapshot, and you are notified if an upload fails.</p>
 
-                <form className="space-y-4 pt-2">
+                {s3Loading ? (
+                  <p className="text-xs text-mutedText pt-2">Loading saved settings…</p>
+                ) : (
+                <form onSubmit={handleSaveS3} className="space-y-4 pt-2">
                   <div>
-                    <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">S3 Endpoint</label>
+                    <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">S3 Endpoint <span className="normal-case font-normal">(optional — leave blank for AWS)</span></label>
                     <input
                       type="text"
-                      placeholder="e.g. s3.us-east-1.amazonaws.com"
+                      value={s3Form.endpoint}
+                      onChange={(e) => setS3Form({ ...s3Form, endpoint: e.target.value })}
+                      placeholder="e.g. s3.us-east-1.amazonaws.com or accountid.r2.cloudflarestorage.com"
                       className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-blue-400 transition-colors"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Access Key</label>
+                      <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Region</label>
                       <input
-                        type="password"
-                        placeholder="••••••••••••"
+                        type="text"
+                        value={s3Form.region}
+                        onChange={(e) => setS3Form({ ...s3Form, region: e.target.value })}
+                        placeholder="us-east-1"
                         className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-blue-400 transition-colors"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Secret Key</label>
+                      <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Bucket Name</label>
                       <input
-                        type="password"
-                        placeholder="••••••••••••"
+                        type="text"
+                        value={s3Form.bucket}
+                        onChange={(e) => setS3Form({ ...s3Form, bucket: e.target.value })}
+                        placeholder="my-server-backups"
                         className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-blue-400 transition-colors"
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Bucket Name</label>
-                    <input
-                      type="text"
-                      placeholder="my-server-backups"
-                      className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-blue-400 transition-colors"
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Access Key{s3Configured ? <span className="normal-case font-normal"> (saved)</span> : ""}</label>
+                      <input
+                        type="password"
+                        value={s3Form.accessKey}
+                        onChange={(e) => setS3Form({ ...s3Form, accessKey: e.target.value })}
+                        placeholder={s3Configured ? "Leave blank to keep saved key" : "••••••••••••"}
+                        className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-blue-400 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Secret Key{s3Configured ? <span className="normal-case font-normal"> (saved)</span> : ""}</label>
+                      <input
+                        type="password"
+                        value={s3Form.secretKey}
+                        onChange={(e) => setS3Form({ ...s3Form, secretKey: e.target.value })}
+                        placeholder={s3Configured ? "Leave blank to keep saved key" : "••••••••••••"}
+                        className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-blue-400 transition-colors"
+                      />
+                    </div>
                   </div>
+                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={s3Form.enabled}
+                      onChange={(e) => setS3Form({ ...s3Form, enabled: e.target.checked })}
+                      className="w-3.5 h-3.5 accent-blue-500"
+                    />
+                    <span>Upload new snapshots to the bucket automatically</span>
+                  </label>
+                  <p className="text-[10px] text-mutedText leading-normal">Credentials are encrypted on this machine and used for every server you own. A test upload check runs against the bucket when you click Test — nothing is saved by testing.</p>
 
-                  <div className="flex justify-end pt-2">
+                  <div className="flex gap-2 pt-2">
                     <button
                       type="button"
-                      disabled={loading || !!actionLoading}
-                      onClick={() => setSuccess("S3 settings saved! Future backups will be synced.")}
-                      className="w-full px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors"
+                      disabled={s3Saving || s3Testing || !s3Form.bucket.trim()}
+                      onClick={handleTestS3}
+                      className="flex-1 px-4 py-2 rounded-lg bg-slate-900 border border-white/10 hover:border-blue-400/40 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-bold text-slate-200 transition-colors"
                     >
-                      Save Cloud Settings
+                      {s3Testing ? "Testing…" : "Test Connection"}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={s3Saving || s3Testing || !s3Form.bucket.trim()}
+                      className="flex-1 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors"
+                    >
+                      {s3Saving ? "Saving…" : "Save Cloud Settings"}
                     </button>
                   </div>
                 </form>
+                )}
               </div>
+              )}
 
               {/* Server State Warnings */}
               <div className="glass-panel rounded-2xl border border-white/5 p-6 space-y-3">
