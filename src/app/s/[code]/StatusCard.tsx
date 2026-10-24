@@ -2,7 +2,7 @@
 
 import React from "react";
 import { CalendarClock, Users } from "lucide-react";
-import { formatSessionStart } from "@/lib/sessions";
+import { formatSessionStart, formatBusiestHour } from "@/lib/sessions";
 import { gameIcon, statusLabel } from "@/lib/gameDisplay";
 import type { PublicServerStatus, PlayerHistoryPoint } from "@/lib/statusShare";
 
@@ -37,6 +37,64 @@ function PlayerHistoryStrip({ history }: { history: PlayerHistoryPoint[] }) {
         <span>24h ago</span>
         <span>now</span>
       </div>
+    </div>
+  );
+}
+
+const HEATMAP_DOW = new Intl.DateTimeFormat("en-US", { weekday: "narrow" });
+const HEATMAP_HOUR = new Intl.DateTimeFormat("en-US", { hour: "numeric" });
+
+/**
+ * The full "Fridays 8–11 PM" story: average players per weekday×hour over
+ * the last week, host-local time. Cells scale against the week's busiest
+ * hour; only rendered once there's real data.
+ */
+function WeeklyHeatmap({ weekly }: { weekly: number[][] }) {
+  const max = Math.max(...weekly.flat());
+  if (max <= 0) return null;
+  let busiest = { dow: 0, hour: 0 };
+  for (let dow = 0; dow < 7; dow++) {
+    for (let hour = 0; hour < 24; hour++) {
+      if (weekly[dow][hour] > weekly[busiest.dow][busiest.hour]) busiest = { dow, hour };
+    }
+  }
+  const cellColor = (v: number) => {
+    const r = v / max;
+    if (r > 0.66) return "bg-emerald-400";
+    if (r > 0.33) return "bg-emerald-500/70";
+    return "bg-emerald-600/40";
+  };
+  // Jan 4 2026 is a Sunday — construct dates from it so dow/hour stay fixed
+  // regardless of the viewer's timezone.
+  const date = (dow: number, hour: number) => new Date(2026, 0, 4 + dow, hour);
+  const fmtDow = (dow: number) => new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(date(dow, 0));
+  return (
+    <div className="mt-5">
+      <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        <span>Busiest hours · last 7 days</span>
+      </div>
+      <div className="mt-2 space-y-[3px]" aria-label="Average players by weekday and hour over the last week">
+        {weekly.map((day, dow) => (
+          <div key={dow} className="grid grid-cols-[10px_1fr] items-center gap-1.5">
+            <span className="text-[9px] font-bold text-slate-600 text-center">{HEATMAP_DOW.format(date(dow, 0))}</span>
+            <div className="grid grid-cols-[repeat(24,minmax(0,1fr))] gap-[2px]">
+              {day.map((v, hour) => (
+                <div
+                  key={hour}
+                  className={`h-2 rounded-[2px] ${v > 0 ? cellColor(v) : "bg-slate-800/70"}`}
+                  title={`${fmtDow(dow)} ${HEATMAP_HOUR.format(date(dow, hour))} — avg ${v} player${v === 1 ? "" : "s"}`}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-1.5 flex justify-between text-[10px] text-slate-600">
+        <span>12 AM</span>
+        <span className="text-slate-500">Busiest: {formatBusiestHour(busiest)}</span>
+        <span>11 PM</span>
+      </div>
+      <p className="mt-1 text-[10px] text-slate-600">Average players by hour · host&apos;s local time</p>
     </div>
   );
 }
@@ -123,6 +181,8 @@ export function StatusCard({ initial }: { initial: PublicServerStatus | null }) 
         ) : null}
 
         {status.history.length > 0 && <PlayerHistoryStrip history={status.history} />}
+
+        {status.weekly?.some((day) => day.some((v) => v > 0)) && <WeeklyHeatmap weekly={status.weekly} />}
 
         {status.nextSession && (
           <div className="mt-5 p-3 rounded-xl bg-slate-950/50 border border-white/5">
