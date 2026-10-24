@@ -12,6 +12,9 @@ import {
   collectRequiredDependencies,
 } from "@/lib/mods/modrinth";
 import {
+  resolveCfInstall, collectRequiredCfFiles, curseForgeDownloadUrl, getCurseForgeFiles, getCurseForgeMods,
+} from "@/lib/mods/curseforge";
+import {
   communityForGame, fetchCommunityIndex, findVersionEntry, newestVersion,
   collectDependencies, extractThunderstorePackage,
 } from "@/lib/mods/thunderstore";
@@ -150,6 +153,105 @@ export async function installMinecraftMod(args: {
   });
 
   return { dependencyCount: toInstall.length };
+}
+
+/**
+ * Install a CurseForge jar mod (and its required dependency graph) into the
+ * server's mods/ directory, mirroring the Modrinth flow. Unlike Modrinth,
+ * CurseForge exposes no client/server metadata — a client-only mod is caught
+ * by the sandbox boot test, which rolls the install back automatically.
+ */
+export async function installMinecraftCurseforge(args: {
+  serverId: string;
+  installDir: string;
+  modId: string;
+  /** displayName/fileName pin from a search card; falls back to the newest compatible file. */
+  version?: string;
+  warnings: string[];
+}): Promise<InstallStepResult> {
+  const { serverId, installDir, modId, version, warnings } = args;
+
+  const modsDir = path.join(installDir, "mods");
+  if (!fs.existsSync(modsDir)) {
+    fs.mkdirSync(modsDir, { recursive: true });
+  }
+
+  const marker = readLoaderMarker(installDir);
+  const gameVersion = detectMinecraftVersion(installDir);
+  const loader = marker?.type ?? null;
+
+  const candidate = await resolveCfInstall(modId, { mcVersion: gameVersion, loader, displayName: version });
+
+  // Required dependencies first: BFS over CurseForge's fileId graph, skipping
+  // anything already installed. Unresolvable deps warn, not fail.
+  const installedModIds = new Set(
+    (await prisma.modInstallation.findMany({ where: { serverId }, select: { packageId: true } }))
+      .map((m) => m.packageId)
+  );
+  const { order: depFiles, missingFileIds } = await collectRequiredCfFiles(
+    candidate.file,
+    async (fileId) => {
+      const files = await getCurseForgeFiles([fileId]);
+      return files[0] ?? null;
+    },
+    (depModId) => installedModIds.has(depModId.toString())
+  );
+  for (const fileId of missingFileIds) {
+    warnings.push(`Dependency file ${fileId} could not be resolved on CurseForge — the mod may not work without it.`);
+  }
+  const depModIds = Array.from(new Set(depFiles.map((f) => f.modId)));
+  const depNames = depModIds.length > 0 ? new Map((await getCurseForgeMods(depModIds)).map((m) => [m.id, m.name])) : new Map<number, string>();
+  for (const dep of depFiles) {
+    const dest = safeJoin(modsDir, `${dep.modId}.jar`);
+    await downloadFile(curseForgeDownloadUrl(dep), dest);
+    await prisma.modInstallation.upsert({
+      where: { serverId_provider_packageId: { serverId, provider: "curseforge", packageId: dep.modId.toString() } },
+      update: { version: dep.displayName },
+      create: {
+        serverId, provider: "curseforge", packageId: dep.modId.toString(),
+        version: dep.displayName, name: depNames.get(dep.modId) || dep.fileName,
+      },
+    });
+  }
+
+  // Main mod: download to a temp location first so we can inspect the jar.
+  const tempJar = safeJoin(modsDir, `.staging-${Date.now()}.jar`);
+  await downloadFile(curseForgeDownloadUrl(candidate.file), tempJar);
+
+  const needsLoader = detectModLoader(tempJar);
+  if (needsLoader) {
+    // NeoForge also loads jars whose manifest is the legacy Forge
+    // META-INF/mods.toml, so a neoforge server satisfies "forge" mods.
+    const satisfied =
+      !!marker &&
+      (marker.type === needsLoader || (marker.type === "neoforge" && needsLoader === "forge"));
+    if (!satisfied) {
+      fs.unlinkSync(tempJar);
+      const loaderName = { fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge" }[needsLoader];
+      throw new Error(
+        `'${candidate.mod.name}' requires the ${needsLoader} loader, which isn't installed on this server. Install ${loaderName} first (Installed tab → Install Loader).`
+      );
+    }
+  }
+
+  const destPath = safeJoin(modsDir, `${candidate.mod.id}.jar`);
+  fs.renameSync(tempJar, destPath);
+
+  await prisma.modInstallation.upsert({
+    where: { serverId_provider_packageId: { serverId, provider: "curseforge", packageId: candidate.mod.id.toString() } },
+    update: {
+      version: candidate.file.displayName,
+      name: candidate.mod.name,
+      dependencies: JSON.stringify(depFiles.map((d) => d.modId.toString())),
+    },
+    create: {
+      serverId, provider: "curseforge", packageId: candidate.mod.id.toString(),
+      version: candidate.file.displayName, name: candidate.mod.name,
+      dependencies: JSON.stringify(depFiles.map((d) => d.modId.toString())),
+    },
+  });
+
+  return { dependencyCount: depFiles.length };
 }
 
 /**

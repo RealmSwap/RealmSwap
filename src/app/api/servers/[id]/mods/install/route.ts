@@ -8,7 +8,7 @@ import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshot
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { downloadFile } from "@/lib/download";
 import {
-  installMinecraftMod, installValheimThunderstore, installZomboidWorkshopMod,
+  installMinecraftMod, installMinecraftCurseforge, installValheimThunderstore, installZomboidWorkshopMod,
 } from "@/lib/mods/installers";
 import fs from "fs";
 import path from "path";
@@ -33,7 +33,7 @@ export async function POST(
 
     const serverId = params.id;
     const modInstallSchema = z.object({
-      modType: z.enum(["STEAM_WORKSHOP", "MODRINTH", "BEPINEX", "THUNDERSTORE"]),
+      modType: z.enum(["STEAM_WORKSHOP", "MODRINTH", "CURSEFORGE", "BEPINEX", "THUNDERSTORE"]),
       modId: z.string().optional(),
       modName: z.string().optional(),
       version: z.string().optional(),
@@ -74,15 +74,24 @@ export async function POST(
       // 2. Perform Installation
       if (game === "MINECRAFT") {
         if (!modId) {
-          throw new Error("A Modrinth project id/slug is required for Minecraft mods.");
+          throw new Error("A Modrinth project id or CurseForge mod id is required for Minecraft mods.");
         }
-        const result = await installMinecraftMod({
-          serverId,
-          installDir: serverRoot, // Minecraft installs live at the server root
-          projectId: modId,
-          versionNumber: version,
-          warnings,
-        });
+        const result =
+          modType === "CURSEFORGE"
+            ? await installMinecraftCurseforge({
+                serverId,
+                installDir: serverRoot, // Minecraft installs live at the server root
+                modId,
+                version,
+                warnings,
+              })
+            : await installMinecraftMod({
+                serverId,
+                installDir: serverRoot, // Minecraft installs live at the server root
+                projectId: modId,
+                versionNumber: version,
+                warnings,
+              });
         dependencyCount = result.dependencyCount;
 
       } else if (game === "VALHEIM") {
