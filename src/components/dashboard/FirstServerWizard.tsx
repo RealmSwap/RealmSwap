@@ -45,6 +45,7 @@ export function FirstServerWizard({
   const [deploying, setDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deployed, setDeployed] = useState<any | null>(null);
+  const [dockerAvailable, setDockerAvailable] = useState(false);
 
   // Step-3 option state
   const [s3, setS3] = useState<{ configured: boolean; bucket?: string | null; admin: boolean } | null>(null);
@@ -57,6 +58,14 @@ export function FirstServerWizard({
       .then((d) => setDefinitions(d.definitions || []))
       .catch(() => setError("Failed to load game list"))
       .finally(() => setLoading(false));
+    // Headless deployments (NAS/mini PC) have no local-machine runner — when a
+    // Docker daemon is reachable, deploys default to the container runtime.
+    // The create route still validates the game has a container plan and
+    // falls back with a clear error otherwise, so this is safe to send.
+    fetch("/api/system/docker-status")
+      .then((r) => (r.ok ? r.json() : { available: false }))
+      .then((d) => setDockerAvailable(!!d.available))
+      .catch(() => setDockerAvailable(false));
   }, []);
 
   // Offsite status is admin-only; a non-admin teammate just gets the link
@@ -81,6 +90,9 @@ export function FirstServerWizard({
     setDeploying(true);
     setError(null);
     try {
+      // Container plan means the game can run under the Docker runtime; only
+      // then pass runnerType — LOCAL remains the default on desktop machines.
+      const hasContainerPlan = !!picked?.spec?.container;
       const res = await fetch("/api/servers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,6 +102,7 @@ export function FirstServerWizard({
           ramAllocation: ram,
           password: password || undefined,
           paramValues: {},
+          runnerType: dockerAvailable && hasContainerPlan ? "DOCKER" : undefined,
         }),
       });
       const data = await res.json();

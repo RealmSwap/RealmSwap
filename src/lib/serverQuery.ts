@@ -1,6 +1,7 @@
 import { GameDig } from "gamedig";
 import type { GameDefinitionSpec } from "./definitions/types";
 import { renderTemplate } from "./definitions/template";
+import { gameHost } from "./appPaths";
 
 /**
  * Shared game-server query (gamedig) used by the authenticated
@@ -66,7 +67,7 @@ export async function queryGameServer(
   try {
     const state = await (deps.dig ?? GameDig.query)({
       type: spec.queryType as string,
-      host: deps.host ?? "127.0.0.1",
+      host: deps.host ?? gameHost(),
       port: queryPort,
     });
     return {

@@ -68,7 +68,7 @@ model Server {
   ramAllocation    Float // GB allocated
   region           String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
   status           String // "RUNNING", "STOPPED", "STARTING"
-  runnerType       String              @default("CLOUD") // "CLOUD" or "LOCAL"
+  runnerType       String              @default("CLOUD") // "LOCAL" | "DOCKER"; default is a legacy value — resolveRunnerType always sets this explicitly at create, and the factory falls through to LOCAL for anything not "DOCKER"
   localPath        String? // File path for local server storage
   pid              Int? // Process ID for local runner execution
   password         String? // Unhashed password for Valheim/game server configs

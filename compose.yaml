@@ -1,0 +1,53 @@
+# RealmSwap headless deployment (NAS / home server / any Docker host).
+#
+# See docs/headless-docker.md for the full guide. Quick start:
+#   1. cp compose.env.example .env  and fill in the values
+#   2. docker compose up -d --build
+#   3. open http://<host>:3000
+#
+# The dashboard container drives the HOST Docker daemon through the mounted
+# socket to run game-server containers as siblings (docker-outside-of-docker).
+# It never runs game servers inside itself.
+
+services:
+  realmswap:
+    build: .
+    container_name: realmswap-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # App data (DB, servers, backups, snapshots) inside this container.
+      GAMEVAULT_DATA_DIR: /data
+      DATABASE_URL: file:/data/realmswap.db
+
+      # The same volume as ./data below, as seen by the HOST Docker daemon —
+      # game-server containers bind-mount server dirs from here. Must be the
+      # absolute host path of ./data.
+      GAMEVAULT_HOST_DATA_DIR: ${REALMSWAP_HOST_DATA_DIR:?Set REALMSWAP_HOST_DATA_DIR in .env (absolute host path of the ./data volume)}
+
+      # Published game ports are reachable from this container via the host
+      # gateway (extra_hosts below) — used for player queries and RCON.
+      GAMEVAULT_GAME_HOST: host.docker.internal
+
+      # Supabase shared services (auth + marketplace). Required — the app
+      # 500s without them. See docs/supabase-shared-services.md.
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?Set NEXT_PUBLIC_SUPABASE_URL in .env}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?Set NEXT_PUBLIC_SUPABASE_ANON_KEY in .env}
+
+      # Optional integrations.
+      FREE_TIER_SLOTS: ${FREE_TIER_SLOTS:-999}
+      BOT_API_SECRET: ${BOT_API_SECRET:-}
+      STEAM_API_KEY: ${STEAM_API_KEY:-}
+      CURSEFORGE_API_KEY: ${CURSEFORGE_API_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    volumes:
+      # All persistent state. Keep REALMSWAP_HOST_DATA_DIR in .env in sync
+      # with this absolute path.
+      - ./data:/data
+      # DockerRunner drives the host daemon to run game containers as siblings.
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      # Linux Docker Engine needs this line to resolve host.docker.internal;
+      # Docker Desktop provides it natively.
+      - "host.docker.internal:host-gateway"

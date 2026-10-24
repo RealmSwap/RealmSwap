@@ -57,7 +57,10 @@ vi.mock("@/lib/db", () => ({
     },
   },
 }));
-vi.mock("@/lib/appPaths", () => ({ dataRoot: () => bag.dataRoot }));
+vi.mock("@/lib/appPaths", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/appPaths")>();
+  return { ...actual, dataRoot: () => bag.dataRoot };
+});
 vi.mock("@/lib/offsiteBackup", () => ({
   startOffsiteUpload: (...args: any[]) => {
     bag.offsiteCalls.push(args);

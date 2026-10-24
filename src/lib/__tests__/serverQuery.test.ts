@@ -57,6 +57,19 @@ describe("queryGameServer", () => {
     const result = await queryGameServer(baseServer, spec(), { dig });
     expect(result).toEqual({ status: "offline", error: "timed out" });
   });
+
+  it("queries GAMEVAULT_GAME_HOST when set (containerized dashboards reach the host gateway)", async () => {
+    const dig = vi.fn().mockResolvedValue({ name: "x", players: [], maxplayers: 0 });
+    const prev = process.env.GAMEVAULT_GAME_HOST;
+    process.env.GAMEVAULT_GAME_HOST = "host.docker.internal";
+    try {
+      await queryGameServer(baseServer, spec(), { dig });
+    } finally {
+      if (prev === undefined) delete process.env.GAMEVAULT_GAME_HOST;
+      else process.env.GAMEVAULT_GAME_HOST = prev;
+    }
+    expect(dig).toHaveBeenCalledWith({ type: "minecraft", host: "host.docker.internal", port: 25565 });
+  });
 });
 
 describe("resolveQueryPort + buildQueryContext", () => {

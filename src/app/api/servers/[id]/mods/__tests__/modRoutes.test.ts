@@ -121,7 +121,10 @@ vi.mock("@/lib/runners/sandbox", () => ({
     }
   },
 }));
-vi.mock("@/lib/appPaths", () => ({ dataRoot: () => bag.dataRoot }));
+vi.mock("@/lib/appPaths", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/appPaths")>();
+  return { ...actual, dataRoot: () => bag.dataRoot };
+});
 
 import { POST as installMod } from "@/app/api/servers/[id]/mods/install/route";
 import { SandboxBootError } from "@/lib/runners/sandbox";

@@ -13,11 +13,17 @@ import { rconManager } from "./rconManager";
 import { beginSaveFlush, getSaveFlushPlan, pickBackupsToPrune, SaveFlushSession } from "./saveFlush";
 
 // Get the local save path for each game type. Delegates to the pure resolver,
-// injecting the live filesystem roots.
-function getSavePath(game: string, serverId: string): { srcDir: string; zipPattern: string; destExtractDir: string } {
+// injecting the live filesystem roots. DOCKER-runner Valheim servers save under
+// the server dir (the container spec redirects HOME to /data/valheim-data),
+// not the Windows user profile.
+function getSavePath(game: string, serverId: string, runnerType?: string): { srcDir: string; zipPattern: string; destExtractDir: string } {
   return resolveSavePath(game, serverId, {
     dataRoot: dataRoot(),
     userProfile: process.env.USERPROFILE || "",
+    dockerValheimWorlds:
+      runnerType === "DOCKER"
+        ? path.join(dataRoot(), "local-servers", serverId, "valheim-data", ".config", "IronGate", "Valheim", "worlds_local")
+        : undefined,
   });
 }
 
@@ -31,7 +37,7 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
     throw new Error("Server not found");
   }
 
-  const { srcDir, zipPattern } = getSavePath(server.game, serverId);
+  const { srcDir, zipPattern } = getSavePath(server.game, serverId, server.runnerType);
 
   // Validate that source directory actually exists and has files before zipping
   if (!fs.existsSync(srcDir)) {
@@ -305,7 +311,7 @@ export async function restoreBackup(backupId: string, sourcePath?: string): Prom
     );
   }
 
-  const { destExtractDir } = getSavePath(backup.game, backup.serverId);
+  const { destExtractDir } = getSavePath(backup.game, backup.serverId, backup.server.runnerType);
 
   await withServerLock(backup.serverId, async () => {
     const stagingDir = `${destExtractDir}.restore-staging`;

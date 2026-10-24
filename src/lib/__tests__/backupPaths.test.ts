@@ -24,6 +24,17 @@ describe("getSavePath", () => {
     });
   });
 
+  it("maps DOCKER-runner Valheim to the redirected-HOME worlds dir under the server dir", () => {
+    // The container spec sets HOME=/data/valheim-data, so Unity's
+    // $HOME/.config/IronGate/Valheim/worlds_local lands on the bind mount.
+    const dir = path.join("DATA", "local-servers", id, "valheim-data", ".config", "IronGate", "Valheim", "worlds_local");
+    expect(getSavePath("VALHEIM", id, { ...roots, dockerValheimWorlds: dir })).toEqual({
+      srcDir: dir,
+      zipPattern: `${dir}/Dedicated.*`,
+      destExtractDir: dir,
+    });
+  });
+
   it("maps Enshrouded to its savegame directory", () => {
     const dir = path.join("DATA", "local-servers", id, "enshrouded-server", "savegame");
     expect(getSavePath("ENSHROUDED", id, roots).srcDir).toBe(dir);

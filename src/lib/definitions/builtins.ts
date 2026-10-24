@@ -70,7 +70,11 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       container: {
         executable: "valheim_server.x86_64",
         installSubDir: "valheim-server",
-        env: { LD_LIBRARY_PATH: "./linux64", SteamAppId: "892970" },
+        // HOME redirect: Valheim's Unity layer writes worlds to
+        // $HOME/.config/IronGate/Valheim — without this they land in the
+        // container's writable layer and are destroyed by the rm -f + run
+        // cycle on every start. /data is the bind-mounted server dir.
+        env: { LD_LIBRARY_PATH: "./linux64", SteamAppId: "892970", HOME: "/data/valheim-data" },
         args: ["-nographics", "-batchmode", "-name", "{name}", "-port", "2456", "-world", "{worldName}", "-password", "{password}", "-public", "1", "-crossplay"],
       },
       defaultPort: 2456,

@@ -18,11 +18,16 @@ export type SavePaths = {
  * injected (`dataRoot` for app-managed servers, `userProfile` for games that
  * save under the Windows user profile) so the per-game path logic is testable
  * without touching real config or the DB.
+ *
+ * `dockerValheimWorlds` overrides Valheim's save dir for DOCKER-runner servers:
+ * the container spec redirects HOME to /data/valheim-data, so Unity's
+ * $HOME/.config/IronGate/Valheim/worlds_local lives under the server dir
+ * instead of the Windows user profile (which only exists for LOCAL runners).
  */
 export function getSavePath(
   game: string,
   serverId: string,
-  roots: { dataRoot: string; userProfile: string }
+  roots: { dataRoot: string; userProfile: string; dockerValheimWorlds?: string }
 ): SavePaths {
   const root = roots.dataRoot;
 
@@ -33,7 +38,7 @@ export function getSavePath(
     }
     case "VALHEIM": {
       // Valheim runner boots with -world Dedicated, so files are Dedicated.db and Dedicated.fwl
-      const dir = path.join(
+      const dir = roots.dockerValheimWorlds ?? path.join(
         roots.userProfile,
         "AppData",
         "LocalLow",
