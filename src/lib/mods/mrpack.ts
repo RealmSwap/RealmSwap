@@ -107,19 +107,24 @@ export function verifyFileHash(buf: Buffer, hashes: Record<string, string>): boo
 }
 
 /**
- * Extract the pack's `overrides/` and `server-overrides/` trees into the
- * server root. `client-overrides/` and anything else in the archive is
- * ignored. Returns the number of files written.
+ * Extract the pack's override trees into the server root. Defaults to the
+ * Modrinth `overrides/` + `server-overrides/` prefixes; CurseForge manifests
+ * pass their (validated) custom overrides folder instead. `client-overrides/`
+ * and anything else in the archive is ignored. Returns the number of files
+ * written.
  */
-export function extractMrpackOverrides(zip: AdmZip, serverRoot: string): number {
+export function extractMrpackOverrides(
+  zip: AdmZip,
+  serverRoot: string,
+  prefixes: string[] = ["overrides/", "server-overrides/"]
+): number {
   let count = 0;
   for (const entry of zip.getEntries()) {
     if (entry.isDirectory) continue;
     const name = entry.entryName;
-    let rel: string | null = null;
-    if (name.startsWith("overrides/")) rel = name.slice("overrides/".length);
-    else if (name.startsWith("server-overrides/")) rel = name.slice("server-overrides/".length);
-    else continue;
+    const prefix = prefixes.find((p) => name.startsWith(p));
+    if (!prefix) continue;
+    const rel = name.slice(prefix.length);
     const target = safeJoin(serverRoot, safePackPath(rel));
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, entry.getData());

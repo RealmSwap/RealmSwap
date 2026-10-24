@@ -104,3 +104,66 @@ describe("checkModUpdates", () => {
     expect(result.errors[0]).toContain("network down");
   });
 });
+
+describe("checkModUpdates: curseforge rows", () => {
+  function cfApiFile(opts: { id: number; displayName: string }) {
+    return {
+      id: opts.id,
+      modId: 42,
+      displayName: opts.displayName,
+      fileName: "x.jar",
+      downloadUrl: null,
+      hashes: [],
+      gameVersions: ["1.21.1", "Fabric"],
+      modLoaderType: 4,
+      dependencies: [],
+      isAvailable: true,
+    };
+  }
+
+  const cfDeps = (files: any[]) => ({
+    mcVersion: "1.21.1",
+    loader: "fabric",
+    getCfModFiles: (async () => files) as any,
+  });
+
+  it("flags stale curseforge mods and reports unknown versions", async () => {
+    const result = await checkModUpdates({
+      game: "MINECRAFT",
+      serverRoot: "/tmp/none",
+      rows: [
+        { provider: "curseforge", packageId: "42", version: "1.0.0", name: "CF Mod" },
+        { provider: "curseforge", packageId: "42", version: "unknown", name: "CF Unknown" },
+        { provider: "curseforge", packageId: "not-a-number", version: "1.0.0", name: "CF Bad" },
+      ],
+      deps: cfDeps([cfApiFile({ id: 900, displayName: "1.0.0" }), cfApiFile({ id: 1100, displayName: "2.0.0" })]),
+    });
+    expect(result.updates).toEqual([
+      { packageId: "42", name: "CF Mod", provider: "curseforge", current: "1.0.0", latest: "2.0.0" },
+    ]);
+    expect(result.unknown).toEqual([{ packageId: "42", name: "CF Unknown", version: "unknown" }]);
+    expect(result.errors[0]).toContain("not a CurseForge mod id");
+  });
+
+  it("reports files locked to CurseForge distribution and version-matched rows as current", async () => {
+    const result = await checkModUpdates({
+      game: "MINECRAFT",
+      serverRoot: "/tmp/none",
+      rows: [{ provider: "curseforge", packageId: "42", version: "2.0.0", name: "CF Mod" }],
+      deps: cfDeps([cfApiFile({ id: 1100, displayName: "2.0.0" })]),
+    });
+    expect(result.updates).toEqual([]);
+    expect(result.errors).toEqual([]);
+  });
+
+  it("rejects curseforge updates on non-Minecraft games", async () => {
+    const result = await checkModUpdates({
+      game: "VALHEIM",
+      serverRoot: "/tmp/none",
+      rows: [{ provider: "curseforge", packageId: "42", version: "1.0.0", name: "CF Mod" }],
+      deps: cfDeps([]),
+    });
+    expect(result.updates).toEqual([]);
+    expect(result.errors[0]).toContain("Minecraft servers only");
+  });
+});
