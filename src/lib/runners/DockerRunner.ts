@@ -10,6 +10,7 @@ import { planContainer, planPorts, planInstall } from "../definitions/plan";
 import { applyConfigFiles } from "../definitions/applyConfigFiles";
 import { appendLog, clearLogs, getServerLogTail } from "../serverLogs";
 import { serverEventBus } from "../eventBus";
+import { markFirstOnline } from "../firstOnline";
 import { setProgress, clearProgress, parseSteamProgress } from "../downloadProgress";
 import { startMonitoring, stopMonitoring, clearStatsHistory } from "../processMonitor";
 import { isCrashExit, evaluateCrash, CRASH_MAX_RETRIES, type CrashCounter } from "../crashPolicy";
@@ -47,6 +48,10 @@ async function resolveDefinition(server: { definitionId: string | null; game: st
 }
 
 function setStatus(serverId: string, status: string, extra: Record<string, unknown> = {}) {
+  if (status === "RUNNING") {
+    // First-ever readiness — feeds the dashboard's first-boot celebration.
+    markFirstOnline(serverId).catch(() => {});
+  }
   return prisma.server
     .update({ where: { id: serverId }, data: { status, ...(status === "RUNNING" ? { pendingRestart: false } : {}), ...extra } })
     .then(() => serverEventBus.emit("status_update", { serverId, status }))

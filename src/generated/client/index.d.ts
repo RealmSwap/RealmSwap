@@ -6444,6 +6444,9 @@ export namespace Prisma {
     memoryUsage: number | null
     snapshotInterval: number | null
     backupRetention: number | null
+    autoStartLeadMinutes: number | null
+    idleStopMinutes: number | null
+    sessionAutoStopHours: number | null
   }
 
   export type ServerSumAggregateOutputType = {
@@ -6458,6 +6461,9 @@ export namespace Prisma {
     memoryUsage: number | null
     snapshotInterval: number | null
     backupRetention: number | null
+    autoStartLeadMinutes: number | null
+    idleStopMinutes: number | null
+    sessionAutoStopHours: number | null
   }
 
   export type ServerMinAggregateOutputType = {
@@ -6499,6 +6505,11 @@ export namespace Prisma {
     backupRetention: number | null
     inviteCode: string | null
     statusShareCode: string | null
+    autoStartLeadMinutes: number | null
+    idleStopEnabled: boolean | null
+    idleStopMinutes: number | null
+    sessionAutoStopHours: number | null
+    firstOnlineAt: Date | null
   }
 
   export type ServerMaxAggregateOutputType = {
@@ -6540,6 +6551,11 @@ export namespace Prisma {
     backupRetention: number | null
     inviteCode: string | null
     statusShareCode: string | null
+    autoStartLeadMinutes: number | null
+    idleStopEnabled: boolean | null
+    idleStopMinutes: number | null
+    sessionAutoStopHours: number | null
+    firstOnlineAt: Date | null
   }
 
   export type ServerCountAggregateOutputType = {
@@ -6581,6 +6597,11 @@ export namespace Prisma {
     backupRetention: number
     inviteCode: number
     statusShareCode: number
+    autoStartLeadMinutes: number
+    idleStopEnabled: number
+    idleStopMinutes: number
+    sessionAutoStopHours: number
+    firstOnlineAt: number
     _all: number
   }
 
@@ -6597,6 +6618,9 @@ export namespace Prisma {
     memoryUsage?: true
     snapshotInterval?: true
     backupRetention?: true
+    autoStartLeadMinutes?: true
+    idleStopMinutes?: true
+    sessionAutoStopHours?: true
   }
 
   export type ServerSumAggregateInputType = {
@@ -6611,6 +6635,9 @@ export namespace Prisma {
     memoryUsage?: true
     snapshotInterval?: true
     backupRetention?: true
+    autoStartLeadMinutes?: true
+    idleStopMinutes?: true
+    sessionAutoStopHours?: true
   }
 
   export type ServerMinAggregateInputType = {
@@ -6652,6 +6679,11 @@ export namespace Prisma {
     backupRetention?: true
     inviteCode?: true
     statusShareCode?: true
+    autoStartLeadMinutes?: true
+    idleStopEnabled?: true
+    idleStopMinutes?: true
+    sessionAutoStopHours?: true
+    firstOnlineAt?: true
   }
 
   export type ServerMaxAggregateInputType = {
@@ -6693,6 +6725,11 @@ export namespace Prisma {
     backupRetention?: true
     inviteCode?: true
     statusShareCode?: true
+    autoStartLeadMinutes?: true
+    idleStopEnabled?: true
+    idleStopMinutes?: true
+    sessionAutoStopHours?: true
+    firstOnlineAt?: true
   }
 
   export type ServerCountAggregateInputType = {
@@ -6734,6 +6771,11 @@ export namespace Prisma {
     backupRetention?: true
     inviteCode?: true
     statusShareCode?: true
+    autoStartLeadMinutes?: true
+    idleStopEnabled?: true
+    idleStopMinutes?: true
+    sessionAutoStopHours?: true
+    firstOnlineAt?: true
     _all?: true
   }
 
@@ -6862,6 +6904,11 @@ export namespace Prisma {
     backupRetention: number
     inviteCode: string | null
     statusShareCode: string | null
+    autoStartLeadMinutes: number
+    idleStopEnabled: boolean
+    idleStopMinutes: number
+    sessionAutoStopHours: number
+    firstOnlineAt: Date | null
     _count: ServerCountAggregateOutputType | null
     _avg: ServerAvgAggregateOutputType | null
     _sum: ServerSumAggregateOutputType | null
@@ -6922,6 +6969,11 @@ export namespace Prisma {
     backupRetention?: boolean
     inviteCode?: boolean
     statusShareCode?: boolean
+    autoStartLeadMinutes?: boolean
+    idleStopEnabled?: boolean
+    idleStopMinutes?: boolean
+    sessionAutoStopHours?: boolean
+    firstOnlineAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     definition?: boolean | Server$definitionArgs<ExtArgs>
     backups?: boolean | Server$backupsArgs<ExtArgs>
@@ -6976,6 +7028,11 @@ export namespace Prisma {
     backupRetention?: boolean
     inviteCode?: boolean
     statusShareCode?: boolean
+    autoStartLeadMinutes?: boolean
+    idleStopEnabled?: boolean
+    idleStopMinutes?: boolean
+    sessionAutoStopHours?: boolean
+    firstOnlineAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     definition?: boolean | Server$definitionArgs<ExtArgs>
   }, ExtArgs["result"]["server"]>
@@ -7019,6 +7076,11 @@ export namespace Prisma {
     backupRetention?: boolean
     inviteCode?: boolean
     statusShareCode?: boolean
+    autoStartLeadMinutes?: boolean
+    idleStopEnabled?: boolean
+    idleStopMinutes?: boolean
+    sessionAutoStopHours?: boolean
+    firstOnlineAt?: boolean
   }
 
   export type ServerInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7096,6 +7158,11 @@ export namespace Prisma {
       backupRetention: number
       inviteCode: string | null
       statusShareCode: string | null
+      autoStartLeadMinutes: number
+      idleStopEnabled: boolean
+      idleStopMinutes: number
+      sessionAutoStopHours: number
+      firstOnlineAt: Date | null
     }, ExtArgs["result"]["server"]>
     composites: {}
   }
@@ -7539,6 +7606,11 @@ export namespace Prisma {
     readonly backupRetention: FieldRef<"Server", 'Int'>
     readonly inviteCode: FieldRef<"Server", 'String'>
     readonly statusShareCode: FieldRef<"Server", 'String'>
+    readonly autoStartLeadMinutes: FieldRef<"Server", 'Int'>
+    readonly idleStopEnabled: FieldRef<"Server", 'Boolean'>
+    readonly idleStopMinutes: FieldRef<"Server", 'Int'>
+    readonly sessionAutoStopHours: FieldRef<"Server", 'Int'>
+    readonly firstOnlineAt: FieldRef<"Server", 'DateTime'>
   }
     
 
@@ -19121,12 +19193,16 @@ export namespace Prisma {
     cpu: number | null
     ramMB: number | null
     diskMB: number | null
+    playerCount: number | null
+    maxPlayers: number | null
   }
 
   export type ServerTelemetrySumAggregateOutputType = {
     cpu: number | null
     ramMB: number | null
     diskMB: number | null
+    playerCount: number | null
+    maxPlayers: number | null
   }
 
   export type ServerTelemetryMinAggregateOutputType = {
@@ -19135,6 +19211,8 @@ export namespace Prisma {
     cpu: number | null
     ramMB: number | null
     diskMB: number | null
+    playerCount: number | null
+    maxPlayers: number | null
     createdAt: Date | null
   }
 
@@ -19144,6 +19222,8 @@ export namespace Prisma {
     cpu: number | null
     ramMB: number | null
     diskMB: number | null
+    playerCount: number | null
+    maxPlayers: number | null
     createdAt: Date | null
   }
 
@@ -19153,6 +19233,8 @@ export namespace Prisma {
     cpu: number
     ramMB: number
     diskMB: number
+    playerCount: number
+    maxPlayers: number
     createdAt: number
     _all: number
   }
@@ -19162,12 +19244,16 @@ export namespace Prisma {
     cpu?: true
     ramMB?: true
     diskMB?: true
+    playerCount?: true
+    maxPlayers?: true
   }
 
   export type ServerTelemetrySumAggregateInputType = {
     cpu?: true
     ramMB?: true
     diskMB?: true
+    playerCount?: true
+    maxPlayers?: true
   }
 
   export type ServerTelemetryMinAggregateInputType = {
@@ -19176,6 +19262,8 @@ export namespace Prisma {
     cpu?: true
     ramMB?: true
     diskMB?: true
+    playerCount?: true
+    maxPlayers?: true
     createdAt?: true
   }
 
@@ -19185,6 +19273,8 @@ export namespace Prisma {
     cpu?: true
     ramMB?: true
     diskMB?: true
+    playerCount?: true
+    maxPlayers?: true
     createdAt?: true
   }
 
@@ -19194,6 +19284,8 @@ export namespace Prisma {
     cpu?: true
     ramMB?: true
     diskMB?: true
+    playerCount?: true
+    maxPlayers?: true
     createdAt?: true
     _all?: true
   }
@@ -19290,6 +19382,8 @@ export namespace Prisma {
     cpu: number
     ramMB: number
     diskMB: number | null
+    playerCount: number | null
+    maxPlayers: number | null
     createdAt: Date
     _count: ServerTelemetryCountAggregateOutputType | null
     _avg: ServerTelemetryAvgAggregateOutputType | null
@@ -19318,6 +19412,8 @@ export namespace Prisma {
     cpu?: boolean
     ramMB?: boolean
     diskMB?: boolean
+    playerCount?: boolean
+    maxPlayers?: boolean
     createdAt?: boolean
     server?: boolean | ServerDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["serverTelemetry"]>
@@ -19328,6 +19424,8 @@ export namespace Prisma {
     cpu?: boolean
     ramMB?: boolean
     diskMB?: boolean
+    playerCount?: boolean
+    maxPlayers?: boolean
     createdAt?: boolean
     server?: boolean | ServerDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["serverTelemetry"]>
@@ -19338,6 +19436,8 @@ export namespace Prisma {
     cpu?: boolean
     ramMB?: boolean
     diskMB?: boolean
+    playerCount?: boolean
+    maxPlayers?: boolean
     createdAt?: boolean
   }
 
@@ -19359,6 +19459,8 @@ export namespace Prisma {
       cpu: number
       ramMB: number
       diskMB: number | null
+      playerCount: number | null
+      maxPlayers: number | null
       createdAt: Date
     }, ExtArgs["result"]["serverTelemetry"]>
     composites: {}
@@ -19759,6 +19861,8 @@ export namespace Prisma {
     readonly cpu: FieldRef<"ServerTelemetry", 'Float'>
     readonly ramMB: FieldRef<"ServerTelemetry", 'Float'>
     readonly diskMB: FieldRef<"ServerTelemetry", 'Float'>
+    readonly playerCount: FieldRef<"ServerTelemetry", 'Int'>
+    readonly maxPlayers: FieldRef<"ServerTelemetry", 'Int'>
     readonly createdAt: FieldRef<"ServerTelemetry", 'DateTime'>
   }
     
@@ -29950,7 +30054,12 @@ export namespace Prisma {
     lastSnapshotAt: 'lastSnapshotAt',
     backupRetention: 'backupRetention',
     inviteCode: 'inviteCode',
-    statusShareCode: 'statusShareCode'
+    statusShareCode: 'statusShareCode',
+    autoStartLeadMinutes: 'autoStartLeadMinutes',
+    idleStopEnabled: 'idleStopEnabled',
+    idleStopMinutes: 'idleStopMinutes',
+    sessionAutoStopHours: 'sessionAutoStopHours',
+    firstOnlineAt: 'firstOnlineAt'
   };
 
   export type ServerScalarFieldEnum = (typeof ServerScalarFieldEnum)[keyof typeof ServerScalarFieldEnum]
@@ -30130,6 +30239,8 @@ export namespace Prisma {
     cpu: 'cpu',
     ramMB: 'ramMB',
     diskMB: 'diskMB',
+    playerCount: 'playerCount',
+    maxPlayers: 'maxPlayers',
     createdAt: 'createdAt'
   };
 
@@ -30604,6 +30715,11 @@ export namespace Prisma {
     backupRetention?: IntFilter<"Server"> | number
     inviteCode?: StringNullableFilter<"Server"> | string | null
     statusShareCode?: StringNullableFilter<"Server"> | string | null
+    autoStartLeadMinutes?: IntFilter<"Server"> | number
+    idleStopEnabled?: BoolFilter<"Server"> | boolean
+    idleStopMinutes?: IntFilter<"Server"> | number
+    sessionAutoStopHours?: IntFilter<"Server"> | number
+    firstOnlineAt?: DateTimeNullableFilter<"Server"> | Date | string | null
     user?: XOR<UserRelationFilter, UserWhereInput>
     definition?: XOR<GameDefinitionNullableRelationFilter, GameDefinitionWhereInput> | null
     backups?: BackupListRelationFilter
@@ -30657,6 +30773,11 @@ export namespace Prisma {
     backupRetention?: SortOrder
     inviteCode?: SortOrderInput | SortOrder
     statusShareCode?: SortOrderInput | SortOrder
+    autoStartLeadMinutes?: SortOrder
+    idleStopEnabled?: SortOrder
+    idleStopMinutes?: SortOrder
+    sessionAutoStopHours?: SortOrder
+    firstOnlineAt?: SortOrderInput | SortOrder
     user?: UserOrderByWithRelationInput
     definition?: GameDefinitionOrderByWithRelationInput
     backups?: BackupOrderByRelationAggregateInput
@@ -30713,6 +30834,11 @@ export namespace Prisma {
     snapshotInterval?: IntFilter<"Server"> | number
     lastSnapshotAt?: DateTimeNullableFilter<"Server"> | Date | string | null
     backupRetention?: IntFilter<"Server"> | number
+    autoStartLeadMinutes?: IntFilter<"Server"> | number
+    idleStopEnabled?: BoolFilter<"Server"> | boolean
+    idleStopMinutes?: IntFilter<"Server"> | number
+    sessionAutoStopHours?: IntFilter<"Server"> | number
+    firstOnlineAt?: DateTimeNullableFilter<"Server"> | Date | string | null
     user?: XOR<UserRelationFilter, UserWhereInput>
     definition?: XOR<GameDefinitionNullableRelationFilter, GameDefinitionWhereInput> | null
     backups?: BackupListRelationFilter
@@ -30766,6 +30892,11 @@ export namespace Prisma {
     backupRetention?: SortOrder
     inviteCode?: SortOrderInput | SortOrder
     statusShareCode?: SortOrderInput | SortOrder
+    autoStartLeadMinutes?: SortOrder
+    idleStopEnabled?: SortOrder
+    idleStopMinutes?: SortOrder
+    sessionAutoStopHours?: SortOrder
+    firstOnlineAt?: SortOrderInput | SortOrder
     _count?: ServerCountOrderByAggregateInput
     _avg?: ServerAvgOrderByAggregateInput
     _max?: ServerMaxOrderByAggregateInput
@@ -30815,6 +30946,11 @@ export namespace Prisma {
     backupRetention?: IntWithAggregatesFilter<"Server"> | number
     inviteCode?: StringNullableWithAggregatesFilter<"Server"> | string | null
     statusShareCode?: StringNullableWithAggregatesFilter<"Server"> | string | null
+    autoStartLeadMinutes?: IntWithAggregatesFilter<"Server"> | number
+    idleStopEnabled?: BoolWithAggregatesFilter<"Server"> | boolean
+    idleStopMinutes?: IntWithAggregatesFilter<"Server"> | number
+    sessionAutoStopHours?: IntWithAggregatesFilter<"Server"> | number
+    firstOnlineAt?: DateTimeNullableWithAggregatesFilter<"Server"> | Date | string | null
   }
 
   export type DiscordRoleAccessWhereInput = {
@@ -31686,6 +31822,8 @@ export namespace Prisma {
     cpu?: FloatFilter<"ServerTelemetry"> | number
     ramMB?: FloatFilter<"ServerTelemetry"> | number
     diskMB?: FloatNullableFilter<"ServerTelemetry"> | number | null
+    playerCount?: IntNullableFilter<"ServerTelemetry"> | number | null
+    maxPlayers?: IntNullableFilter<"ServerTelemetry"> | number | null
     createdAt?: DateTimeFilter<"ServerTelemetry"> | Date | string
     server?: XOR<ServerRelationFilter, ServerWhereInput>
   }
@@ -31696,6 +31834,8 @@ export namespace Prisma {
     cpu?: SortOrder
     ramMB?: SortOrder
     diskMB?: SortOrderInput | SortOrder
+    playerCount?: SortOrderInput | SortOrder
+    maxPlayers?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     server?: ServerOrderByWithRelationInput
   }
@@ -31709,6 +31849,8 @@ export namespace Prisma {
     cpu?: FloatFilter<"ServerTelemetry"> | number
     ramMB?: FloatFilter<"ServerTelemetry"> | number
     diskMB?: FloatNullableFilter<"ServerTelemetry"> | number | null
+    playerCount?: IntNullableFilter<"ServerTelemetry"> | number | null
+    maxPlayers?: IntNullableFilter<"ServerTelemetry"> | number | null
     createdAt?: DateTimeFilter<"ServerTelemetry"> | Date | string
     server?: XOR<ServerRelationFilter, ServerWhereInput>
   }, "id">
@@ -31719,6 +31861,8 @@ export namespace Prisma {
     cpu?: SortOrder
     ramMB?: SortOrder
     diskMB?: SortOrderInput | SortOrder
+    playerCount?: SortOrderInput | SortOrder
+    maxPlayers?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: ServerTelemetryCountOrderByAggregateInput
     _avg?: ServerTelemetryAvgOrderByAggregateInput
@@ -31736,6 +31880,8 @@ export namespace Prisma {
     cpu?: FloatWithAggregatesFilter<"ServerTelemetry"> | number
     ramMB?: FloatWithAggregatesFilter<"ServerTelemetry"> | number
     diskMB?: FloatNullableWithAggregatesFilter<"ServerTelemetry"> | number | null
+    playerCount?: IntNullableWithAggregatesFilter<"ServerTelemetry"> | number | null
+    maxPlayers?: IntNullableWithAggregatesFilter<"ServerTelemetry"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"ServerTelemetry"> | Date | string
   }
 
@@ -32740,6 +32886,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
@@ -32793,6 +32944,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
@@ -32842,6 +32998,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
@@ -32895,6 +33056,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
@@ -32946,6 +33112,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
   }
 
   export type ServerUpdateManyMutationInput = {
@@ -32985,6 +33156,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ServerUncheckedUpdateManyInput = {
@@ -33026,6 +33202,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type DiscordRoleAccessCreateInput = {
@@ -33970,6 +34151,8 @@ export namespace Prisma {
     cpu: number
     ramMB: number
     diskMB?: number | null
+    playerCount?: number | null
+    maxPlayers?: number | null
     createdAt?: Date | string
     server: ServerCreateNestedOneWithoutTelemetryInput
   }
@@ -33980,6 +34163,8 @@ export namespace Prisma {
     cpu: number
     ramMB: number
     diskMB?: number | null
+    playerCount?: number | null
+    maxPlayers?: number | null
     createdAt?: Date | string
   }
 
@@ -33988,6 +34173,8 @@ export namespace Prisma {
     cpu?: FloatFieldUpdateOperationsInput | number
     ramMB?: FloatFieldUpdateOperationsInput | number
     diskMB?: NullableFloatFieldUpdateOperationsInput | number | null
+    playerCount?: NullableIntFieldUpdateOperationsInput | number | null
+    maxPlayers?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     server?: ServerUpdateOneRequiredWithoutTelemetryNestedInput
   }
@@ -33998,6 +34185,8 @@ export namespace Prisma {
     cpu?: FloatFieldUpdateOperationsInput | number
     ramMB?: FloatFieldUpdateOperationsInput | number
     diskMB?: NullableFloatFieldUpdateOperationsInput | number | null
+    playerCount?: NullableIntFieldUpdateOperationsInput | number | null
+    maxPlayers?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -34007,6 +34196,8 @@ export namespace Prisma {
     cpu: number
     ramMB: number
     diskMB?: number | null
+    playerCount?: number | null
+    maxPlayers?: number | null
     createdAt?: Date | string
   }
 
@@ -34015,6 +34206,8 @@ export namespace Prisma {
     cpu?: FloatFieldUpdateOperationsInput | number
     ramMB?: FloatFieldUpdateOperationsInput | number
     diskMB?: NullableFloatFieldUpdateOperationsInput | number | null
+    playerCount?: NullableIntFieldUpdateOperationsInput | number | null
+    maxPlayers?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -34024,6 +34217,8 @@ export namespace Prisma {
     cpu?: FloatFieldUpdateOperationsInput | number
     ramMB?: FloatFieldUpdateOperationsInput | number
     diskMB?: NullableFloatFieldUpdateOperationsInput | number | null
+    playerCount?: NullableIntFieldUpdateOperationsInput | number | null
+    maxPlayers?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -35272,6 +35467,11 @@ export namespace Prisma {
     backupRetention?: SortOrder
     inviteCode?: SortOrder
     statusShareCode?: SortOrder
+    autoStartLeadMinutes?: SortOrder
+    idleStopEnabled?: SortOrder
+    idleStopMinutes?: SortOrder
+    sessionAutoStopHours?: SortOrder
+    firstOnlineAt?: SortOrder
   }
 
   export type ServerAvgOrderByAggregateInput = {
@@ -35286,6 +35486,9 @@ export namespace Prisma {
     memoryUsage?: SortOrder
     snapshotInterval?: SortOrder
     backupRetention?: SortOrder
+    autoStartLeadMinutes?: SortOrder
+    idleStopMinutes?: SortOrder
+    sessionAutoStopHours?: SortOrder
   }
 
   export type ServerMaxOrderByAggregateInput = {
@@ -35327,6 +35530,11 @@ export namespace Prisma {
     backupRetention?: SortOrder
     inviteCode?: SortOrder
     statusShareCode?: SortOrder
+    autoStartLeadMinutes?: SortOrder
+    idleStopEnabled?: SortOrder
+    idleStopMinutes?: SortOrder
+    sessionAutoStopHours?: SortOrder
+    firstOnlineAt?: SortOrder
   }
 
   export type ServerMinOrderByAggregateInput = {
@@ -35368,6 +35576,11 @@ export namespace Prisma {
     backupRetention?: SortOrder
     inviteCode?: SortOrder
     statusShareCode?: SortOrder
+    autoStartLeadMinutes?: SortOrder
+    idleStopEnabled?: SortOrder
+    idleStopMinutes?: SortOrder
+    sessionAutoStopHours?: SortOrder
+    firstOnlineAt?: SortOrder
   }
 
   export type ServerSumOrderByAggregateInput = {
@@ -35382,6 +35595,9 @@ export namespace Prisma {
     memoryUsage?: SortOrder
     snapshotInterval?: SortOrder
     backupRetention?: SortOrder
+    autoStartLeadMinutes?: SortOrder
+    idleStopMinutes?: SortOrder
+    sessionAutoStopHours?: SortOrder
   }
 
   export type FloatWithAggregatesFilter<$PrismaModel = never> = {
@@ -35925,6 +36141,8 @@ export namespace Prisma {
     cpu?: SortOrder
     ramMB?: SortOrder
     diskMB?: SortOrder
+    playerCount?: SortOrder
+    maxPlayers?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -35932,6 +36150,8 @@ export namespace Prisma {
     cpu?: SortOrder
     ramMB?: SortOrder
     diskMB?: SortOrder
+    playerCount?: SortOrder
+    maxPlayers?: SortOrder
   }
 
   export type ServerTelemetryMaxOrderByAggregateInput = {
@@ -35940,6 +36160,8 @@ export namespace Prisma {
     cpu?: SortOrder
     ramMB?: SortOrder
     diskMB?: SortOrder
+    playerCount?: SortOrder
+    maxPlayers?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -35949,6 +36171,8 @@ export namespace Prisma {
     cpu?: SortOrder
     ramMB?: SortOrder
     diskMB?: SortOrder
+    playerCount?: SortOrder
+    maxPlayers?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -35956,6 +36180,8 @@ export namespace Prisma {
     cpu?: SortOrder
     ramMB?: SortOrder
     diskMB?: SortOrder
+    playerCount?: SortOrder
+    maxPlayers?: SortOrder
   }
 
   export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -38185,6 +38411,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
@@ -38236,6 +38467,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
@@ -38575,6 +38811,11 @@ export namespace Prisma {
     backupRetention?: IntFilter<"Server"> | number
     inviteCode?: StringNullableFilter<"Server"> | string | null
     statusShareCode?: StringNullableFilter<"Server"> | string | null
+    autoStartLeadMinutes?: IntFilter<"Server"> | number
+    idleStopEnabled?: BoolFilter<"Server"> | boolean
+    idleStopMinutes?: IntFilter<"Server"> | number
+    sessionAutoStopHours?: IntFilter<"Server"> | number
+    firstOnlineAt?: DateTimeNullableFilter<"Server"> | Date | string | null
   }
 
   export type ArchiveUpsertWithWhereUniqueWithoutUserInput = {
@@ -39269,6 +39510,8 @@ export namespace Prisma {
     cpu: number
     ramMB: number
     diskMB?: number | null
+    playerCount?: number | null
+    maxPlayers?: number | null
     createdAt?: Date | string
   }
 
@@ -39277,6 +39520,8 @@ export namespace Prisma {
     cpu: number
     ramMB: number
     diskMB?: number | null
+    playerCount?: number | null
+    maxPlayers?: number | null
     createdAt?: Date | string
   }
 
@@ -39690,6 +39935,8 @@ export namespace Prisma {
     cpu?: FloatFilter<"ServerTelemetry"> | number
     ramMB?: FloatFilter<"ServerTelemetry"> | number
     diskMB?: FloatNullableFilter<"ServerTelemetry"> | number | null
+    playerCount?: IntNullableFilter<"ServerTelemetry"> | number | null
+    maxPlayers?: IntNullableFilter<"ServerTelemetry"> | number | null
     createdAt?: DateTimeFilter<"ServerTelemetry"> | Date | string
   }
 
@@ -39730,6 +39977,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
@@ -39782,6 +40034,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
@@ -39846,6 +40103,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
@@ -39898,6 +40160,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
@@ -39946,6 +40213,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
@@ -39998,6 +40270,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
@@ -40062,6 +40339,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
@@ -40114,6 +40396,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
@@ -40162,6 +40449,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
@@ -40214,6 +40506,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
@@ -40278,6 +40575,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
@@ -40330,6 +40632,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
@@ -40594,6 +40901,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
@@ -40646,6 +40958,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
@@ -40710,6 +41027,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
@@ -40762,6 +41084,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
@@ -40918,6 +41245,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
@@ -40970,6 +41302,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
@@ -41085,6 +41422,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
@@ -41137,6 +41479,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
@@ -41293,6 +41640,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
@@ -41344,6 +41696,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
@@ -41475,6 +41832,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
@@ -41527,6 +41889,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
@@ -41591,6 +41958,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
@@ -41643,6 +42015,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
@@ -41691,6 +42068,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
@@ -41743,6 +42125,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
@@ -41807,6 +42194,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
@@ -41859,6 +42251,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
@@ -41907,6 +42304,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
@@ -41959,6 +42361,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
@@ -42023,6 +42430,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
@@ -42075,6 +42487,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
@@ -42123,6 +42540,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
@@ -42175,6 +42597,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
@@ -42310,6 +42737,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
@@ -42362,6 +42794,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
@@ -43241,6 +43678,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     user: UserCreateNestedOneWithoutServersInput
     definition?: GameDefinitionCreateNestedOneWithoutServersInput
     backups?: BackupCreateNestedManyWithoutServerInput
@@ -43293,6 +43735,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
@@ -43400,6 +43847,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
@@ -43452,6 +43904,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
@@ -43517,6 +43974,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
   }
 
   export type ArchiveCreateManyUserInput = {
@@ -43661,6 +44123,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     definition?: GameDefinitionUpdateOneWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
@@ -43712,6 +44179,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
@@ -43762,6 +44234,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ArchiveUpdateWithoutUserInput = {
@@ -44018,6 +44495,8 @@ export namespace Prisma {
     cpu: number
     ramMB: number
     diskMB?: number | null
+    playerCount?: number | null
+    maxPlayers?: number | null
     createdAt?: Date | string
   }
 
@@ -44278,6 +44757,8 @@ export namespace Prisma {
     cpu?: FloatFieldUpdateOperationsInput | number
     ramMB?: FloatFieldUpdateOperationsInput | number
     diskMB?: NullableFloatFieldUpdateOperationsInput | number | null
+    playerCount?: NullableIntFieldUpdateOperationsInput | number | null
+    maxPlayers?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -44286,6 +44767,8 @@ export namespace Prisma {
     cpu?: FloatFieldUpdateOperationsInput | number
     ramMB?: FloatFieldUpdateOperationsInput | number
     diskMB?: NullableFloatFieldUpdateOperationsInput | number | null
+    playerCount?: NullableIntFieldUpdateOperationsInput | number | null
+    maxPlayers?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -44294,6 +44777,8 @@ export namespace Prisma {
     cpu?: FloatFieldUpdateOperationsInput | number
     ramMB?: FloatFieldUpdateOperationsInput | number
     diskMB?: NullableFloatFieldUpdateOperationsInput | number | null
+    playerCount?: NullableIntFieldUpdateOperationsInput | number | null
+    maxPlayers?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -44335,6 +44820,11 @@ export namespace Prisma {
     backupRetention?: number
     inviteCode?: string | null
     statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
   }
 
   export type ServerUpdateWithoutDefinitionInput = {
@@ -44374,6 +44864,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutServersNestedInput
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
@@ -44425,6 +44920,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
@@ -44475,6 +44975,11 @@ export namespace Prisma {
     backupRetention?: IntFieldUpdateOperationsInput | number
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type AutomationConditionCreateManyAutomationInput = {

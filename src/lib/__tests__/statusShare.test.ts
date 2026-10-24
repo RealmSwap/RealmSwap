@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { getPublicStatus, nextSessionFrom, clearStatusCache } from "../statusShare";
+import { getPublicStatus, nextSessionFrom, clearStatusCache, bucketPlayerHistory, HISTORY_BUCKET_MS } from "../statusShare";
 
 /**
  * The public status page payload. Everything here is what an anonymous
@@ -12,6 +12,7 @@ const bag = vi.hoisted(() => ({
   server: null as any,
   def: null as any,
   serverQueries: 0,
+  telemetryRows: [] as { createdAt: Date; playerCount: number | null }[],
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -30,6 +31,11 @@ vi.mock("@/lib/db", () => ({
         findFirst: async () => bag.def,
       };
     },
+    get serverTelemetry() {
+      return {
+        findMany: async () => bag.telemetryRows,
+      };
+    },
   },
 }));
 
@@ -46,7 +52,34 @@ beforeEach(() => {
   bag.server = null;
   bag.def = { id: "def1", spec: JSON.stringify({ queryType: "minecraft" }) };
   bag.serverQueries = 0;
+  bag.telemetryRows = [];
   dig.mockClear();
+});
+
+describe("bucketPlayerHistory", () => {
+  it("buckets 5-minute stamps into 30-minute buckets keeping each bucket's peak", () => {
+    const base = NOW.getTime();
+    const rows = [
+      { createdAt: new Date(base - 3 * HISTORY_BUCKET_MS), playerCount: 2 },
+      { createdAt: new Date(base - 3 * HISTORY_BUCKET_MS + 4 * 60_000), playerCount: 7 },
+      { createdAt: new Date(base - 1 * HISTORY_BUCKET_MS), playerCount: 1 },
+    ];
+    const buckets = bucketPlayerHistory(rows, NOW);
+    expect(buckets).toHaveLength(2);
+    expect(buckets[0]).toMatchObject({ n: 7 }); // peak of the older bucket
+    expect(buckets[1]).toMatchObject({ n: 1 });
+    // t is the bucket start, within the last 24h
+    expect(new Date(buckets[0].t).getTime()).toBeLessThan(NOW.getTime());
+  });
+
+  it("drops out-of-window rows and returns nothing when there is no data yet", () => {
+    const old = bucketPlayerHistory(
+      [{ createdAt: new Date(NOW.getTime() - 25 * 60 * 60 * 1000), playerCount: 9 }],
+      NOW
+    );
+    expect(old).toEqual([]);
+    expect(bucketPlayerHistory([], NOW)).toEqual([]);
+  });
 });
 
 describe("nextSessionFrom", () => {
@@ -105,6 +138,7 @@ describe("getPublicStatus", () => {
     });
     expect(status?.nextSession?.title).toBe("Friday Night");
     expect(status?.nextSession?.rosterCount).toBe(4);
+    expect(status?.history).toEqual([]); // no telemetry rows in this fixture
 
     // Leak guards: the payload must not even have fields for secrets.
     const keys = Object.keys(status ?? {});
@@ -113,6 +147,25 @@ describe("getPublicStatus", () => {
     expect(keys).not.toContain("inviteCode");
     expect(JSON.stringify(status)).not.toContain("secret");
     expect(JSON.stringify(status)).not.toContain('"p1"');
+  });
+
+  it("carries the 24h player history as counts only — no names, no join timestamps", async () => {
+    bag.server = {
+      id: "s1", name: "My Server", game: "MINECRAFT", status: "STOPPED",
+      port: 25565, ramAllocation: 4, definitionId: "def1", statusShareCode: "abc12345",
+      plannedSessions: [],
+    };
+    bag.telemetryRows = [
+      { createdAt: new Date(NOW.getTime() - 2 * HISTORY_BUCKET_MS), playerCount: 12 },
+      { createdAt: new Date(NOW.getTime() - 1 * HISTORY_BUCKET_MS), playerCount: 4 },
+    ];
+    const status = await getPublicStatus("abc12345", { now: NOW, dig });
+    expect(status?.history).toHaveLength(2);
+    expect(status?.history[0]).toMatchObject({ n: 12 });
+    const serialized = JSON.stringify(status);
+    expect(serialized).not.toContain("password");
+    // Only the two numbers and bucket-start ISO stamps ride along
+    expect(serialized?.match(/"n":/g)).toHaveLength(2);
   });
 
   it("never queries the game for a stopped server", async () => {

@@ -252,12 +252,14 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
         if (s.id === selectedServer.id) {
           if (action === "TOGGLE_TUNNEL") return { ...s, tunnelEnabled: enable };
           if (action === "TOGGLE_AUTO_UPDATE") return { ...s, autoUpdate: enable };
+          if (action === "TOGGLE_IDLE_STOP") return { ...s, idleStopEnabled: enable };
         }
         return s;
       }));
       setSelectedServer((prev: any) => {
         if (action === "TOGGLE_TUNNEL") return { ...prev, tunnelEnabled: enable };
         if (action === "TOGGLE_AUTO_UPDATE") return { ...prev, autoUpdate: enable };
+        if (action === "TOGGLE_IDLE_STOP") return { ...prev, idleStopEnabled: enable };
         return prev;
       });
     } catch (err: any) {
@@ -278,6 +280,25 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
       if (!res.ok) throw new Error(data.error);
       setSelectedServer((prev: any) => ({ ...prev, autoUpdateHour: hour }));
       setServers(servers.map(s => s.id === selectedServer.id ? { ...s, autoUpdateHour: hour } : s));
+    } catch (err: any) {
+      setError(err.message);
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
+  // Generic action + optimistic row patch for the power/automation settings.
+  const setServerOption = async (action: string, payload: Record<string, unknown>, patch: Record<string, unknown>) => {
+    if (!selectedServer) return;
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ...payload })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setSelectedServer((prev: any) => ({ ...prev, ...patch }));
+      setServers(servers.map(s => s.id === selectedServer.id ? { ...s, ...patch } : s));
     } catch (err: any) {
       setError(err.message);
       setTimeout(() => setError(null), 3000);
@@ -625,6 +646,69 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                           <input type="checkbox" className="sr-only peer" checked={selectedServer.autoUpdate || false} onChange={(e) => toggleSetting("TOGGLE_AUTO_UPDATE", e.target.checked)} disabled={selectedServer.game === "MINECRAFT"} />
                           <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple peer-disabled:opacity-50"></div>
                         </label>
+                      </div>
+                    </div>
+
+                    {/* Power & automation — when this server boots and stops itself */}
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-4">Power &amp; Automation</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-4 p-4 bg-slate-900 border border-white/5 rounded-lg">
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-200">Auto-start before sessions</h4>
+                            <p className="text-xs text-slate-500 mt-1 max-w-md">Planned Discord sessions boot this server automatically before they start. The session chip on the dashboard shows the boot time.</p>
+                          </div>
+                          <select
+                            value={selectedServer.autoStartLeadMinutes ?? 15}
+                            onChange={(e) => setServerOption("SET_AUTO_START_LEAD", { minutes: Number(e.target.value) }, { autoStartLeadMinutes: Number(e.target.value) })}
+                            className="bg-slate-950 border border-white/10 rounded px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-accentPurple shrink-0"
+                          >
+                            {[0, 5, 10, 15, 20, 30, 45, 60].map((m) => (
+                              <option key={m} value={m}>{m === 0 ? "At start time" : `${m} min before`}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4 p-4 bg-slate-900 border border-white/5 rounded-lg">
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-200">Stop when idle</h4>
+                            <p className="text-xs text-slate-500 mt-1 max-w-md">If nobody is online for this long, stop the server automatically to free RAM and CPU. Player counts are sampled every 5 minutes — a game that doesn&apos;t answer queries is never treated as empty.</p>
+                            {selectedServer.idleStopEnabled && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">After</span>
+                                <select
+                                  value={selectedServer.idleStopMinutes ?? 30}
+                                  onChange={(e) => setServerOption("TOGGLE_IDLE_STOP", { enable: true, minutes: Number(e.target.value) }, { idleStopMinutes: Number(e.target.value) })}
+                                  className="bg-slate-950 border border-white/10 rounded px-2 py-1 text-xs text-slate-200 outline-none focus:border-accentPurple"
+                                >
+                                  {[15, 30, 45, 60, 90, 120].map((m) => (
+                                    <option key={m} value={m}>{m} min empty</option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" className="sr-only peer" checked={selectedServer.idleStopEnabled || false} onChange={(e) => toggleSetting("TOGGLE_IDLE_STOP", e.target.checked)} />
+                            <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
+                          </label>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4 p-4 bg-slate-900 border border-white/5 rounded-lg">
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-200">Stop after a session winds down</h4>
+                            <p className="text-xs text-slate-500 mt-1 max-w-md">When a planned session started this many hours ago and the server is still empty, stop it automatically.</p>
+                          </div>
+                          <select
+                            value={selectedServer.sessionAutoStopHours ?? 0}
+                            onChange={(e) => setServerOption("SET_SESSION_AUTO_STOP", { hours: Number(e.target.value) }, { sessionAutoStopHours: Number(e.target.value) })}
+                            className="bg-slate-950 border border-white/10 rounded px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-accentPurple shrink-0"
+                          >
+                            {[0, 2, 4, 6, 12, 24].map((h) => (
+                              <option key={h} value={h}>{h === 0 ? "Off" : `After ${h}h empty`}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     </div>
                   </div>

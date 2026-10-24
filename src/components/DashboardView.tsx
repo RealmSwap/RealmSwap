@@ -7,6 +7,7 @@ import { ActivityFeed } from "./dashboard/ActivityFeed";
 import { VaultSection } from "./dashboard/VaultSection";
 import { FirstServerWizard } from "./dashboard/FirstServerWizard";
 import { ConnectionModal } from "./dashboard/ConnectionModal";
+import { FirstBootCelebration } from "./dashboard/FirstBootCelebration";
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -63,6 +64,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   // Import Map Modal State
   const [advisorServer, setAdvisorServer] = useState<any>(null);
   const [connectionServer, setConnectionServer] = useState<any>(null);
+  const [celebrationServer, setCelebrationServer] = useState<any>(null);
   const [importMapServer, setImportMapServer] = useState<any>(null);
   const [importWorldPath, setImportWorldPath] = useState("");
   const [importLoading, setImportLoading] = useState(false);
@@ -119,6 +121,24 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
     const interval = setInterval(fetchUpdates, 60000); // Poll every 60s as a fallback
     return () => clearInterval(interval);
   }, [addToast]);
+
+  // First-boot celebration: a server whose firstOnlineAt was just stamped
+  // (within 15 min — so old servers never re-celebrate) and that this
+  // browser hasn't celebrated yet. The localStorage guard keeps a refresh
+  // from firing it twice.
+  useEffect(() => {
+    if (celebrationServer) return;
+    if (typeof window === "undefined") return;
+    const fresh = data.servers.find((s: any) => {
+      if (!s.firstOnlineAt) return false;
+      if (localStorage.getItem(`rs-celebrated-${s.id}`)) return false;
+      return Date.now() - new Date(s.firstOnlineAt).getTime() < 15 * 60 * 1000;
+    });
+    if (fresh) {
+      localStorage.setItem(`rs-celebrated-${fresh.id}`, "1");
+      setCelebrationServer(fresh);
+    }
+  }, [data.servers, celebrationServer]);
 
   const fetchedHistoryRef = useRef<Set<string>>(new Set());
 
@@ -507,6 +527,18 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
 
       {connectionServer && (
         <ConnectionModal server={connectionServer} onClose={() => setConnectionServer(null)} />
+      )}
+
+      {celebrationServer && (
+        <FirstBootCelebration
+          server={celebrationServer}
+          onClose={() => setCelebrationServer(null)}
+          onOpenJoinInfo={() => {
+            const s = celebrationServer;
+            setCelebrationServer(null);
+            setConnectionServer(s);
+          }}
+        />
       )}
 
       {advisorServer && (

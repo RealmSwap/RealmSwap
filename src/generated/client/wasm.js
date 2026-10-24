@@ -189,7 +189,12 @@ exports.Prisma.ServerScalarFieldEnum = {
   lastSnapshotAt: 'lastSnapshotAt',
   backupRetention: 'backupRetention',
   inviteCode: 'inviteCode',
-  statusShareCode: 'statusShareCode'
+  statusShareCode: 'statusShareCode',
+  autoStartLeadMinutes: 'autoStartLeadMinutes',
+  idleStopEnabled: 'idleStopEnabled',
+  idleStopMinutes: 'idleStopMinutes',
+  sessionAutoStopHours: 'sessionAutoStopHours',
+  firstOnlineAt: 'firstOnlineAt'
 };
 
 exports.Prisma.DiscordRoleAccessScalarFieldEnum = {
@@ -333,6 +338,8 @@ exports.Prisma.ServerTelemetryScalarFieldEnum = {
   cpu: 'cpu',
   ramMB: 'ramMB',
   diskMB: 'diskMB',
+  playerCount: 'playerCount',
+  maxPlayers: 'maxPlayers',
   createdAt: 'createdAt'
 };
 

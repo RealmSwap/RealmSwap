@@ -13,6 +13,7 @@ import { prisma } from "../db";
 import { mapPort, unmapPort, getPublicIP, getLanIP } from "../upnp";
 import { startMonitoring, stopMonitoring, clearStatsHistory } from "../processMonitor";
 import { serverEventBus } from "../eventBus";
+import { markFirstOnline } from "../firstOnline";
 import { parseSpec } from "../definitions/serialize";
 import { buildContext } from "../definitions/context";
 import { planInstall, planLaunch, planPorts, resolveCommand, resolveExecutablePath } from "../definitions/plan";
@@ -389,6 +390,9 @@ function waitForReadiness(
       where: { id: serverId },
       data: { status: "RUNNING", pendingRestart: false },
     }).then(() => serverEventBus.emit("status_update", { serverId, status: "RUNNING" })).catch(e => console.error("Error updating status to RUNNING:", e));
+
+    // First-ever readiness — feeds the dashboard's first-boot celebration.
+    markFirstOnline(serverId).catch(() => {});
   };
 
   // 1. Stdout listener

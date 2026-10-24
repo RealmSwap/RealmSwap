@@ -4,7 +4,42 @@ import React from "react";
 import { CalendarClock, Users } from "lucide-react";
 import { formatSessionStart } from "@/lib/sessions";
 import { gameIcon, statusLabel } from "@/lib/gameDisplay";
-import type { PublicServerStatus } from "@/lib/statusShare";
+import type { PublicServerStatus, PlayerHistoryPoint } from "@/lib/statusShare";
+
+/**
+ * "Players over the last 24h" bar strip — the busiest-hours story at a
+ * glance (when friends actually show up). Counts only; hand-rolled bars
+ * like the dashboard sparklines, no chart library.
+ */
+function PlayerHistoryStrip({ history }: { history: PlayerHistoryPoint[] }) {
+  const peak = Math.max(...history.map((p) => p.n));
+  const fmtTime = (iso: string) =>
+    new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(new Date(iso));
+  return (
+    <div className="mt-5">
+      <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        <span>Players · last 24h</span>
+        <span className="text-emerald-400/80 normal-case">
+          {peak > 0 ? `peak ${peak}` : ""}
+        </span>
+      </div>
+      <div className="mt-2 flex items-end gap-[2px] h-10" aria-label="Players over the last 24 hours">
+        {history.map((p) => (
+          <div
+            key={p.t}
+            className={`flex-1 rounded-sm min-w-[3px] ${p.n > 0 ? "bg-emerald-500/60" : "bg-slate-700/60"}`}
+            style={{ height: `${peak > 0 ? Math.max((p.n / peak) * 100, 8) : 8}%` }}
+            title={`${fmtTime(p.t)} — ${p.n} player${p.n === 1 ? "" : "s"}`}
+          />
+        ))}
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-slate-600">
+        <span>24h ago</span>
+        <span>now</span>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Live view of the public status payload. Server-rendered with the page's
@@ -86,6 +121,8 @@ export function StatusCard({ initial }: { initial: PublicServerStatus | null }) 
             Up — this game doesn&apos;t report player counts
           </div>
         ) : null}
+
+        {status.history.length > 0 && <PlayerHistoryStrip history={status.history} />}
 
         {status.nextSession && (
           <div className="mt-5 p-3 rounded-xl bg-slate-950/50 border border-white/5">

@@ -66,15 +66,19 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
-    // Peak RAM per server over the last 7 days, for right-sizing hints.
+    // Peak RAM + peak player count per server over the last 7 days, for
+    // right-sizing hints. One groupBy serves both (playerCount is null on
+    // most rows — the 5-min player stamps — and _max ignores nulls).
     const peaks = await prisma.serverTelemetry
       .groupBy({
         by: ["serverId"],
         where: { createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
-        _max: { ramMB: true },
+        _max: { ramMB: true, playerCount: true, maxPlayers: true },
       })
-      .catch(() => [] as { serverId: string; _max: { ramMB: number | null } }[]);
+      .catch(() => [] as { serverId: string; _max: { ramMB: number | null; playerCount: number | null; maxPlayers: number | null } }[]);
     const peakByServer = new Map(peaks.map((p) => [p.serverId, p._max.ramMB ?? 0]));
+    const peakPlayersByServer = new Map(peaks.map((p) => [p.serverId, p._max.playerCount ?? 0]));
+    const peakSlotsByServer = new Map(peaks.map((p) => [p.serverId, p._max.maxPlayers]));
 
     return NextResponse.json({
       user: {
@@ -92,6 +96,16 @@ export async function GET(req: NextRequest) {
             ramHint = `Peaks at only ${peakGB.toFixed(1)} of ${s.ramAllocation} GB — you can free RAM by lowering the allocation.`;
           }
         }
+        const peakPlayers = peakPlayersByServer.get(s.id) ?? 0;
+        const peakSlots = peakSlotsByServer.get(s.id) ?? null;
+        let playerHint: string | null = null;
+        if (peakPlayers > 0) {
+          if (peakSlots != null && peakPlayers >= peakSlots * 0.9) {
+            playerHint = `Peaked at ${peakPlayers} of ${peakSlots} slots this week — close to full; consider raising max players.`;
+          } else {
+            playerHint = `Peaked at ${peakPlayers}${peakSlots != null ? ` of ${peakSlots}` : ""} players this week.`;
+          }
+        }
         // Secrets (password/rcon/sftp) never ride in the shared list payload —
         // team members see servers too. The SFTP panel fetches them per-server
         // via /api/servers/[id]/secrets (ADMIN only). Planned sessions go out
@@ -100,6 +114,7 @@ export async function GET(req: NextRequest) {
         return {
           ...safe,
           ramHint,
+          playerHint,
           plannedSessions: (s.plannedSessions ?? []).map(summarizePlannedSession),
         };
       }),

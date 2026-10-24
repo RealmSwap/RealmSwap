@@ -26,7 +26,8 @@ import {
   RotateCw,
   MemoryStick,
   QrCode,
-  CalendarClock
+  CalendarClock,
+  Users
 } from "lucide-react";
 
 export function ServerHeroCard({
@@ -186,11 +187,16 @@ export function ServerHeroCard({
           {server.plannedSessions?.length > 0 && (
             <div
               className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-300/90 mt-1 w-fit"
-              title={`Planned in Discord: ${server.plannedSessions[0].title} — ${server.plannedSessions[0].rosterCount} in${server.plannedSessions.length > 1 ? ` (+${server.plannedSessions.length - 1} more scheduled)` : ""}`}
+              title={`Planned in Discord: ${server.plannedSessions[0].title} — ${server.plannedSessions[0].rosterCount} in${server.plannedSessions.length > 1 ? ` (+${server.plannedSessions.length - 1} more scheduled)` : ""}. The server boots automatically ${server.autoStartLeadMinutes ?? 15} min before the session.${server.plannedSessions.length > 1 ? ` (+${server.plannedSessions.length - 1} more scheduled)` : ""}`}
             >
               <CalendarClock className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate max-w-[320px]">
                 {formatSessionStart(server.plannedSessions[0].startTime)} · {server.plannedSessions[0].rosterCount} in
+                {" · "}
+                auto-starts{" "}
+                {formatSessionStart(
+                  new Date(new Date(server.plannedSessions[0].startTime).getTime() - (server.autoStartLeadMinutes ?? 15) * 60_000).toISOString()
+                )}
               </span>
             </div>
           )}
@@ -201,6 +207,15 @@ export function ServerHeroCard({
             >
               <MemoryStick className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="truncate max-w-[320px]">{server.ramHint}</span>
+            </div>
+          )}
+          {server.playerHint && (
+            <div
+              className="flex items-center gap-1.5 text-[11px] font-medium text-violet-300/90 mt-1 w-fit"
+              title="Based on player counts reported by the game over the last 7 days"
+            >
+              <Users className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate max-w-[320px]">{server.playerHint}</span>
             </div>
           )}
           <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-white/80 mt-1">
