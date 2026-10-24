@@ -63,7 +63,7 @@ const GAME_THEMES: Record<
     border: "border-green-500/30",
     text: "text-green-400",
     icon: "⛏️",
-    providerName: "Modrinth",
+    providerName: "Modrinth + CurseForge",
   },
   VALHEIM: {
     gradient: "from-amber-500 to-amber-700",
@@ -558,6 +558,8 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     if (mod.modType === "BEPINEX") return "BEPINEX";
     if (mod.provider === "modrinth") return "MODRINTH";
     if (mod.provider === "workshop" || mod.workshopId) return "STEAM_WORKSHOP";
+    if (mod.provider === "curseforge") return "CURSEFORGE";
+    if (mod.workshopId) return "STEAM_WORKSHOP";
     return "THUNDERSTORE";
   };
 
@@ -1796,7 +1798,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {mod.provider === "modrinth" || mod.provider === "thunderstore" ? (
+                            {mod.provider === "modrinth" || mod.provider === "thunderstore" || mod.provider === "curseforge" ? (
                               <button
                                 onClick={() => handleUpdateMod(mod)}
                                 disabled={loading || updatingModId === mod.id || selectedServer.status === "RUNNING"}

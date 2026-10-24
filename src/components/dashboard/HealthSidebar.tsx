@@ -13,9 +13,11 @@ import {
   BadgeCent,
   AlertTriangle,
   X,
-  CalendarClock
+  CalendarClock,
+  Users
 } from "lucide-react";
-import { formatSessionStart, PlannedSessionSummary } from "@/lib/sessions";
+import { formatSessionStart, formatBusiestHour, PlannedSessionSummary } from "@/lib/sessions";
+import { Sparkline } from "./Sparkline";
 import {
   LineChart,
   Line,
@@ -37,6 +39,13 @@ export function HealthSidebar({
   const [crashData, setCrashData] = React.useState<{ crashes: any[]; weekCount: number } | null>(null);
   const [latestBackup, setLatestBackup] = React.useState<any | null>(null);
   const [network, setNetwork] = React.useState<{ overall: "ready" | "maybe" | "blocked"; issue: { label: string; detail: string } | null; tunnelAlive: boolean } | null>(null);
+  const [players, setPlayers] = React.useState<{
+    current: number | null;
+    maxPlayers: number | null;
+    supported: boolean;
+    history: { t: string; n: number }[];
+    busiest: { dow: number; hour: number; avg: number } | null;
+  } | null>(null);
 
   // Latest backup row (desc by createdAt) — feeds the Last Backup card and
   // its verification status.
@@ -107,6 +116,27 @@ export function HealthSidebar({
     }
     fetchSessions();
     const interval = setInterval(fetchSessions, 60000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [server?.id]);
+
+  // Players: live count (route caches the game query 20s) + 24h/7d history
+  // from the telemetry stamps. 10s poll is safe against the route's cache.
+  React.useEffect(() => {
+    if (!server) return;
+    let cancelled = false;
+    async function fetchPlayers() {
+      try {
+        const res = await fetch(`/api/servers/${server.id}/players`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && !data.error) setPlayers(data);
+        }
+      } catch {
+        // Leave the previous state — transient fetch errors shouldn't blank the row.
+      }
+    }
+    fetchPlayers();
+    const interval = setInterval(fetchPlayers, 10000);
     return () => { cancelled = true; clearInterval(interval); };
   }, [server?.id]);
 
@@ -198,6 +228,45 @@ export function HealthSidebar({
             <div>
               <div className="text-sm font-bold text-slate-200">Network</div>
               <div className={`text-xs ${networkView.cls}`} title={networkTitle}>{networkView.text}</div>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className={`p-2 rounded-xl ${
+              (players?.current ?? 0) > 0 ? "bg-emerald-500/10 text-emerald-400"
+              : players?.supported === false ? "bg-slate-800/60 text-slate-500"
+              : server.status === "RUNNING" ? "bg-sky-500/10 text-sky-400"
+              : "bg-slate-800/60 text-slate-500"
+            }`}>
+              <Users className="w-4 h-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-bold text-slate-200">Players</div>
+              <div className="text-xs text-slate-400" title={players?.supported === false ? "This game doesn't support server queries" : undefined}>
+                {players === null
+                  ? "Checking…"
+                  : players.supported === false
+                    ? "This game doesn't report player counts"
+                    : server.status !== "RUNNING"
+                      ? "Offline — start to accept players"
+                      : players.current == null
+                        ? "Up — no query response yet"
+                        : players.current === 0
+                          ? "Nobody online right now"
+                          : `${players.current}${players.maxPlayers != null ? ` / ${players.maxPlayers}` : ""} online`}
+              </div>
+              {players?.busiest && (
+                <div
+                  className="text-[10px] font-bold text-violet-300/90 mt-0.5"
+                  title="Busiest hour by average players over the last week (host's local time)"
+                >
+                  Busiest: {formatBusiestHour(players.busiest)}
+                </div>
+              )}
+              {players && players.history.length > 0 && (
+                <div className="mt-1.5">
+                  <Sparkline data={players.history.map((p) => p.n)} color="#34d399" height={16} width={96} className="opacity-70" />
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-start gap-3">

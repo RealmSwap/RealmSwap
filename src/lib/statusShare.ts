@@ -26,6 +26,7 @@ export interface PublicServerStatus {
   maxplayers: number | null;
   nextSession: (PlannedSessionSummary & { isNext: true }) | null;
   history: PlayerHistoryPoint[]; // player counts over the last 24h (counts only — no names, no timestamps of individual joins)
+  weekly: number[][]; // 7×24 avg players per weekday-hour over the last week (host-local time) — the "Fridays 8–11 PM" story
 }
 
 const STATUS_CACHE_TTL_MS = 20_000;
@@ -58,6 +59,54 @@ export function bucketPlayerHistory(
       t: new Date(start + idx * HISTORY_BUCKET_MS).toISOString(),
       n: buckets.get(idx)!,
     }));
+}
+
+export const WEEKLY_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * "Fridays 8–11 PM" as data: average player count per weekday×hour over the
+ * last 7 days, bucketed in the HOST's local time (that's the timezone the
+ * sessions actually happen in). grid[getDay()][getHours()]. Stamps only
+ * exist while the server runs, so quiet hours read as 0 without claiming
+ * the server was offline.
+ */
+export function bucketWeeklyHeatmap(
+  rows: { createdAt: Date | string; playerCount: number }[],
+  now: Date
+): number[][] {
+  const start = now.getTime() - WEEKLY_WINDOW_MS;
+  const sums = Array.from({ length: 7 }, () => new Array<number>(24).fill(0));
+  const counts = Array.from({ length: 7 }, () => new Array<number>(24).fill(0));
+  for (const row of rows) {
+    const ts = new Date(row.createdAt).getTime();
+    if (ts < start || ts > now.getTime()) continue;
+    const d = new Date(ts); // host-local wall clock — the timezone sessions happen in
+    sums[d.getDay()][d.getHours()] += row.playerCount;
+    counts[d.getDay()][d.getHours()] += 1;
+  }
+  return sums.map((daySums, dow) =>
+    daySums.map((sum, hour) =>
+      counts[dow][hour] > 0 ? Math.round((sum / counts[dow][hour]) * 10) / 10 : 0
+    )
+  );
+}
+
+export interface BusiestHour {
+  dow: number; // 0 = Sunday (Date#getDay)
+  hour: number; // 0–23, host-local
+  avg: number; // average players in that hour over the week
+}
+
+/** The single busiest weekday-hour cell; null when the week has no player data at all. */
+export function busiestHour(grid: number[][]): BusiestHour | null {
+  let best: BusiestHour | null = null;
+  for (let dow = 0; dow < grid.length; dow++) {
+    for (let hour = 0; hour < 24; hour++) {
+      const avg = grid[dow][hour];
+      if (avg > 0 && (!best || avg > best.avg)) best = { dow, hour, avg };
+    }
+  }
+  return best;
 }
 
 const globalForStatus = globalThis as unknown as {
@@ -130,17 +179,20 @@ export async function getPublicStatus(
 
   // Player history from the telemetry table's 5-minute stamps — counts only,
   // so the public payload stays leak-proof (no player names, no join events).
+  // One 7-day fetch feeds both the 24h strip and the weekly heatmap.
   const historyRows = await prisma.serverTelemetry
     .findMany({
       where: {
         serverId: server.id,
         playerCount: { not: null },
-        createdAt: { gte: new Date(now.getTime() - HISTORY_WINDOW_MS) },
+        createdAt: { gte: new Date(now.getTime() - WEEKLY_WINDOW_MS) },
       },
       orderBy: { createdAt: "asc" },
       select: { createdAt: true, playerCount: true },
     })
     .catch(() => [] as { createdAt: Date; playerCount: number | null }[]);
+
+  const stampRows = historyRows.map((r) => ({ createdAt: r.createdAt, playerCount: r.playerCount as number }));
 
   const status: PublicServerStatus = {
     code,
@@ -150,10 +202,8 @@ export async function getPublicStatus(
     players,
     maxplayers,
     nextSession: next ? { ...next, isNext: true } : null,
-    history: bucketPlayerHistory(
-      historyRows.map((r) => ({ createdAt: r.createdAt, playerCount: r.playerCount as number })),
-      now
-    ),
+    history: bucketPlayerHistory(stampRows, now),
+    weekly: bucketWeeklyHeatmap(stampRows, now),
   };
 
   statusCache().set(code, { status, at: now.getTime() });

@@ -65,3 +65,17 @@ export function isAutoStartDue(sessionStartTime: Date | string, leadMinutes: num
   const t = now.getTime();
   return t >= start - leadMs && t < start;
 }
+
+const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/**
+ * "Friday 9 PM" for the weekly heatmap's busiest cell (dow from
+ * Date#getDay, hour host-local). Pure — the Date is constructed, so the
+ * label doesn't depend on the viewer's timezone.
+ */
+export function formatBusiestHour(busiest: { dow: number; hour: number }): string {
+  const hourLabel = new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(
+    new Date(2026, 0, 4, busiest.hour) // Jan 4 2026 is a Sunday; only the clock hour matters
+  );
+  return `${WEEKDAY_NAMES[busiest.dow] ?? "?"} ${hourLabel}`;
+}

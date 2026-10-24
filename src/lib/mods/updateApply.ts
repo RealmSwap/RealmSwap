@@ -7,6 +7,9 @@ import { downloadFile } from "@/lib/download";
 import { detectMinecraftVersion, readLoaderMarker } from "@/lib/mods/mcLoaders";
 import { resolveInstallCandidate } from "@/lib/mods/modrinth";
 import {
+  getCurseForgeModFiles, pickCompatibleCfFile, curseForgeDownloadUrl,
+} from "@/lib/mods/curseforge";
+import {
   communityForGame,
   fetchCommunityIndex,
   isBepInExCore,
@@ -45,6 +48,7 @@ export class UpdateResolutionError extends Error {
  */
 export async function resolveModUpdate(
   installation: { provider: string; packageId: string; version: string; name?: string; workshopModId?: string | null },
+  installation: { provider: string; packageId: string; version: string; name?: string },
   game: string,
   serverId: string
 ): Promise<ResolvedModUpdate> {
@@ -64,6 +68,32 @@ export async function resolveModUpdate(
       newVersionNumber: candidate.version.version_number,
       applyUpdate: async () => {
         await downloadFile(candidate.file.url, dest);
+      },
+    };
+  }
+
+  if (installation.provider === "curseforge") {
+    if (game !== "MINECRAFT") {
+      throw new UpdateResolutionError("CurseForge mod updates are supported for Minecraft servers only.");
+    }
+    const modId = Number(installation.packageId);
+    if (!Number.isInteger(modId) || modId <= 0) {
+      throw new UpdateResolutionError(`'${installation.packageId}' is not a CurseForge mod id.`, 404);
+    }
+    const marker = readLoaderMarker(serverRoot);
+    const files = await getCurseForgeModFiles(modId);
+    const candidate = pickCompatibleCfFile(files, {
+      mcVersion: detectMinecraftVersion(serverRoot),
+      loader: marker?.type ?? null,
+    });
+    if (!candidate) {
+      throw new UpdateResolutionError(`No compatible CurseForge file found for '${installation.name ?? installation.packageId}'.`, 404);
+    }
+    const dest = safeJoin(path.join(serverRoot, "mods"), `${installation.packageId}.jar`);
+    return {
+      newVersionNumber: candidate.displayName,
+      applyUpdate: async () => {
+        await downloadFile(curseForgeDownloadUrl(candidate), dest);
       },
     };
   }

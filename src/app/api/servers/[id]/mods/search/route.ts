@@ -42,8 +42,6 @@ export async function GET(
       const modrinthResults = await modrinth.search(query, game, options);
       const curseforgeResults = await curseforge.search(query, game, options);
       results = [...modrinthResults, ...curseforgeResults].sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
-    } else if (game === "ARK") {
-      results = await curseforge.search(query, game, options);
     } else if (game === "ZOMBOID") {
       results = await workshop.search(query, game, options);
     } else {
