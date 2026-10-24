@@ -20,7 +20,8 @@ import {
 import { WORKSHOP_APP_IDS, getWorkshopDetails } from "@/lib/mods/workshop";
 import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
 import { fetchUmodPluginMeta, OXIDE_CORE_MARKER, oxidePluginsDir } from "@/lib/mods/umod";
-import { installPalworldThunderstore } from "@/lib/mods/installers";
+import { installPalworldThunderstore, installFicsitMod } from "@/lib/mods/installers";
+import { getFicsitModByReference, getFicsitModVersion, pickFicsitServerDownload } from "@/lib/mods/ficsit";
 import {
   addZomboidWorkshopMod, removeZomboidWorkshopMod, zomboidServerIniPath,
 } from "@/lib/mods/zomboid";
@@ -121,6 +122,33 @@ export async function resolveModUpdate(
           ? meta.download_url
           : `https://umod.org/plugins/${encodeURIComponent(installation.packageId)}.cs`;
         await downloadFile(url, safeJoin(oxidePluginsDir(rustDir), `${installation.packageId}.cs`));
+      },
+    };
+  }
+
+  if (installation.provider === "ficsit") {
+    // Satisfactory: resolve by the stable reference, reinstall the newest
+    // WindowsServer build (SML + deps stay provisioned by the installer).
+    const byRef = await getFicsitModByReference(installation.packageId);
+    if (!byRef) {
+      throw new UpdateResolutionError(`Mod '${installation.packageId}' not found on ficsit.app.`, 404);
+    }
+    const resolved = await getFicsitModVersion({ modId: byRef.id });
+    if (!resolved) {
+      throw new UpdateResolutionError(`'${installation.packageId}' has no release version on ficsit.app.`, 404);
+    }
+    if (!pickFicsitServerDownload(resolved.version)) {
+      throw new UpdateResolutionError(
+        `'${installation.packageId}' has no WindowsServer build — the client-only release can't run on this server.`
+      );
+    }
+    return {
+      newVersionNumber: resolved.version.version,
+      applyUpdate: async () => {
+        await installFicsitMod({
+          serverId, satisfactoryDir: path.join(serverRoot, "satisfactory-server"),
+          modId: byRef.id, warnings: [],
+        });
       },
     };
   }

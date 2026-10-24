@@ -11,6 +11,7 @@ import {
   installMinecraftMod, installMinecraftCurseforge, installValheimThunderstore, installZomboidWorkshopMod,
   installArkWorkshopMod, installVRisingThunderstore, installVRisingBepInexCore,
   ensureShimloaderCore, installPalworldThunderstore,
+  ensureFicsitSml, installFicsitMod,
 } from "@/lib/mods/installers";
 import { installOxideCore, installRustUmodPlugin } from "@/lib/mods/umod";
 import fs from "fs";
@@ -36,7 +37,7 @@ export async function POST(
 
     const serverId = params.id;
     const modInstallSchema = z.object({
-      modType: z.enum(["STEAM_WORKSHOP", "MODRINTH", "CURSEFORGE", "BEPINEX", "THUNDERSTORE", "UMOD"]),
+      modType: z.enum(["STEAM_WORKSHOP", "MODRINTH", "CURSEFORGE", "BEPINEX", "THUNDERSTORE", "UMOD", "FICSIT"]),
       modId: z.string().optional(),
       modName: z.string().optional(),
       version: z.string().optional(),
@@ -206,6 +207,19 @@ export async function POST(
           await installPalworldThunderstore({
             serverId, palworldDir, packageId: modId, name: modName, versionNumber: version, downloadUrl, warnings,
           });
+        }
+
+      } else if (game === "SATISFACTORY") {
+        const satisfactoryDir = path.join(serverRoot, "satisfactory-server");
+        if (!fs.existsSync(path.join(satisfactoryDir, "FactoryServer.exe"))) {
+          throw new Error("Satisfactory server is not installed yet — install the server before adding mods.");
+        }
+        if (!modId) {
+          // Theme-card framework install: SML only.
+          await ensureFicsitSml(serverId, satisfactoryDir, warnings);
+        } else {
+          const result = await installFicsitMod({ serverId, satisfactoryDir, modId, versionNumber: version, warnings });
+          dependencyCount = result.dependencyCount;
         }
 
       } else {

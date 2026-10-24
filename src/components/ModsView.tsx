@@ -580,6 +580,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     if (mod.provider === "modrinth") return "MODRINTH";
     if (mod.provider === "curseforge") return "CURSEFORGE";
     if (mod.provider === "umod") return "UMOD";
+    if (mod.provider === "ficsit") return "FICSIT";
     if (mod.provider === "workshop" || mod.workshopId) return "STEAM_WORKSHOP";
     return "THUNDERSTORE";
   };

@@ -6,9 +6,11 @@ import { ModrinthProvider } from "@/lib/mods/providers/ModrinthProvider";
 import { SteamWorkshopProvider } from "@/lib/mods/providers/SteamWorkshopProvider";
 import { CurseForgeProvider } from "@/lib/mods/providers/CurseForgeProvider";
 import { UmodProvider } from "@/lib/mods/providers/UmodProvider";
+import { FicsitProvider } from "@/lib/mods/providers/FicsitProvider";
 
 // Instantiate singletons for caching
 const thunderstore = new ThunderstoreProvider();
+const ficsit = new FicsitProvider();
 const modrinth = new ModrinthProvider();
 const workshop = new SteamWorkshopProvider();
 const curseforge = new CurseForgeProvider();
@@ -52,6 +54,8 @@ export async function GET(
       results = await workshop.search(query, game, options);
     } else if (game === "RUST") {
       results = await umod.search(query, game, options);
+    } else if (game === "SATISFACTORY") {
+      results = await ficsit.search(query, game, options);
     } else {
       // Return empty results with a flag instead of a hard error —
       // the frontend shows a friendly "not supported yet" state
