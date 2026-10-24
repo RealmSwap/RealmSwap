@@ -11,6 +11,7 @@ import { dataRoot } from "@/lib/appPaths";
 import path from "path";
 import fs from "fs";
 import AdmZip from "adm-zip";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 /**
  * The Configure modal's backend. Each mod ecosystem names and formats its
@@ -211,6 +212,7 @@ export async function POST(
     }
 
     const { server } = access;
+    requireLocalServer(server, "Mod config editing");
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json({ error: "Please stop the server before modifying configurations." }, { status: 400 });
     }

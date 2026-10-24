@@ -1,6 +1,7 @@
 import { parseSpec } from "./definitions/serialize";
 import { prisma as defaultPrisma } from "./db";
 import { queryGameServer } from "./serverQuery";
+import { resolveGameHost } from "./gameHost";
 import { summarizePlannedSession, PlannedSessionSummary } from "./sessions";
 import type { PrismaClient } from "@/generated/client";
 
@@ -140,7 +141,7 @@ export function nextSessionFrom(
 
 export async function getPublicStatus(
   code: string,
-  deps: { prisma?: PrismaClient; dig?: (opts: { type: string; host: string; port: number }) => Promise<any>; now?: Date } = {}
+  deps: { prisma?: PrismaClient; dig?: (opts: { type: string; host: string; port: number }) => Promise<any>; host?: string; now?: Date } = {}
 ): Promise<PublicServerStatus | null> {
   const prisma = deps.prisma ?? defaultPrisma;
   const now = deps.now ?? new Date();
@@ -167,7 +168,7 @@ export async function getPublicStatus(
       ? await prisma.gameDefinition.findUnique({ where: { id: server.definitionId } })
       : await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug: server.game.toUpperCase() } });
     if (def) {
-      const result = await queryGameServer(server, parseSpec(def.spec), { dig: deps.dig });
+      const result = await queryGameServer(server, parseSpec(def.spec), { dig: deps.dig, host: deps.host ?? await resolveGameHost(server) });
       if (result.status === "online") {
         players = result.players;
         maxplayers = result.maxplayers;

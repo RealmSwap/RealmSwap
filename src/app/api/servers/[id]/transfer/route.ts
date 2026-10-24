@@ -11,6 +11,7 @@ import { setProgress, clearProgress } from "@/lib/downloadProgress";
 import { getRunner } from "@/lib/runners/factory";
 import { dataRoot } from "@/lib/appPaths";
 import { FileEntry, SftpClient, TransferDirection, Transferer } from "@/lib/hosting/types";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 function parseIncludePaths(raw: string | null): string[] {
   if (!raw) return [];
@@ -26,6 +27,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const user = await getAuthenticatedUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const access = await verifyServerAccess(params.id, user.id);
+  if (!access) return NextResponse.json({ error: "Server not found" }, { status: 404 });
+  requireLocalServer(access.server, "Cloud transfer");
   if (!access) return NextResponse.json({ error: "Server not found" }, { status: 404 });
   if (!access.isOwner) return NextResponse.json({ error: "Only the server owner can manage host transfers" }, { status: 403 });
   const { server } = access;

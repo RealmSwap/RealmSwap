@@ -11,6 +11,7 @@ import { swapDirIntoPlace, withServerLock } from "./atomicFs";
 import { reconcileInstalledMods } from "./mods/reconcile";
 import { rconManager } from "./rconManager";
 import { beginSaveFlush, getSaveFlushPlan, pickBackupsToPrune, SaveFlushSession } from "./saveFlush";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // Get the local save path for each game type. Delegates to the pure resolver,
 // injecting the live filesystem roots. DOCKER-runner Valheim servers save under
@@ -37,6 +38,7 @@ export async function createBackup(serverId: string, backupType: "MANUAL" | "AUT
     throw new Error("Server not found");
   }
 
+  requireLocalServer(server, "Backups");
   const { srcDir, zipPattern } = getSavePath(server.game, serverId, server.runnerType);
 
   // Validate that source directory actually exists and has files before zipping
@@ -311,6 +313,7 @@ export async function restoreBackup(backupId: string, sourcePath?: string): Prom
     );
   }
 
+  requireLocalServer(backup.server, "Backup restores");
   const { destExtractDir } = getSavePath(backup.game, backup.serverId, backup.server.runnerType);
 
   await withServerLock(backup.serverId, async () => {

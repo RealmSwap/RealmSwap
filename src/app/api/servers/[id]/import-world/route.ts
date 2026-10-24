@@ -6,6 +6,7 @@ import { dataRoot } from "@/lib/appPaths";
 import { swapDirIntoPlace, withServerLock } from "@/lib/atomicFs";
 import fs from "fs";
 import path from "path";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // Helper to recursively copy directories
 function copyFolderRecursiveSync(from: string, to: string) {
@@ -103,6 +104,7 @@ export async function POST(
       return NextResponse.json({ error: "Server not found" }, { status: 404 });
     }
     const { server } = access;
+    requireLocalServer(server, "World imports");
 
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json(

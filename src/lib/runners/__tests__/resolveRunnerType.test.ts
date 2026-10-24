@@ -13,4 +13,9 @@ describe("resolveRunnerType", () => {
     expect(resolveRunnerType("DOCKER", { hasContainer: false, dockerAvailable: true })).toBe("LOCAL");
     expect(resolveRunnerType("DOCKER", { hasContainer: true, dockerAvailable: false })).toBe("LOCAL");
   });
+  it("returns AGENT only when requested and the node is enrolled", () => {
+    expect(resolveRunnerType("AGENT", { hasContainer: false, dockerAvailable: false, nodeEnrolled: true })).toBe("AGENT");
+    expect(resolveRunnerType("AGENT", { hasContainer: true, dockerAvailable: true, nodeEnrolled: false })).toBe("LOCAL");
+    expect(resolveRunnerType("AGENT", { hasContainer: true, dockerAvailable: true })).toBe("LOCAL");
+  });
 });

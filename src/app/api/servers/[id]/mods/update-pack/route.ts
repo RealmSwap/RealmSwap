@@ -18,6 +18,7 @@ import {
 } from "@/lib/mods/packInstall";
 import fs from "fs";
 import path from "path";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // GET /api/servers/[id]/mods/pack — the server's installed pack identity.
 export async function GET(
@@ -67,6 +68,7 @@ export async function POST(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
+    requireLocalServer(server, "Modpack updates");
 
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json({ error: "Please stop the server before updating the modpack." }, { status: 400 });

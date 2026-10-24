@@ -160,6 +160,7 @@ exports.Prisma.ServerScalarFieldEnum = {
   region: 'region',
   status: 'status',
   runnerType: 'runnerType',
+  nodeId: 'nodeId',
   localPath: 'localPath',
   pid: 'pid',
   password: 'password',
@@ -466,6 +467,38 @@ exports.Prisma.PlayerAuditLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.AgentNodeScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  userId: 'userId',
+  status: 'status',
+  enrollTokenHash: 'enrollTokenHash',
+  enrollExpiresAt: 'enrollExpiresAt',
+  secret: 'secret',
+  platform: 'platform',
+  arch: 'arch',
+  agentVersion: 'agentVersion',
+  dockerVersion: 'dockerVersion',
+  lanIp: 'lanIp',
+  totalRamMB: 'totalRamMB',
+  freeDiskGB: 'freeDiskGB',
+  lastSeenAt: 'lastSeenAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AgentCommandScalarFieldEnum = {
+  id: 'id',
+  nodeId: 'nodeId',
+  serverId: 'serverId',
+  type: 'type',
+  payload: 'payload',
+  status: 'status',
+  result: 'result',
+  createdAt: 'createdAt',
+  sentAt: 'sentAt',
+  completedAt: 'completedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -504,7 +537,9 @@ exports.Prisma.ModelName = {
   PushSubscription: 'PushSubscription',
   Player: 'Player',
   PlayerServerAccess: 'PlayerServerAccess',
-  PlayerAuditLog: 'PlayerAuditLog'
+  PlayerAuditLog: 'PlayerAuditLog',
+  AgentNode: 'AgentNode',
+  AgentCommand: 'AgentCommand'
 };
 
 /**

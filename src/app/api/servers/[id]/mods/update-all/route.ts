@@ -5,6 +5,7 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { resolveModUpdate } from "@/lib/mods/updateApply";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // POST: update every stale mod in ONE snapshot window — resolve all versions
 // first (no snapshot unless something actually changes), then apply updates
@@ -25,6 +26,7 @@ export async function POST(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
+    requireLocalServer(server, "Mod updates");
     const serverId = server.id;
     const game = server.game.toUpperCase();
 

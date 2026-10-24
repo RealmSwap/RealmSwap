@@ -17,6 +17,7 @@ import { installOxideCore, installRustUmodPlugin } from "@/lib/mods/umod";
 import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // POST /api/servers/[id]/mods/install
 // Body: { modType: string, modId?: string, modName?: string, downloadUrl?: string, workshopId?: string }
@@ -58,6 +59,7 @@ export async function POST(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
+    requireLocalServer(server, "Mod installs");
 
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json({ error: "Please stop the server before installing mods." }, { status: 400 });

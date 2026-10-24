@@ -10,6 +10,7 @@ import {
   detectPackServerMcVersion, PackPreflightError,
 } from "@/lib/mods/packInstall";
 import path from "path";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // POST /api/servers/[id]/mods/import-modpack
 // Body: multipart form with a `modpack` file in Modrinth .mrpack format or
@@ -37,6 +38,7 @@ export async function POST(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
+    requireLocalServer(server, "Modpack imports");
 
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json({ error: "Please stop the server before importing a modpack." }, { status: 400 });

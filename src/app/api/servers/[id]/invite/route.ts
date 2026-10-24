@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { generateInviteCodeParts } from "@/lib/realmsync";
 import { startRealmSyncServer, stopRealmSyncServer, getRealmSyncStatus } from "@/lib/realmSyncHost";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -14,6 +15,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     });
 
     if (!server) return new NextResponse("Server not found", { status: 404 });
+    requireLocalServer(server, "RealmSync invites");
 
     // Start the dedicated sync server
     const { publicIp, port } = await startRealmSyncServer();

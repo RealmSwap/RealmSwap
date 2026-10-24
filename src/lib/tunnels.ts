@@ -164,6 +164,13 @@ function sleep(ms: number): Promise<void> {
  * live forwarding address for our port.
  */
 export async function startTunnel(serverId: string, port: number): Promise<TunnelStartResult> {
+  // Tunnels proxy a port on the machine running this dashboard — meaningless
+  // (and wrong) for a server whose game container lives on a remote node.
+  const { prisma } = await import("@/lib/db");
+  const row = await prisma.server.findUnique({ where: { id: serverId }, select: { runnerType: true } }).catch(() => null);
+  if (row?.runnerType === "AGENT") {
+    throw new Error("Tunnels are not supported for remote-node servers yet — port-forward the node's ports instead.");
+  }
   if (runningTunnels.has(serverId) || startingTunnels.has(serverId)) {
     return { ok: true };
   }

@@ -24,6 +24,16 @@ export async function register() {
     (getRunner("DOCKER") as import("@/lib/runners/DockerRunner").DockerRunner)
       .reconcileOnBoot()
       .catch((err: any) => console.error("[Docker] boot reconcile failed:", err?.message));
+
+    // Remote-node servers also outlive this process: their containers run on
+    // the agent, which keeps reporting. Restart the dashboard-side monitors
+    // (they read agent-reported stats from the rows).
+    const { prisma } = await import("@/lib/db");
+    const { startMonitoring } = await import("@/lib/processMonitor");
+    const remoteServers = await prisma.server.findMany({
+      where: { runnerType: "AGENT", status: { in: ["RUNNING", "STARTING"] } },
+    }).catch(() => []);
+    for (const server of remoteServers) startMonitoring(server);
   }
   if (!process.env.SENTRY_DSN) return;
   const Sentry = await import("@sentry/nextjs");

@@ -1,6 +1,6 @@
 import { Rcon } from "rcon-client";
 import { prisma } from "./db";
-import { gameHost } from "./appPaths";
+import { resolveGameHost } from "./gameHost";
 
 class RconManager {
   private connections: Map<string, Rcon> = new Map();
@@ -15,7 +15,7 @@ class RconManager {
 
     const server = await prisma.server.findUnique({
       where: { id: serverId },
-      select: { rconPort: true, rconPassword: true, game: true }
+      select: { rconPort: true, rconPassword: true, game: true, id: true, runnerType: true, nodeId: true }
     });
 
     if (!server || !server.rconPort || !server.rconPassword) {
@@ -24,7 +24,7 @@ class RconManager {
 
     try {
       const rcon = await Rcon.connect({
-        host: gameHost(),
+        host: await resolveGameHost(server),
         port: server.rconPort,
         password: server.rconPassword,
         // Default 2000ms rejects `save-all flush` on large Minecraft worlds
