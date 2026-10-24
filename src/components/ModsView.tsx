@@ -557,9 +557,8 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   const installModType = (mod: { modType?: string; provider?: string; workshopId?: string }): string => {
     if (mod.modType === "BEPINEX") return "BEPINEX";
     if (mod.provider === "modrinth") return "MODRINTH";
-    if (mod.provider === "workshop" || mod.workshopId) return "STEAM_WORKSHOP";
     if (mod.provider === "curseforge") return "CURSEFORGE";
-    if (mod.workshopId) return "STEAM_WORKSHOP";
+    if (mod.provider === "workshop" || mod.workshopId) return "STEAM_WORKSHOP";
     return "THUNDERSTORE";
   };
 

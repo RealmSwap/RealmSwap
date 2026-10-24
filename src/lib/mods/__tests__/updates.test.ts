@@ -155,6 +155,9 @@ describe("workshop rows (Steam Workshop, Zomboid)", () => {
       deps: wsDeps,
     });
     expect(result.errors[0]).toContain('provider "workshop"');
+  });
+});
+
 describe("checkModUpdates: curseforge rows", () => {
   function cfApiFile(opts: { id: number; displayName: string }) {
     return {
@@ -215,5 +218,6 @@ describe("checkModUpdates: curseforge rows", () => {
     });
     expect(result.updates).toEqual([]);
     expect(result.errors[0]).toContain("Minecraft servers only");
+
   });
 });

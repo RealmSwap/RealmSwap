@@ -61,14 +61,12 @@ export async function checkModUpdates(opts: {
 
   const modrinthRows = rows.filter((r) => r.provider === "modrinth");
   const thunderstoreRows = rows.filter((r) => r.provider === "thunderstore");
+  const curseforgeRows = rows.filter((r) => r.provider === "curseforge");
   const workshopRows = rows.filter((r) => r.provider === "workshop" && game === "ZOMBOID");
   const otherRows = rows.filter(
     (r) =>
-      r.provider !== "modrinth" && r.provider !== "thunderstore" &&
+      r.provider !== "modrinth" && r.provider !== "thunderstore" && r.provider !== "curseforge" &&
       !(r.provider === "workshop" && game === "ZOMBOID")
-  const curseforgeRows = rows.filter((r) => r.provider === "curseforge");
-  const otherRows = rows.filter(
-    (r) => r.provider !== "modrinth" && r.provider !== "thunderstore" && r.provider !== "curseforge"
   );
   for (const row of otherRows) {
     errors.push(`${row.name}: updates are not supported for provider "${row.provider}"`);

@@ -48,7 +48,6 @@ export class UpdateResolutionError extends Error {
  */
 export async function resolveModUpdate(
   installation: { provider: string; packageId: string; version: string; name?: string; workshopModId?: string | null },
-  installation: { provider: string; packageId: string; version: string; name?: string },
   game: string,
   serverId: string
 ): Promise<ResolvedModUpdate> {

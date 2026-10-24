@@ -46,7 +46,7 @@ export async function POST(
       rowPatch?: Record<string, string>;
     }[] = [];
     for (const installation of installations) {
-      if (!["modrinth", "thunderstore", "workshop"].includes(installation.provider)) {
+      if (!["modrinth", "thunderstore", "workshop", "curseforge"].includes(installation.provider)) {
         continue; // rows without an update path; the updates check already reports them
       }
       try {
