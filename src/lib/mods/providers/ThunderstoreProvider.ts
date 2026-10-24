@@ -39,7 +39,10 @@ export class ThunderstoreProvider implements ModProvider {
     const categoryFilter = options?.category || "";
     const limit = 20;
 
-    let filtered = packages.filter((pkg) => !pkg.is_deprecated);
+    // Desktop mod-manager installers (.msi shells like r2modman/Gale) are
+    // not server mods — they'd only ever dead-end at install.
+    const MANAGER_PACKAGES = new Set(["ebkr-r2modman", "Kesomannen-GaleModManager"]);
+    let filtered = packages.filter((pkg) => !pkg.is_deprecated && !MANAGER_PACKAGES.has(pkg.full_name));
 
     // Text search filter
     const q = query.toLowerCase();

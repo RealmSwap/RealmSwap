@@ -20,6 +20,10 @@ import {
 } from "@/lib/mods/thunderstore";
 import { addZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { addArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
+import {
+  SHIMLOADER_PACKAGE_ID, PALWORLD_OVERLAY_DIR, shimloaderMarkerPath,
+  planPalworldPackage, applyPalworldPlan,
+} from "@/lib/mods/palworld";
 import { WORKSHOP_APP_IDS } from "@/lib/mods/workshop";
 import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
 
@@ -622,4 +626,97 @@ export async function installArkWorkshopMod(args: {
       version: version || "Workshop", name: name || `Workshop ${workshopId}`,
     },
   });
+}
+
+/**
+ * Palworld: ensure the Thunderstore unreal_shimloader core (the UE4SS shim)
+ * is present. Its zip is an overlay wrapper — dwmapi.dll proxy + the UE4SS
+ * bundle — extracted whole into overlay/<full_name>/ and activated by
+ * runner-injected --mod-dir/--pak-dir/--cfg-dir/--overlay-dir launch args
+ * (see LocalRunner + palworld.ts).
+ */
+export async function ensureShimloaderCore(serverId: string, palworldDir: string): Promise<void> {
+  if (fs.existsSync(shimloaderMarkerPath(palworldDir))) return;
+
+  const index = await fetchCommunityIndex(communityForGame("PALWORLD")!);
+  const corePkg = index.find((p) => p.full_name === SHIMLOADER_PACKAGE_ID);
+  const versionEntry = corePkg ? newestVersion(corePkg) : null;
+  if (!corePkg || !versionEntry) {
+    throw new Error("unreal_shimloader is no longer available on Thunderstore — it is required for Palworld mods.");
+  }
+
+  const tempZip = safeJoin(palworldDir, ".shimloader.staging.zip");
+  await downloadFile(versionEntry.download_url, tempZip);
+  try {
+    // The wrapper keeps its zip layout (dwmapi.dll + UE4SS/ at the root) —
+    // shimloader overlays the tree onto Pal/Binaries/Win64 at boot.
+    extractThunderstorePackage(new AdmZip(tempZip), path.join(palworldDir, PALWORLD_OVERLAY_DIR, SHIMLOADER_PACKAGE_ID));
+  } catch (err: any) {
+    throw new Error(`Failed to extract unreal_shimloader: ${err.message}`);
+  } finally {
+    try { fs.unlinkSync(tempZip); } catch (_) {}
+  }
+
+  await prisma.modInstallation.upsert({
+    where: { serverId_provider_packageId: { serverId, provider: "thunderstore", packageId: SHIMLOADER_PACKAGE_ID } },
+    update: { version: versionEntry.version_number },
+    create: {
+      serverId, provider: "thunderstore", packageId: SHIMLOADER_PACKAGE_ID,
+      version: versionEntry.version_number, name: "unreal_shimloader (UE4SS)",
+    },
+  });
+}
+
+/**
+ * Install a Thunderstore package into a Palworld server via shimloader's
+ * manager dirs (mods/ paks/ cfgs/ overlay/). Provisions the shimloader core
+ * first when missing. Package layouts are classified by planPalworldPackage;
+ * unknown layouts are refused before anything is written.
+ */
+export async function installPalworldThunderstore(args: {
+  serverId: string;
+  palworldDir: string;
+  packageId: string;
+  name?: string;
+  /** Pinned version number (e.g. from a collection export); falls back to newest. */
+  versionNumber?: string;
+  downloadUrl?: string;
+  warnings: string[];
+}): Promise<InstallStepResult> {
+  const { serverId, palworldDir, packageId, name, versionNumber, downloadUrl, warnings } = args;
+
+  await ensureShimloaderCore(serverId, palworldDir);
+
+  const index = await fetchCommunityIndex(communityForGame("PALWORLD")!);
+  const pkg = index.find((p) => p.full_name === packageId);
+  if (!pkg) {
+    throw new Error(`Package '${packageId}' not found on the Palworld Thunderstore community.`);
+  }
+  const versionEntry = findVersionEntry(pkg, { versionNumber, downloadUrl });
+  if (!versionEntry) {
+    throw new Error(`Version '${versionNumber}' of '${packageId}' is no longer available on Thunderstore.`);
+  }
+
+  const tempZip = safeJoin(palworldDir, ".palworld-mod.staging.zip");
+  await downloadFile(versionEntry.download_url, tempZip);
+  let zip: AdmZip;
+  try {
+    zip = new AdmZip(tempZip);
+    const plan = planPalworldPackage({ zip, fullName: packageId, packageName: pkg.name });
+    applyPalworldPlan({ zip, palworldDir, plan });
+  } catch (err: any) {
+    throw new Error(err.message);
+  } finally {
+    try { fs.unlinkSync(tempZip); } catch (_) {}
+  }
+
+  await prisma.modInstallation.upsert({
+    where: { serverId_provider_packageId: { serverId, provider: "thunderstore", packageId } },
+    update: { name: name || pkg.name, version: versionEntry.version_number },
+    create: {
+      serverId, provider: "thunderstore", packageId,
+      version: versionEntry.version_number, name: name || pkg.name,
+    },
+  });
+  return { dependencyCount: 0 };
 }

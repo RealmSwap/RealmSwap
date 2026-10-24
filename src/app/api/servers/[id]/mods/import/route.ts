@@ -14,7 +14,9 @@ import {
 } from "@/lib/mods/mcLoaders";
 import {
   installMinecraftMod, installValheimThunderstore, installZomboidWorkshopMod, installVRisingThunderstore,
+  installArkWorkshopMod,
 } from "@/lib/mods/installers";
+import { installOxideCore, installRustUmodPlugin, OXIDE_CORE_PACKAGE_ID } from "@/lib/mods/umod";
 
 const LOADER_LABELS: Record<string, string> = {
   fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
@@ -70,7 +72,7 @@ export async function POST(
         minecraftVersion: z.string().optional(),
       }).optional(),
       mods: z.array(z.object({
-        provider: z.enum(["workshop", "thunderstore", "modrinth"]),
+        provider: z.enum(["workshop", "thunderstore", "modrinth", "umod"]),
         packageId: z.string().min(1),
         name: z.string().optional(),
         version: z.string().optional(),
@@ -199,6 +201,33 @@ export async function POST(
           await installZomboidWorkshopMod({
             serverId, serverRoot, workshopId: mod.packageId, modId: mod.workshopModId, name: mod.name,
           });
+        } else if (game === "ARK") {
+          if (mod.provider !== "workshop") {
+            throw new Error(`Collection entry '${mod.packageId}' uses provider '${mod.provider}', which ARK doesn't support.`);
+          }
+          // The Workshop ID goes onto ActiveMods= — with -automanagemods the
+          // engine downloads and updates the mod itself at boot, so import
+          // is a pure ini replay.
+          await installArkWorkshopMod({
+            serverId, serverRoot, workshopId: mod.packageId, name: mod.name, version: mod.version,
+          });
+        } else if (game === "RUST") {
+          const rustDir = path.join(serverRoot, "rust-server");
+          if (!fs.existsSync(path.join(rustDir, "RustDedicated_Data"))) {
+            throw new Error("Rust server is not installed yet — install the server before importing plugins.");
+          }
+          if (mod.provider !== "umod") {
+            throw new Error(`Collection entry '${mod.packageId}' uses provider '${mod.provider}', which Rust doesn't support.`);
+          }
+          if (mod.packageId === OXIDE_CORE_PACKAGE_ID) {
+            // The framework row exports like any other — reinstall the core.
+            await installOxideCore({ serverId, rustDir });
+          } else {
+            await installRustUmodPlugin({
+              serverId, rustDir, packageId: mod.packageId, name: mod.name,
+              exportedVersion: mod.version, warnings,
+            });
+          }
         } else {
           throw new Error(`Mod collections are not supported for game: ${server.game}`);
         }

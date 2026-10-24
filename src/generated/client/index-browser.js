@@ -308,6 +308,23 @@ exports.Prisma.GameDefinitionScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.InstalledModpackScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId',
+  kind: 'kind',
+  projectId: 'projectId',
+  fileId: 'fileId',
+  fileName: 'fileName',
+  packName: 'packName',
+  version: 'version',
+  mcVersion: 'mcVersion',
+  loaderType: 'loaderType',
+  loaderVersion: 'loaderVersion',
+  packageIds: 'packageIds',
+  installedAt: 'installedAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ModInstallationScalarFieldEnum = {
   id: 'id',
   serverId: 'serverId',
@@ -474,6 +491,7 @@ exports.Prisma.ModelName = {
   S3Setting: 'S3Setting',
   Collaborator: 'Collaborator',
   GameDefinition: 'GameDefinition',
+  InstalledModpack: 'InstalledModpack',
   ModInstallation: 'ModInstallation',
   ServerSnapshot: 'ServerSnapshot',
   ServerTelemetry: 'ServerTelemetry',

@@ -17,6 +17,7 @@ import { markFirstOnline } from "../firstOnline";
 import { parseSpec } from "../definitions/serialize";
 import { buildContext } from "../definitions/context";
 import { planInstall, planLaunch, planPorts, resolveCommand, resolveExecutablePath } from "../definitions/plan";
+import { shimloaderMarkerPath, shimloaderLaunchArgs } from "../mods/palworld";
 import { ensureJava, parseRequiredJavaMajor } from "../runtimes/javaRuntime";
 import { applyConfigFiles } from "../definitions/applyConfigFiles";
 import { readLoaderMarker, applyLoaderLaunch } from "../mods/mcLoaders";
@@ -623,6 +624,18 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     );
     if (marker && !launch.args.includes("server.jar")) {
       logWriter(`[Loader] Using ${marker.type} ${marker.loaderVersion} (Minecraft ${marker.minecraftVersion})`);
+    }
+  }
+
+  // Palworld: with the shimloader core installed, the manager dirs must be
+  // passed on the command line — the shim loads but loads no mods without
+  // them (r2modman-style contract; paths are manager-owned, so the runner
+  // injects them at launch rather than the game spec).
+  if (server.game.toUpperCase() === "PALWORLD") {
+    const palworldDir = path.join(installDir, "palworld-server");
+    if (fs.existsSync(shimloaderMarkerPath(palworldDir))) {
+      launch.args.push(...shimloaderLaunchArgs(palworldDir));
+      logWriter(`[Mods] Shimloader active — mods/, paks/, cfgs/, overlay/ dirs passed on the launch line`);
     }
   }
 

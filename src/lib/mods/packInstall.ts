@@ -119,6 +119,8 @@ export interface PackApplyResult {
   installedCount: number;
   clientOnlyCount: number;
   overridesCount: number;
+  /** ModInstallation packageIds this pack owns — the retirement set for updates. */
+  installedPackageIds: string[];
 }
 
 /**
@@ -157,6 +159,7 @@ export async function applyModpackPlan(args: {
 
   let installedCount = 0;
   let clientOnlyCount = 0;
+  const installedPackageIds: string[] = [];
 
   if (plan.cfPlan && plan.cfManifest) {
     const modsDir = path.join(serverRoot, "mods");
@@ -184,6 +187,7 @@ export async function applyModpackPlan(args: {
           version: cfFile.displayName, name: plan.cfPlan.modNames.get(cfFile.modId) || cfFile.fileName,
         },
       });
+      installedPackageIds.push(String(cfFile.modId));
       installedCount++;
     }
 
@@ -239,6 +243,7 @@ export async function applyModpackPlan(args: {
             version: plan.packVersion, name: packageId,
           },
         });
+        installedPackageIds.push(packageId);
       }
       installedCount++;
     }
@@ -251,7 +256,7 @@ export async function applyModpackPlan(args: {
   // Overrides go on last so pack-provided files win over manifest downloads.
   const overridesCount = extractMrpackOverrides(plan.zip, serverRoot, plan.overridesPrefixes);
 
-  return { installedCount, clientOnlyCount, overridesCount };
+  return { installedCount, clientOnlyCount, overridesCount, installedPackageIds };
 }
 
 /** Shared response copy for both pack routes. */
@@ -299,4 +304,38 @@ export function detectPackServerMcVersion(serverId: string): string {
     );
   }
   return mcVersion;
+}
+
+/**
+ * Record (or replace) the server's installed-pack identity. One pack per
+ * server: a new install supersedes the previous row. packageIds is the
+ * retirement set the update flow may drop when a newer manifest leaves mods
+ * behind.
+ */
+export async function recordInstalledModpack(args: {
+  serverId: string;
+  plan: ModpackPlan;
+  result: PackApplyResult;
+  projectId?: string | null;
+  fileId?: number | null;
+  fileName?: string | null;
+}): Promise<void> {
+  const { serverId, plan, result, projectId, fileId, fileName } = args;
+  const data = {
+    kind: plan.kind,
+    projectId: projectId ?? null,
+    fileId: fileId ?? null,
+    fileName: fileName ?? null,
+    packName: plan.packName,
+    version: plan.packVersion,
+    mcVersion: plan.packMcVersion ?? null,
+    loaderType: plan.packLoader?.type ?? null,
+    loaderVersion: plan.packLoader?.version ?? null,
+    packageIds: JSON.stringify(result.installedPackageIds),
+  };
+  await prisma.installedModpack.upsert({
+    where: { serverId },
+    update: data,
+    create: { serverId, ...data },
+  });
 }

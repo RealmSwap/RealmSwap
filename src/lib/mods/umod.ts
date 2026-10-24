@@ -182,9 +182,13 @@ export async function installRustUmodPlugin(args: {
   /** Pinned version from a search card or collection export. */
   version?: string;
   downloadUrl?: string;
+  /** Version the collection was exported with — warns when uMod's latest moved on. */
+  exportedVersion?: string;
   warnings: string[];
+  /** Injectable metadata fetch (tests never touch umod.org). */
+  deps?: UmodDeps;
 }): Promise<void> {
-  const { serverId, rustDir, packageId, name, version, downloadUrl, warnings } = args;
+  const { serverId, rustDir, packageId, name, version, downloadUrl, exportedVersion, warnings, deps } = args;
 
   if (!fs.existsSync(path.join(rustDir, OXIDE_CORE_MARKER))) {
     await installOxideCore({ serverId, rustDir });
@@ -196,7 +200,7 @@ export async function installRustUmodPlugin(args: {
   if (!url) {
     let meta: any = null;
     try {
-      meta = await umodJson(`https://umod.org/plugins/${encodeURIComponent(packageId)}.json`);
+      meta = await umodJson(`https://umod.org/plugins/${encodeURIComponent(packageId)}.json`, deps);
     } catch (err: any) {
       warnings.push(`Could not fetch uMod metadata for ${packageId}: ${err.message}`);
     }
@@ -207,6 +211,13 @@ export async function installRustUmodPlugin(args: {
       resolvedVersion = meta.latest_release_version;
     }
     if (typeof meta?.title === "string" && meta.title) title = meta.title;
+    // uMod serves only the newest release — a pinned older version can't be
+    // downloaded, so imports install latest and say so.
+    if (exportedVersion && resolvedVersion && exportedVersion !== resolvedVersion) {
+      warnings.push(
+        `Plugin ${packageId} moved from ${exportedVersion} to ${resolvedVersion} since the collection was exported — installing the newest release.`
+      );
+    }
   }
 
   const pluginsDir = oxidePluginsDir(rustDir);
@@ -237,4 +248,62 @@ export function removeRustUmodPlugin(rustDir: string, packageId: string): void {
   } catch {
     // Already gone — reconcile/uninstall treat that as success.
   }
+}
+
+export interface UmodPluginMeta {
+  name?: string;
+  title?: string;
+  latest_release_version?: string;
+  latest_release_at?: string;
+  download_url?: string;
+}
+
+/**
+ * One plugin's metadata (latest version + download URL). Each call is a real
+ * uMod request — callers must be user-initiated, never batched (the API 429s
+ * aggressively). Results are cached for 60s to absorb double-clicks only.
+ */
+export async function fetchUmodPluginMeta(
+  packageId: string,
+  deps?: UmodDeps
+): Promise<UmodPluginMeta | null> {
+  const cached = metaCache.get(packageId);
+  if (cached && Date.now() - cached.fetchedAt < META_TTL_MS) return cached.meta;
+  try {
+    const meta = await umodJson<UmodPluginMeta>(
+      `https://umod.org/plugins/${encodeURIComponent(packageId)}.json`,
+      deps
+    );
+    metaCache.set(packageId, { meta, fetchedAt: Date.now() });
+    return meta;
+  } catch {
+    // A failed metadata fetch (rate limit, network) must not crash a check —
+    // the caller reports "unknown" honestly.
+    return null;
+  }
+}
+
+const META_TTL_MS = 60 * 1000;
+const metaCache = new Map<string, { meta: UmodPluginMeta | null; fetchedAt: number }>();
+
+export interface UmodUpdateCheck {
+  currentVersion: string;
+  latestVersion: string | null;
+  upToDate: boolean | null; // null = couldn't reach uMod
+}
+
+/** Compare an installed plugin's version against uMod's latest release. */
+export async function checkUmodPluginUpdate(args: {
+  packageId: string;
+  currentVersion: string;
+  deps?: UmodDeps;
+}): Promise<UmodUpdateCheck> {
+  const { packageId, currentVersion, deps } = args;
+  const meta = await fetchUmodPluginMeta(packageId, deps);
+  const latest = meta?.latest_release_version ?? null;
+  return {
+    currentVersion,
+    latestVersion: latest,
+    upToDate: latest === null ? null : latest === currentVersion,
+  };
 }

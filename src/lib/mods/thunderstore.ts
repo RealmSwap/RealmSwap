@@ -217,6 +217,7 @@ export function communityForGame(game: string): string | null {
   const communities: Record<string, string> = {
     VALHEIM: "valheim",
     VRISING: "v-rising",
+    PALWORLD: "palworld",
   };
   return communities[game.toUpperCase()] ?? null;
 }

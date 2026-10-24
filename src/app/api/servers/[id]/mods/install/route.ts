@@ -10,6 +10,7 @@ import { downloadFile } from "@/lib/download";
 import {
   installMinecraftMod, installMinecraftCurseforge, installValheimThunderstore, installZomboidWorkshopMod,
   installArkWorkshopMod, installVRisingThunderstore, installVRisingBepInexCore,
+  ensureShimloaderCore, installPalworldThunderstore,
 } from "@/lib/mods/installers";
 import { installOxideCore, installRustUmodPlugin } from "@/lib/mods/umod";
 import fs from "fs";
@@ -192,6 +193,20 @@ export async function POST(
         await installArkWorkshopMod({
           serverId, serverRoot, workshopId, name: modName, version,
         });
+
+      } else if (game === "PALWORLD") {
+        const palworldDir = path.join(serverRoot, "palworld-server");
+        if (!fs.existsSync(palworldDir)) {
+          throw new Error("Palworld server is not installed yet — install the server before adding mods.");
+        }
+        if (!modId) {
+          // Theme-card framework install: shimloader/UE4SS only.
+          await ensureShimloaderCore(serverId, palworldDir);
+        } else {
+          await installPalworldThunderstore({
+            serverId, palworldDir, packageId: modId, name: modName, versionNumber: version, downloadUrl, warnings,
+          });
+        }
 
       } else {
         throw new Error(`Mods are not supported for game: ${server.game}`);

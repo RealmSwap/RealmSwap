@@ -362,6 +362,9 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   const [loaderBusy, setLoaderBusy] = useState(false);
   const [updatingModId, setUpdatingModId] = useState<string | null>(null);
   const [updateAllBusy, setUpdateAllBusy] = useState(false);
+  const [updatePackBusy, setUpdatePackBusy] = useState(false);
+  const [packInfo, setPackInfo] = useState<any>(null);
+  const [packUpdatable, setPackUpdatable] = useState(false);
   const [syncingDisk, setSyncingDisk] = useState(false);
   const [updatesInfo, setUpdatesInfo] = useState<{ updates: any[]; unknown: any[] } | null>(null);
   const [staleOnly, setStaleOnly] = useState(false);
@@ -452,6 +455,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
           if (data.mods) setInstalledMods(data.mods);
         })
         .catch((err) => console.error(err));
+      fetchPack();
     } else {
       setInstalledMods([]);
       setSearchResults([]);
@@ -679,6 +683,62 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       else toast.error(err.message);
     } finally {
       setUpdateAllBusy(false);
+    }
+  };
+
+  /** uMod only: one user-clicked metadata request per plugin (batch checks
+   * would 429 against umod.org — the check-update route is deliberately
+   * single-plugin). Offers the Update button when a newer release exists. */
+  const handleCheckUpdate = async (mod: any) => {
+    if (!selectedServer) return;
+    setUpdatingModId(mod.id);
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/mods/${mod.id}/check-update`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Check failed");
+      if (data.upToDate === null) toast.error(`Couldn't reach uMod for ${mod.name} — try again in a minute.`);
+      else if (data.upToDate) toast.info(`${mod.name} is up to date (${data.currentVersion}).`);
+      else toast.success(`${mod.name} has a newer release: ${data.latestVersion} (installed ${data.currentVersion}). Use Update to install it.`);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setUpdatingModId(null);
+    }
+  };
+
+  /** Re-resolve the installed CurseForge pack's newest file, re-apply it, and
+   * drop mods that left the new manifest (server-side, one snapshot window). */
+  const handleUpdatePack = async () => {
+    if (!selectedServer || updatePackBusy) return;
+    setUpdatePackBusy(true);
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/mods/update-pack`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) { const e = new Error(data.error || "Pack update failed"); (e as any).bootOutput = data.bootOutput; throw e; }
+      toast[data.updated ? "success" : "info"](data.message);
+      if (data.updated) {
+        const fresh = await fetch(`/api/servers/${selectedServer.id}/mods`).then((r) => r.json());
+        setInstalledMods(fresh.mods || fresh || []);
+        refreshUpdates();
+        fetchPack();
+      }
+    } catch (err: any) {
+      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
+      else toast.error(err.message);
+    } finally {
+      setUpdatePackBusy(false);
+    }
+  };
+
+  const fetchPack = async () => {
+    if (!selectedServer || selectedServer.game.toUpperCase() !== "MINECRAFT") return;
+    try {
+      const res = await fetch(`/api/servers/${selectedServer.id}/mods/pack`);
+      const data = await res.json();
+      setPackInfo(data.pack && data.pack.packName ? data.pack : null);
+      setPackUpdatable(!!data.updatable);
+    } catch {
+      setPackInfo(null);
     }
   };
 
@@ -925,6 +985,17 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     });
     setCustomWorkshopId("");
     setCustomModId("");
+  };
+
+  /** The Configure modal covers every ecosystem that ships editable config
+   * files: BepInEx .cfg (Valheim/V Rising), Forge-standard .toml (Minecraft),
+   * Oxide .json (Rust). */
+  const canConfigure = (mod: { provider: string }) => {
+    const g = selectedServer?.game?.toUpperCase();
+    if (mod.provider === "thunderstore") return g === "VALHEIM" || g === "VRISING";
+    if (mod.provider === "modrinth" || mod.provider === "curseforge") return g === "MINECRAFT";
+    if (mod.provider === "umod") return g === "RUST";
+    return false;
   };
 
   const handleConfigureClick = async (mod: any) => {
@@ -1802,6 +1873,27 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                   </div>
                 </div>
 
+                {game === "MINECRAFT" && packInfo && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-violet-500/10 border border-violet-500/25 text-xs text-violet-300">
+                    <span className="font-bold flex items-center gap-2">
+                      <Package className="w-4 h-4" />
+                      Pack: {packInfo.packName} {packInfo.version}
+                      {packInfo.fileId != null && ` · CF file ${packInfo.fileId}`}
+                      {packInfo.loaderType && ` · ${packInfo.loaderType}`}
+                      {!packUpdatable && " · imported manually (no project identity — re-import to update)"}
+                    </span>
+                    {packUpdatable && (
+                      <button
+                        onClick={handleUpdatePack}
+                        disabled={updatePackBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                        className="px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/40 hover:bg-violet-500/30 text-violet-200 font-bold transition-colors disabled:opacity-50"
+                        title="Resolves the pack's newest CurseForge file, re-applies it in one snapshot window, and removes mods that left the new manifest."
+                      >
+                        {updatePackBusy ? "Updating…" : "Update pack"}
+                      </button>
+                    )}
+                  </div>
+                )}
                 {installedMods.length === 0 ? (
                   <div className="glass-panel rounded-2xl border border-dashed border-white/5 p-12 text-center">
                     <Package className="w-10 h-10 text-slate-600 mx-auto mb-3" />
@@ -1883,7 +1975,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {mod.provider === "modrinth" || mod.provider === "thunderstore" || mod.provider === "curseforge" ? (
+                            {mod.provider === "modrinth" || mod.provider === "thunderstore" || mod.provider === "curseforge" || mod.provider === "umod" ? (
                               <button
                                 onClick={() => handleUpdateMod(mod)}
                                 disabled={loading || updatingModId === mod.id || selectedServer.status === "RUNNING"}
@@ -1894,6 +1986,17 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                                 {updatingModId === mod.id ? "Updating…" : "Update"}
                               </button>
                             ) : null}
+                            {mod.provider === "umod" && (
+                              <button
+                                onClick={() => handleCheckUpdate(mod)}
+                                disabled={updatingModId === mod.id}
+                                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                                title="One manual metadata request per plugin — umod.org rate-limits batched checks"
+                              >
+                                <Search className={`w-3 h-3 ${updatingModId === mod.id ? "animate-spin" : ""}`} />
+                                Check for updates
+                              </button>
+                            )}
                             <button
                               onClick={() => handleDeleteMod(mod)}
                               disabled={loading || selectedServer.status === "RUNNING"}
@@ -1902,7 +2005,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                               <Trash className="w-3 h-3" />
                               Uninstall
                             </button>
-                            {mod.provider === "thunderstore" && (
+                            {canConfigure(mod) && (
                               <button
                                 onClick={() => handleConfigureClick(mod)}
                                 className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-colors flex items-center gap-1.5"
@@ -2147,7 +2250,20 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                             </div>
 
                             <div className="mt-3">
-                              {prop.type === "Boolean" ? (
+                              {prop.type === "JSON" ? (
+                                <textarea
+                                  value={prop.value}
+                                  onChange={(e) =>
+                                    updateConfigValue(
+                                      sIdx,
+                                      pIdx,
+                                      e.target.value
+                                    )
+                                  }
+                                  rows={Math.min(12, Math.max(3, prop.value.split("\n").length))}
+                                  className="w-full px-3 py-2 text-xs font-mono rounded-lg bg-slate-900 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors"
+                                />
+                              ) : prop.type === "Boolean" ? (
                                 <select
                                   value={prop.value.toLowerCase()}
                                   onChange={(e) =>

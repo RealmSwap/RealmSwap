@@ -19,6 +19,8 @@ import {
 } from "@/lib/mods/thunderstore";
 import { WORKSHOP_APP_IDS, getWorkshopDetails } from "@/lib/mods/workshop";
 import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
+import { fetchUmodPluginMeta, OXIDE_CORE_MARKER, oxidePluginsDir } from "@/lib/mods/umod";
+import { installPalworldThunderstore } from "@/lib/mods/installers";
 import {
   addZomboidWorkshopMod, removeZomboidWorkshopMod, zomboidServerIniPath,
 } from "@/lib/mods/zomboid";
@@ -99,9 +101,51 @@ export async function resolveModUpdate(
   }
 
   if (installation.provider === "umod") {
-    throw new UpdateResolutionError(
-      "uMod plugin updates aren't supported — uMod's API rate-limits the per-plugin requests an update check needs. Reinstall the plugin to update it."
-    );
+    // One metadata request resolves the newest release; the apply re-downloads
+    // the plugin's .cs. Batch checks (updates.ts) stay unsupported — each
+    // plugin costs uMod requests and the API 429s aggressively.
+    const meta = await fetchUmodPluginMeta(installation.packageId);
+    if (!meta?.latest_release_version) {
+      throw new UpdateResolutionError(`Plugin '${installation.packageId}' has no releases on uMod.`, 404);
+    }
+    const rustDir = path.join(dataRoot(), "local-servers", serverId, "rust-server");
+    if (!fs.existsSync(path.join(rustDir, OXIDE_CORE_MARKER))) {
+      throw new UpdateResolutionError(
+        "The Oxide framework is not installed on this server — reinstall the plugin instead."
+      );
+    }
+    return {
+      newVersionNumber: meta.latest_release_version,
+      applyUpdate: async () => {
+        const url = typeof meta.download_url === "string" && meta.download_url
+          ? meta.download_url
+          : `https://umod.org/plugins/${encodeURIComponent(installation.packageId)}.cs`;
+        await downloadFile(url, safeJoin(oxidePluginsDir(rustDir), `${installation.packageId}.cs`));
+      },
+    };
+  }
+
+  if (installation.provider === "thunderstore" && game === "PALWORLD") {
+    // Palworld packages reinstall through the shimloader layout classifier —
+    // the newest version's files land in mods/ paks/ cfgs/ overlay/.
+    const index = await fetchCommunityIndex(communityForGame("PALWORLD")!);
+    const pkg = index.find((p) => p.full_name === installation.packageId);
+    if (!pkg) {
+      throw new UpdateResolutionError(`Package '${installation.packageId}' not found on Thunderstore.`, 404);
+    }
+    const latest = newestVersion(pkg);
+    if (!latest) {
+      throw new UpdateResolutionError(`Package '${installation.packageId}' has no published versions.`, 404);
+    }
+    return {
+      newVersionNumber: latest.version_number,
+      applyUpdate: async () => {
+        await installPalworldThunderstore({
+          serverId, palworldDir: path.join(serverRoot, "palworld-server"),
+          packageId: installation.packageId, name: installation.name, warnings: [],
+        });
+      },
+    };
   }
 
   if (installation.provider === "thunderstore") {

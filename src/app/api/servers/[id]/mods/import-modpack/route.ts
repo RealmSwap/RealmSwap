@@ -6,7 +6,7 @@ import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshot
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { readLoaderMarker } from "@/lib/mods/mcLoaders";
 import {
-  planModpackFromZip, applyModpackPlan, packResultMessage, auditPackInstall,
+  planModpackFromZip, applyModpackPlan, packResultMessage, auditPackInstall, recordInstalledModpack,
   detectPackServerMcVersion, PackPreflightError,
 } from "@/lib/mods/packInstall";
 import path from "path";
@@ -84,6 +84,7 @@ export async function POST(
       console.log(`[Sandbox] Boot test passed for ${serverId}`);
 
       await auditPackInstall({ userId: user.id, serverName: server.name, plan, result, warnings });
+      await recordInstalledModpack({ serverId, plan, result });
 
       return NextResponse.json({
         success: true,
