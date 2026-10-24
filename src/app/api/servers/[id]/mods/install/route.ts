@@ -9,6 +9,7 @@ import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { downloadFile } from "@/lib/download";
 import {
   installMinecraftMod, installMinecraftCurseforge, installValheimThunderstore, installZomboidWorkshopMod,
+  installArkWorkshopMod,
 } from "@/lib/mods/installers";
 import fs from "fs";
 import path from "path";
@@ -137,6 +138,16 @@ export async function POST(
         // derives the ini mod IDs from its mod.info files.
         await installZomboidWorkshopMod({
           serverId, serverRoot, workshopId, modId, name: modName, version,
+        });
+
+      } else if (game === "ARK") {
+        if (!workshopId) {
+          throw new Error("A Workshop ID is required for ARK mods.");
+        }
+        // The Workshop ID goes straight onto ActiveMods= — the server
+        // downloads and updates the mod itself (-automanagemods).
+        await installArkWorkshopMod({
+          serverId, serverRoot, workshopId, name: modName, version,
         });
 
       } else {

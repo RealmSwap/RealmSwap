@@ -288,7 +288,8 @@
           },
           "-server",
           "-nosound",
-          "-QueryPort=27015"
+          "-QueryPort=27015",
+          "-automanagemods"
         ],
         "readyPattern": "Full Startup:"
       },
@@ -310,7 +311,8 @@
           },
           "-server",
           "-nosound",
-          "-QueryPort=27015"
+          "-QueryPort=27015",
+          "-automanagemods"
         ]
       },
       "defaultPort": 7777,

@@ -151,6 +151,11 @@ export async function resolveModUpdate(
   }
 
   if (installation.provider === "workshop") {
+    if (game === "ARK") {
+      throw new UpdateResolutionError(
+        "ARK Workshop mods are downloaded and updated by the server itself on startup (-automanagemods) — restart the server to pick up updates."
+      );
+    }
     if (game !== "ZOMBOID") {
       throw new UpdateResolutionError("Steam Workshop mod updates are supported for Project Zomboid servers only.");
     }
