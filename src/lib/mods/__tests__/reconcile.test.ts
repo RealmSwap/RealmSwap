@@ -206,4 +206,47 @@ describe("reconcileInstalledMods", () => {
       expect(result.added).toBe(0);
     });
   });
+
+  describe("ARK", () => {
+    const arkIni = () =>
+      path.join(serverRoot(), "ark-server", "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini");
+
+    function writeArkIni(activeMods: string[]) {
+      fs.mkdirSync(path.dirname(arkIni()), { recursive: true });
+      fs.writeFileSync(arkIni(), `[ServerSettings]\nActiveMods=${activeMods.join(",")}\n[SessionSettings]\nSessionName=x\n`);
+    }
+
+    it("keys rows on ActiveMods, deletes gone ids, adds new ones", async () => {
+      writeArkIni(["731604991", "1404697612"]);
+      bag.server = { id: "s1", game: "ARK" };
+      bag.rows = [
+        { id: "r1", packageId: "731604991", workshopModId: null },
+        { id: "r2", packageId: "gone", workshopModId: null },
+      ];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result).toEqual({ removed: 1, added: 1, repaired: 0 });
+      expect(bag.deletes).toEqual(["r2"]);
+      expect(bag.creates).toEqual([
+        {
+          serverId: "s1",
+          provider: "workshop",
+          packageId: "1404697612",
+          version: "Workshop",
+          name: "Workshop 1404697612",
+        },
+      ]);
+    });
+
+    it("treats a missing ini as nothing installed", async () => {
+      bag.server = { id: "s1", game: "ARK" };
+      bag.rows = [{ id: "r1", packageId: "731604991", workshopModId: null }];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result.removed).toBe(1);
+      expect(result.added).toBe(0);
+    });
+  });
 });

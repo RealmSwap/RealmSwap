@@ -66,7 +66,11 @@ export async function checkModUpdates(opts: {
   const otherRows = rows.filter(
     (r) =>
       r.provider !== "modrinth" && r.provider !== "thunderstore" && r.provider !== "curseforge" &&
-      !(r.provider === "workshop" && game === "ZOMBOID")
+      !(r.provider === "workshop" && game === "ZOMBOID") &&
+      // ARK workshop mods are downloaded AND updated by the dedicated server
+      // itself on every start (-automanagemods) — there is nothing for the
+      // update machinery to do, so they are deliberately unreported.
+      !(r.provider === "workshop" && game === "ARK")
   );
   for (const row of otherRows) {
     errors.push(`${row.name}: updates are not supported for provider "${row.provider}"`);

@@ -21,6 +21,9 @@ export function steamApiKey(): string {
 /** Steam AppIDs with Workshop install strategies in this app. */
 export const WORKSHOP_APP_IDS: Record<string, number> = {
   ZOMBOID: 108600,
+  // ARK: Survival Evolved (the game client's workshop appid; the dedicated
+  // server itself installs as 376030).
+  ARK: 346110,
 };
 
 export function isWorkshopSearchable(game: string): boolean {

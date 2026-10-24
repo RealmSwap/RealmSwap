@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { dataRoot } from "@/lib/appPaths";
 import { readZomboidModLists, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { curatedZomboidWorkshopName } from "@/lib/mods/providers/SteamWorkshopProvider";
+import { readArkActiveMods, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 
 /**
  * Mod rows ↔ disk reconciliation.
@@ -145,6 +146,47 @@ async function reconcileValheim(serverId: string, valheimDir: string): Promise<R
 }
 
 /**
+ * ARK: workshop rows are keyed by the ActiveMods= ids in GameUserSettings.ini
+ * ([ServerSettings]). Single id space — a row's packageId IS the ini entry.
+ */
+async function reconcileArk(serverId: string, serverRoot: string): Promise<ReconcileResult> {
+  const activeMods = new Set(readArkActiveMods(arkGameUserSettingsIniPath(serverRoot)));
+
+  const rows = await prisma.modInstallation.findMany({
+    where: { serverId, provider: "workshop" },
+  });
+
+  let removed = 0;
+  let added = 0;
+  const survivingIds = new Set<string>();
+  for (const row of rows) {
+    if (!activeMods.has(row.packageId)) {
+      await prisma.modInstallation.delete({ where: { id: row.id } });
+      removed++;
+      continue;
+    }
+    survivingIds.add(row.packageId);
+  }
+
+  for (const workshopId of Array.from(activeMods)) {
+    if (!survivingIds.has(workshopId)) {
+      await prisma.modInstallation.create({
+        data: {
+          serverId,
+          provider: "workshop",
+          packageId: workshopId,
+          version: "Workshop",
+          name: `Workshop ${workshopId}`,
+        },
+      });
+      added++;
+    }
+  }
+
+  return { removed, added, repaired: 0 };
+}
+
+/**
  * Zomboid: workshop rows are keyed by the WorkshopItems= ids in
  * servertest.ini. The ini's two keys can't be re-paired from disk alone, so a
  * row's workshopModId is kept as-is while that id is still enabled on Mods=,
@@ -226,6 +268,8 @@ export async function reconcileInstalledMods(serverId: string): Promise<Reconcil
       return reconcileValheim(serverId, path.join(serverRoot, "valheim-server"));
     case "ZOMBOID":
       return reconcileZomboid(serverId, serverRoot);
+    case "ARK":
+      return reconcileArk(serverId, serverRoot);
     default:
       return { removed: 0, added: 0, repaired: 0 };
   }

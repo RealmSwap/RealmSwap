@@ -19,6 +19,7 @@ import {
   collectDependencies, extractThunderstorePackage,
 } from "@/lib/mods/thunderstore";
 import { addZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
+import { addArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 import { WORKSHOP_APP_IDS } from "@/lib/mods/workshop";
 import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
 
@@ -451,6 +452,37 @@ export async function installZomboidWorkshopMod(args: {
     create: {
       serverId, provider: "workshop", packageId: workshopId,
       version: version || "Workshop", name: displayName || `Workshop ${workshopId}`, workshopModId: modIds.join(";"),
+    },
+  });
+}
+
+/**
+ * Register an ARK: Survival Evolved workshop mod: append its Workshop ID to
+ * GameUserSettings.ini's ActiveMods= (order = load order) and record a row.
+ * Unlike Zomboid there is a single id space — the Workshop file id IS the
+ * ActiveMods entry, so no workshopModId is stored. The dedicated server
+ * downloads and updates the mod itself on startup via -automanagemods,
+ * which the ARK launch spec carries.
+ */
+export async function installArkWorkshopMod(args: {
+  serverId: string;
+  serverRoot: string;
+  workshopId: string;
+  name?: string;
+  version?: string;
+}): Promise<void> {
+  const { serverId, serverRoot, workshopId, name, version } = args;
+  const arkDir = path.join(serverRoot, "ark-server");
+  if (!fs.existsSync(arkDir)) {
+    throw new Error("ARK server is not installed yet — install the server before adding Workshop mods.");
+  }
+  addArkActiveMod(arkGameUserSettingsIniPath(serverRoot), workshopId);
+  await prisma.modInstallation.upsert({
+    where: { serverId_provider_packageId: { serverId, provider: "workshop", packageId: workshopId } },
+    update: { name: name || `Workshop ${workshopId}`, ...(version ? { version } : {}) },
+    create: {
+      serverId, provider: "workshop", packageId: workshopId,
+      version: version || "Workshop", name: name || `Workshop ${workshopId}`,
     },
   });
 }
