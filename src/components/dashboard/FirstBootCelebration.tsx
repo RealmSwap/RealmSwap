@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Link2, QrCode, X } from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
+import { isLoopbackOrigin, statusPageUrl } from "@/lib/shareLink";
 
 const CONFETTI_COLORS = ["#a78bfa", "#34d399", "#60a5fa", "#fbbf24", "#f472b6", "#f87171"];
 
@@ -24,9 +25,11 @@ export function FirstBootCelebration({
 }) {
   const { addToast } = useToast();
   const [copied, setCopied] = React.useState(false);
-  const shareLink = server.statusShareCode
-    ? `${window.location.origin}/s/${server.statusShareCode}`
-    : null;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const shareLink = server.statusShareCode ? statusPageUrl(server.statusShareCode, origin) : null;
+  // The dashboard runs on the host's machine — a loopback link can't leave it,
+  // so don't offer copying a "public" URL that friends can't open.
+  const localOnly = !!shareLink && isLoopbackOrigin(origin);
 
   const copyLink = async () => {
     if (!shareLink) return;
@@ -97,7 +100,7 @@ export function FirstBootCelebration({
             <QrCode className="w-4 h-4" />
             Open Join Info
           </button>
-          {shareLink && (
+          {shareLink && !localOnly && (
             <button
               onClick={copyLink}
               className="w-full py-2.5 rounded-xl bg-slate-800 border border-white/5 hover:border-emerald-500/40 text-slate-200 hover:text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors"

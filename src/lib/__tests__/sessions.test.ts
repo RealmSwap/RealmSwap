@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { summarizePlannedSession, formatSessionStart, isAutoStartDue } from "../sessions";
+import { summarizePlannedSession, formatSessionStart, isAutoStartDue, formatBusiestHour } from "../sessions";
 
 describe("summarizePlannedSession", () => {
   it("counts the roster without shipping Discord IDs to the client", () => {
@@ -85,5 +85,13 @@ describe("isAutoStartDue", () => {
     expect(isAutoStartDue(start, 0, start)).toBe(false);
     const thirtyBefore = new Date(start.getTime() - 30 * 60_000);
     expect(isAutoStartDue(start, 30, thirtyBefore)).toBe(true);
+  });
+});
+
+describe("formatBusiestHour", () => {
+  it("labels the busiest weekday-hour cell, midnight included", () => {
+    expect(formatBusiestHour({ dow: 5, hour: 21 })).toBe("Friday 9 PM");
+    expect(formatBusiestHour({ dow: 0, hour: 0 })).toBe("Sunday 12 AM");
+    expect(formatBusiestHour({ dow: 6, hour: 12 })).toBe("Saturday 12 PM");
   });
 });

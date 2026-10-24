@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { getPublicStatus, nextSessionFrom, clearStatusCache, bucketPlayerHistory, HISTORY_BUCKET_MS } from "../statusShare";
+import {
+  getPublicStatus,
+  nextSessionFrom,
+  clearStatusCache,
+  bucketPlayerHistory,
+  bucketWeeklyHeatmap,
+  busiestHour,
+  HISTORY_BUCKET_MS,
+} from "../statusShare";
 
 /**
  * The public status page payload. Everything here is what an anonymous
@@ -79,6 +87,40 @@ describe("bucketPlayerHistory", () => {
     );
     expect(old).toEqual([]);
     expect(bucketPlayerHistory([], NOW)).toEqual([]);
+  });
+});
+
+describe("bucketWeeklyHeatmap + busiestHour", () => {
+  it("averages stamps per weekday×hour in host-local time", () => {
+    // Oct 23 2026 is a Friday; Oct 16 is the Friday one week earlier, inside
+    // the 7-day window ending at Friday noon. Local dates keep the
+    // weekday/hour bucketing deterministic regardless of the test's TZ.
+    const fridayNoon = new Date(2026, 9, 23, 12, 0);
+    const rows = [
+      { createdAt: new Date(2026, 9, 16, 21, 10), playerCount: 4 },
+      { createdAt: new Date(2026, 9, 16, 21, 40), playerCount: 8 },
+      { createdAt: new Date(2026, 9, 16, 22, 0), playerCount: 2 },
+    ];
+    const grid = bucketWeeklyHeatmap(rows, fridayNoon);
+    expect(grid).toHaveLength(7);
+    expect(grid[0]).toHaveLength(24);
+    expect(grid[5][21]).toBe(6); // Friday 9 PM = (4+8)/2
+    expect(grid[5][22]).toBe(2); // Friday 10 PM
+    expect(grid[5][12]).toBe(0); // quiet hour reads 0, not fake data
+    expect(grid[6][21]).toBe(0);
+    const busiest = busiestHour(grid);
+    expect(busiest).toEqual({ dow: 5, hour: 21, avg: 6 });
+  });
+
+  it("drops rows older than the 7-day window and yields all-zero grids to busiestHour=null", () => {
+    const fridayNoon = new Date(2026, 9, 23, 12, 0);
+    const grid = bucketWeeklyHeatmap(
+      [{ createdAt: new Date(fridayNoon.getTime() - 8 * 24 * 60 * 60 * 1000), playerCount: 9 }],
+      fridayNoon
+    );
+    expect(grid.flat().every((v) => v === 0)).toBe(true);
+    expect(busiestHour(grid)).toBeNull();
+    expect(busiestHour(bucketWeeklyHeatmap([], fridayNoon))).toBeNull();
   });
 });
 
@@ -162,6 +204,8 @@ describe("getPublicStatus", () => {
     const status = await getPublicStatus("abc12345", { now: NOW, dig });
     expect(status?.history).toHaveLength(2);
     expect(status?.history[0]).toMatchObject({ n: 12 });
+    expect(status?.weekly).toHaveLength(7);
+    expect(status?.weekly[0]).toHaveLength(24);
     const serialized = JSON.stringify(status);
     expect(serialized).not.toContain("password");
     // Only the two numbers and bucket-start ISO stamps ride along
