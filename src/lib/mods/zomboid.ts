@@ -49,14 +49,20 @@ export function readZomboidModLists(iniPath: string): { workshopIds: string[]; m
   };
 }
 
-/** Register a workshop mod on both keys. Idempotent per id; safe on a missing ini. */
-export function addZomboidWorkshopMod(iniPath: string, workshopId: string, modId: string): void {
+/**
+ * Register a workshop mod on both keys. Idempotent per id; safe on a missing
+ * ini. One workshop item can ship several mod folders — pass every mod ID.
+ */
+export function addZomboidWorkshopMod(iniPath: string, workshopId: string, modId: string | string[]): void {
+  const modIds = Array.isArray(modId) ? modId : [modId];
   editIni(iniPath, (content) => {
     if (!readList(content, "WorkshopItems").includes(workshopId)) {
       content = upsertList(content, "WorkshopItems", [...readList(content, "WorkshopItems"), workshopId]);
     }
-    if (!readList(content, "Mods").includes(modId)) {
-      content = upsertList(content, "Mods", [...readList(content, "Mods"), modId]);
+    const mods = readList(content, "Mods");
+    const missing = modIds.filter((id) => !mods.includes(id));
+    if (missing.length > 0) {
+      content = upsertList(content, "Mods", [...mods, ...missing]);
     }
     return content;
   });
@@ -64,16 +70,19 @@ export function addZomboidWorkshopMod(iniPath: string, workshopId: string, modId
 
 /**
  * Remove a workshop mod: its Workshop ID from `WorkshopItems=` and its mod ID
- * from `Mods=`. Other entries and unrelated ini lines are preserved. The ini
- * is left untouched when it doesn't exist (nothing was ever installed).
+ * (or every mod ID a multi-mod item carried) from `Mods=`. Other entries and
+ * unrelated ini lines are preserved. The ini is left untouched when it
+ * doesn't exist (nothing was ever installed).
  */
-export function removeZomboidWorkshopMod(iniPath: string, workshopId: string, modId: string | null): void {
+export function removeZomboidWorkshopMod(iniPath: string, workshopId: string, modId: string | string[] | null): void {
   if (!fs.existsSync(iniPath)) return;
+  const modIds = modId === null ? [] : Array.isArray(modId) ? modId : [modId];
   editIni(iniPath, (content) => {
     const workshopItems = readList(content, "WorkshopItems").filter((x) => x !== workshopId);
     content = upsertList(content, "WorkshopItems", workshopItems);
-    if (modId) {
-      const mods = readList(content, "Mods").filter((x) => x !== modId);
+    if (modIds.length > 0) {
+      const remove = new Set(modIds);
+      const mods = readList(content, "Mods").filter((x) => !remove.has(x));
       content = upsertList(content, "Mods", mods);
     }
     return content;

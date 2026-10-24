@@ -121,11 +121,13 @@ export async function POST(
         }
 
       } else if (game === "ZOMBOID") {
-        if (!workshopId || !modId) {
-          throw new Error("Both Workshop ID and Mod ID are required for Project Zomboid mods.");
+        if (!workshopId) {
+          throw new Error("A Workshop ID is required for Project Zomboid mods.");
         }
+        // Without a modId the installer downloads the item via SteamCMD and
+        // derives the ini mod IDs from its mod.info files.
         await installZomboidWorkshopMod({
-          serverId, serverRoot, workshopId, modId, name: modName,
+          serverId, serverRoot, workshopId, modId, name: modName, version,
         });
 
       } else {

@@ -16,6 +16,8 @@ import {
   collectDependencies, extractThunderstorePackage,
 } from "@/lib/mods/thunderstore";
 import { addZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
+import { WORKSHOP_APP_IDS } from "@/lib/mods/workshop";
+import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
 
 /**
  * Per-game mod installation steps shared by the single-mod install route and
@@ -298,23 +300,55 @@ export async function installValheimThunderstore(args: {
 /**
  * Register a Project Zomboid workshop mod: merge it into servertest.ini's
  * WorkshopItems=/Mods= keys and record a row keyed by the Workshop ID (with
- * the ini mod ID stored alongside, so uninstall can strip both keys).
+ * the ini mod IDs stored alongside, so uninstall can strip both keys).
+ *
+ * The ini mod ID is not in the Steam Web API — when the caller has none
+ * (live search results), the item is downloaded with SteamCMD into the
+ * server's Steam dir (a boot pre-cache) and the ids are derived from its
+ * mod.info files. One item can carry several mod folders; the row stores
+ * them ';'-joined.
  */
 export async function installZomboidWorkshopMod(args: {
   serverId: string;
   serverRoot: string;
   workshopId: string;
-  modId: string;
+  modId?: string;
   name?: string;
+  /** Pre-fetched item time_updated (ISO); stored as the row version. */
+  version?: string;
+  deps?: {
+    downloadWorkshop?: typeof downloadWorkshopItem;
+    deriveZomboid?: typeof deriveZomboidModIds;
+  };
 }): Promise<void> {
-  const { serverId, serverRoot, workshopId, modId, name } = args;
-  addZomboidWorkshopMod(zomboidServerIniPath(serverRoot), workshopId, modId);
+  const { serverId, serverRoot, workshopId, modId, name, version } = args;
+
+  let modIds: string[];
+  let displayName = name;
+  if (modId) {
+    modIds = [modId];
+  } else {
+    const pzDir = path.join(serverRoot, "zomboid-server");
+    if (!fs.existsSync(pzDir)) {
+      throw new Error("Project Zomboid server is not installed yet — install the server before adding Workshop mods.");
+    }
+    const contentDir = await (args.deps?.downloadWorkshop ?? downloadWorkshopItem)({
+      appId: WORKSHOP_APP_IDS.ZOMBOID,
+      workshopId,
+      installDir: pzDir,
+    });
+    const derived = (args.deps?.deriveZomboid ?? deriveZomboidModIds)(contentDir);
+    modIds = derived.map((d) => d.modId);
+    displayName = displayName ?? derived[0]?.name ?? undefined;
+  }
+
+  addZomboidWorkshopMod(zomboidServerIniPath(serverRoot), workshopId, modIds);
   await prisma.modInstallation.upsert({
     where: { serverId_provider_packageId: { serverId, provider: "workshop", packageId: workshopId } },
-    update: { name: name || `Workshop ${workshopId}`, workshopModId: modId },
+    update: { name: displayName || `Workshop ${workshopId}`, workshopModId: modIds.join(";"), ...(version ? { version } : {}) },
     create: {
       serverId, provider: "workshop", packageId: workshopId,
-      version: "Workshop", name: name || `Workshop ${workshopId}`, workshopModId: modId,
+      version: version || "Workshop", name: displayName || `Workshop ${workshopId}`, workshopModId: modIds.join(";"),
     },
   });
 }

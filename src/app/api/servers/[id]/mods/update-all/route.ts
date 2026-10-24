@@ -43,10 +43,11 @@ export async function POST(
       from: string;
       to: string;
       applyUpdate: () => Promise<void>;
+      rowPatch?: Record<string, string>;
     }[] = [];
     for (const installation of installations) {
-      if (installation.provider !== "modrinth" && installation.provider !== "thunderstore") {
-        continue; // workshop/curseforge rows have no update path; the updates check already reports them
+      if (!["modrinth", "thunderstore", "workshop"].includes(installation.provider)) {
+        continue; // rows without an update path; the updates check already reports them
       }
       try {
         const resolved = await resolveModUpdate(installation, game, serverId);
@@ -59,6 +60,7 @@ export async function POST(
             from: installation.version,
             to: resolved.newVersionNumber,
             applyUpdate: resolved.applyUpdate,
+            rowPatch: resolved.rowPatch,
           });
         }
       } catch (err: any) {
@@ -88,7 +90,7 @@ export async function POST(
       for (const item of planned) {
         await prisma.modInstallation.update({
           where: { id: item.installationId },
-          data: { version: item.to, updatedAt: new Date() },
+          data: { version: item.to, updatedAt: new Date(), ...(item.rowPatch ?? {}) },
         });
       }
       await prisma.activityLog.create({

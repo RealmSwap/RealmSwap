@@ -64,12 +64,13 @@ export async function DELETE(
         fs.unlinkSync(jarPath);
       }
     } else if (game === "ZOMBOID") {
-      // packageId is the Workshop ID (WorkshopItems=); the ini mod ID for
-      // Mods= is stored on the row — the two id spaces are unrelated.
+      // packageId is the Workshop ID (WorkshopItems=); the ini mod IDs for
+      // Mods= are stored ';'-joined on the row (one item can ship several
+      // mod folders) — the two id spaces are unrelated.
       removeZomboidWorkshopMod(
         zomboidServerIniPath(path.join(dataRoot(), "local-servers", serverId)),
         installation.packageId,
-        installation.workshopModId ?? null
+        installation.workshopModId ? installation.workshopModId.split(";").filter(Boolean) : null
       );
     }
 

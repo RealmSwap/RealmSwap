@@ -104,3 +104,56 @@ describe("checkModUpdates", () => {
     expect(result.errors[0]).toContain("network down");
   });
 });
+
+describe("workshop rows (Steam Workshop, Zomboid)", () => {
+  const wsDeps = {
+    fetchWorkshopDetails: (async (ids: string[]) => {
+      const map = new Map();
+      for (const id of ids) {
+        if (id === "gone") continue;
+        map.set(id, { workshopId: id, title: id, timeUpdated: id === "w-current" ? "2025-06-01T00:00:00.000Z" : "2025-12-01T00:00:00.000Z" });
+      }
+      return map;
+    }) as any,
+  };
+
+  it("flags stale versions, passes up-to-date, and buckets non-date versions as unknown", async () => {
+    const result = await checkModUpdates({
+      game: "ZOMBOID",
+      serverRoot: "/tmp/none",
+      rows: [
+        { provider: "workshop", packageId: "w-stale", version: "2025-01-01T00:00:00.000Z", name: "Stale" },
+        { provider: "workshop", packageId: "w-current", version: "2025-06-01T00:00:00.000Z", name: "Current" },
+        { provider: "workshop", packageId: "w-legacy", version: "Workshop", name: "Legacy" },
+      ],
+      deps: wsDeps,
+    });
+
+    expect(result.updates).toEqual([
+      { packageId: "w-stale", name: "Stale", provider: "workshop", current: "2025-01-01T00:00:00.000Z", latest: "2025-12-01T00:00:00.000Z" },
+    ]);
+    expect(result.unknown).toEqual([{ packageId: "w-legacy", name: "Legacy", version: "Workshop" }]);
+    expect(result.errors).toEqual([]);
+  });
+
+  it("reports items that vanished from the workshop", async () => {
+    const result = await checkModUpdates({
+      game: "ZOMBOID",
+      serverRoot: "/tmp/none",
+      rows: [{ provider: "workshop", packageId: "gone", version: "2025-01-01T00:00:00.000Z", name: "Gone Mod" }],
+      deps: wsDeps,
+    });
+    expect(result.updates).toEqual([]);
+    expect(result.errors[0]).toContain("no longer available");
+  });
+
+  it("still errors for workshop rows on other games (no install strategy there)", async () => {
+    const result = await checkModUpdates({
+      game: "MINECRAFT",
+      serverRoot: "/tmp/none",
+      rows: [{ provider: "workshop", packageId: "w1", version: "2025-01-01T00:00:00.000Z", name: "WS" }],
+      deps: wsDeps,
+    });
+    expect(result.errors[0]).toContain('provider "workshop"');
+  });
+});

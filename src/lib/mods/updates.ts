@@ -1,6 +1,7 @@
 import { detectMinecraftVersion, readLoaderMarker } from "@/lib/mods/mcLoaders";
 import { fetchVersions, pickCompatibleVersion } from "@/lib/mods/modrinth";
 import { communityForGame, fetchCommunityIndex, newestVersion } from "@/lib/mods/thunderstore";
+import { getWorkshopDetails, WorkshopDetail } from "@/lib/mods/workshop";
 
 export interface InstalledModRow {
   provider: string;
@@ -32,6 +33,7 @@ export interface ModUpdatesResult {
 export interface CheckUpdatesDeps {
   fetchVersions?: typeof fetchVersions;
   fetchIndex?: typeof fetchCommunityIndex;
+  fetchWorkshopDetails?: (ids: string[]) => Promise<Map<string, WorkshopDetail>>;
   mcVersion?: string | null;
   loader?: string | null;
 }
@@ -57,9 +59,48 @@ export async function checkModUpdates(opts: {
 
   const modrinthRows = rows.filter((r) => r.provider === "modrinth");
   const thunderstoreRows = rows.filter((r) => r.provider === "thunderstore");
-  const otherRows = rows.filter((r) => r.provider !== "modrinth" && r.provider !== "thunderstore");
+  const workshopRows = rows.filter((r) => r.provider === "workshop" && game === "ZOMBOID");
+  const otherRows = rows.filter(
+    (r) =>
+      r.provider !== "modrinth" && r.provider !== "thunderstore" &&
+      !(r.provider === "workshop" && game === "ZOMBOID")
+  );
   for (const row of otherRows) {
     errors.push(`${row.name}: updates are not supported for provider "${row.provider}"`);
+  }
+
+  if (workshopRows.length > 0) {
+    // Workshop "versions" are the item's last-updated timestamp (ISO) — the
+    // API exposes no version numbers. Rows installed before this existed
+    // carry "Workshop" and land in the unknown bucket until reinstalled.
+    const doFetchDetails = deps.fetchWorkshopDetails ?? getWorkshopDetails;
+    try {
+      const details = await doFetchDetails(workshopRows.map((r) => r.packageId));
+      for (const row of workshopRows) {
+        const latest = details.get(row.packageId)?.timeUpdated;
+        if (!latest) {
+          errors.push(`${row.name}: no longer available on the Steam Workshop`);
+          continue;
+        }
+        if (!/^\d{4}-\d{2}-\d{2}T/.test(row.version)) {
+          unknown.push({ packageId: row.packageId, name: row.name, version: row.version });
+          continue;
+        }
+        if (latest !== row.version) {
+          updates.push({
+            packageId: row.packageId,
+            name: row.name,
+            provider: "workshop",
+            current: row.version,
+            latest,
+          });
+        }
+      }
+    } catch (err: any) {
+      for (const row of workshopRows) {
+        errors.push(`${row.name}: ${err.message}`);
+      }
+    }
   }
 
   if (modrinthRows.length > 0 && game === "MINECRAFT") {
