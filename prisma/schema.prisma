@@ -105,6 +105,7 @@ model Server {
   automations      Automation[]
   hostLink         ServerHostLink?
   inviteCode       String?             @unique // For RealmSync
+  statusShareCode  String?             @unique // Public no-login status page (/s/<code>); null = disabled
   plannedSessions  PlannedSession[]
   discordRoles     DiscordRoleAccess[]
   playerAccess     PlayerServerAccess[]
@@ -278,6 +279,7 @@ model ServerTelemetry {
   server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
   cpu       Float    // CPU percentage
   ramMB     Float    // RAM used in MB
+  diskMB    Float? // Server folder size in MB (null on rows written before this existed)
   createdAt DateTime @default(now())
 
   @@index([serverId, createdAt])
