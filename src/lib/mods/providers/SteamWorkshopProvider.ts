@@ -1,13 +1,17 @@
 import { ModProvider, ModSearchResult, SearchOptions } from "./types";
+import {
+  isWorkshopSearchable, resolveAuthorNames, searchWorkshop, steamApiKey, workshopWebsiteUrl,
+} from "@/lib/mods/workshop";
 import path from "path";
 import fs from "fs";
 
 /**
- * Curated catalogue of popular Steam Workshop mods, keyed by game.
- * The Steam Workshop API requires an API key for real search, so we
- * maintain a hand-picked catalogue of well-known mods that users can
- * browse and filter. Users can always enter Workshop IDs manually for
- * mods not listed here.
+ * Curated catalogue of popular Steam Workshop mods, keyed by game. Shown as
+ * an offline fallback when no STEAM_API_KEY is configured (the Workshop Web
+ * API needs a key for search). Users can always enter Workshop IDs manually
+ * for mods not listed here. Note: verified against live downloads, some of
+ * these display-name mappings are stale — prefer live search when a key is
+ * present.
  */
 const CURATED_MODS: Record<string, Omit<ModSearchResult, "provider">[]> = {
   ZOMBOID: [
@@ -79,12 +83,43 @@ export class SteamWorkshopProvider implements ModProvider {
 
   async search(query: string, game: string, options?: SearchOptions): Promise<ModSearchResult[]> {
     const gameKey = game.toUpperCase();
-    const mods = CURATED_MODS[gameKey];
-    if (!mods) return [];
-
     const offset = options?.offset || 0;
     const categoryFilter = options?.category || "";
     const limit = 20;
+
+    // Live search when a key is configured; the curated catalogue is the
+    // offline fallback (also the only path for games without an AppID).
+    if (steamApiKey() && isWorkshopSearchable(gameKey)) {
+      try {
+        const items = await searchWorkshop({ query, game: gameKey, offset, sort: options?.sort });
+        const authors = await resolveAuthorNames(items.map((i) => i.authorSteamId));
+        let results: ModSearchResult[] = items.map((i) => ({
+          provider: this.id,
+          packageId: i.workshopId,
+          name: i.title,
+          author: authors[i.authorSteamId] ?? i.authorSteamId,
+          description: i.description,
+          version: i.timeUpdated,
+          downloadUrl: "",
+          iconUrl: i.previewUrl || undefined,
+          downloads: i.subscriptions,
+          categories: i.tags,
+          updatedAt: i.timeUpdated,
+          websiteUrl: workshopWebsiteUrl(i.workshopId),
+        }));
+        if (categoryFilter) {
+          const want = categoryFilter.toLowerCase();
+          results = results.filter((m) => m.categories?.some((c) => c.toLowerCase() === want));
+        }
+        return results.slice(0, limit);
+      } catch {
+        // Network/API failure — fall through to the curated catalogue so
+        // the tab stays usable, mirroring the no-key behavior.
+      }
+    }
+
+    const mods = CURATED_MODS[gameKey];
+    if (!mods) return [];
 
     let filtered = mods.map((m) => ({ ...m, provider: this.id })) as ModSearchResult[];
 

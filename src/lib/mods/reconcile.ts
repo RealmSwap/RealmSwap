@@ -170,12 +170,24 @@ async function reconcileZomboid(serverId: string, serverRoot: string): Promise<R
       continue;
     }
     survivingIds.add(row.packageId);
-    if (row.workshopModId && !modIdSet.has(row.workshopModId)) {
-      await prisma.modInstallation.update({
-        where: { id: row.id },
-        data: { workshopModId: null },
-      });
-      repaired++;
+    // workshopModId may be ';'-joined (multi-mod items): drop stale ids,
+    // nulling the field only when none survive on Mods=.
+    if (row.workshopModId) {
+      const ids = row.workshopModId.split(";").filter(Boolean);
+      const surviving = ids.filter((id) => modIdSet.has(id));
+      if (surviving.length === 0) {
+        await prisma.modInstallation.update({
+          where: { id: row.id },
+          data: { workshopModId: null },
+        });
+        repaired++;
+      } else if (surviving.length !== ids.length) {
+        await prisma.modInstallation.update({
+          where: { id: row.id },
+          data: { workshopModId: surviving.join(";") },
+        });
+        repaired++;
+      }
     }
   }
 

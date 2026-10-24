@@ -41,8 +41,12 @@ export async function POST(
     // up-to-date mod never touches the server.
     let newVersionNumber: string;
     let applyUpdate: () => Promise<void>;
+    let rowPatch: Record<string, string> = {};
     try {
-      ({ newVersionNumber, applyUpdate } = await resolveModUpdate(installation, game, serverId));
+      const resolved = await resolveModUpdate(installation, game, serverId);
+      newVersionNumber = resolved.newVersionNumber;
+      applyUpdate = resolved.applyUpdate;
+      rowPatch = resolved.rowPatch ?? {};
     } catch (err: any) {
       if (err instanceof UpdateResolutionError) {
         return NextResponse.json({ error: err.message }, { status: err.status });
@@ -65,7 +69,7 @@ export async function POST(
 
       await prisma.modInstallation.update({
         where: { id: installation.id },
-        data: { version: newVersionNumber, updatedAt: new Date() },
+        data: { version: newVersionNumber, updatedAt: new Date(), ...rowPatch },
       });
       await prisma.activityLog.create({
         data: {

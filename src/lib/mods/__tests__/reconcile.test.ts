@@ -185,6 +185,17 @@ describe("reconcileInstalledMods", () => {
       ]);
     });
 
+    it("trims stale ids from ';'-joined multi-mod rows without nulling survivors", async () => {
+      writeIni(["w1"], ["m1"]);
+      bag.server = { id: "s1", game: "ZOMBOID" };
+      bag.rows = [{ id: "r1", packageId: "w1", workshopModId: "m1;m2;m3" }];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result).toEqual({ removed: 0, added: 0, repaired: 1 });
+      expect(bag.updates).toEqual([{ where: { id: "r1" }, data: { workshopModId: "m1" } }]);
+    });
+
     it("treats a missing ini as nothing installed", async () => {
       bag.server = { id: "s1", game: "ZOMBOID" };
       bag.rows = [{ id: "r1", packageId: "w1", workshopModId: "m1" }];

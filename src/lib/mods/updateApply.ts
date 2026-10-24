@@ -16,10 +16,17 @@ import {
   newestVersion,
   extractThunderstorePackage,
 } from "@/lib/mods/thunderstore";
+import { WORKSHOP_APP_IDS, getWorkshopDetails } from "@/lib/mods/workshop";
+import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
+import {
+  addZomboidWorkshopMod, removeZomboidWorkshopMod, zomboidServerIniPath,
+} from "@/lib/mods/zomboid";
 
 export interface ResolvedModUpdate {
   newVersionNumber: string;
   applyUpdate: () => Promise<void>;
+  /** Extra column updates the route must persist after a successful apply. */
+  rowPatch?: { workshopModId?: string };
 }
 
 /** Resolution failed for a client-facing reason (unsupported provider/game,
@@ -40,7 +47,7 @@ export class UpdateResolutionError extends Error {
  * combination has no update path or the package is gone from the provider.
  */
 export async function resolveModUpdate(
-  installation: { provider: string; packageId: string; version: string; name?: string },
+  installation: { provider: string; packageId: string; version: string; name?: string; workshopModId?: string | null },
   game: string,
   serverId: string
 ): Promise<ResolvedModUpdate> {
@@ -141,6 +148,47 @@ export async function resolveModUpdate(
         }
       },
     };
+  }
+
+  if (installation.provider === "workshop") {
+    if (game !== "ZOMBOID") {
+      throw new UpdateResolutionError("Steam Workshop mod updates are supported for Project Zomboid servers only.");
+    }
+    const details = await getWorkshopDetails([installation.packageId]);
+    const latest = details.get(installation.packageId)?.timeUpdated;
+    if (!latest) {
+      throw new UpdateResolutionError(
+        `Workshop item '${installation.packageId}' is no longer available on the Steam Workshop.`,
+        404
+      );
+    }
+    if (!/^\d{4}-\d{2}-\d{2}T/.test(installation.version)) {
+      throw new UpdateResolutionError(
+        `${installation.name ?? "This mod"} has no recorded Workshop version — reinstall it once to enable update checks.`
+      );
+    }
+    const pzDir = path.join(serverRoot, "zomboid-server");
+    const oldModIds = (installation.workshopModId ?? "").split(";").filter(Boolean);
+    const resolved: ResolvedModUpdate = {
+      newVersionNumber: latest,
+      applyUpdate: async () => {
+        // Re-download (pre-caches the new content for the server's own
+        // boot download) and re-derive: mod IDs can change between
+        // item versions, so the ini's Mods= entries are swapped.
+        const contentDir = await downloadWorkshopItem({
+          appId: WORKSHOP_APP_IDS.ZOMBOID,
+          workshopId: installation.packageId,
+          installDir: pzDir,
+        });
+        const derived = deriveZomboidModIds(contentDir);
+        const ini = zomboidServerIniPath(serverRoot);
+        removeZomboidWorkshopMod(ini, installation.packageId, oldModIds);
+        const modIds = derived.map((d) => d.modId);
+        addZomboidWorkshopMod(ini, installation.packageId, modIds);
+        resolved.rowPatch = { workshopModId: modIds.join(";") };
+      },
+    };
+    return resolved;
   }
 
   throw new UpdateResolutionError(`Updates are not supported for provider '${installation.provider}'.`);
