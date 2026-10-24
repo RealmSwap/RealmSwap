@@ -4,6 +4,11 @@ import { Server } from "@/generated/client";
 import { serverEventBus } from "./eventBus";
 import { maybePruneTelemetry } from "./telemetryRetention";
 import { getServerDiskBytes, bytesToMB } from "./diskUsage";
+import {
+  maybeSamplePlayers,
+  takePendingPlayerSample,
+  resetAutoStopState,
+} from "./autoStop";
 
 // Global store for process monitoring intervals and history
 const globalForMonitor = globalThis as unknown as {
@@ -32,6 +37,10 @@ export function startMonitoring(server: Server): void {
   if (monitorIntervals.has(serverId)) {
     return;
   }
+
+  // A fresh run resets the auto-stop engine: the empty streak must span one
+  // continuous uptime, and it lives in memory so app restarts fail open.
+  resetAutoStopState(serverId);
 
   // Initialize history
   if (!statsHistory.has(serverId)) {
@@ -90,14 +99,25 @@ export function startMonitoring(server: Server): void {
       // this 10s tick never waits on the filesystem. Null until the first
       // walk completes (or when the server has no local install folder).
       const diskBytes = await getServerDiskBytes(serverId).catch(() => null);
+      // Player counts ride the same rows: a gamedig query runs in the
+      // background at most every ~5 min; when one completed since the last
+      // tick it attaches here (null on ticks without a fresh sample).
+      const playerSample = takePendingPlayerSample(serverId);
       await prisma.serverTelemetry.create({
         data: {
           serverId,
           cpu: stats.cpuPercent,
           ramMB: stats.memoryMB,
-          diskMB: bytesToMB(diskBytes)
+          diskMB: bytesToMB(diskBytes),
+          playerCount: playerSample?.playerCount ?? null,
+          maxPlayers: playerSample?.maxPlayers ?? null,
         }
       }).catch(() => {});
+
+      // Background player sample + auto-stop evaluation — never blocks the tick.
+      maybeSamplePlayers(server).catch((e) =>
+        console.error(`[Player Sampler] Server ${serverId}:`, e?.message)
+      );
 
       // Rows past the 7-day retention window are deleted here (throttled to
       // at most one prune per hour) so the table can't grow forever.

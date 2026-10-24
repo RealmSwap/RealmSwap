@@ -12,6 +12,11 @@ import type { PrismaClient } from "@/generated/client";
  * host identity, or player names.
  */
 
+export interface PlayerHistoryPoint {
+  t: string; // ISO start of a 30-minute bucket
+  n: number; // peak player count within the bucket
+}
+
 export interface PublicServerStatus {
   code: string;
   name: string;
@@ -20,9 +25,40 @@ export interface PublicServerStatus {
   players: number | null; // null = running but the game doesn't answer queries
   maxplayers: number | null;
   nextSession: (PlannedSessionSummary & { isNext: true }) | null;
+  history: PlayerHistoryPoint[]; // player counts over the last 24h (counts only — no names, no timestamps of individual joins)
 }
 
 const STATUS_CACHE_TTL_MS = 20_000;
+
+export const HISTORY_WINDOW_MS = 24 * 60 * 60 * 1000;
+export const HISTORY_BUCKET_MS = 30 * 60 * 1000;
+
+/**
+ * Bucket 5-minute player stamps into 30-minute buckets over the last 24h,
+ * keeping each bucket's peak. Only buckets that actually have samples are
+ * returned — "no data yet" (the feature just shipped, server stopped) must
+ * not render as a wall of fake zeros.
+ */
+export function bucketPlayerHistory(
+  rows: { createdAt: Date | string; playerCount: number }[],
+  now: Date
+): PlayerHistoryPoint[] {
+  const start = now.getTime() - HISTORY_WINDOW_MS;
+  const buckets = new Map<number, number>();
+  for (const row of rows) {
+    const ts = new Date(row.createdAt).getTime();
+    if (ts < start || ts > now.getTime()) continue;
+    const idx = Math.floor((ts - start) / HISTORY_BUCKET_MS);
+    const current = buckets.get(idx);
+    if (current === undefined || row.playerCount > current) buckets.set(idx, row.playerCount);
+  }
+  return Array.from(buckets.keys())
+    .sort((a, b) => a - b)
+    .map((idx) => ({
+      t: new Date(start + idx * HISTORY_BUCKET_MS).toISOString(),
+      n: buckets.get(idx)!,
+    }));
+}
 
 const globalForStatus = globalThis as unknown as {
   statusShareCache: Map<string, { status: PublicServerStatus; at: number }> | undefined;
@@ -91,6 +127,21 @@ export async function getPublicStatus(
   }
 
   const next = nextSessionFrom(server.plannedSessions ?? [], now);
+
+  // Player history from the telemetry table's 5-minute stamps — counts only,
+  // so the public payload stays leak-proof (no player names, no join events).
+  const historyRows = await prisma.serverTelemetry
+    .findMany({
+      where: {
+        serverId: server.id,
+        playerCount: { not: null },
+        createdAt: { gte: new Date(now.getTime() - HISTORY_WINDOW_MS) },
+      },
+      orderBy: { createdAt: "asc" },
+      select: { createdAt: true, playerCount: true },
+    })
+    .catch(() => [] as { createdAt: Date; playerCount: number | null }[]);
+
   const status: PublicServerStatus = {
     code,
     name: server.name,
@@ -99,6 +150,10 @@ export async function getPublicStatus(
     players,
     maxplayers,
     nextSession: next ? { ...next, isNext: true } : null,
+    history: bucketPlayerHistory(
+      historyRows.map((r) => ({ createdAt: r.createdAt, playerCount: r.playerCount as number })),
+      now
+    ),
   };
 
   statusCache().set(code, { status, at: now.getTime() });

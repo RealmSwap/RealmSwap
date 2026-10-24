@@ -52,3 +52,16 @@ export function formatSessionStart(iso: string, now: Date = new Date()): string 
     minute: "2-digit",
   }).format(when);
 }
+
+/**
+ * Should the event watcher auto-boot this session's server right now?
+ * Pure so the per-server lead time (Server.autoStartLeadMinutes) is testable
+ * without discord.js. Due once the session is within the lead window and
+ * hasn't started yet — a lead of 0 means "at the start time".
+ */
+export function isAutoStartDue(sessionStartTime: Date | string, leadMinutes: number, now: Date): boolean {
+  const start = new Date(sessionStartTime).getTime();
+  const leadMs = Math.max(0, leadMinutes) * 60 * 1000;
+  const t = now.getTime();
+  return t >= start - leadMs && t < start;
+}

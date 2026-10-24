@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { summarizePlannedSession, formatSessionStart } from "../sessions";
+import { summarizePlannedSession, formatSessionStart, isAutoStartDue } from "../sessions";
 
 describe("summarizePlannedSession", () => {
   it("counts the roster without shipping Discord IDs to the client", () => {
@@ -57,5 +57,33 @@ describe("formatSessionStart", () => {
     const out = formatSessionStart(new Date(2026, 9, 30, 18, 0).toISOString(), now);
     expect(out).not.toMatch(/^(Today|Tomorrow) /);
     expect(out).toMatch(/^Fri/);
+  });
+});
+
+describe("isAutoStartDue", () => {
+  const start = new Date(2026, 9, 23, 18, 0); // 6:00 PM local
+
+  it("is due inside the lead window but before the start", () => {
+    const fiveBefore = new Date(start.getTime() - 5 * 60_000);
+    expect(isAutoStartDue(start, 15, fiveBefore)).toBe(true);
+  });
+
+  it("is not due before the lead window opens", () => {
+    const twentyBefore = new Date(start.getTime() - 20 * 60_000);
+    expect(isAutoStartDue(start, 15, twentyBefore)).toBe(false);
+  });
+
+  it("is not due once the session has started (or later)", () => {
+    expect(isAutoStartDue(start, 15, start)).toBe(false);
+    const after = new Date(start.getTime() + 10 * 60_000);
+    expect(isAutoStartDue(start, 15, after)).toBe(false);
+  });
+
+  it("honors a zero lead as exactly-at-start-time and a per-server lead", () => {
+    const secondBefore = new Date(start.getTime() - 60_000);
+    expect(isAutoStartDue(start, 0, secondBefore)).toBe(false);
+    expect(isAutoStartDue(start, 0, start)).toBe(false);
+    const thirtyBefore = new Date(start.getTime() - 30 * 60_000);
+    expect(isAutoStartDue(start, 30, thirtyBefore)).toBe(true);
   });
 });

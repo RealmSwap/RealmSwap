@@ -60,56 +60,61 @@ model Subscription {
 }
 
 model Server {
-  id               String               @id @default(cuid())
-  userId           String
-  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name             String
-  game             String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
-  ramAllocation    Float // GB allocated
-  region           String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
-  status           String // "RUNNING", "STOPPED", "STARTING"
-  runnerType       String               @default("CLOUD") // "CLOUD" or "LOCAL"
-  localPath        String? // File path for local server storage
-  pid              Int? // Process ID for local runner execution
-  password         String? // Unhashed password for Valheim/game server configs
-  rconPort         Int? // RCON Port
-  rconPassword     String? // RCON Password
-  sftpPassword     String? // Unique generated password for SFTP access
-  sftpPort         Int? // Assigned SFTP port (typically 2022+id)
-  tunnelEnabled    Boolean              @default(false)
-  tunnelUrl        String? // playit.gg tunnel URL (e.g., xxx.auto.playit.gg:12345)
-  tunnelClaimUrl   String? // playit agent claim link while the agent is unclaimed
-  tunnelPid        Int? // OS pid of the spawned playit agent, for orphan cleanup on boot
-  enableUpnp       Boolean              @default(false) // Trigger router port mapping
-  autoUpdate       Boolean              @default(false) // Nightly SteamCMD update while the server is stopped
-  autoUpdateHour   Int                  @default(4) // Local hour (0-23) of the nightly update window
-  lastAutoUpdateAt DateTime? // Last overnight update run (dedupes within a calendar day)
-  ipAddress        String
-  port             Int
-  definitionId     String?
-  definition       GameDefinition?      @relation(fields: [definitionId], references: [id])
-  paramValues      String? // JSON object of custom param values
-  pendingRestart   Boolean              @default(false) // Settings changed while running; cleared on next start
-  healthStatus     String               @default("OK") // "OK", "DEGRADED", "FAILING"
-  cpuUsage         Float                @default(0) // Mocked live utilization percentage
-  memoryUsage      Float                @default(0) // Mocked live RAM utilization in GB
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  snapshotInterval Int                  @default(0) // 0 = disabled, 1, 6, 12, 24 hours
-  lastSnapshotAt   DateTime?
-  backupRetention  Int                  @default(20) // keep last N snapshot zips per server; 0 = keep everything
-  backups          Backup[]
-  collaborators    Collaborator[]
-  mods             ModInstallation[]
-  snapshots        ServerSnapshot[]
-  automations      Automation[]
-  hostLink         ServerHostLink?
-  inviteCode       String?              @unique // For RealmSync
-  statusShareCode  String?              @unique // Public no-login status page (/s/<code>); null = disabled
-  plannedSessions  PlannedSession[]
-  discordRoles     DiscordRoleAccess[]
-  playerAccess     PlayerServerAccess[]
-  telemetry        ServerTelemetry[]
+  id                   String               @id @default(cuid())
+  userId               String
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                 String
+  game                 String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
+  ramAllocation        Float // GB allocated
+  region               String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
+  status               String // "RUNNING", "STOPPED", "STARTING"
+  runnerType           String               @default("CLOUD") // "CLOUD" or "LOCAL"
+  localPath            String? // File path for local server storage
+  pid                  Int? // Process ID for local runner execution
+  password             String? // Unhashed password for Valheim/game server configs
+  rconPort             Int? // RCON Port
+  rconPassword         String? // RCON Password
+  sftpPassword         String? // Unique generated password for SFTP access
+  sftpPort             Int? // Assigned SFTP port (typically 2022+id)
+  tunnelEnabled        Boolean              @default(false)
+  tunnelUrl            String? // playit.gg tunnel URL (e.g., xxx.auto.playit.gg:12345)
+  tunnelClaimUrl       String? // playit agent claim link while the agent is unclaimed
+  tunnelPid            Int? // OS pid of the spawned playit agent, for orphan cleanup on boot
+  enableUpnp           Boolean              @default(false) // Trigger router port mapping
+  autoUpdate           Boolean              @default(false) // Nightly SteamCMD update while the server is stopped
+  autoUpdateHour       Int                  @default(4) // Local hour (0-23) of the nightly update window
+  lastAutoUpdateAt     DateTime? // Last overnight update run (dedupes within a calendar day)
+  ipAddress            String
+  port                 Int
+  definitionId         String?
+  definition           GameDefinition?      @relation(fields: [definitionId], references: [id])
+  paramValues          String? // JSON object of custom param values
+  pendingRestart       Boolean              @default(false) // Settings changed while running; cleared on next start
+  healthStatus         String               @default("OK") // "OK", "DEGRADED", "FAILING"
+  cpuUsage             Float                @default(0) // Mocked live utilization percentage
+  memoryUsage          Float                @default(0) // Mocked live RAM utilization in GB
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  snapshotInterval     Int                  @default(0) // 0 = disabled, 1, 6, 12, 24 hours
+  lastSnapshotAt       DateTime?
+  backupRetention      Int                  @default(20) // keep last N snapshot zips per server; 0 = keep everything
+  backups              Backup[]
+  collaborators        Collaborator[]
+  mods                 ModInstallation[]
+  snapshots            ServerSnapshot[]
+  automations          Automation[]
+  hostLink             ServerHostLink?
+  inviteCode           String?              @unique // For RealmSync
+  statusShareCode      String?              @unique // Public no-login status page (/s/<code>); null = disabled
+  autoStartLeadMinutes Int                  @default(15) // Minutes before a planned Discord session to auto-boot (0 = at start time)
+  idleStopEnabled      Boolean              @default(false) // Auto-stop once the server has been empty for idleStopMinutes
+  idleStopMinutes      Int                  @default(30) // Empty streak (5-min player samples) that triggers the idle stop
+  sessionAutoStopHours Int                  @default(0) // Hours after a planned session's start to stop it if still empty; 0 = off
+  firstOnlineAt        DateTime? // First time this server reached RUNNING — drives the first-boot celebration
+  plannedSessions      PlannedSession[]
+  discordRoles         DiscordRoleAccess[]
+  playerAccess         PlayerServerAccess[]
+  telemetry            ServerTelemetry[]
 }
 
 model DiscordRoleAccess {
@@ -274,13 +279,15 @@ model ServerSnapshot {
 }
 
 model ServerTelemetry {
-  id        String   @id @default(cuid())
-  serverId  String
-  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  cpu       Float // CPU percentage
-  ramMB     Float // RAM used in MB
-  diskMB    Float? // Server folder size in MB (null on rows written before this existed)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  serverId    String
+  server      Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  cpu         Float // CPU percentage
+  ramMB       Float // RAM used in MB
+  diskMB      Float? // Server folder size in MB (null on rows written before this existed)
+  playerCount Int? // Players reported by the game query, stamped every ~5 min (null = no sample this tick / query failed)
+  maxPlayers  Int? // Slot count reported alongside playerCount (null when the game doesn't report it)
+  createdAt   DateTime @default(now())
 
   @@index([serverId, createdAt])
 }

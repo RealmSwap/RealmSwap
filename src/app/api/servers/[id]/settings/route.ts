@@ -217,6 +217,43 @@ export async function POST(
       return NextResponse.json({ success: true, autoUpdateHour: hour });
     }
 
+    if (body.action === "SET_AUTO_START_LEAD") {
+      const minutes = Number(body.minutes);
+      if (!Number.isInteger(minutes) || minutes < 0 || minutes > 120) {
+        return NextResponse.json({ error: "minutes must be an integer between 0 and 120" }, { status: 400 });
+      }
+      await prisma.server.update({
+        where: { id: server.id },
+        data: { autoStartLeadMinutes: minutes }
+      });
+      return NextResponse.json({ success: true, autoStartLeadMinutes: minutes });
+    }
+
+    if (body.action === "TOGGLE_IDLE_STOP") {
+      const enable = !!body.enable;
+      const minutes = Number(body.minutes ?? server.idleStopMinutes ?? 30);
+      if (!Number.isInteger(minutes) || minutes < 10 || minutes > 240) {
+        return NextResponse.json({ error: "minutes must be an integer between 10 and 240" }, { status: 400 });
+      }
+      await prisma.server.update({
+        where: { id: server.id },
+        data: { idleStopEnabled: enable, idleStopMinutes: minutes }
+      });
+      return NextResponse.json({ success: true, idleStopEnabled: enable, idleStopMinutes: minutes });
+    }
+
+    if (body.action === "SET_SESSION_AUTO_STOP") {
+      const hours = Number(body.hours);
+      if (!Number.isInteger(hours) || hours < 0 || hours > 48) {
+        return NextResponse.json({ error: "hours must be an integer between 0 and 48 (0 = off)" }, { status: 400 });
+      }
+      await prisma.server.update({
+        where: { id: server.id },
+        data: { sessionAutoStopHours: hours }
+      });
+      return NextResponse.json({ success: true, sessionAutoStopHours: hours });
+    }
+
     if (body.action === "REGENERATE_SFTP") {
       const newPass = crypto.randomBytes(8).toString("hex");
       const updated = await prisma.server.update({
