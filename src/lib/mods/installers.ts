@@ -24,6 +24,10 @@ import {
   SHIMLOADER_PACKAGE_ID, PALWORLD_OVERLAY_DIR, shimloaderMarkerPath,
   planPalworldPackage, applyPalworldPlan,
 } from "@/lib/mods/palworld";
+import {
+  getFicsitModVersion, getFicsitModByReference, pickFicsitServerDownload,
+  FICSIT_SML_REFERENCE, FICSIT_SMM_MARKER, type FicsitMod,
+} from "@/lib/mods/ficsit";
 import { WORKSHOP_APP_IDS } from "@/lib/mods/workshop";
 import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
 
@@ -719,4 +723,130 @@ export async function installPalworldThunderstore(args: {
     },
   });
   return { dependencyCount: 0 };
+}
+
+/** The SML boot loader row (installed like any ficsit mod, resolved by reference). */
+export async function ensureFicsitSml(serverId: string, satisfactoryDir: string, warnings: string[]): Promise<void> {
+  if (fs.existsSync(path.join(satisfactoryDir, "FactoryGame", "Mods", FICSIT_SML_REFERENCE, "SML.uplugin"))) return;
+
+  const sml = await getFicsitModByReference(FICSIT_SML_REFERENCE);
+  if (!sml) {
+    throw new Error("SML is no longer available on ficsit.app — it is required for Satisfactory mods.");
+  }
+  await installFicsitMod({ serverId, satisfactoryDir, modId: sml.id, warnings });
+}
+
+/**
+ * Install a ficsit.app mod (or the SML core) into a Satisfactory dedicated
+ * server: the version's WindowsServer zip extracts to
+ * FactoryGame/Mods/<mod_reference>/ with a `.smm` hash marker, exactly the
+ * layout ficsit-cli/SMR manage. Client-only mods (no WindowsServer target)
+ * refuse closed before anything is written. The mod is accepted as its
+ * GraphQL id OR its stable reference (search cards ship both; collections
+ * ship the reference) — resolution tries the exact reference filter first,
+ * then the id lookup.
+ */
+export async function installFicsitMod(args: {
+  serverId: string;
+  satisfactoryDir: string;
+  /** ficsit.app GraphQL id or stable mod reference. */
+  modId: string;
+  versionNumber?: string;
+  warnings: string[];
+  /** Injected by tests; real installs resolve dependencies recursively. */
+  skipDependencies?: boolean;
+}): Promise<{ dependencyCount: number }> {
+  const { serverId, satisfactoryDir, modId, versionNumber, warnings, skipDependencies } = args;
+
+  let modIdResolved = modId;
+  let byRef = await getFicsitModByReference(modId);
+  if (byRef) {
+    modIdResolved = byRef.id;
+  } else {
+    byRef = await getFicsitModVersion({ modId, versionNumber }).then((r) => r?.mod ?? null);
+    if (!byRef) {
+      throw new Error(`'${modId}' not found on ficsit.app.`);
+    }
+  }
+  const resolved = await getFicsitModVersion({ modId: modIdResolved, versionNumber });
+  if (!resolved) {
+    throw new Error(
+      `'${byRef.name}' is not available on ficsit.app${versionNumber ? ` in version ${versionNumber} — the author may have removed it` : " (no release version)"}.`
+    );
+  }
+  return installResolvedFicsit({ serverId, satisfactoryDir, resolved, warnings, skipDependencies });
+}
+
+async function installResolvedFicsit(args: {
+  serverId: string;
+  satisfactoryDir: string;
+  resolved: NonNullable<Awaited<ReturnType<typeof getFicsitModVersion>>>;
+  warnings: string[];
+  skipDependencies?: boolean;
+}): Promise<{ dependencyCount: number }> {
+  const { serverId, satisfactoryDir, resolved, warnings, skipDependencies } = args;
+  const { mod, version } = resolved;
+
+  const downloadUrl = pickFicsitServerDownload(version);
+  if (!downloadUrl) {
+    throw new Error(
+      `'${mod.name}' has no WindowsServer build — its latest release only ships client files, which won't work on a dedicated server.`
+    );
+  }
+
+  // SML is a dependency of everything except itself.
+  let dependencyCount = 0;
+  if (!skipDependencies && mod.modReference !== FICSIT_SML_REFERENCE) {
+    await ensureFicsitSml(serverId, satisfactoryDir, warnings);
+    dependencyCount += 1;
+    for (const dep of version.dependencies ?? []) {
+      if (dep.optional) continue;
+      const depResolved = await getFicsitModVersion({ modId: dep.mod_id });
+      if (!depResolved) {
+        warnings.push(`A required dependency (${dep.mod_id}) is no longer available on ficsit.app — the server may fail to boot without it.`);
+        continue;
+      }
+      const depDir = path.join(satisfactoryDir, "FactoryGame", "Mods", depResolved.mod.modReference);
+      if (fs.existsSync(depDir)) continue; // installed (or user-managed) — leave it
+      await installResolvedFicsit({ serverId, satisfactoryDir, resolved: depResolved, warnings, skipDependencies: true });
+      dependencyCount += 1;
+    }
+  }
+
+  const modsRoot = path.join(satisfactoryDir, "FactoryGame", "Mods");
+  const modDir = safeJoin(modsRoot, mod.modReference);
+  fs.mkdirSync(modDir, { recursive: true });
+
+  const tempZip = safeJoin(satisfactoryDir, ".ficsit-mod.staging.zip");
+  await downloadFile(downloadUrl, tempZip);
+  try {
+    // Zip entries are rooted at the plugin files (no wrapper dir); extract
+    // per-entry re-anchored so a hostile archive can't escape the mod dir.
+    extractThunderstorePackage(new AdmZip(tempZip), modDir);
+  } catch (err: any) {
+    throw new Error(`Failed to extract '${mod.name}': ${err.message}`);
+  } finally {
+    try { fs.unlinkSync(tempZip); } catch (_) {}
+  }
+
+  // ficsit-cli's own marker: its hash-check then treats this as a managed
+  // install instead of "unknown mod state".
+  if (version.hash) {
+    fs.writeFileSync(path.join(modDir, FICSIT_SMM_MARKER), version.hash);
+  }
+
+  await prisma.modInstallation.upsert({
+    where: { serverId_provider_packageId: { serverId, provider: "ficsit", packageId: mod.modReference } },
+    update: { name: mod.name, version: version.version },
+    create: {
+      serverId, provider: "ficsit", packageId: mod.modReference,
+      version: version.version, name: mod.name,
+    },
+  });
+  return { dependencyCount };
+}
+
+/** Remove a mod's FactoryGame/Mods/<reference> directory (SML included). */
+export function removeFicsitMod(satisfactoryDir: string, packageId: string): void {
+  fs.rmSync(path.join(satisfactoryDir, "FactoryGame", "Mods", packageId), { recursive: true, force: true });
 }

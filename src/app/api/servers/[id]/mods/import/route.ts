@@ -14,7 +14,7 @@ import {
 } from "@/lib/mods/mcLoaders";
 import {
   installMinecraftMod, installValheimThunderstore, installZomboidWorkshopMod, installVRisingThunderstore,
-  installArkWorkshopMod,
+  installArkWorkshopMod, installFicsitMod,
 } from "@/lib/mods/installers";
 import { installOxideCore, installRustUmodPlugin, OXIDE_CORE_PACKAGE_ID } from "@/lib/mods/umod";
 
@@ -72,7 +72,7 @@ export async function POST(
         minecraftVersion: z.string().optional(),
       }).optional(),
       mods: z.array(z.object({
-        provider: z.enum(["workshop", "thunderstore", "modrinth", "umod"]),
+        provider: z.enum(["workshop", "thunderstore", "modrinth", "umod", "ficsit"]),
         packageId: z.string().min(1),
         name: z.string().optional(),
         version: z.string().optional(),
@@ -228,6 +228,20 @@ export async function POST(
               exportedVersion: mod.version, warnings,
             });
           }
+        } else if (game === "SATISFACTORY") {
+          if (mod.provider !== "ficsit") {
+            throw new Error(`Collection entry '${mod.packageId}' uses provider '${mod.provider}', which Satisfactory doesn't support.`);
+          }
+          const satisfactoryDir = path.join(serverRoot, "satisfactory-server");
+          if (!fs.existsSync(path.join(satisfactoryDir, "FactoryServer.exe"))) {
+            throw new Error("Satisfactory server is not installed yet — install the server before importing mods.");
+          }
+          // Collections ship the stable mod reference (the dir name); unlike
+          // uMod, ficsit serves every published version, so pins install exactly.
+          const result = await installFicsitMod({
+            serverId, satisfactoryDir, modId: mod.packageId, versionNumber: mod.version, warnings,
+          });
+          dependencyCount += result.dependencyCount;
         } else {
           throw new Error(`Mod collections are not supported for game: ${server.game}`);
         }

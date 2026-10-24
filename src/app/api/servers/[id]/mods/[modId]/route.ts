@@ -8,6 +8,7 @@ import { dataRoot } from "@/lib/appPaths";
 import { removeZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { removeArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 import { uninstallPalworldPackage } from "@/lib/mods/palworld";
+import { removeFicsitMod } from "@/lib/mods/installers";
 import { removeRustUmodPlugin } from "@/lib/mods/umod";
 
 export async function DELETE(
@@ -98,6 +99,8 @@ export async function DELETE(
         arkGameUserSettingsIniPath(path.join(dataRoot(), "local-servers", serverId)),
         installation.packageId
       );
+    } else if (game === "SATISFACTORY") {
+      removeFicsitMod(path.join(dataRoot(), "local-servers", serverId, "satisfactory-server"), installation.packageId);
     } else if (game === "PALWORLD") {
       // Shimloader layout: per-package uninstall manifest lists the exact
       // installed paths (mods/, paks/, cfgs/, overlay/ contributions).

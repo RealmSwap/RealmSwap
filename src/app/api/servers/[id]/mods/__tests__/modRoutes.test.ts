@@ -803,3 +803,122 @@ describe("Rust JSON config route", () => {
     expect(JSON.parse(fs.readFileSync(jsonPath, "utf-8"))).toEqual({ Max: 10, Enabled: false });
   });
 });
+
+// ─── Satisfactory (ficsit.app) ──────────────────────────────────────────────
+// The ficsit GraphQL + downloads are stubbed offline; the real installer
+// pipeline (SML provisioning, zip extraction, .smm marker, rows) runs.
+// getMod answers with the ASKED id and reference lookups with the ASKED
+// references — static payloads would make SML resolution return mod data and
+// recurse forever. Values are the { getMod: … } envelopes ficsitGraphQL unwraps.
+const FICSIT_SML_GETMOD = {
+  getMod: {
+    id: "smlid123", name: "Satisfactory Mod Loader", mod_reference: "SML",
+    latestVersions: { release: { ver: "3.12.0", hash: "c".repeat(64), targets: [{ targetName: "WindowsServer", link: "/v1/version/smlv1/WindowsServer/download" }], dependencies: [] } },
+    pinned: { ver: "3.12.0", hash: "c".repeat(64), targets: [{ targetName: "WindowsServer", link: "/v1/version/smlv1/WindowsServer/download" }], dependencies: [] },
+  },
+};
+const FICSIT_MOD_GETMOD = {
+  getMod: {
+    id: "modid456", name: "Nuke Rebar", mod_reference: "NukeRebar",
+    latestVersions: { release: { ver: "1.2.0", hash: "d".repeat(64), targets: [{ targetName: "WindowsServer", link: "/v1/version/modv1/WindowsServer/download" }], dependencies: [] } },
+    pinned: { ver: "1.2.0", hash: "d".repeat(64), targets: [{ targetName: "WindowsServer", link: "/v1/version/modv1/WindowsServer/download" }], dependencies: [] },
+  },
+};
+
+const FICSIT_GRAPHQL = (getModById: Record<string, unknown>) =>
+  async (url: string, init?: RequestInit) => {
+    if (url !== "https://api.ficsit.app/v2/query") return new Response("nope", { status: 404 });
+    const body = JSON.parse(String(init?.body));
+    const q: string = body.query;
+    if (Array.isArray(body.variables?.filter?.references)) {
+      const refs: string[] = body.variables.filter.references;
+      const byRef: Record<string, unknown> = { SML: FICSIT_SML_GETMOD, NukeRebar: FICSIT_MOD_GETMOD };
+      const mods = refs.map((ref: string) => (byRef[ref] ? { ...(byRef[ref] as any).getMod, latestVersions: { release: { ver: (byRef[ref] as any).getMod.latestVersions.release.ver } } } : null)).filter(Boolean);
+      return new Response(JSON.stringify({ data: { getMods: { mods } } }), { status: 200 });
+    }
+    const envelope = getModById[String(body.variables?.id ?? "")];
+    if (envelope) return new Response(JSON.stringify({ data: envelope }), { status: 200 });
+    return new Response(JSON.stringify({ data: { getMod: null } }), { status: 200 });
+  };
+
+describe("SATISFACTORY install route", () => {
+  it("installs SML from the theme card (no modId) and records the ficsit row", async () => {
+    bag.access = { server: { id: "s1", name: "Factory", game: "SATISFACTORY", status: "STOPPED" } };
+    const serverDir = path.join(dir, "local-servers", "s1", "satisfactory-server");
+    fs.mkdirSync(serverDir, { recursive: true });
+    fs.writeFileSync(path.join(serverDir, "FactoryServer.exe"), "exe");
+    vi.stubGlobal("fetch", FICSIT_GRAPHQL({ smlid123: FICSIT_SML_GETMOD }));
+    bag.downloadBody = (url) => {
+      if (url === "https://api.ficsit.app/v1/version/smlv1/WindowsServer/download") {
+        const zip = new AdmZip();
+        zip.addFile("SML.uplugin", Buffer.from(""));
+        zip.addFile("Binaries/Win64/FactoryServer-SML-Win64-Shipping.dll", Buffer.from("x"));
+        return zip.toBuffer();
+      }
+      return null;
+    };
+
+    const res = await installMod(
+      jsonReq("/api/servers/s1/mods/install", "POST", { modType: "FICSIT" }),
+      { params: { id: "s1" } }
+    );
+    expect(res.status).toBe(200);
+    expect(fs.existsSync(path.join(serverDir, "FactoryGame", "Mods", "SML", "SML.uplugin"))).toBe(true);
+    const row = bag.upserts.find((u) => u.where.serverId_provider_packageId?.packageId === "SML");
+    expect(row.create).toMatchObject({ provider: "ficsit", packageId: "SML", version: "3.12.0" });
+    vi.unstubAllGlobals();
+  });
+
+  it("refuses installs when the server is not installed yet", async () => {
+    bag.access = { server: { id: "s1", name: "Factory", game: "SATISFACTORY", status: "STOPPED" } };
+    const res = await installMod(
+      jsonReq("/api/servers/s1/mods/install", "POST", { modType: "FICSIT", modId: "whatever" }),
+      { params: { id: "s1" } }
+    );
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/not installed yet/);
+  });
+});
+
+describe("SATISFACTORY collection import", () => {
+  it("reinstalls a mod by reference with its pinned version", async () => {
+    bag.access = { server: { id: "s1", name: "Factory", game: "SATISFACTORY", status: "STOPPED" } };
+    const serverDir = path.join(dir, "local-servers", "s1", "satisfactory-server");
+    fs.mkdirSync(serverDir, { recursive: true });
+    fs.writeFileSync(path.join(serverDir, "FactoryServer.exe"), "exe");
+    vi.stubGlobal("fetch", FICSIT_GRAPHQL({ smlid123: FICSIT_SML_GETMOD, modid456: FICSIT_MOD_GETMOD }));
+    bag.downloadBody = (url) => {
+      if (url === "https://api.ficsit.app/v1/version/modv1/WindowsServer/download") {
+        const zip = new AdmZip();
+        zip.addFile("NukeRebar.uplugin", Buffer.from(""));
+        return zip.toBuffer();
+      }
+      if (url === "https://api.ficsit.app/v1/version/smlv1/WindowsServer/download") {
+        const zip = new AdmZip();
+        zip.addFile("SML.uplugin", Buffer.from(""));
+        return zip.toBuffer();
+      }
+      return null;
+    };
+
+    const collection = {
+      name: "Factory pack", game: "SATISFACTORY",
+      mods: [{ provider: "ficsit", packageId: "NukeRebar", name: "Nuke Rebar", version: "1.2.0" }],
+    };
+    const form = new FormData();
+    form.append("collection", new Blob([JSON.stringify(collection)]), "c.json");
+    const res = await importCollection(
+      new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form }),
+      { params: { id: "s1" } }
+    );
+    expect(res.status).toBe(200);
+    expect(fs.existsSync(path.join(serverDir, "FactoryGame", "Mods", "NukeRebar", "NukeRebar.uplugin"))).toBe(true);
+    // SML auto-provisioned + the mod row pinned to the collection's version.
+    const sml = bag.upserts.find((u) => u.where.serverId_provider_packageId?.packageId === "SML");
+    const mod = bag.upserts.find((u) => u.where.serverId_provider_packageId?.packageId === "NukeRebar");
+    expect(sml).toBeTruthy();
+    expect(mod.create).toMatchObject({ provider: "ficsit", packageId: "NukeRebar", version: "1.2.0" });
+    vi.unstubAllGlobals();
+  });
+});

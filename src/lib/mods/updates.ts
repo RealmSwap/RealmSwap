@@ -3,6 +3,7 @@ import { fetchVersions, pickCompatibleVersion } from "@/lib/mods/modrinth";
 import { communityForGame, fetchCommunityIndex, newestVersion } from "@/lib/mods/thunderstore";
 import { getWorkshopDetails, WorkshopDetail } from "@/lib/mods/workshop";
 import { getCurseForgeModFiles, pickCompatibleCfFile } from "@/lib/mods/curseforge";
+import { getFicsitLatestVersions, getFicsitModsByReferences } from "@/lib/mods/ficsit";
 
 export interface InstalledModRow {
   provider: string;
@@ -36,6 +37,8 @@ export interface CheckUpdatesDeps {
   fetchIndex?: typeof fetchCommunityIndex;
   fetchWorkshopDetails?: (ids: string[]) => Promise<Map<string, WorkshopDetail>>;
   getCfModFiles?: typeof getCurseForgeModFiles;
+  fetchFicsitLatest?: typeof getFicsitLatestVersions;
+  fetchFicsitRefs?: typeof getFicsitModsByReferences;
   mcVersion?: string | null;
   loader?: string | null;
 }
@@ -72,8 +75,10 @@ export async function checkModUpdates(opts: {
       // update machinery to do, so they are deliberately unreported.
       !(r.provider === "workshop" && game === "ARK") &&
       // uMod update checks would need one rate-limited uMod request per
-      // plugin — deliberately unreported (reinstall to update).
-      r.provider !== "umod"
+      // plugin — deliberately unreported (the per-plugin Check button covers
+      // it). ficsit rows ARE batch-checkable (one keyless GraphQL query) and
+      // are handled in their own block below.
+      r.provider !== "umod" && r.provider !== "ficsit"
   );
   for (const row of otherRows) {
     errors.push(`${row.name}: updates are not supported for provider "${row.provider}"`);
@@ -227,6 +232,44 @@ export async function checkModUpdates(opts: {
         for (const row of thunderstoreRows) {
           errors.push(`${row.name}: ${err.message}`);
         }
+      }
+    }
+  }
+
+  // ficsit.app is keyless and unthrottled at our scale — one batched GraphQL
+  // query covers every installed Satisfactory mod, so unlike uMod these are
+  // reported in the banner.
+  const ficsitRows = rows.filter((r) => r.provider === "ficsit");
+  if (ficsitRows.length > 0 && game === "SATISFACTORY") {
+    // Rows don't carry the GraphQL id (packageId is the stable mod reference
+    // that matches the on-disk dir); resolve references → ids first.
+    try {
+      const doFetchFicsitLatest = deps.fetchFicsitLatest ?? getFicsitLatestVersions;
+      const doFetchFicsitRefs = deps.fetchFicsitRefs ?? getFicsitModsByReferences;
+      const idByRef = await doFetchFicsitRefs(ficsitRows.map((r) => r.packageId));
+      const latest = await doFetchFicsitLatest(Array.from(idByRef.values()).filter((v): v is string => !!v));
+      const latestByRef = new Map(
+        Array.from(idByRef.entries()).map(([ref, id]) => [ref, id ? latest.get(id) ?? null : null])
+      );
+      for (const row of ficsitRows) {
+        const newest = latestByRef.get(row.packageId);
+        if (newest === null || newest === undefined) {
+          errors.push(`${row.name}: no longer available on ficsit.app`);
+          continue;
+        }
+        if (newest !== row.version) {
+          updates.push({
+            packageId: row.packageId,
+            name: row.name,
+            provider: "ficsit",
+            current: row.version,
+            latest: newest,
+          });
+        }
+      }
+    } catch (err: any) {
+      for (const row of ficsitRows) {
+        errors.push(`${row.name}: ${err.message}`);
       }
     }
   }
