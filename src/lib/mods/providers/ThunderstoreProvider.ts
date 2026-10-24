@@ -8,7 +8,7 @@ import {
 
 /**
  * Thunderstore hosts mod communities for many games — each with a public
- * package index at https://{community}.thunderstore.io/api/v1/package/.
+ * package index at https://thunderstore.io/c/{community}/api/v1/package/.
  * Index fetching/caching is shared with the install-time dependency
  * resolver in src/lib/mods/thunderstore.ts.
  */

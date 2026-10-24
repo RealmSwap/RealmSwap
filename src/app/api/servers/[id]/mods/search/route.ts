@@ -5,12 +5,14 @@ import { ThunderstoreProvider } from "@/lib/mods/providers/ThunderstoreProvider"
 import { ModrinthProvider } from "@/lib/mods/providers/ModrinthProvider";
 import { SteamWorkshopProvider } from "@/lib/mods/providers/SteamWorkshopProvider";
 import { CurseForgeProvider } from "@/lib/mods/providers/CurseForgeProvider";
+import { UmodProvider } from "@/lib/mods/providers/UmodProvider";
 
 // Instantiate singletons for caching
 const thunderstore = new ThunderstoreProvider();
 const modrinth = new ModrinthProvider();
 const workshop = new SteamWorkshopProvider();
 const curseforge = new CurseForgeProvider();
+const umod = new UmodProvider();
 
 export async function GET(
   req: NextRequest,
@@ -32,10 +34,14 @@ export async function GET(
 
     const game = access.server.game.toUpperCase();
     const options = { offset, sort, category };
+    const kind = searchParams.get("type") || "mods";
     let results: any[] = [];
 
     // Route to the appropriate provider based on game
-    if (ThunderstoreProvider.supportsGame(game)) {
+    if (game === "MINECRAFT" && kind === "modpacks") {
+      // CurseForge's browsable modpack catalog (classId 4471)
+      results = await curseforge.searchModpacks(query, game, options);
+    } else if (ThunderstoreProvider.supportsGame(game)) {
       results = await thunderstore.search(query, game, options);
     } else if (game === "MINECRAFT") {
       // Combine Modrinth and CurseForge
@@ -44,6 +50,8 @@ export async function GET(
       results = [...modrinthResults, ...curseforgeResults].sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
     } else if (game === "ZOMBOID" || game === "ARK") {
       results = await workshop.search(query, game, options);
+    } else if (game === "RUST") {
+      results = await umod.search(query, game, options);
     } else {
       // Return empty results with a flag instead of a hard error —
       // the frontend shows a friendly "not supported yet" state

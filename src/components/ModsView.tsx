@@ -87,7 +87,7 @@ const GAME_THEMES: Record<
     border: "border-orange-500/30",
     text: "text-orange-400",
     icon: "🦊",
-    providerName: "Thunderstore",
+    providerName: "—",
   },
   VRISING: {
     gradient: "from-purple-500 to-red-800",
@@ -127,7 +127,7 @@ const GAME_THEMES: Record<
     border: "border-stone-500/30",
     text: "text-stone-400",
     icon: "⚙️",
-    providerName: "—",
+    providerName: "uMod (Oxide)",
   },
   SATISFACTORY: {
     gradient: "from-orange-500 to-amber-700",
@@ -203,30 +203,22 @@ const RECOMMENDED_MODS: Record<string, any[]> = {
       modId: "BepInExPack",
     },
     {
-      name: "Valheim Plus Plugin",
-      type: "Plugin",
-      desc: "Configurable stamina tweaks, build sharing, inventory size modifiers, and server UI indicators.",
-      downloadUrl:
-        "https://github.com/valheimPlus/ValheimPlus/releases/download/0.9.9.11/ValheimPlus.dll",
-      modId: "ValheimPlus",
-    },
-    {
       name: "Jötunn (Mod Framework)",
       type: "Mod Framework",
       desc: "Library that mod authors use to add custom items, recipes, and game systems to Valheim.",
-      modId: "Jotunn",
+      modId: "ValheimModding-Jotunn",
     },
     {
       name: "Plant Everything",
       type: "Gameplay",
       desc: "Allows planting nearly every type of flora — berry bushes, mushrooms, saplings, and more.",
-      modId: "PlantEverything",
+      modId: "Advize-PlantEverything",
     },
     {
       name: "Epic Loot",
       type: "Content",
       desc: "Adds a full loot rarity system with magic items, set bonuses, and enchanting mechanics.",
-      modId: "EpicLoot",
+      modId: "RandyKnapp-EpicLoot",
     },
   ],
   ZOMBOID: [
@@ -266,27 +258,6 @@ const RECOMMENDED_MODS: Record<string, any[]> = {
       modId: "Brita",
     },
   ],
-  PALWORLD: [
-    {
-      name: "BepInEx Pack for Palworld",
-      type: "Mod Core",
-      desc: "The essential BepInEx modding framework for loading Palworld server plugins.",
-      modType: "BEPINEX",
-      modId: "BepInExPack_Palworld",
-    },
-    {
-      name: "Pal Edit",
-      type: "Utility",
-      desc: "Save editor utility that lets admins modify Pal stats, levels, and abilities on the server.",
-      modId: "PalEdit",
-    },
-    {
-      name: "Faster Breeding",
-      type: "Gameplay",
-      desc: "Reduces breeding timers and egg hatch times with configurable multipliers.",
-      modId: "FasterBreeding",
-    },
-  ],
   VRISING: [
     {
       name: "BepInEx Pack for V Rising",
@@ -296,10 +267,51 @@ const RECOMMENDED_MODS: Record<string, any[]> = {
       modId: "BepInExPack_VRising",
     },
     {
-      name: "Bloody Merchant",
-      type: "Economy",
-      desc: "Adds an in-game merchant NPC that players can trade with using configurable item prices.",
-      modId: "BloodyMerchant",
+      name: "Bloodcraft",
+      type: "Overhaul",
+      desc: "Full server-side overhaul: classes, prestige, custom abilities, and companion systems.",
+      modId: "zfolmt-Bloodcraft",
+    },
+    {
+      name: "Vampire Command Framework",
+      type: "Mod Framework",
+      desc: "Foundation other V Rising plugins build on — install it when a mod lists it as a dependency.",
+      modId: "deca-VampireCommandFramework",
+    },
+    {
+      name: "Kindred Commands",
+      type: "Admin",
+      desc: "Chat-command suite for admins: ban, heal, teleport, item grants, and more.",
+      modId: "odjit-KindredCommands",
+    },
+  ],
+  RUST: [
+    {
+      name: "Oxide/uMod Framework",
+      type: "Mod Core",
+      desc: "The plugin framework for Rust servers — compiles .cs plugins at boot. Auto-installed with your first plugin.",
+      modType: "UMOD",
+    },
+    {
+      name: "Kits",
+      type: "Essentials",
+      desc: "One-click loadouts of items, commands and vehicles for admins and groups.",
+      modType: "UMOD",
+      modId: "Kits",
+    },
+    {
+      name: "Clans",
+      type: "Social",
+      desc: "Player-created clans with tags, chat, and ally/friendly-fire management.",
+      modType: "UMOD",
+      modId: "Clans",
+    },
+    {
+      name: "ImageLibrary",
+      type: "Library",
+      desc: "Icon preloader required by many popular Rust plugins.",
+      modType: "UMOD",
+      modId: "ImageLibrary",
     },
   ],
 };
@@ -374,6 +386,9 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   const [browseOffset, setBrowseOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
+  /* Minecraft pack browsing: CurseForge modpacks instead of mods */
+  const [packMode, setPackMode] = useState(false);
+
   /* Detail modal */
   const [detailMod, setDetailMod] = useState<any | null>(null);
 
@@ -409,8 +424,8 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     game === "VALHEIM" ||
     game === "MINECRAFT" ||
     game === "ZOMBOID" ||
-    game === "PALWORLD" ||
-    game === "VRISING";
+    game === "VRISING" ||
+    game === "RUST";
 
   /** Dynamic category list from current results */
   const availableCategories = useMemo(() => {
@@ -531,6 +546,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         offset: "0",
         sort: sortBy,
         ...(selectedCategory && { category: selectedCategory }),
+        ...(packMode && game === "MINECRAFT" && { type: "modpacks" }),
       });
       fetch(
         `/api/servers/${selectedServer.id}/mods/search?${params.toString()}`
@@ -547,7 +563,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, selectedServer, sortBy, selectedCategory]);
+  }, [searchQuery, selectedServer, sortBy, selectedCategory, packMode, game]);
 
   /* ── Handlers ────────────────────────────────────────────────── */
 
@@ -556,10 +572,49 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   // BepInEx core install apart from normal package installs.
   const installModType = (mod: { modType?: string; provider?: string; workshopId?: string }): string => {
     if (mod.modType === "BEPINEX") return "BEPINEX";
+    if (mod.modType === "UMOD") return "UMOD";
     if (mod.provider === "modrinth") return "MODRINTH";
     if (mod.provider === "curseforge") return "CURSEFORGE";
+    if (mod.provider === "umod") return "UMOD";
     if (mod.provider === "workshop" || mod.workshopId) return "STEAM_WORKSHOP";
     return "THUNDERSTORE";
+  };
+
+  const handleInstallPack = async (mod: { modId?: string; packageId?: string; name: string }) => {
+    if (!selectedServer) return;
+    setLoading(true);
+    showError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch(
+        `/api/servers/${selectedServer.id}/mods/install-pack`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ projectId: mod.modId || mod.packageId }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) { const e = new Error(data.error || "Failed to install modpack"); (e as any).bootOutput = data.bootOutput; throw e; }
+
+      setSuccess(data.message || `Successfully installed ${mod.name}`);
+      if (data.message) toast.success(data.message); else toast.success(`Installed ${mod.name}`);
+
+      const modsRes = await fetch(`/api/servers/${selectedServer.id}/mods`);
+      const modsData = await modsRes.json();
+      if (modsData.mods) setInstalledMods(modsData.mods);
+    } catch (err: any) {
+      showError(err.message, (err as any).bootOutput);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** Search-result install dispatch: pack cards go through install-pack. */
+  const handleInstallSearchResult = (mod: any) => {
+    if (mod.kind === "modpack") return handleInstallPack(mod);
+    return handleInstallMod(mod);
   };
 
   const handleInstallLoader = async (loader: "fabric" | "quilt" | "forge" | "neoforge") => {
@@ -746,6 +801,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       offset: String(newOffset),
       sort: sortBy,
       ...(selectedCategory && { category: selectedCategory }),
+      ...(packMode && game === "MINECRAFT" && { type: "modpacks" }),
     });
 
     try {
@@ -1441,6 +1497,36 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                             </button>
                           </div>
                         )}
+
+                        {/* Minecraft: browse CurseForge modpacks instead of mods */}
+                        {game === "MINECRAFT" && (
+                          <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-white/5">
+                            <span className="text-[10px] text-mutedText font-bold uppercase tracking-wider mr-1">
+                              Browse:
+                            </span>
+                            {[
+                              { id: false, label: "Mods" },
+                              { id: true, label: "Modpacks" },
+                            ].map((opt) => (
+                              <button
+                                key={opt.label}
+                                onClick={() => setPackMode(opt.id)}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                                  packMode === opt.id
+                                    ? "bg-accentPurple/25 text-accentPurple border border-accentPurple/40"
+                                    : "bg-white/5 text-slate-400 border border-transparent hover:bg-white/10"
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                            {packMode && (
+                              <span className="text-[10px] text-mutedText ml-1">
+                                One-click full pack installs — snapshot + boot-tested, rolled back on failure.
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Zomboid Workshop Form */}
@@ -1534,7 +1620,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                                 loading={loading}
                                 serverStatus={selectedServer.status}
                                 isInstalled={isInstalled(mod.packageId)}
-                                onInstall={handleInstallMod}
+                                onInstall={handleInstallSearchResult}
                                 onDetail={setDetailMod}
                                 animationDelay={idx * 30}
                               />
@@ -1965,13 +2051,20 @@ export default function ModsView({ servers, user }: ModsViewProps) {
               ) : (
                 <button
                   onClick={() => {
-                    handleInstallMod({
-                      name: detailMod.name,
-                      modId: detailMod.packageId,
-                      version: detailMod.version,
-                      downloadUrl: detailMod.downloadUrl,
-                      provider: detailMod.provider,
-                    });
+                    if (detailMod.kind === "modpack") {
+                      handleInstallPack({
+                        name: detailMod.name,
+                        modId: detailMod.packageId,
+                      });
+                    } else {
+                      handleInstallMod({
+                        name: detailMod.name,
+                        modId: detailMod.packageId,
+                        version: detailMod.version,
+                        downloadUrl: detailMod.downloadUrl,
+                        provider: detailMod.provider,
+                      });
+                    }
                     setDetailMod(null);
                   }}
                   disabled={
@@ -2257,6 +2350,7 @@ function ModCard({
                 version: mod.version,
                 downloadUrl: mod.downloadUrl,
                 provider: mod.provider,
+                kind: mod.kind,
               });
             }}
             disabled={loading || serverStatus === "RUNNING"}

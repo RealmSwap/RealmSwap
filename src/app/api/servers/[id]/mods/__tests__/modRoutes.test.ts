@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from "vitest";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import AdmZip from "adm-zip";
 import { NextRequest } from "next/server";
 
 /**
@@ -25,7 +26,23 @@ const bag = vi.hoisted(() => ({
   bootError: null as Error | null,
   restored: [] as string[],
   discarded: [] as string[],
+  // Per-test download bodies (URL → bytes); null falls through to real HTTPS.
+  downloadBody: null as null | ((url: string) => Buffer | null),
 }));
+
+vi.mock("@/lib/download", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/download")>();
+  return {
+    downloadFile: async (url: string, dest: string) => {
+      const body = bag.downloadBody?.(url);
+      if (body) {
+        fs.writeFileSync(dest, body);
+        return;
+      }
+      return actual.downloadFile(url, dest);
+    },
+  };
+});
 
 vi.mock("@/lib/auth", () => ({ getAuthenticatedUser: async () => ({ id: "user1" }) }));
 vi.mock("@/lib/serverAuth", () => ({
@@ -386,5 +403,210 @@ describe("mod config route", () => {
     );
     expect(res.status).toBe(400);
     expect(fs.readFileSync(cfgPath, "utf-8")).toBe(before);
+  });
+});
+
+/** Small in-test zip builder for download bodies the installers extract. */
+function zipFor(entries: Record<string, string>): Buffer {
+  const zip = new AdmZip();
+  for (const [name, content] of Object.entries(entries)) {
+    zip.addFile(name, Buffer.from(content));
+  }
+  return zip.toBuffer();
+}
+
+describe("VRISING install + uninstall route", () => {
+  const vrDir = () => path.join(dir, "local-servers", "s1", "vrising-server");
+
+  beforeEach(() => {
+    bag.access = { server: { id: "s1", name: "V Server", game: "VRISING", status: "STOPPED" } };
+    bag.downloadBody = null;
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    bag.downloadBody = null;
+  });
+
+  function stubThunderstoreIndex() {
+    const index = [
+      {
+        full_name: "BepInEx-BepInExPack_V_Rising", name: "BepInExPack_V_Rising", owner: "BepInEx",
+        is_deprecated: false, rating_score: 50, date_updated: "", categories: [],
+        versions: [{ version_number: "1.733.2", download_url: "https://ts/core.zip", dependencies: [], description: "", icon: "" }],
+      },
+      {
+        full_name: "deca-VampireCommandFramework", name: "VampireCommandFramework", owner: "deca",
+        is_deprecated: false, rating_score: 22, date_updated: "", categories: [],
+        versions: [{ version_number: "0.9.0", download_url: "https://ts/vcf.zip", dependencies: [], description: "", icon: "" }],
+      },
+      {
+        full_name: "team-CoolMod", name: "CoolMod", owner: "team",
+        is_deprecated: false, rating_score: 10, date_updated: "", categories: [],
+        versions: [{ version_number: "1.0.0", download_url: "https://ts/coolmod.zip", dependencies: ["deca-VampireCommandFramework-0.9.0"], description: "", icon: "" }],
+      },
+    ];
+    vi.stubGlobal("fetch", vi.fn(async (url: any) => {
+      if (String(url).includes("/api/v1/package/")) {
+        return { ok: true, json: async () => index };
+      }
+      throw new Error(`unexpected fetch ${url}`);
+    }));
+    bag.downloadBody = (url) => {
+      if (url === "https://ts/core.zip") {
+        return zipFor({
+          "BepInExPack_V_Rising/doorstop_config.ini": "[doorstop]",
+          "BepInExPack_V_Rising/BepInEx/core/BepInEx.Core.dll": "core",
+        });
+      }
+      if (url === "https://ts/vcf.zip") return zipFor({ "VampireCommandFramework.dll": "vcf" });
+      if (url === "https://ts/coolmod.zip") return zipFor({ "CoolMod.dll": "mod" });
+      return null;
+    };
+  }
+
+  it("installs a plugin with its dependency and auto-provisions the IL2CPP BepInEx core pack", async () => {
+    fs.mkdirSync(vrDir(), { recursive: true });
+    stubThunderstoreIndex();
+
+    const res = await installMod(
+      jsonReq("/api/servers/s1/mods/install", "POST", {
+        modType: "THUNDERSTORE", modId: "team-CoolMod", modName: "CoolMod",
+      }),
+      { params: { id: "s1" } }
+    );
+
+    expect(res.status).toBe(200);
+    expect((await res.json()).dependencyCount).toBe(1);
+    // Core pack wrapper folder is stripped onto the server root
+    expect(fs.readFileSync(path.join(vrDir(), "doorstop_config.ini"), "utf-8")).toBe("[doorstop]");
+    // Content packages land in per-package plugin folders
+    expect(fs.existsSync(path.join(vrDir(), "BepInEx", "plugins", "deca-VampireCommandFramework", "VampireCommandFramework.dll"))).toBe(true);
+    expect(fs.existsSync(path.join(vrDir(), "BepInEx", "plugins", "team-CoolMod", "CoolMod.dll"))).toBe(true);
+    // Rows: core, dependency, main — real versions
+    expect(bag.upserts.map((u) => u.create.packageId)).toEqual([
+      "BepInEx-BepInExPack_V_Rising",
+      "deca-VampireCommandFramework",
+      "team-CoolMod",
+    ]);
+    expect(bag.upserts[2].create.version).toBe("1.0.0");
+    expect(bag.audit[0]?.action).toBe("INSTALL_MOD");
+  });
+
+  it("routes a directly-requested core pack to the server root, not plugins/", async () => {
+    fs.mkdirSync(vrDir(), { recursive: true });
+    stubThunderstoreIndex();
+
+    const res = await installMod(
+      jsonReq("/api/servers/s1/mods/install", "POST", {
+        modType: "THUNDERSTORE", modId: "BepInEx-BepInExPack_V_Rising",
+      }),
+      { params: { id: "s1" } }
+    );
+
+    expect(res.status).toBe(200);
+    expect(fs.existsSync(path.join(vrDir(), "doorstop_config.ini"))).toBe(true);
+    expect(fs.existsSync(path.join(vrDir(), "BepInEx", "plugins", "BepInEx-BepInExPack_V_Rising"))).toBe(false);
+    expect(bag.upserts[0].create).toMatchObject({
+      provider: "thunderstore",
+      packageId: "BepInEx-BepInExPack_V_Rising",
+      version: "1.733.2",
+    });
+  });
+
+  it("removes the package folder on uninstall", async () => {
+    fs.mkdirSync(path.join(vrDir(), "BepInEx", "plugins", "team-CoolMod"), { recursive: true });
+    fs.writeFileSync(path.join(vrDir(), "BepInEx", "plugins", "team-CoolMod", "CoolMod.dll"), "mod");
+    bag.findFirst = {
+      id: "row1", serverId: "s1", provider: "thunderstore", packageId: "team-CoolMod", name: "CoolMod",
+    };
+
+    const res = await uninstallMod(
+      jsonReq("/api/servers/s1/mods/team-CoolMod", "DELETE"),
+      { params: { id: "s1", modId: "team-CoolMod" } }
+    );
+
+    expect(res.status).toBe(200);
+    expect(fs.existsSync(path.join(vrDir(), "BepInEx", "plugins", "team-CoolMod"))).toBe(false);
+    expect(bag.deletes[0].where.serverId_provider_packageId).toEqual({
+      serverId: "s1", provider: "thunderstore", packageId: "team-CoolMod",
+    });
+  });
+});
+
+describe("RUST install + uninstall route", () => {
+  const rustDir = () => path.join(dir, "local-servers", "s1", "rust-server");
+
+  beforeEach(() => {
+    bag.access = { server: { id: "s1", name: "Rust Server", game: "RUST", status: "STOPPED" } };
+    bag.downloadBody = null;
+  });
+  afterEach(() => {
+    bag.downloadBody = null;
+  });
+
+  it("installs a plugin and auto-provisions the Oxide framework", async () => {
+    fs.mkdirSync(rustDir(), { recursive: true });
+    bag.downloadBody = (url) => {
+      if (url === "https://umod.org/games/rust/download") {
+        return zipFor({
+          "RustDedicated_Data/Managed/Oxide.Core.dll": "oxide",
+          "RustDedicated_Data/Managed/Oxide.Common.dll": "oxide2",
+        });
+      }
+      if (url === "https://umod.org/plugins/Kits.cs") return Buffer.from("void Init() {}");
+      return null;
+    };
+
+    const res = await installMod(
+      jsonReq("/api/servers/s1/mods/install", "POST", {
+        modType: "UMOD", modId: "Kits", modName: "Rust Kits", version: "4.4.10",
+        downloadUrl: "https://umod.org/plugins/Kits.cs",
+      }),
+      { params: { id: "s1" } }
+    );
+
+    expect(res.status).toBe(200);
+    expect(fs.readFileSync(path.join(rustDir(), "Oxide", "plugins", "Kits.cs"), "utf-8")).toBe("void Init() {}");
+    expect(fs.existsSync(path.join(rustDir(), "RustDedicated_Data", "Managed", "Oxide.Core.dll"))).toBe(true);
+    // Rows: Oxide framework, then the plugin with the pinned version
+    expect(bag.upserts.map((u) => u.create.packageId)).toEqual(["Oxide", "Kits"]);
+    expect(bag.upserts[1].create).toMatchObject({
+      provider: "umod", packageId: "Kits", version: "4.4.10", name: "Rust Kits",
+    });
+    expect(bag.audit[0]?.action).toBe("INSTALL_MOD");
+  });
+
+  it("installs the Oxide framework alone for the theme card (no modId)", async () => {
+    fs.mkdirSync(rustDir(), { recursive: true });
+    bag.downloadBody = (url) =>
+      url === "https://umod.org/games/rust/download"
+        ? zipFor({ "RustDedicated_Data/Managed/Oxide.Core.dll": "oxide" })
+        : null;
+
+    const res = await installMod(
+      jsonReq("/api/servers/s1/mods/install", "POST", { modType: "UMOD", modName: "Oxide/uMod Framework" }),
+      { params: { id: "s1" } }
+    );
+
+    expect(res.status).toBe(200);
+    expect(bag.upserts).toHaveLength(1);
+    expect(bag.upserts[0].create).toMatchObject({ provider: "umod", packageId: "Oxide" });
+    expect(fs.existsSync(path.join(rustDir(), "Oxide", "plugins"))).toBe(true);
+  });
+
+  it("removes the plugin .cs on uninstall", async () => {
+    fs.mkdirSync(path.join(rustDir(), "Oxide", "plugins"), { recursive: true });
+    fs.writeFileSync(path.join(rustDir(), "Oxide", "plugins", "Kits.cs"), "void Init() {}");
+    bag.findFirst = {
+      id: "row1", serverId: "s1", provider: "umod", packageId: "Kits", name: "Rust Kits",
+    };
+
+    const res = await uninstallMod(
+      jsonReq("/api/servers/s1/mods/Kits", "DELETE"),
+      { params: { id: "s1", modId: "Kits" } }
+    );
+
+    expect(res.status).toBe(200);
+    expect(fs.existsSync(path.join(rustDir(), "Oxide", "plugins", "Kits.cs"))).toBe(false);
   });
 });

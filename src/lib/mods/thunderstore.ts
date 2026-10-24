@@ -166,6 +166,47 @@ export function extractThunderstorePackage(zip: AdmZip, destDir: string): number
 }
 
 /**
+ * The single top-level directory of a zip when every entry shares one (e.g.
+ * BepInExPack_V_Rising/...), else null. Directory entries count too so a
+ * folder-only layout still strips.
+ */
+export function commonRootDir(zip: AdmZip): string | null {
+  const entries = zip.getEntries();
+  if (entries.length === 0) return null;
+  let root: string | null = null;
+  for (const entry of entries) {
+    const name = entry.entryName.replace(/\\/g, "/");
+    if (!name || name.startsWith("/")) return null;
+    const top = name.includes("/") ? name.slice(0, name.indexOf("/")) : null;
+    if (top === null) return null; // a root-level file: nothing to strip
+    if (root === null) root = top;
+    else if (root !== top) return null;
+  }
+  return root;
+}
+
+/**
+ * Extract a framework/core pack zip onto the game directory: when every
+ * entry lives under one wrapper folder (BepInExPack_V_Rising/), it is
+ * stripped so BepInEx/, doorstop_config.ini etc. land at destDir itself.
+ */
+export function extractCorePack(zip: AdmZip, destDir: string): number {
+  const root = commonRootDir(zip);
+  let count = 0;
+  for (const entry of zip.getEntries()) {
+    if (entry.isDirectory) continue;
+    const name = entry.entryName.replace(/\\/g, "/");
+    const rel = root && name.startsWith(`${root}/`) ? name.slice(root.length + 1) : name;
+    if (!rel) continue;
+    const target = safeJoin(destDir, safePackPath(rel));
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, entry.getData());
+    count++;
+  }
+  return count;
+}
+
+/**
  * Fetch (and cache, 10 min) the full package index for a community. Shared
  * by search and install so they don't refetch the multi-megabyte index.
  */
@@ -176,7 +217,6 @@ export function communityForGame(game: string): string | null {
   const communities: Record<string, string> = {
     VALHEIM: "valheim",
     VRISING: "v-rising",
-    PALWORLD: "palworld",
   };
   return communities[game.toUpperCase()] ?? null;
 }
@@ -189,7 +229,10 @@ export async function fetchCommunityIndex(
   if (!force && cached && Date.now() - cached.fetchedAt < INDEX_TTL) {
     return cached.packages;
   }
-  const res = await fetch(`https://${community}.thunderstore.io/api/v1/package/`);
+  // The /c/<community>/ path serves every community — legacy ones (valheim,
+  // v-rising) also have subdomains, but newer ones (palworld, ...) do not,
+  // so the uniform path is the one template that works for all.
+  const res = await fetch(`https://thunderstore.io/c/${community}/api/v1/package/`);
   if (!res.ok) {
     if (cached) return cached.packages; // stale beats nothing
     throw new Error(`Thunderstore request failed (${res.status}) for ${community}.`);

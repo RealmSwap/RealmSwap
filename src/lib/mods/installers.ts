@@ -16,7 +16,7 @@ import {
 } from "@/lib/mods/curseforge";
 import {
   communityForGame, fetchCommunityIndex, findVersionEntry, newestVersion,
-  collectDependencies, extractThunderstorePackage,
+  collectDependencies, extractThunderstorePackage, extractCorePack, isBepInExCore,
 } from "@/lib/mods/thunderstore";
 import { addZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { addArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
@@ -258,13 +258,19 @@ export async function installMinecraftCurseforge(args: {
 }
 
 /**
- * Install a Thunderstore package (and its required dependencies, resolved
- * from the package index) into a Valheim server's BepInEx plugins dir.
- * Auto-installs the BepInEx core framework first when it's missing.
+ * Shared Thunderstore installer for the BepInEx-family games (Valheim, V
+ * Rising): resolve the package, its version and dependency graph from the
+ * community index, provision the game's BepInEx core when it is missing,
+ * extract every content package into its own plugins/<packageId>/ folder and
+ * record rows with real versions. A core pack requested directly is
+ * extracted over the server root (its wrapper folder stripped) instead of
+ * the plugins dir.
  */
-export async function installValheimThunderstore(args: {
+async function installBepInExThunderstore(args: {
   serverId: string;
-  valheimDir: string;
+  serverDir: string;
+  community: string;
+  ensureCore: () => Promise<void>;
   packageId: string;
   name?: string;
   /** Pinned version number (e.g. from a collection export); falls back to newest. */
@@ -272,15 +278,11 @@ export async function installValheimThunderstore(args: {
   downloadUrl?: string;
   warnings: string[];
 }): Promise<InstallStepResult> {
-  const { serverId, valheimDir, packageId, name, versionNumber, downloadUrl, warnings } = args;
+  const { serverId, serverDir, community, ensureCore, packageId, name, versionNumber, downloadUrl, warnings } = args;
 
   // Everything — version, download URL and dependency graph — is resolved
   // from the package index so the recorded rows describe what is actually
   // on disk.
-  const community = communityForGame("VALHEIM");
-  if (!community) {
-    throw new Error("Mods are not supported for game: Valheim");
-  }
   const index = await fetchCommunityIndex(community);
   const pkg = index.find((p) => p.full_name === packageId);
   if (!pkg) {
@@ -301,42 +303,37 @@ export async function installValheimThunderstore(args: {
     );
   }
 
-  // BepInEx core is a hard prerequisite for any plugin.
-  const bepinexCheckFile = path.join(valheimDir, "doorstop_config.ini");
-  if (!fs.existsSync(bepinexCheckFile)) {
-    console.log(`[Sandbox] BepInEx not found for server ${serverId}. Auto-installing core framework first...`);
-    const zipPath = path.join(path.dirname(valheimDir), "bepinex.zip");
-    const defaultBepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
-
-    await downloadFile(defaultBepInExUrl, zipPath);
+  if (isBepInExCore(packageId)) {
+    // Framework, not content: the plugins-dir layout would leave BepInEx
+    // unusable, so the pack goes over the server root with its wrapper
+    // folder stripped (BepInEx/, doorstop_config.ini, winhttp.dll, ...).
+    const tempZip = safeJoin(serverDir, ".bepinex-core.staging.zip");
+    await downloadFile(versionEntry.download_url, tempZip);
     try {
-      const zip = new AdmZip(zipPath);
-      zip.extractAllTo(valheimDir, true);
-      try { fs.unlinkSync(zipPath); } catch (_) {}
+      extractCorePack(new AdmZip(tempZip), serverDir);
     } catch (err: any) {
-      throw new Error(`Failed to extract BepInEx: ${err.message}`);
+      throw new Error(`Failed to extract ${pkg.name}: ${err.message}`);
+    } finally {
+      try { fs.unlinkSync(tempZip); } catch (_) {}
     }
-
     await prisma.modInstallation.upsert({
-      where: {
-        serverId_provider_packageId: {
-          serverId,
-          provider: "thunderstore",
-          packageId: "denikson-BepInExPack_Valheim"
-        }
-      },
-      update: { version: "5.4.2202" },
+      where: { serverId_provider_packageId: { serverId, provider: "thunderstore", packageId } },
+      update: { version: versionEntry.version_number, name: name || pkg.name },
       create: {
-        serverId,
-        provider: "thunderstore",
-        packageId: "denikson-BepInExPack_Valheim",
-        version: "5.4.2202",
-        name: "BepInExPack Valheim"
-      }
+        serverId, provider: "thunderstore", packageId,
+        version: versionEntry.version_number, name: name || pkg.name,
+      },
     });
+    return { dependencyCount: 0 };
   }
 
-  const pluginsDir = path.join(valheimDir, "BepInEx", "plugins");
+  // BepInEx core is a hard prerequisite for any plugin.
+  if (!fs.existsSync(path.join(serverDir, "doorstop_config.ini"))) {
+    console.log(`[Sandbox] BepInEx not found for server ${serverId}. Auto-installing core framework first...`);
+    await ensureCore();
+  }
+
+  const pluginsDir = path.join(serverDir, "BepInEx", "plugins");
   if (!fs.existsSync(pluginsDir)) {
     fs.mkdirSync(pluginsDir, { recursive: true });
   }
@@ -398,6 +395,146 @@ export async function installValheimThunderstore(args: {
   );
 
   return { dependencyCount: depOrder.length };
+}
+
+/**
+ * Install a Thunderstore package (and its required dependencies, resolved
+ * from the package index) into a Valheim server's BepInEx plugins dir.
+ * Auto-installs the BepInEx core framework first when it's missing.
+ */
+export async function installValheimThunderstore(args: {
+  serverId: string;
+  valheimDir: string;
+  packageId: string;
+  name?: string;
+  /** Pinned version number (e.g. from a collection export); falls back to newest. */
+  versionNumber?: string;
+  downloadUrl?: string;
+  warnings: string[];
+}): Promise<InstallStepResult> {
+  const { serverId, valheimDir } = args;
+  return installBepInExThunderstore({
+    serverId,
+    serverDir: valheimDir,
+    community: communityForGame("VALHEIM")!,
+    ensureCore: async () => {
+      // Official BepInEx release zip (Valheim is Mono). The recorded row is
+      // keyed to the community core pack id that dependency strings
+      // reference, so the resolver's BepInExPack skip stays truthful.
+      const zipPath = path.join(path.dirname(valheimDir), "bepinex.zip");
+      const defaultBepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
+
+      await downloadFile(defaultBepInExUrl, zipPath);
+      try {
+        new AdmZip(zipPath).extractAllTo(valheimDir, true);
+        try { fs.unlinkSync(zipPath); } catch (_) {}
+      } catch (err: any) {
+        throw new Error(`Failed to extract BepInEx: ${err.message}`);
+      }
+
+      await prisma.modInstallation.upsert({
+        where: {
+          serverId_provider_packageId: {
+            serverId,
+            provider: "thunderstore",
+            packageId: "denikson-BepInExPack_Valheim"
+          }
+        },
+        update: { version: "5.4.2202" },
+        create: {
+          serverId,
+          provider: "thunderstore",
+          packageId: "denikson-BepInExPack_Valheim",
+          version: "5.4.2202",
+          name: "BepInExPack Valheim"
+        }
+      });
+    },
+    packageId: args.packageId,
+    name: args.name,
+    versionNumber: args.versionNumber,
+    downloadUrl: args.downloadUrl,
+    warnings: args.warnings,
+  });
+}
+
+/** The V Rising community's BepInEx core pack (BepInEx 6 for IL2CPP — the
+ * official Mono BepInEx 5 zip Valheim uses would never load here). */
+export const VRISING_CORE_PACKAGE_ID = "BepInEx-BepInExPack_V_Rising";
+
+async function ensureVRisingCore(serverId: string, vrisingDir: string, force: boolean): Promise<void> {
+  if (!force && fs.existsSync(path.join(vrisingDir, "doorstop_config.ini"))) return;
+
+  const index = await fetchCommunityIndex(communityForGame("VRISING")!);
+  const corePkg = index.find((p) => p.full_name === VRISING_CORE_PACKAGE_ID);
+  const versionEntry = corePkg ? newestVersion(corePkg) : null;
+  if (!corePkg || !versionEntry) {
+    throw new Error("BepInExPack_V_Rising is no longer available on Thunderstore — it is required for V Rising plugins.");
+  }
+
+  const tempZip = safeJoin(vrisingDir, ".bepinex-core.staging.zip");
+  await downloadFile(versionEntry.download_url, tempZip);
+  try {
+    // The pack wraps everything in BepInExPack_V_Rising/ — stripped so
+    // doorstop_config.ini and BepInEx/ land at the server root.
+    extractCorePack(new AdmZip(tempZip), vrisingDir);
+  } catch (err: any) {
+    throw new Error(`Failed to extract BepInExPack_V_Rising: ${err.message}`);
+  } finally {
+    try { fs.unlinkSync(tempZip); } catch (_) {}
+  }
+
+  await prisma.modInstallation.upsert({
+    where: { serverId_provider_packageId: { serverId, provider: "thunderstore", packageId: VRISING_CORE_PACKAGE_ID } },
+    update: { version: versionEntry.version_number },
+    create: {
+      serverId,
+      provider: "thunderstore",
+      packageId: VRISING_CORE_PACKAGE_ID,
+      version: versionEntry.version_number,
+      name: "BepInExPack V Rising",
+    },
+  });
+}
+
+/**
+ * Install a Thunderstore package into a V Rising server's BepInEx plugins
+ * dir, mirroring the Valheim flow. Auto-installs the community BepInEx core
+ * pack (IL2CPP) when it's missing.
+ */
+export async function installVRisingThunderstore(args: {
+  serverId: string;
+  vrisingDir: string;
+  packageId: string;
+  name?: string;
+  /** Pinned version number (e.g. from a collection export); falls back to newest. */
+  versionNumber?: string;
+  downloadUrl?: string;
+  warnings: string[];
+}): Promise<InstallStepResult> {
+  const { serverId, vrisingDir } = args;
+  return installBepInExThunderstore({
+    serverId,
+    serverDir: vrisingDir,
+    community: communityForGame("VRISING")!,
+    ensureCore: () => ensureVRisingCore(serverId, vrisingDir, false),
+    packageId: args.packageId,
+    name: args.name,
+    versionNumber: args.versionNumber,
+    downloadUrl: args.downloadUrl,
+    warnings: args.warnings,
+  });
+}
+
+/**
+ * (Re-)provision the V Rising BepInEx core pack unconditionally — the
+ * route's BEPINEX modType path, mirroring Valheim's "Install BepInEx" card.
+ */
+export async function installVRisingBepInexCore(args: {
+  serverId: string;
+  vrisingDir: string;
+}): Promise<void> {
+  await ensureVRisingCore(args.serverId, args.vrisingDir, true);
 }
 
 /**

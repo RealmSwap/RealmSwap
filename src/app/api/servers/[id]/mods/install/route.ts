@@ -9,8 +9,9 @@ import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { downloadFile } from "@/lib/download";
 import {
   installMinecraftMod, installMinecraftCurseforge, installValheimThunderstore, installZomboidWorkshopMod,
-  installArkWorkshopMod,
+  installArkWorkshopMod, installVRisingThunderstore, installVRisingBepInexCore,
 } from "@/lib/mods/installers";
+import { installOxideCore, installRustUmodPlugin } from "@/lib/mods/umod";
 import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
@@ -34,7 +35,7 @@ export async function POST(
 
     const serverId = params.id;
     const modInstallSchema = z.object({
-      modType: z.enum(["STEAM_WORKSHOP", "MODRINTH", "CURSEFORGE", "BEPINEX", "THUNDERSTORE"]),
+      modType: z.enum(["STEAM_WORKSHOP", "MODRINTH", "CURSEFORGE", "BEPINEX", "THUNDERSTORE", "UMOD"]),
       modId: z.string().optional(),
       modName: z.string().optional(),
       version: z.string().optional(),
@@ -128,6 +129,48 @@ export async function POST(
             warnings,
           });
           dependencyCount = result.dependencyCount;
+        }
+
+      } else if (game === "VRISING") {
+        const vrisingDir = path.join(serverRoot, "vrising-server");
+        if (!fs.existsSync(vrisingDir)) {
+          throw new Error("V Rising server directory not found. Please start/install the server first.");
+        }
+
+        if (modType === "BEPINEX") {
+          // Core framework install only (the community's IL2CPP BepInEx 6
+          // pack — the Mono zip Valheim uses would not load here).
+          await installVRisingBepInexCore({ serverId, vrisingDir });
+        } else {
+          if (!modId) {
+            throw new Error("A Thunderstore package id is required for V Rising mods.");
+          }
+          const result = await installVRisingThunderstore({
+            serverId,
+            vrisingDir,
+            packageId: modId,
+            name: modName,
+            versionNumber: version,
+            downloadUrl,
+            warnings,
+          });
+          dependencyCount = result.dependencyCount;
+        }
+
+      } else if (game === "RUST") {
+        const rustDir = path.join(serverRoot, "rust-server");
+        if (!fs.existsSync(rustDir)) {
+          throw new Error("Rust server is not installed yet — install the server before adding plugins.");
+        }
+        if (!modId) {
+          // Theme-card framework install: Oxide/uMod only.
+          await installOxideCore({ serverId, rustDir });
+        } else {
+          // A uMod plugin: its .cs source goes to Oxide/plugins/ and the
+          // framework compiles it at boot.
+          await installRustUmodPlugin({
+            serverId, rustDir, packageId: modId, name: modName, version, downloadUrl, warnings,
+          });
         }
 
       } else if (game === "ZOMBOID") {

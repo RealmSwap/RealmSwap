@@ -82,6 +82,9 @@ export const CURSEFORGE_GAME_IDS: Record<string, number> = {
 /** CFCore loader enum. */
 export const CURSEFORGE_LOADER_IDS = { forge: 1, fabric: 4, quilt: 5, neoforge: 6 } as const;
 
+/** CFCore class ids (top-level section filters for /mods/search). */
+export const CURSEFORGE_CLASS_IDS = { modpacks: 4471 } as const;
+
 /** CFCore sort-field enum (subset we expose). */
 export const CURSEFORGE_SORT_FIELDS = { featured: 1, popularity: 2, lastUpdated: 3, name: 4, totalDownloads: 6 } as const;
 
@@ -118,6 +121,7 @@ export async function searchCurseForgeMods(
     sortField?: number;
     sortOrder?: string;
     categoryId?: number;
+    classId?: number;
   },
   deps?: CurseForgeDeps
 ): Promise<{ data: CurseForgeMod[]; total: number }> {
@@ -130,6 +134,7 @@ export async function searchCurseForgeMods(
   if (opts.offset) params.set("index", String(opts.offset));
   params.set("pageSize", String(opts.pageSize ?? 20));
   if (opts.categoryId) params.set("categoryId", String(opts.categoryId));
+  if (opts.classId) params.set("classId", String(opts.classId));
   const json = await cfRequest<{ data: CurseForgeMod[]; pagination: { total?: number } }>(
     `/mods/search?${params.toString()}`,
     undefined,

@@ -13,7 +13,7 @@ import {
   installFabricServer, installForgeServer, installNeoForgeServer, installQuiltServer,
 } from "@/lib/mods/mcLoaders";
 import {
-  installMinecraftMod, installValheimThunderstore, installZomboidWorkshopMod,
+  installMinecraftMod, installValheimThunderstore, installZomboidWorkshopMod, installVRisingThunderstore,
 } from "@/lib/mods/installers";
 
 const LOADER_LABELS: Record<string, string> = {
@@ -171,6 +171,19 @@ export async function POST(
           }
           const result = await installValheimThunderstore({
             serverId, valheimDir, packageId: mod.packageId,
+            name: mod.name, versionNumber: mod.version, warnings,
+          });
+          dependencyCount += result.dependencyCount;
+        } else if (game === "VRISING") {
+          if (mod.provider !== "thunderstore") {
+            throw new Error(`Collection entry '${mod.packageId}' uses provider '${mod.provider}', which V Rising doesn't support.`);
+          }
+          const vrisingDir = path.join(serverRoot, "vrising-server");
+          if (!fs.existsSync(vrisingDir)) {
+            throw new Error("V Rising server directory not found. Please start/install the server first.");
+          }
+          const result = await installVRisingThunderstore({
+            serverId, vrisingDir, packageId: mod.packageId,
             name: mod.name, versionNumber: mod.version, warnings,
           });
           dependencyCount += result.dependencyCount;
