@@ -15,6 +15,7 @@ import {
   isBepInExCore,
   newestVersion,
   extractThunderstorePackage,
+  extractCorePack,
 } from "@/lib/mods/thunderstore";
 import { WORKSHOP_APP_IDS, getWorkshopDetails } from "@/lib/mods/workshop";
 import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
@@ -97,9 +98,19 @@ export async function resolveModUpdate(
     };
   }
 
+  if (installation.provider === "umod") {
+    throw new UpdateResolutionError(
+      "uMod plugin updates aren't supported — uMod's API rate-limits the per-plugin requests an update check needs. Reinstall the plugin to update it."
+    );
+  }
+
   if (installation.provider === "thunderstore") {
-    if (game !== "VALHEIM") {
-      throw new UpdateResolutionError("Thunderstore mod updates are supported for Valheim servers only.");
+    // BepInEx-family games share one installer shape; anything else has no
+    // Thunderstore community and thus no update path.
+    const bepinexGameDirs: Record<string, string> = { VALHEIM: "valheim-server", VRISING: "vrising-server" };
+    const serverDirName = bepinexGameDirs[game];
+    if (!serverDirName) {
+      throw new UpdateResolutionError("Thunderstore mod updates are supported for Valheim and V Rising servers only.");
     }
     const community = communityForGame(game);
     if (!community) {
@@ -114,20 +125,20 @@ export async function resolveModUpdate(
     if (!latest) {
       throw new UpdateResolutionError(`Package '${installation.packageId}' has no published versions.`, 404);
     }
-    const pluginsDir = path.join(serverRoot, "valheim-server", "BepInEx", "plugins");
+    const serverDir = path.join(serverRoot, serverDirName);
+    const pluginsDir = path.join(serverDir, "BepInEx", "plugins");
     const modDir = safeJoin(pluginsDir, installation.packageId);
     if (isBepInExCore(installation.packageId)) {
       // The core pack installs over the server root, not the plugins dir —
-      // same as the install route's auto-provisioning.
-      const serverDir = path.join(serverRoot, "valheim-server");
+      // same as the install route's auto-provisioning. The wrapper folder is
+      // stripped when the pack has one.
       const tempZip = safeJoin(serverDir, ".bepinex-core.staging.zip");
       return {
         newVersionNumber: latest.version_number,
         applyUpdate: async () => {
           await downloadFile(latest.download_url, tempZip);
           try {
-            const zip = new AdmZip(tempZip);
-            zip.extractAllTo(serverDir, true);
+            extractCorePack(new AdmZip(tempZip), serverDir);
           } finally {
             try { fs.unlinkSync(tempZip); } catch (_) {}
           }

@@ -249,4 +249,85 @@ describe("reconcileInstalledMods", () => {
       expect(result.added).toBe(0);
     });
   });
+
+  describe("VRISING", () => {
+    const vrDir = () => path.join(serverRoot(), "vrising-server");
+
+    it("keys rows on plugin folders and the doorstop marker, like Valheim", async () => {
+      fs.mkdirSync(path.join(vrDir(), "BepInEx", "plugins", "zfolmt-Bloodcraft"), { recursive: true });
+      fs.writeFileSync(path.join(vrDir(), "doorstop_config.ini"), "[doorstop]");
+      bag.server = { id: "s1", game: "VRISING" };
+      bag.rows = [
+        { id: "r1", packageId: "zfolmt-Bloodcraft" },
+        { id: "r2", packageId: "zfolmt-Gone" },
+        { id: "r3", packageId: "BepInEx-BepInExPack_V_Rising" },
+      ];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result).toEqual({ removed: 1, added: 0, repaired: 0 });
+      expect(bag.deletes).toEqual(["r2"]);
+    });
+
+    it("adds minimal rows for disk packages without rows", async () => {
+      fs.mkdirSync(path.join(vrDir(), "BepInEx", "plugins", "odjit-KindredCommands"), { recursive: true });
+      bag.server = { id: "s1", game: "VRISING" };
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result.added).toBe(1);
+      expect(bag.creates).toEqual([
+        {
+          serverId: "s1",
+          provider: "thunderstore",
+          packageId: "odjit-KindredCommands",
+          version: "unknown",
+          name: "odjit-KindredCommands",
+        },
+      ]);
+    });
+  });
+
+  describe("RUST", () => {
+    const rustDir = () => path.join(serverRoot(), "rust-server");
+
+    it("keys rows on plugin .cs files and the Oxide marker", async () => {
+      fs.mkdirSync(path.join(rustDir(), "Oxide", "plugins"), { recursive: true });
+      fs.writeFileSync(path.join(rustDir(), "Oxide", "plugins", "Kits.cs"), "// Kits");
+      fs.writeFileSync(path.join(rustDir(), "Oxide", "plugins", "Clans.cs"), "// Clans");
+      fs.mkdirSync(path.join(rustDir(), "RustDedicated_Data", "Managed"), { recursive: true });
+      fs.writeFileSync(path.join(rustDir(), "RustDedicated_Data", "Managed", "Oxide.Core.dll"), "oxide");
+      bag.server = { id: "s1", game: "RUST" };
+      bag.rows = [
+        { id: "r1", packageId: "Kits" },
+        { id: "r2", packageId: "RemovedPlugin" },
+        { id: "r3", packageId: "Oxide" },
+      ];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result).toEqual({ removed: 1, added: 1, repaired: 0 });
+      expect(bag.deletes).toEqual(["r2"]);
+      expect(bag.creates).toEqual([
+        {
+          serverId: "s1",
+          provider: "umod",
+          packageId: "Clans",
+          version: "unknown",
+          name: "Clans",
+        },
+      ]);
+    });
+
+    it("ignores non-.cs files in the plugins dir", async () => {
+      fs.mkdirSync(path.join(rustDir(), "Oxide", "plugins"), { recursive: true });
+      fs.writeFileSync(path.join(rustDir(), "Oxide", "plugins", "Kits.json"), "{}");
+      bag.server = { id: "s1", game: "RUST" };
+      bag.rows = [];
+
+      await reconcileInstalledMods("s1");
+
+      expect(bag.creates).toHaveLength(0);
+    });
+  });
 });

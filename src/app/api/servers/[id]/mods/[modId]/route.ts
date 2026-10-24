@@ -7,6 +7,7 @@ import path from "path";
 import { dataRoot } from "@/lib/appPaths";
 import { removeZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { removeArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
+import { removeRustUmodPlugin } from "@/lib/mods/umod";
 
 export async function DELETE(
   req: NextRequest,
@@ -58,6 +59,24 @@ export async function DELETE(
       if (fs.existsSync(modDir) && fs.statSync(modDir).isDirectory()) {
         fs.rmSync(modDir, { recursive: true, force: true });
       }
+    } else if (game === "VRISING") {
+      // Same layout as Valheim: per-package folders (or loose dlls) under
+      // BepInEx/plugins.
+      const pluginsDir = path.join(dataRoot(), "local-servers", serverId, "vrising-server", "BepInEx", "plugins");
+      const dllPath = path.join(pluginsDir, `${modId}.dll`);
+      if (fs.existsSync(dllPath)) {
+        fs.unlinkSync(dllPath);
+      }
+      const zipPath = path.join(pluginsDir, `${modId}.zip`);
+      if (fs.existsSync(zipPath)) {
+        fs.unlinkSync(zipPath);
+      }
+      const modDir = path.join(pluginsDir, modId);
+      if (fs.existsSync(modDir) && fs.statSync(modDir).isDirectory()) {
+        fs.rmSync(modDir, { recursive: true, force: true });
+      }
+    } else if (game === "RUST") {
+      removeRustUmodPlugin(path.join(dataRoot(), "local-servers", serverId, "rust-server"), modId);
     } else if (game === "MINECRAFT") {
       const modsDir = path.join(dataRoot(), "local-servers", serverId, "mods");
       const jarPath = path.join(modsDir, `${modId}.jar`);

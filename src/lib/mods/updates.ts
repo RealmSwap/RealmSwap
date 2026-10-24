@@ -70,7 +70,10 @@ export async function checkModUpdates(opts: {
       // ARK workshop mods are downloaded AND updated by the dedicated server
       // itself on every start (-automanagemods) — there is nothing for the
       // update machinery to do, so they are deliberately unreported.
-      !(r.provider === "workshop" && game === "ARK")
+      !(r.provider === "workshop" && game === "ARK") &&
+      // uMod update checks would need one rate-limited uMod request per
+      // plugin — deliberately unreported (reinstall to update).
+      r.provider !== "umod"
   );
   for (const row of otherRows) {
     errors.push(`${row.name}: updates are not supported for provider "${row.provider}"`);

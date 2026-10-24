@@ -5,6 +5,7 @@ import { dataRoot } from "@/lib/appPaths";
 import { readZomboidModLists, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { curatedZomboidWorkshopName } from "@/lib/mods/providers/SteamWorkshopProvider";
 import { readArkActiveMods, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
+import { OXIDE_CORE_MARKER, OXIDE_CORE_PACKAGE_ID, oxidePluginsDir } from "@/lib/mods/umod";
 
 /**
  * Mod rows ↔ disk reconciliation.
@@ -29,7 +30,7 @@ export interface ReconcileResult {
 }
 
 const BEPINEX_CORE_PACKAGE_ID = "denikson-BepInExPack_Valheim";
-const BEPINEX_CORE_VERSION = "5.4.2202";
+const VRISING_CORE_PACKAGE_ID = "BepInEx-BepInExPack_V_Rising";
 
 function listDir(dir: string): string[] {
   try {
@@ -108,15 +109,21 @@ async function reconcileMinecraft(serverId: string, serverRoot: string): Promise
 }
 
 /**
- * Valheim: Thunderstore rows are keyed by the extracted package folder under
- * BepInEx/plugins; the BepInEx core row is keyed by the doorstop marker file.
+ * BepInEx-family games (Valheim, V Rising): Thunderstore rows are keyed by
+ * the extracted package folder under BepInEx/plugins; the BepInEx core row
+ * is keyed by the doorstop marker file.
  */
-async function reconcileValheim(serverId: string, valheimDir: string): Promise<ReconcileResult> {
+async function reconcileBepInexGame(
+  serverId: string,
+  gameDir: string,
+  corePackageId: string,
+  coreName: string
+): Promise<ReconcileResult> {
   const diskIds = new Set<string>();
-  if (fs.existsSync(path.join(valheimDir, "doorstop_config.ini"))) {
-    diskIds.add(BEPINEX_CORE_PACKAGE_ID);
+  if (fs.existsSync(path.join(gameDir, "doorstop_config.ini"))) {
+    diskIds.add(corePackageId);
   }
-  const pluginsDir = path.join(valheimDir, "BepInEx", "plugins");
+  const pluginsDir = path.join(gameDir, "BepInEx", "plugins");
   for (const entry of listDir(pluginsDir)) {
     if (!entry.startsWith(".") && isDirectory(path.join(pluginsDir, entry))) {
       diskIds.add(entry);
@@ -127,17 +134,62 @@ async function reconcileValheim(serverId: string, valheimDir: string): Promise<R
     where: { serverId, provider: "thunderstore" },
   });
   return applyRowDelta(serverId, "thunderstore", rows, diskIds, (packageId) =>
-    packageId === BEPINEX_CORE_PACKAGE_ID
+    packageId === corePackageId
       ? {
           serverId,
           provider: "thunderstore",
           packageId,
-          version: BEPINEX_CORE_VERSION,
-          name: "BepInExPack Valheim",
+          version: "unknown",
+          name: coreName,
         }
       : {
           serverId,
           provider: "thunderstore",
+          packageId,
+          version: "unknown",
+          name: packageId,
+        }
+  );
+}
+
+async function reconcileValheim(serverId: string, valheimDir: string): Promise<ReconcileResult> {
+  return reconcileBepInexGame(serverId, valheimDir, BEPINEX_CORE_PACKAGE_ID, "BepInExPack Valheim");
+}
+
+async function reconcileVRising(serverId: string, vrisingDir: string): Promise<ReconcileResult> {
+  return reconcileBepInexGame(serverId, vrisingDir, VRISING_CORE_PACKAGE_ID, "BepInExPack V Rising");
+}
+
+/**
+ * Rust: uMod rows are keyed by the plugin .cs file name under Oxide/plugins;
+ * the Oxide framework row is keyed by its Oxide.Core.dll marker.
+ */
+async function reconcileRust(serverId: string, rustDir: string): Promise<ReconcileResult> {
+  const diskIds = new Set<string>();
+  if (fs.existsSync(path.join(rustDir, OXIDE_CORE_MARKER))) {
+    diskIds.add(OXIDE_CORE_PACKAGE_ID);
+  }
+  for (const entry of listDir(oxidePluginsDir(rustDir))) {
+    if (entry.endsWith(".cs")) {
+      diskIds.add(entry.slice(0, -3));
+    }
+  }
+
+  const rows = await prisma.modInstallation.findMany({
+    where: { serverId, provider: "umod" },
+  });
+  return applyRowDelta(serverId, "umod", rows, diskIds, (packageId) =>
+    packageId === OXIDE_CORE_PACKAGE_ID
+      ? {
+          serverId,
+          provider: "umod",
+          packageId,
+          version: "release",
+          name: "Oxide/uMod framework",
+        }
+      : {
+          serverId,
+          provider: "umod",
           packageId,
           version: "unknown",
           name: packageId,
@@ -266,6 +318,10 @@ export async function reconcileInstalledMods(serverId: string): Promise<Reconcil
       return reconcileMinecraft(serverId, serverRoot);
     case "VALHEIM":
       return reconcileValheim(serverId, path.join(serverRoot, "valheim-server"));
+    case "VRISING":
+      return reconcileVRising(serverId, path.join(serverRoot, "vrising-server"));
+    case "RUST":
+      return reconcileRust(serverId, path.join(serverRoot, "rust-server"));
     case "ZOMBOID":
       return reconcileZomboid(serverId, serverRoot);
     case "ARK":

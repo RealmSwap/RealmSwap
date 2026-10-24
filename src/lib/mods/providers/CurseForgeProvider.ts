@@ -1,11 +1,57 @@
 import { ModProvider, ModSearchResult, SearchOptions } from "./types";
 import {
-  CURSEFORGE_GAME_IDS, CURSEFORGE_SORT_FIELDS, curseForgeApiKey,
+  CURSEFORGE_GAME_IDS, CURSEFORGE_SORT_FIELDS, CURSEFORGE_CLASS_IDS, curseForgeApiKey,
   searchCurseForgeMods, curseForgeCategoryId,
 } from "../curseforge";
 
 export class CurseForgeProvider implements ModProvider {
   id = "curseforge";
+
+  /**
+   * Modpack search (classId 4471): one-click full-pack installs ride the
+   * install-pack route, which resolves the newest downloadable pack file
+   * server-side — the card carries no file pin.
+   */
+  async searchModpacks(query: string, game: string, options?: SearchOptions): Promise<ModSearchResult[]> {
+    const apiKey = curseForgeApiKey();
+    if (!apiKey) {
+      console.warn("[CurseForge] CURSEFORGE_API_KEY is not set — returning no modpack results.");
+      return [];
+    }
+    const gameId = CURSEFORGE_GAME_IDS[game.toUpperCase()];
+    if (!gameId) {
+      console.warn(`[CurseForge] No game id mapped for '${game}' — returning no modpack results.`);
+      return [];
+    }
+
+    try {
+      const { data } = await searchCurseForgeMods({
+        gameId,
+        query,
+        offset: options?.offset,
+        sortField: CURSEFORGE_SORT_FIELDS.totalDownloads,
+        classId: CURSEFORGE_CLASS_IDS.modpacks,
+      });
+      return data.map((mod) => ({
+        provider: this.id,
+        packageId: mod.id.toString(),
+        name: mod.name,
+        author: mod.authors?.[0]?.name || "Unknown",
+        description: mod.summary,
+        version: mod.latestFilesIndexes?.[0]?.gameVersion || "latest",
+        downloadUrl: mod.links?.websiteUrl || "",
+        iconUrl: mod.logo?.thumbnailUrl || mod.logo?.url || "",
+        downloads: mod.downloadCount || 0,
+        categories: mod.categories?.map((c) => c.name.toLowerCase()) || [],
+        updatedAt: mod.dateModified,
+        websiteUrl: mod.links?.websiteUrl || "",
+        kind: "modpack",
+      }));
+    } catch (err) {
+      console.error("[CurseForge] Modpack search failed", err);
+      return [];
+    }
+  }
 
   async search(query: string, game: string, options?: SearchOptions): Promise<ModSearchResult[]> {
     const apiKey = curseForgeApiKey();

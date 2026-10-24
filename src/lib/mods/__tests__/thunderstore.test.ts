@@ -11,6 +11,8 @@ import {
   isBepInExCore,
   collectDependencies,
   extractThunderstorePackage,
+  commonRootDir,
+  extractCorePack,
   ThunderstorePackage,
 } from "../thunderstore";
 
@@ -201,6 +203,63 @@ describe("extractThunderstorePackage", () => {
       ],
     } as unknown as AdmZip;
     expect(() => extractThunderstorePackage(hostileZip, path.join(dir, "victim"))).toThrow(/unsafe/i);
+    expect(fs.existsSync(path.resolve(dir, "escaped.dll"))).toBe(false);
+  });
+});
+
+describe("commonRootDir / extractCorePack", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rs-cpk-"));
+
+  it("detects a single shared wrapper folder", () => {
+    const zip = new AdmZip();
+    zip.addFile("BepInExPack_V_Rising/BepInEx/core/BepInEx.Core.dll", Buffer.from("core"));
+    zip.addFile("BepInExPack_V_Rising/doorstop_config.ini", Buffer.from("ini"));
+    expect(commonRootDir(zip)).toBe("BepInExPack_V_Rising");
+  });
+
+  it("returns null when entries sit at the zip root", () => {
+    const zip = new AdmZip();
+    zip.addFile("manifest.json", Buffer.from("{}"));
+    zip.addFile("BepInEx/core.dll", Buffer.from("dll"));
+    expect(commonRootDir(zip)).toBeNull();
+  });
+
+  it("returns null when entries span several top-level folders", () => {
+    const zip = new AdmZip();
+    zip.addFile("BepInEx/core.dll", Buffer.from("dll"));
+    zip.addFile("plugins/mod.dll", Buffer.from("dll"));
+    expect(commonRootDir(zip)).toBeNull();
+  });
+
+  it("strips the wrapper folder so the core lands at the server root", () => {
+    const zip = new AdmZip();
+    zip.addFile("BepInExPack_V_Rising/doorstop_config.ini", Buffer.from("ini"));
+    zip.addFile("BepInExPack_V_Rising/BepInEx/plugins/mod.dll", Buffer.from("dll"));
+    const dest = path.join(dir, "vrising-server");
+    const count = extractCorePack(zip, dest);
+    expect(count).toBe(2);
+    expect(fs.readFileSync(path.join(dest, "doorstop_config.ini"), "utf-8")).toBe("ini");
+    expect(fs.readFileSync(path.join(dest, "BepInEx", "plugins", "mod.dll"), "utf-8")).toBe("dll");
+    expect(fs.existsSync(path.join(dest, "BepInExPack_V_Rising"))).toBe(false);
+  });
+
+  it("extracts as-is when there is no wrapper folder", () => {
+    const zip = new AdmZip();
+    zip.addFile("winhttp.dll", Buffer.from("proxy"));
+    zip.addFile("BepInEx/core.dll", Buffer.from("dll"));
+    const dest = path.join(dir, "plain-server");
+    extractCorePack(zip, dest);
+    expect(fs.readFileSync(path.join(dest, "winhttp.dll"), "utf-8")).toBe("proxy");
+    expect(fs.readFileSync(path.join(dest, "BepInEx", "core.dll"), "utf-8")).toBe("dll");
+  });
+
+  it("blocks zip-slip attempts through the stripped paths", () => {
+    const hostileZip = {
+      getEntries: () => [
+        { entryName: "wrap/../../../escaped.dll", isDirectory: false, getData: () => Buffer.from("evil") },
+      ],
+    } as unknown as AdmZip;
+    expect(() => extractCorePack(hostileZip, path.join(dir, "victim"))).toThrow(/unsafe/i);
     expect(fs.existsSync(path.resolve(dir, "escaped.dll"))).toBe(false);
   });
 });
