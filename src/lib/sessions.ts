@@ -34,9 +34,11 @@ export function summarizePlannedSession(ps: {
 }
 
 // "Today 6:00 PM" / "Tomorrow 6:00 PM" / "Fri, Oct 24 6:00 PM"
-export function formatSessionStart(iso: string): string {
+// `now` is injectable so tests (and callers) can be deterministic — a test
+// that computed "now + 2h" off the real clock failed on CI when it ran
+// within 2 hours of local midnight and the answer flipped to "Tomorrow".
+export function formatSessionStart(iso: string, now: Date = new Date()): string {
   const when = new Date(iso);
-  const now = new Date();
   const time = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit" }).format(when);
   if (when.toDateString() === now.toDateString()) return `Today ${time}`;
   const tomorrow = new Date(now);

@@ -41,23 +41,21 @@ describe("summarizePlannedSession", () => {
 });
 
 describe("formatSessionStart", () => {
+  // Fixed local dates — never derived from the real clock, so the test can't
+  // race midnight the way the first CI run of the "Today" case did.
+  const now = new Date(2026, 9, 23, 22, 0); // Fri Oct 23 2026, 10 PM local
+
   it("labels today as Today", () => {
-    const later = new Date();
-    later.setHours(later.getHours() + 2);
-    expect(formatSessionStart(later.toISOString())).toMatch(/^Today /);
+    expect(formatSessionStart(new Date(2026, 9, 23, 23, 30).toISOString(), now)).toMatch(/^Today /);
   });
 
   it("labels tomorrow as Tomorrow", () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (tomorrow.toDateString() === new Date().toDateString()) return; // DST edge — skip
-    expect(formatSessionStart(tomorrow.toISOString())).toMatch(/^Tomorrow /);
+    expect(formatSessionStart(new Date(2026, 9, 24, 18, 0).toISOString(), now)).toMatch(/^Tomorrow /);
   });
 
   it("labels further out with the weekday", () => {
-    const nextWeek = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000);
-    const out = formatSessionStart(nextWeek.toISOString());
+    const out = formatSessionStart(new Date(2026, 9, 30, 18, 0).toISOString(), now);
     expect(out).not.toMatch(/^(Today|Tomorrow) /);
-    expect(out.length).toBeGreaterThan(0);
+    expect(out).toMatch(/^Fri/);
   });
 });
