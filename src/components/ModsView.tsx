@@ -558,7 +558,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     if (mod.modType === "BEPINEX") return "BEPINEX";
     if (mod.provider === "modrinth") return "MODRINTH";
     if (mod.provider === "curseforge") return "CURSEFORGE";
-    if (mod.workshopId) return "STEAM_WORKSHOP";
+    if (mod.provider === "workshop" || mod.workshopId) return "STEAM_WORKSHOP";
     return "THUNDERSTORE";
   };
 
@@ -704,11 +704,15 @@ export default function ModsView({ servers, user }: ModsViewProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             modType: installModType(mod),
-            modId: mod.modId || mod.packageId,
+            // Workshop results: packageId is the Workshop file id, not a mod
+            // id — sending it as modId would write the wrong id space into
+            // Mods=. Omitting modId lets the server derive it from the
+            // downloaded item's mod.info.
+            modId: mod.provider === "workshop" ? mod.modId : (mod.modId || mod.packageId),
             modName: mod.name,
             version: mod.version,
             downloadUrl: mod.downloadUrl,
-            workshopId: mod.workshopId,
+            workshopId: mod.workshopId || (mod.provider === "workshop" ? mod.packageId : undefined),
           }),
         }
       );
@@ -855,10 +859,12 @@ export default function ModsView({ servers, user }: ModsViewProps) {
 
   const handleZomboidSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customWorkshopId || !customModId) return;
+    if (!customWorkshopId) return;
     handleInstallMod({
-      name: `Workshop ID ${customWorkshopId} (${customModId})`,
-      modId: customModId,
+      name: customModId
+        ? `Workshop ID ${customWorkshopId} (${customModId})`
+        : `Workshop ID ${customWorkshopId}`,
+      modId: customModId || undefined,
       workshopId: customWorkshopId,
     });
     setCustomWorkshopId("");
@@ -1445,8 +1451,9 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                             Custom Workshop Mod
                           </h4>
                           <p className="text-[11px] text-mutedText">
-                            Don&apos;t see your mod above? Enter a Workshop
-                            ID and Mod ID manually.
+                            Don&apos;t see your mod above? Enter a Workshop ID.
+                            The Mod ID is detected from the downloaded files
+                            when left blank.
                           </p>
                           <form
                             onSubmit={handleZomboidSubmit}
@@ -1469,7 +1476,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                             </div>
                             <div>
                               <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1">
-                                Mod Identifier
+                                Mod ID (optional)
                               </label>
                               <input
                                 type="text"
@@ -1477,9 +1484,8 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                                 onChange={(e) =>
                                   setCustomModId(e.target.value)
                                 }
-                                placeholder="e.g. BB_CommonSense"
+                                placeholder="Auto-detected if left blank"
                                 className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors"
-                                required
                               />
                             </div>
                             <button

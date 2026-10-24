@@ -65,3 +65,28 @@ describe("zomboid servertest.ini merge", () => {
     expect(fs.existsSync(ini)).toBe(false);
   });
 });
+
+describe("multi-mod workshop items", () => {
+  it("registers every mod folder and removes them all together", () => {
+    const ini = path.join(dir, "multi", "servertest.ini");
+    fs.mkdirSync(path.dirname(ini), { recursive: true });
+    fs.writeFileSync(ini, "SaveEveryMin=5\n");
+
+    addZomboidWorkshopMod(ini, "111", ["MO", "MT"]);
+    let content = fs.readFileSync(ini, "utf-8");
+    expect(content).toContain("WorkshopItems=111");
+    expect(content).toContain("Mods=MO;MT");
+    expect(content).toContain("SaveEveryMin=5");
+
+    // Idempotent re-add of one id keeps the other.
+    addZomboidWorkshopMod(ini, "111", "MO");
+    content = fs.readFileSync(ini, "utf-8");
+    expect(content).toContain("Mods=MO;MT");
+
+    removeZomboidWorkshopMod(ini, "111", ["MO", "MT"]);
+    content = fs.readFileSync(ini, "utf-8");
+    expect(content).toContain("WorkshopItems=");
+    expect(content).not.toContain("WorkshopItems=111");
+    expect(content).toContain("Mods=");
+  });
+});

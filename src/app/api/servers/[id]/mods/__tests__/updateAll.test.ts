@@ -142,7 +142,7 @@ describe("POST /mods/update-all", () => {
     ];
     bag.planned.set("mod-current", { newVersionNumber: "2.0.0" }); // same = up to date
     // mod-gone has no plan -> resolveModUpdate throws (resolution-phase failure)
-    // mod-ws: workshop provider skipped before resolution entirely
+    // mod-ws: workshop rows go through resolution too; no plan -> skipped
 
     const res = await updateAll(req(), { params: { id: "s1" } });
     const data = await res.json();
@@ -150,8 +150,8 @@ describe("POST /mods/update-all", () => {
     expect(res.status).toBe(200);
     expect(data.updated).toEqual([]);
     expect(bag.createdSnapshots).toHaveLength(0); // nothing to do, no snapshot
-    expect(data.skipped).toHaveLength(2);
-    expect(data.skipped.map((s: any) => s.name).sort()).toEqual(["Current", "Gone"]);
+    expect(data.skipped).toHaveLength(3);
+    expect(data.skipped.map((s: any) => s.name).sort()).toEqual(["Current", "Gone", "Workshop"]);
   });
 
   it("rolls the WHOLE window back when one apply fails mid-batch", async () => {
