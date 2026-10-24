@@ -6,6 +6,7 @@ import {
   AlertTriangle, Check, Copy, ExternalLink, Globe, Loader2, QrCode, RefreshCw,
   ShieldCheck, X, XCircle,
 } from "lucide-react";
+import { isLoopbackOrigin, statusPageUrl } from "@/lib/shareLink";
 
 interface Check {
   id: string; label: string; status: "ok" | "warn" | "fail" | "skip";
@@ -304,48 +305,62 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
               <h4 className="text-sm font-bold text-slate-200">Public status page</h4>
             </div>
             {shareCode ? (
-              <>
-                <p className="text-xs text-slate-500">
-                  Anyone with this link can see when the server is up, how many players are online, and the next planned session — no login, no passwords.
-                </p>
-                <div className="flex items-center gap-2">
-                  <code className="text-[11px] text-slate-300 font-mono bg-black/40 px-3 py-1.5 rounded border border-white/10 flex-1 truncate">
-                    {typeof window !== "undefined" ? window.location.origin : ""}/s/{shareCode}
-                  </code>
-                  <button
-                    onClick={() => copy(`${window.location.origin}/s/${shareCode}`, "share")}
-                    className="p-2 rounded bg-white/5 hover:bg-white/10 text-slate-300 flex-shrink-0"
-                    title="Copy status link"
-                  >
-                    {copied === "share" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
-                  <a
-                    href={`/s/${shareCode}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-2 rounded bg-white/5 hover:bg-white/10 text-slate-300 flex-shrink-0"
-                    title="Open the status page"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <button
-                    onClick={() => manageStatusShare("rotate")}
-                    disabled={shareBusy}
-                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-accentPurple/50 hover:bg-accentPurple/10 text-slate-300 text-[11px] font-bold transition-colors disabled:opacity-40"
-                  >
-                    New link
-                  </button>
-                  <button
-                    onClick={() => manageStatusShare("disable")}
-                    disabled={shareBusy}
-                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/10 text-slate-300 hover:text-red-400 text-[11px] font-bold transition-colors disabled:opacity-40"
-                  >
-                    Turn off
-                  </button>
-                </div>
-              </>
+              (() => {
+                const origin = typeof window !== "undefined" ? window.location.origin : "";
+                const shareUrl = statusPageUrl(shareCode, origin);
+                const localOnly = isLoopbackOrigin(origin);
+                return (
+                  <>
+                    <p className="text-xs text-slate-500">
+                      {localOnly
+                        ? "This status page runs on your machine, so the link below only works for you right now. Hosted public links (realmswap.app/s/<code>) are on the roadmap — the code you generate today carries over."
+                        : "Anyone with this link can see when the server is up, how many players are online, and the next planned session — no login, no passwords."}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <code className="text-[11px] text-slate-300 font-mono bg-black/40 px-3 py-1.5 rounded border border-white/10 flex-1 truncate">
+                        {shareUrl}
+                      </code>
+                      <button
+                        onClick={() => copy(shareUrl, "share")}
+                        className="p-2 rounded bg-white/5 hover:bg-white/10 text-slate-300 flex-shrink-0"
+                        title={localOnly ? "Copy link (works on this machine only)" : "Copy status link"}
+                      >
+                        {copied === "share" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                      <a
+                        href={`/s/${shareCode}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2 rounded bg-white/5 hover:bg-white/10 text-slate-300 flex-shrink-0"
+                        title="Open the status page"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                    {localOnly && (
+                      <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-bold">
+                        Heads up: friends can&apos;t open a <span className="font-mono">localhost</span> URL — this link won&apos;t work outside your machine yet.
+                      </div>
+                    )}
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={() => manageStatusShare("rotate")}
+                        disabled={shareBusy}
+                        className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-accentPurple/50 hover:bg-accentPurple/10 text-slate-300 text-[11px] font-bold transition-colors disabled:opacity-40"
+                      >
+                        New link
+                      </button>
+                      <button
+                        onClick={() => manageStatusShare("disable")}
+                        disabled={shareBusy}
+                        className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/10 text-slate-300 hover:text-red-400 text-[11px] font-bold transition-colors disabled:opacity-40"
+                      >
+                        Turn off
+                      </button>
+                    </div>
+                  </>
+                );
+              })()
             ) : (
               <>
                 <p className="text-xs text-slate-500">
