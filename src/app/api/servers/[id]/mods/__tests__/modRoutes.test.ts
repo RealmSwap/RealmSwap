@@ -226,6 +226,57 @@ describe("Zomboid uninstall route", () => {
   });
 });
 
+describe("ARK install + uninstall route", () => {
+  const arkIniPath = () =>
+    path.join(dir, "local-servers", "s1", "ark-server", "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini");
+
+  beforeEach(() => {
+    bag.access = {
+      server: { id: "s1", name: "ARK Server", game: "ARK", status: "STOPPED" },
+    };
+  });
+
+  it("appends the workshop id to ActiveMods= and records the row", async () => {
+    fs.mkdirSync(path.join(dir, "local-servers", "s1", "ark-server"), { recursive: true });
+    const res = await installMod(
+      jsonReq("/api/servers/s1/mods/install", "POST", {
+        modType: "STEAM_WORKSHOP",
+        modName: "Structures Plus (S+)",
+        workshopId: "731604991",
+      }),
+      { params: { id: "s1" } }
+    );
+    expect(res.status).toBe(200);
+    expect(fs.readFileSync(arkIniPath(), "utf-8")).toContain("ActiveMods=731604991");
+    expect(bag.upserts[0].create).toMatchObject({
+      provider: "workshop",
+      packageId: "731604991",
+    });
+    // Single id space — no workshopModId for ARK.
+    expect(bag.upserts[0].create).not.toHaveProperty("workshopModId");
+    expect(bag.audit[0]?.action).toBe("INSTALL_MOD");
+  });
+
+  it("removes the workshop id from ActiveMods= on uninstall", async () => {
+    fs.mkdirSync(path.dirname(arkIniPath()), { recursive: true });
+    fs.writeFileSync(arkIniPath(), "[ServerSettings]\nActiveMods=731604991,1404697612\n");
+    bag.findFirst = {
+      id: "row1", serverId: "s1", provider: "workshop",
+      packageId: "731604991", workshopModId: null, name: "S+",
+    };
+
+    const res = await uninstallMod(
+      jsonReq("/api/servers/s1/mods/731604991", "DELETE"),
+      { params: { id: "s1", modId: "731604991" } }
+    );
+    expect(res.status).toBe(200);
+    expect(fs.readFileSync(arkIniPath(), "utf-8")).toContain("ActiveMods=1404697612");
+    expect(bag.deletes[0].where.serverId_provider_packageId).toEqual({
+      serverId: "s1", provider: "workshop", packageId: "731604991",
+    });
+  });
+});
+
 describe("mod config route", () => {
   const cfgDir = () => path.join(dir, "local-servers", "s1", "valheim-server", "BepInEx", "config");
 

@@ -221,3 +221,21 @@ describe("checkModUpdates: curseforge rows", () => {
 
   });
 });
+
+describe("ARK workshop rows", () => {
+  it("are deliberately unreported — the server auto-updates them on start", async () => {
+    const result = await checkModUpdates({
+      game: "ARK",
+      serverRoot: "/tmp/none",
+      rows: [{ provider: "workshop", packageId: "731604991", version: "2020-01-01T00:00:00.000Z", name: "S+" }],
+      deps: {
+        fetchWorkshopDetails: (async () => {
+          throw new Error("must not be called for ARK");
+        }) as any,
+      },
+    });
+    expect(result.updates).toEqual([]);
+    expect(result.errors).toEqual([]);
+    expect(result.unknown).toEqual([]);
+  });
+});

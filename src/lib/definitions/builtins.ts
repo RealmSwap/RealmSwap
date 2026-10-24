@@ -144,7 +144,7 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         args: [
           { value: ["TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"], includeWhen: "password" },
           { value: ["TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"], includeWhen: "passwordEmpty" },
-          "-server", "-nosound", "-QueryPort=27015",
+          "-server", "-nosound", "-QueryPort=27015", "-automanagemods",
         ],
       },
       container: {
@@ -153,7 +153,7 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         args: [
           { value: ["TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"], includeWhen: "password" },
           { value: ["TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"], includeWhen: "passwordEmpty" },
-          "-server", "-nosound", "-QueryPort=27015",
+          "-server", "-nosound", "-QueryPort=27015", "-automanagemods",
         ],
       },
       defaultPort: 7777,

@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 import { dataRoot } from "@/lib/appPaths";
 import { removeZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
+import { removeArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 
 export async function DELETE(
   req: NextRequest,
@@ -71,6 +72,11 @@ export async function DELETE(
         zomboidServerIniPath(path.join(dataRoot(), "local-servers", serverId)),
         installation.packageId,
         installation.workshopModId ? installation.workshopModId.split(";").filter(Boolean) : null
+      );
+    } else if (game === "ARK") {
+      removeArkActiveMod(
+        arkGameUserSettingsIniPath(path.join(dataRoot(), "local-servers", serverId)),
+        installation.packageId
       );
     }
 

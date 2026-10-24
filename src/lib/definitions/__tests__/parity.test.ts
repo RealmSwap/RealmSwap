@@ -55,12 +55,12 @@ describe("parity: ARK", () => {
   it("password present", () => {
     const c = ctxFor("ARK", { name: "The Island Survival", password: "pw", ram: 12 });
     const p = planLaunch(def("ARK").spec, c);
-    expect(p.args).toEqual(["TheIsland?SessionName=The Island Survival?ServerPassword=pw?Port=7777?QueryPort=27015?MaxPlayers=20", "-server", "-nosound", "-QueryPort=27015"]);
+    expect(p.args).toEqual(["TheIsland?SessionName=The Island Survival?ServerPassword=pw?Port=7777?QueryPort=27015?MaxPlayers=20", "-server", "-nosound", "-QueryPort=27015", "-automanagemods"]);
   });
   it("password empty", () => {
     const c = ctxFor("ARK", { name: "Island", password: null, ram: 12 });
     const p = planLaunch(def("ARK").spec, c);
-    expect(p.args).toEqual(["TheIsland?SessionName=Island?Port=7777?QueryPort=27015?MaxPlayers=20", "-server", "-nosound", "-QueryPort=27015"]);
+    expect(p.args).toEqual(["TheIsland?SessionName=Island?Port=7777?QueryPort=27015?MaxPlayers=20", "-server", "-nosound", "-QueryPort=27015", "-automanagemods"]);
   });
 });
 
