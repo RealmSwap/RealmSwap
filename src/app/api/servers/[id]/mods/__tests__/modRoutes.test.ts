@@ -28,6 +28,10 @@ const bag = vi.hoisted(() => ({
   discarded: [] as string[],
   // Per-test download bodies (URL → bytes); null falls through to real HTTPS.
   downloadBody: null as null | ((url: string) => Buffer | null),
+  umodCalls: [] as any[],
+  installedModpack: null as any,
+  modpackUpserts: [] as any[],
+  deleteMany: [] as any[],
 }));
 
 vi.mock("@/lib/download", async (importOriginal) => {
@@ -53,6 +57,26 @@ vi.mock("@/lib/serverAuth", () => ({
 }));
 vi.mock("@/lib/db", () => ({
   prisma: {
+    get activityLog() {
+      return {
+        create: async (args: any) => {
+          bag.audit.push(args.data);
+          return {};
+        },
+      };
+    },
+    get serverSnapshot() {
+      return { delete: async () => ({}) };
+    },
+    get installedModpack() {
+      return {
+        findUnique: async () => bag.installedModpack,
+        upsert: async (args: any) => {
+          bag.modpackUpserts.push(args);
+          return {};
+        },
+      };
+    },
     get modInstallation() {
       return {
         findMany: async () => bag.findMany,
@@ -66,18 +90,11 @@ vi.mock("@/lib/db", () => ({
           bag.deletes.push(args);
           return {};
         },
-      };
-    },
-    get activityLog() {
-      return {
-        create: async (args: any) => {
-          bag.audit.push(args.data);
+        deleteMany: async (args: any) => {
+          bag.deleteMany.push(args);
           return {};
         },
       };
-    },
-    get serverSnapshot() {
-      return { delete: async () => ({}) };
     },
   },
 }));
@@ -110,6 +127,8 @@ import { POST as installMod } from "@/app/api/servers/[id]/mods/install/route";
 import { SandboxBootError } from "@/lib/runners/sandbox";
 import { DELETE as uninstallMod } from "@/app/api/servers/[id]/mods/[modId]/route";
 import { GET as getConfig, POST as postConfig } from "@/app/api/servers/[id]/mods/[modId]/config/route";
+import { POST as importCollection } from "@/app/api/servers/[id]/mods/import/route";
+
 
 let dir: string;
 let iniPath: string;
@@ -137,6 +156,10 @@ beforeEach(() => {
   bag.bootError = null;
   bag.restored = [];
   bag.discarded = [];
+  bag.umodCalls = [];
+  bag.installedModpack = null;
+  bag.modpackUpserts = [];
+  bag.deleteMany = [];
   iniPath = path.join(dir, "local-servers", "s1", "zomboid-server", "zomboid-data", "Server", "servertest.ini");
 });
 
@@ -608,5 +631,175 @@ describe("RUST install + uninstall route", () => {
 
     expect(res.status).toBe(200);
     expect(fs.existsSync(path.join(rustDir(), "Oxide", "plugins", "Kits.cs"))).toBe(false);
+  });
+});
+
+describe("ARK collection import", () => {
+  it("replays ActiveMods entries and records rows (engine re-downloads at boot)", async () => {
+    bag.access = { server: { id: "s1", name: "ARK", game: "ARK", status: "STOPPED" } };
+    fs.mkdirSync(path.join(dir, "local-servers", "s1", "ark-server"), { recursive: true });
+    const collection = {
+      name: "ARK pack", game: "ARK",
+      mods: [
+        { provider: "workshop", packageId: "931590842", name: "Super Structures", version: "Workshop" },
+        { provider: "workshop", packageId: "895711207", name: "Classic Flyers", version: "Workshop" },
+      ],
+    };
+    const form = new FormData();
+    form.append("collection", new Blob([JSON.stringify(collection)], { type: "application/json" }), "c.json");
+    const req = new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form });
+    const res = await importCollection(req, { params: { id: "s1" } });
+
+    expect(res.status).toBe(200);
+    const ini = fs.readFileSync(
+      path.join(dir, "local-servers", "s1", "ark-server", "ShooterGame", "Saved", "Config", "WindowsServer", "GameUserSettings.ini"),
+      "utf-8"
+    );
+    expect(ini).toContain("ActiveMods=931590842,895711207");
+    expect(bag.upserts).toHaveLength(2);
+    expect(bag.upserts[0].where.serverId_provider_packageId).toEqual({
+      serverId: "s1", provider: "workshop", packageId: "931590842",
+    });
+    expect(bag.audit[0].action).toBe("IMPORT_MODS");
+  });
+
+  it("refuses collections for a different game before snapshotting", async () => {
+    bag.access = { server: { id: "s1", name: "ARK", game: "ARK", status: "STOPPED" } };
+    const collection = { game: "RUST", mods: [{ provider: "umod", packageId: "Kits" }] };
+    const form = new FormData();
+    form.append("collection", new Blob([JSON.stringify(collection)]), "c.json");
+    const res = await importCollection(
+      new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form }),
+      { params: { id: "s1" } }
+    );
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("Rust collection import", () => {
+  it("reinstalls plugins by name and replays the Oxide core row", async () => {
+    bag.access = { server: { id: "s1", name: "Rust", game: "RUST", status: "STOPPED" } };
+    fs.mkdirSync(path.join(dir, "local-servers", "s1", "rust-server", "RustDedicated_Data"), { recursive: true });
+    // Offline: metadata 429s (installer warns + falls back to the derived
+    // URL), the Oxide zip and plugin .cs come from the download bag.
+    vi.stubGlobal("fetch", async () => new Response("slow down", { status: 429 }));
+    bag.downloadBody = (url) => {
+      if (url === "https://umod.org/games/rust/download") {
+        const zip = new AdmZip();
+        zip.addFile("RustDedicated_Data/Managed/Oxide.Core.dll", Buffer.from("oxide"));
+        return zip.toBuffer();
+      }
+      if (url === "https://umod.org/plugins/Kits.cs") return Buffer.from("// Kits");
+      return null;
+    };
+    const collection = {
+      name: "Rust pack", game: "RUST",
+      mods: [
+        { provider: "umod", packageId: "Oxide", name: "Oxide/uMod framework", version: "release" },
+        { provider: "umod", packageId: "Kits", name: "Kits", version: "4.4.10" },
+      ],
+    };
+    const form = new FormData();
+    form.append("collection", new Blob([JSON.stringify(collection)]), "c.json");
+    const res = await importCollection(
+      new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form }),
+      { params: { id: "s1" } }
+    );
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.warnings.join(" ")).toContain("Kits");
+    // Rows: the core replay + the plugin reinstalled from the metadata-less fallback.
+    const core = bag.upserts.find((u) => u.where.serverId_provider_packageId?.packageId === "Oxide");
+    const plugin = bag.upserts.find((u) => u.where.serverId_provider_packageId?.packageId === "Kits");
+    expect(core).toBeTruthy();
+    expect(plugin.create).toMatchObject({ packageId: "Kits" });
+    expect(fs.existsSync(path.join(dir, "local-servers", "s1", "rust-server", "Oxide", "plugins", "Kits.cs"))).toBe(true);
+    vi.unstubAllGlobals();
+  });
+
+  it("refuses non-uMod providers loudly", async () => {
+    bag.access = { server: { id: "s1", name: "Rust", game: "RUST", status: "STOPPED" } };
+    fs.mkdirSync(path.join(dir, "local-servers", "s1", "rust-server", "RustDedicated_Data"), { recursive: true });
+    const collection = { game: "RUST", mods: [{ provider: "thunderstore", packageId: "x-y" }] };
+    const form = new FormData();
+    form.append("collection", new Blob([JSON.stringify(collection)]), "c.json");
+    const res = await importCollection(
+      new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form }),
+      { params: { id: "s1" } }
+    );
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/Rollback completed.*Rust doesn't support/);
+  });
+});
+
+describe("Minecraft TOML config route", () => {
+  it("finds the config via the jar's mods.toml modId and saves line-preserving edits", async () => {
+    bag.access = { server: { id: "s1", name: "MC", game: "MINECRAFT", status: "STOPPED" } };
+    const serverRoot = path.join(dir, "local-servers", "s1");
+    // A real jar carrying META-INF/mods.toml (curseforge rows key on the numeric project id)
+    const jar = new AdmZip();
+    jar.addFile("META-INF/mods.toml", Buffer.from('modId="mymod"\nversion="1.0"'));
+    fs.mkdirSync(path.join(serverRoot, "mods"), { recursive: true });
+    fs.writeFileSync(path.join(serverRoot, "mods", "123456.jar"), jar.toBuffer());
+    fs.mkdirSync(path.join(serverRoot, "config"), { recursive: true });
+    const tomlPath = path.join(serverRoot, "config", "mymod.toml");
+    fs.writeFileSync(tomlPath, '[general]\n# Chat logging\nlogToChat = true\n');
+
+    bag.findUnique = { id: "row1", serverId: "s1", provider: "curseforge", packageId: "123456", name: "My Mod" };
+
+    const getRes = await getConfig(
+      new NextRequest("http://localhost/api/servers/s1/mods/row1/config"),
+      { params: { id: "s1", modId: "row1" } }
+    );
+    expect(getRes.status).toBe(200);
+    const data = await getRes.json();
+    expect(data.file).toBe("mymod.toml");
+    expect(data.format).toBe("toml");
+    expect(data.sections[0].properties[0]).toMatchObject({ key: "logToChat", value: "true", type: "Boolean" });
+
+    const postRes = await postConfig(
+      jsonReq("/api/servers/s1/mods/row1/config", "POST", {
+        sections: [{ name: "general", properties: [{ key: "logToChat", value: "false", type: "Boolean", defaultValue: "", description: "" }] }],
+      }),
+      { params: { id: "s1", modId: "row1" } }
+    );
+    expect(postRes.status).toBe(200);
+    const saved = fs.readFileSync(tomlPath, "utf-8");
+    expect(saved).toContain("logToChat = false");
+    expect(saved).toContain("# Chat logging");
+    expect(fs.existsSync(`${tomlPath}.bak`)).toBe(true);
+  });
+});
+
+describe("Rust JSON config route", () => {
+  it("serves and saves an Oxide plugin's config/<Plugin>.json", async () => {
+    bag.access = { server: { id: "s1", name: "Rust", game: "RUST", status: "STOPPED" } };
+    const cfgDir = path.join(dir, "local-servers", "s1", "rust-server", "Oxide", "config");
+    fs.mkdirSync(cfgDir, { recursive: true });
+    const jsonPath = path.join(cfgDir, "Kits.json");
+    fs.writeFileSync(jsonPath, JSON.stringify({ Max: 5, Enabled: true }));
+
+    bag.findUnique = { id: "row2", serverId: "s1", provider: "umod", packageId: "Kits", name: "Kits" };
+
+    const getRes = await getConfig(
+      new NextRequest("http://localhost/api/servers/s1/mods/row2/config"),
+      { params: { id: "s1", modId: "row2" } }
+    );
+    const data = await getRes.json();
+    expect(data.format).toBe("json");
+    expect(data.sections[0].properties.map((p: any) => p.key)).toEqual(["Max", "Enabled"]);
+
+    const postRes = await postConfig(
+      jsonReq("/api/servers/s1/mods/row2/config", "POST", {
+        sections: [{ name: "Kits.json", properties: [
+          { key: "Max", value: "10", type: "Int32", defaultValue: "", description: "" },
+          { key: "Enabled", value: "false", type: "Boolean", defaultValue: "", description: "" },
+        ] }],
+      }),
+      { params: { id: "s1", modId: "row2" } }
+    );
+    expect(postRes.status).toBe(200);
+    expect(JSON.parse(fs.readFileSync(jsonPath, "utf-8"))).toEqual({ Max: 10, Enabled: false });
   });
 });

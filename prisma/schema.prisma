@@ -102,6 +102,7 @@ model Server {
   collaborators    Collaborator[]
   mods             ModInstallation[]
   snapshots        ServerSnapshot[]
+  modpack          InstalledModpack?
   automations      Automation[]
   hostLink         ServerHostLink?
   inviteCode       String?             @unique // For RealmSync
@@ -248,6 +249,30 @@ model GameDefinition {
   updatedAt        DateTime @updatedAt
 
   @@unique([ownerId, slug])
+}
+
+/// The modpack a Minecraft server currently runs (one pack per server).
+/// Recorded by install-pack (which knows the CurseForge project/file ids) and
+/// manual imports (identity only); the update-pack route re-resolves the
+/// newest pack file and drops mods that left the new manifest.
+model InstalledModpack {
+  id            String   @id @default(cuid())
+  serverId      String   @unique
+  server        Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  kind          String // "curseforge" | "mrpack"
+  projectId     String? // CurseForge project id — update resolution needs it
+  fileId        Int? // CurseForge file id currently installed
+  fileName      String?
+  packName      String
+  version       String // the pack's own version string
+  mcVersion     String?
+  loaderType    String?
+  loaderVersion String?
+  /// JSON array of ModInstallation packageIds this pack installed — the
+  /// exact set an update may retire when the new manifest drops them.
+  packageIds    String?
+  installedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model ModInstallation {

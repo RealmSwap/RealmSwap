@@ -79,6 +79,14 @@ export type Collaborator = $Result.DefaultSelection<Prisma.$CollaboratorPayload>
  */
 export type GameDefinition = $Result.DefaultSelection<Prisma.$GameDefinitionPayload>
 /**
+ * Model InstalledModpack
+ * The modpack a Minecraft server currently runs (one pack per server).
+ * Recorded by install-pack (which knows the CurseForge project/file ids) and
+ * manual imports (identity only); the update-pack route re-resolves the
+ * newest pack file and drops mods that left the new manifest.
+ */
+export type InstalledModpack = $Result.DefaultSelection<Prisma.$InstalledModpackPayload>
+/**
  * Model ModInstallation
  * 
  */
@@ -396,6 +404,16 @@ export class PrismaClient<
     * ```
     */
   get gameDefinition(): Prisma.GameDefinitionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.installedModpack`: Exposes CRUD operations for the **InstalledModpack** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more InstalledModpacks
+    * const installedModpacks = await prisma.installedModpack.findMany()
+    * ```
+    */
+  get installedModpack(): Prisma.InstalledModpackDelegate<ExtArgs>;
 
   /**
    * `prisma.modInstallation`: Exposes CRUD operations for the **ModInstallation** model.
@@ -980,6 +998,7 @@ export namespace Prisma {
     S3Setting: 'S3Setting',
     Collaborator: 'Collaborator',
     GameDefinition: 'GameDefinition',
+    InstalledModpack: 'InstalledModpack',
     ModInstallation: 'ModInstallation',
     ServerSnapshot: 'ServerSnapshot',
     ServerTelemetry: 'ServerTelemetry',
@@ -1008,7 +1027,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "s3Setting" | "collaborator" | "gameDefinition" | "modInstallation" | "serverSnapshot" | "serverTelemetry" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription" | "player" | "playerServerAccess" | "playerAuditLog"
+      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "s3Setting" | "collaborator" | "gameDefinition" | "installedModpack" | "modInstallation" | "serverSnapshot" | "serverTelemetry" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription" | "player" | "playerServerAccess" | "playerAuditLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1919,6 +1938,76 @@ export namespace Prisma {
           count: {
             args: Prisma.GameDefinitionCountArgs<ExtArgs>
             result: $Utils.Optional<GameDefinitionCountAggregateOutputType> | number
+          }
+        }
+      }
+      InstalledModpack: {
+        payload: Prisma.$InstalledModpackPayload<ExtArgs>
+        fields: Prisma.InstalledModpackFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.InstalledModpackFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InstalledModpackPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.InstalledModpackFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InstalledModpackPayload>
+          }
+          findFirst: {
+            args: Prisma.InstalledModpackFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InstalledModpackPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.InstalledModpackFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InstalledModpackPayload>
+          }
+          findMany: {
+            args: Prisma.InstalledModpackFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InstalledModpackPayload>[]
+          }
+          create: {
+            args: Prisma.InstalledModpackCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InstalledModpackPayload>
+          }
+          createMany: {
+            args: Prisma.InstalledModpackCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.InstalledModpackCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InstalledModpackPayload>[]
+          }
+          delete: {
+            args: Prisma.InstalledModpackDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InstalledModpackPayload>
+          }
+          update: {
+            args: Prisma.InstalledModpackUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InstalledModpackPayload>
+          }
+          deleteMany: {
+            args: Prisma.InstalledModpackDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.InstalledModpackUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.InstalledModpackUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$InstalledModpackPayload>
+          }
+          aggregate: {
+            args: Prisma.InstalledModpackAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateInstalledModpack>
+          }
+          groupBy: {
+            args: Prisma.InstalledModpackGroupByArgs<ExtArgs>
+            result: $Utils.Optional<InstalledModpackGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.InstalledModpackCountArgs<ExtArgs>
+            result: $Utils.Optional<InstalledModpackCountAggregateOutputType> | number
           }
         }
       }
@@ -6980,6 +7069,7 @@ export namespace Prisma {
     collaborators?: boolean | Server$collaboratorsArgs<ExtArgs>
     mods?: boolean | Server$modsArgs<ExtArgs>
     snapshots?: boolean | Server$snapshotsArgs<ExtArgs>
+    modpack?: boolean | Server$modpackArgs<ExtArgs>
     automations?: boolean | Server$automationsArgs<ExtArgs>
     hostLink?: boolean | Server$hostLinkArgs<ExtArgs>
     plannedSessions?: boolean | Server$plannedSessionsArgs<ExtArgs>
@@ -7090,6 +7180,7 @@ export namespace Prisma {
     collaborators?: boolean | Server$collaboratorsArgs<ExtArgs>
     mods?: boolean | Server$modsArgs<ExtArgs>
     snapshots?: boolean | Server$snapshotsArgs<ExtArgs>
+    modpack?: boolean | Server$modpackArgs<ExtArgs>
     automations?: boolean | Server$automationsArgs<ExtArgs>
     hostLink?: boolean | Server$hostLinkArgs<ExtArgs>
     plannedSessions?: boolean | Server$plannedSessionsArgs<ExtArgs>
@@ -7112,6 +7203,7 @@ export namespace Prisma {
       collaborators: Prisma.$CollaboratorPayload<ExtArgs>[]
       mods: Prisma.$ModInstallationPayload<ExtArgs>[]
       snapshots: Prisma.$ServerSnapshotPayload<ExtArgs>[]
+      modpack: Prisma.$InstalledModpackPayload<ExtArgs> | null
       automations: Prisma.$AutomationPayload<ExtArgs>[]
       hostLink: Prisma.$ServerHostLinkPayload<ExtArgs> | null
       plannedSessions: Prisma.$PlannedSessionPayload<ExtArgs>[]
@@ -7533,6 +7625,7 @@ export namespace Prisma {
     collaborators<T extends Server$collaboratorsArgs<ExtArgs> = {}>(args?: Subset<T, Server$collaboratorsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CollaboratorPayload<ExtArgs>, T, "findMany"> | Null>
     mods<T extends Server$modsArgs<ExtArgs> = {}>(args?: Subset<T, Server$modsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ModInstallationPayload<ExtArgs>, T, "findMany"> | Null>
     snapshots<T extends Server$snapshotsArgs<ExtArgs> = {}>(args?: Subset<T, Server$snapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ServerSnapshotPayload<ExtArgs>, T, "findMany"> | Null>
+    modpack<T extends Server$modpackArgs<ExtArgs> = {}>(args?: Subset<T, Server$modpackArgs<ExtArgs>>): Prisma__InstalledModpackClient<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     automations<T extends Server$automationsArgs<ExtArgs> = {}>(args?: Subset<T, Server$automationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AutomationPayload<ExtArgs>, T, "findMany"> | Null>
     hostLink<T extends Server$hostLinkArgs<ExtArgs> = {}>(args?: Subset<T, Server$hostLinkArgs<ExtArgs>>): Prisma__ServerHostLinkClient<$Result.GetResult<Prisma.$ServerHostLinkPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
     plannedSessions<T extends Server$plannedSessionsArgs<ExtArgs> = {}>(args?: Subset<T, Server$plannedSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PlannedSessionPayload<ExtArgs>, T, "findMany"> | Null>
@@ -8019,6 +8112,21 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ServerSnapshotScalarFieldEnum | ServerSnapshotScalarFieldEnum[]
+  }
+
+  /**
+   * Server.modpack
+   */
+  export type Server$modpackArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
+    where?: InstalledModpackWhereInput
   }
 
   /**
@@ -17182,6 +17290,1083 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: GameDefinitionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model InstalledModpack
+   */
+
+  export type AggregateInstalledModpack = {
+    _count: InstalledModpackCountAggregateOutputType | null
+    _avg: InstalledModpackAvgAggregateOutputType | null
+    _sum: InstalledModpackSumAggregateOutputType | null
+    _min: InstalledModpackMinAggregateOutputType | null
+    _max: InstalledModpackMaxAggregateOutputType | null
+  }
+
+  export type InstalledModpackAvgAggregateOutputType = {
+    fileId: number | null
+  }
+
+  export type InstalledModpackSumAggregateOutputType = {
+    fileId: number | null
+  }
+
+  export type InstalledModpackMinAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    kind: string | null
+    projectId: string | null
+    fileId: number | null
+    fileName: string | null
+    packName: string | null
+    version: string | null
+    mcVersion: string | null
+    loaderType: string | null
+    loaderVersion: string | null
+    packageIds: string | null
+    installedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type InstalledModpackMaxAggregateOutputType = {
+    id: string | null
+    serverId: string | null
+    kind: string | null
+    projectId: string | null
+    fileId: number | null
+    fileName: string | null
+    packName: string | null
+    version: string | null
+    mcVersion: string | null
+    loaderType: string | null
+    loaderVersion: string | null
+    packageIds: string | null
+    installedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type InstalledModpackCountAggregateOutputType = {
+    id: number
+    serverId: number
+    kind: number
+    projectId: number
+    fileId: number
+    fileName: number
+    packName: number
+    version: number
+    mcVersion: number
+    loaderType: number
+    loaderVersion: number
+    packageIds: number
+    installedAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type InstalledModpackAvgAggregateInputType = {
+    fileId?: true
+  }
+
+  export type InstalledModpackSumAggregateInputType = {
+    fileId?: true
+  }
+
+  export type InstalledModpackMinAggregateInputType = {
+    id?: true
+    serverId?: true
+    kind?: true
+    projectId?: true
+    fileId?: true
+    fileName?: true
+    packName?: true
+    version?: true
+    mcVersion?: true
+    loaderType?: true
+    loaderVersion?: true
+    packageIds?: true
+    installedAt?: true
+    updatedAt?: true
+  }
+
+  export type InstalledModpackMaxAggregateInputType = {
+    id?: true
+    serverId?: true
+    kind?: true
+    projectId?: true
+    fileId?: true
+    fileName?: true
+    packName?: true
+    version?: true
+    mcVersion?: true
+    loaderType?: true
+    loaderVersion?: true
+    packageIds?: true
+    installedAt?: true
+    updatedAt?: true
+  }
+
+  export type InstalledModpackCountAggregateInputType = {
+    id?: true
+    serverId?: true
+    kind?: true
+    projectId?: true
+    fileId?: true
+    fileName?: true
+    packName?: true
+    version?: true
+    mcVersion?: true
+    loaderType?: true
+    loaderVersion?: true
+    packageIds?: true
+    installedAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type InstalledModpackAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which InstalledModpack to aggregate.
+     */
+    where?: InstalledModpackWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InstalledModpacks to fetch.
+     */
+    orderBy?: InstalledModpackOrderByWithRelationInput | InstalledModpackOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: InstalledModpackWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InstalledModpacks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InstalledModpacks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned InstalledModpacks
+    **/
+    _count?: true | InstalledModpackCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: InstalledModpackAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: InstalledModpackSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: InstalledModpackMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: InstalledModpackMaxAggregateInputType
+  }
+
+  export type GetInstalledModpackAggregateType<T extends InstalledModpackAggregateArgs> = {
+        [P in keyof T & keyof AggregateInstalledModpack]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateInstalledModpack[P]>
+      : GetScalarType<T[P], AggregateInstalledModpack[P]>
+  }
+
+
+
+
+  export type InstalledModpackGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: InstalledModpackWhereInput
+    orderBy?: InstalledModpackOrderByWithAggregationInput | InstalledModpackOrderByWithAggregationInput[]
+    by: InstalledModpackScalarFieldEnum[] | InstalledModpackScalarFieldEnum
+    having?: InstalledModpackScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: InstalledModpackCountAggregateInputType | true
+    _avg?: InstalledModpackAvgAggregateInputType
+    _sum?: InstalledModpackSumAggregateInputType
+    _min?: InstalledModpackMinAggregateInputType
+    _max?: InstalledModpackMaxAggregateInputType
+  }
+
+  export type InstalledModpackGroupByOutputType = {
+    id: string
+    serverId: string
+    kind: string
+    projectId: string | null
+    fileId: number | null
+    fileName: string | null
+    packName: string
+    version: string
+    mcVersion: string | null
+    loaderType: string | null
+    loaderVersion: string | null
+    packageIds: string | null
+    installedAt: Date
+    updatedAt: Date
+    _count: InstalledModpackCountAggregateOutputType | null
+    _avg: InstalledModpackAvgAggregateOutputType | null
+    _sum: InstalledModpackSumAggregateOutputType | null
+    _min: InstalledModpackMinAggregateOutputType | null
+    _max: InstalledModpackMaxAggregateOutputType | null
+  }
+
+  type GetInstalledModpackGroupByPayload<T extends InstalledModpackGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<InstalledModpackGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof InstalledModpackGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], InstalledModpackGroupByOutputType[P]>
+            : GetScalarType<T[P], InstalledModpackGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type InstalledModpackSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    kind?: boolean
+    projectId?: boolean
+    fileId?: boolean
+    fileName?: boolean
+    packName?: boolean
+    version?: boolean
+    mcVersion?: boolean
+    loaderType?: boolean
+    loaderVersion?: boolean
+    packageIds?: boolean
+    installedAt?: boolean
+    updatedAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["installedModpack"]>
+
+  export type InstalledModpackSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    serverId?: boolean
+    kind?: boolean
+    projectId?: boolean
+    fileId?: boolean
+    fileName?: boolean
+    packName?: boolean
+    version?: boolean
+    mcVersion?: boolean
+    loaderType?: boolean
+    loaderVersion?: boolean
+    packageIds?: boolean
+    installedAt?: boolean
+    updatedAt?: boolean
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["installedModpack"]>
+
+  export type InstalledModpackSelectScalar = {
+    id?: boolean
+    serverId?: boolean
+    kind?: boolean
+    projectId?: boolean
+    fileId?: boolean
+    fileName?: boolean
+    packName?: boolean
+    version?: boolean
+    mcVersion?: boolean
+    loaderType?: boolean
+    loaderVersion?: boolean
+    packageIds?: boolean
+    installedAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type InstalledModpackInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+  export type InstalledModpackIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    server?: boolean | ServerDefaultArgs<ExtArgs>
+  }
+
+  export type $InstalledModpackPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "InstalledModpack"
+    objects: {
+      server: Prisma.$ServerPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      serverId: string
+      kind: string
+      projectId: string | null
+      fileId: number | null
+      fileName: string | null
+      packName: string
+      version: string
+      mcVersion: string | null
+      loaderType: string | null
+      loaderVersion: string | null
+      /**
+       * JSON array of ModInstallation packageIds this pack installed — the
+       * exact set an update may retire when the new manifest drops them.
+       */
+      packageIds: string | null
+      installedAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["installedModpack"]>
+    composites: {}
+  }
+
+  type InstalledModpackGetPayload<S extends boolean | null | undefined | InstalledModpackDefaultArgs> = $Result.GetResult<Prisma.$InstalledModpackPayload, S>
+
+  type InstalledModpackCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<InstalledModpackFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: InstalledModpackCountAggregateInputType | true
+    }
+
+  export interface InstalledModpackDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['InstalledModpack'], meta: { name: 'InstalledModpack' } }
+    /**
+     * Find zero or one InstalledModpack that matches the filter.
+     * @param {InstalledModpackFindUniqueArgs} args - Arguments to find a InstalledModpack
+     * @example
+     * // Get one InstalledModpack
+     * const installedModpack = await prisma.installedModpack.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends InstalledModpackFindUniqueArgs>(args: SelectSubset<T, InstalledModpackFindUniqueArgs<ExtArgs>>): Prisma__InstalledModpackClient<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one InstalledModpack that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {InstalledModpackFindUniqueOrThrowArgs} args - Arguments to find a InstalledModpack
+     * @example
+     * // Get one InstalledModpack
+     * const installedModpack = await prisma.installedModpack.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends InstalledModpackFindUniqueOrThrowArgs>(args: SelectSubset<T, InstalledModpackFindUniqueOrThrowArgs<ExtArgs>>): Prisma__InstalledModpackClient<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first InstalledModpack that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InstalledModpackFindFirstArgs} args - Arguments to find a InstalledModpack
+     * @example
+     * // Get one InstalledModpack
+     * const installedModpack = await prisma.installedModpack.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends InstalledModpackFindFirstArgs>(args?: SelectSubset<T, InstalledModpackFindFirstArgs<ExtArgs>>): Prisma__InstalledModpackClient<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first InstalledModpack that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InstalledModpackFindFirstOrThrowArgs} args - Arguments to find a InstalledModpack
+     * @example
+     * // Get one InstalledModpack
+     * const installedModpack = await prisma.installedModpack.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends InstalledModpackFindFirstOrThrowArgs>(args?: SelectSubset<T, InstalledModpackFindFirstOrThrowArgs<ExtArgs>>): Prisma__InstalledModpackClient<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more InstalledModpacks that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InstalledModpackFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all InstalledModpacks
+     * const installedModpacks = await prisma.installedModpack.findMany()
+     * 
+     * // Get first 10 InstalledModpacks
+     * const installedModpacks = await prisma.installedModpack.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const installedModpackWithIdOnly = await prisma.installedModpack.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends InstalledModpackFindManyArgs>(args?: SelectSubset<T, InstalledModpackFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a InstalledModpack.
+     * @param {InstalledModpackCreateArgs} args - Arguments to create a InstalledModpack.
+     * @example
+     * // Create one InstalledModpack
+     * const InstalledModpack = await prisma.installedModpack.create({
+     *   data: {
+     *     // ... data to create a InstalledModpack
+     *   }
+     * })
+     * 
+     */
+    create<T extends InstalledModpackCreateArgs>(args: SelectSubset<T, InstalledModpackCreateArgs<ExtArgs>>): Prisma__InstalledModpackClient<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many InstalledModpacks.
+     * @param {InstalledModpackCreateManyArgs} args - Arguments to create many InstalledModpacks.
+     * @example
+     * // Create many InstalledModpacks
+     * const installedModpack = await prisma.installedModpack.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends InstalledModpackCreateManyArgs>(args?: SelectSubset<T, InstalledModpackCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many InstalledModpacks and returns the data saved in the database.
+     * @param {InstalledModpackCreateManyAndReturnArgs} args - Arguments to create many InstalledModpacks.
+     * @example
+     * // Create many InstalledModpacks
+     * const installedModpack = await prisma.installedModpack.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many InstalledModpacks and only return the `id`
+     * const installedModpackWithIdOnly = await prisma.installedModpack.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends InstalledModpackCreateManyAndReturnArgs>(args?: SelectSubset<T, InstalledModpackCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a InstalledModpack.
+     * @param {InstalledModpackDeleteArgs} args - Arguments to delete one InstalledModpack.
+     * @example
+     * // Delete one InstalledModpack
+     * const InstalledModpack = await prisma.installedModpack.delete({
+     *   where: {
+     *     // ... filter to delete one InstalledModpack
+     *   }
+     * })
+     * 
+     */
+    delete<T extends InstalledModpackDeleteArgs>(args: SelectSubset<T, InstalledModpackDeleteArgs<ExtArgs>>): Prisma__InstalledModpackClient<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one InstalledModpack.
+     * @param {InstalledModpackUpdateArgs} args - Arguments to update one InstalledModpack.
+     * @example
+     * // Update one InstalledModpack
+     * const installedModpack = await prisma.installedModpack.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends InstalledModpackUpdateArgs>(args: SelectSubset<T, InstalledModpackUpdateArgs<ExtArgs>>): Prisma__InstalledModpackClient<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more InstalledModpacks.
+     * @param {InstalledModpackDeleteManyArgs} args - Arguments to filter InstalledModpacks to delete.
+     * @example
+     * // Delete a few InstalledModpacks
+     * const { count } = await prisma.installedModpack.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends InstalledModpackDeleteManyArgs>(args?: SelectSubset<T, InstalledModpackDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more InstalledModpacks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InstalledModpackUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many InstalledModpacks
+     * const installedModpack = await prisma.installedModpack.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends InstalledModpackUpdateManyArgs>(args: SelectSubset<T, InstalledModpackUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one InstalledModpack.
+     * @param {InstalledModpackUpsertArgs} args - Arguments to update or create a InstalledModpack.
+     * @example
+     * // Update or create a InstalledModpack
+     * const installedModpack = await prisma.installedModpack.upsert({
+     *   create: {
+     *     // ... data to create a InstalledModpack
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the InstalledModpack we want to update
+     *   }
+     * })
+     */
+    upsert<T extends InstalledModpackUpsertArgs>(args: SelectSubset<T, InstalledModpackUpsertArgs<ExtArgs>>): Prisma__InstalledModpackClient<$Result.GetResult<Prisma.$InstalledModpackPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of InstalledModpacks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InstalledModpackCountArgs} args - Arguments to filter InstalledModpacks to count.
+     * @example
+     * // Count the number of InstalledModpacks
+     * const count = await prisma.installedModpack.count({
+     *   where: {
+     *     // ... the filter for the InstalledModpacks we want to count
+     *   }
+     * })
+    **/
+    count<T extends InstalledModpackCountArgs>(
+      args?: Subset<T, InstalledModpackCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], InstalledModpackCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a InstalledModpack.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InstalledModpackAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends InstalledModpackAggregateArgs>(args: Subset<T, InstalledModpackAggregateArgs>): Prisma.PrismaPromise<GetInstalledModpackAggregateType<T>>
+
+    /**
+     * Group by InstalledModpack.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {InstalledModpackGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends InstalledModpackGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: InstalledModpackGroupByArgs['orderBy'] }
+        : { orderBy?: InstalledModpackGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, InstalledModpackGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetInstalledModpackGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the InstalledModpack model
+   */
+  readonly fields: InstalledModpackFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for InstalledModpack.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__InstalledModpackClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    server<T extends ServerDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ServerDefaultArgs<ExtArgs>>): Prisma__ServerClient<$Result.GetResult<Prisma.$ServerPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the InstalledModpack model
+   */ 
+  interface InstalledModpackFieldRefs {
+    readonly id: FieldRef<"InstalledModpack", 'String'>
+    readonly serverId: FieldRef<"InstalledModpack", 'String'>
+    readonly kind: FieldRef<"InstalledModpack", 'String'>
+    readonly projectId: FieldRef<"InstalledModpack", 'String'>
+    readonly fileId: FieldRef<"InstalledModpack", 'Int'>
+    readonly fileName: FieldRef<"InstalledModpack", 'String'>
+    readonly packName: FieldRef<"InstalledModpack", 'String'>
+    readonly version: FieldRef<"InstalledModpack", 'String'>
+    readonly mcVersion: FieldRef<"InstalledModpack", 'String'>
+    readonly loaderType: FieldRef<"InstalledModpack", 'String'>
+    readonly loaderVersion: FieldRef<"InstalledModpack", 'String'>
+    readonly packageIds: FieldRef<"InstalledModpack", 'String'>
+    readonly installedAt: FieldRef<"InstalledModpack", 'DateTime'>
+    readonly updatedAt: FieldRef<"InstalledModpack", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * InstalledModpack findUnique
+   */
+  export type InstalledModpackFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
+    /**
+     * Filter, which InstalledModpack to fetch.
+     */
+    where: InstalledModpackWhereUniqueInput
+  }
+
+  /**
+   * InstalledModpack findUniqueOrThrow
+   */
+  export type InstalledModpackFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
+    /**
+     * Filter, which InstalledModpack to fetch.
+     */
+    where: InstalledModpackWhereUniqueInput
+  }
+
+  /**
+   * InstalledModpack findFirst
+   */
+  export type InstalledModpackFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
+    /**
+     * Filter, which InstalledModpack to fetch.
+     */
+    where?: InstalledModpackWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InstalledModpacks to fetch.
+     */
+    orderBy?: InstalledModpackOrderByWithRelationInput | InstalledModpackOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for InstalledModpacks.
+     */
+    cursor?: InstalledModpackWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InstalledModpacks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InstalledModpacks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of InstalledModpacks.
+     */
+    distinct?: InstalledModpackScalarFieldEnum | InstalledModpackScalarFieldEnum[]
+  }
+
+  /**
+   * InstalledModpack findFirstOrThrow
+   */
+  export type InstalledModpackFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
+    /**
+     * Filter, which InstalledModpack to fetch.
+     */
+    where?: InstalledModpackWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InstalledModpacks to fetch.
+     */
+    orderBy?: InstalledModpackOrderByWithRelationInput | InstalledModpackOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for InstalledModpacks.
+     */
+    cursor?: InstalledModpackWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InstalledModpacks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InstalledModpacks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of InstalledModpacks.
+     */
+    distinct?: InstalledModpackScalarFieldEnum | InstalledModpackScalarFieldEnum[]
+  }
+
+  /**
+   * InstalledModpack findMany
+   */
+  export type InstalledModpackFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
+    /**
+     * Filter, which InstalledModpacks to fetch.
+     */
+    where?: InstalledModpackWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of InstalledModpacks to fetch.
+     */
+    orderBy?: InstalledModpackOrderByWithRelationInput | InstalledModpackOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing InstalledModpacks.
+     */
+    cursor?: InstalledModpackWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` InstalledModpacks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` InstalledModpacks.
+     */
+    skip?: number
+    distinct?: InstalledModpackScalarFieldEnum | InstalledModpackScalarFieldEnum[]
+  }
+
+  /**
+   * InstalledModpack create
+   */
+  export type InstalledModpackCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
+    /**
+     * The data needed to create a InstalledModpack.
+     */
+    data: XOR<InstalledModpackCreateInput, InstalledModpackUncheckedCreateInput>
+  }
+
+  /**
+   * InstalledModpack createMany
+   */
+  export type InstalledModpackCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many InstalledModpacks.
+     */
+    data: InstalledModpackCreateManyInput | InstalledModpackCreateManyInput[]
+  }
+
+  /**
+   * InstalledModpack createManyAndReturn
+   */
+  export type InstalledModpackCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many InstalledModpacks.
+     */
+    data: InstalledModpackCreateManyInput | InstalledModpackCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * InstalledModpack update
+   */
+  export type InstalledModpackUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
+    /**
+     * The data needed to update a InstalledModpack.
+     */
+    data: XOR<InstalledModpackUpdateInput, InstalledModpackUncheckedUpdateInput>
+    /**
+     * Choose, which InstalledModpack to update.
+     */
+    where: InstalledModpackWhereUniqueInput
+  }
+
+  /**
+   * InstalledModpack updateMany
+   */
+  export type InstalledModpackUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update InstalledModpacks.
+     */
+    data: XOR<InstalledModpackUpdateManyMutationInput, InstalledModpackUncheckedUpdateManyInput>
+    /**
+     * Filter which InstalledModpacks to update
+     */
+    where?: InstalledModpackWhereInput
+  }
+
+  /**
+   * InstalledModpack upsert
+   */
+  export type InstalledModpackUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
+    /**
+     * The filter to search for the InstalledModpack to update in case it exists.
+     */
+    where: InstalledModpackWhereUniqueInput
+    /**
+     * In case the InstalledModpack found by the `where` argument doesn't exist, create a new InstalledModpack with this data.
+     */
+    create: XOR<InstalledModpackCreateInput, InstalledModpackUncheckedCreateInput>
+    /**
+     * In case the InstalledModpack was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<InstalledModpackUpdateInput, InstalledModpackUncheckedUpdateInput>
+  }
+
+  /**
+   * InstalledModpack delete
+   */
+  export type InstalledModpackDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
+    /**
+     * Filter which InstalledModpack to delete.
+     */
+    where: InstalledModpackWhereUniqueInput
+  }
+
+  /**
+   * InstalledModpack deleteMany
+   */
+  export type InstalledModpackDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which InstalledModpacks to delete
+     */
+    where?: InstalledModpackWhereInput
+  }
+
+  /**
+   * InstalledModpack without action
+   */
+  export type InstalledModpackDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the InstalledModpack
+     */
+    select?: InstalledModpackSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: InstalledModpackInclude<ExtArgs> | null
   }
 
 
@@ -30203,6 +31388,26 @@ export namespace Prisma {
   export type GameDefinitionScalarFieldEnum = (typeof GameDefinitionScalarFieldEnum)[keyof typeof GameDefinitionScalarFieldEnum]
 
 
+  export const InstalledModpackScalarFieldEnum: {
+    id: 'id',
+    serverId: 'serverId',
+    kind: 'kind',
+    projectId: 'projectId',
+    fileId: 'fileId',
+    fileName: 'fileName',
+    packName: 'packName',
+    version: 'version',
+    mcVersion: 'mcVersion',
+    loaderType: 'loaderType',
+    loaderVersion: 'loaderVersion',
+    packageIds: 'packageIds',
+    installedAt: 'installedAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type InstalledModpackScalarFieldEnum = (typeof InstalledModpackScalarFieldEnum)[keyof typeof InstalledModpackScalarFieldEnum]
+
+
   export const ModInstallationScalarFieldEnum: {
     id: 'id',
     serverId: 'serverId',
@@ -30726,6 +31931,7 @@ export namespace Prisma {
     collaborators?: CollaboratorListRelationFilter
     mods?: ModInstallationListRelationFilter
     snapshots?: ServerSnapshotListRelationFilter
+    modpack?: XOR<InstalledModpackNullableRelationFilter, InstalledModpackWhereInput> | null
     automations?: AutomationListRelationFilter
     hostLink?: XOR<ServerHostLinkNullableRelationFilter, ServerHostLinkWhereInput> | null
     plannedSessions?: PlannedSessionListRelationFilter
@@ -30784,6 +31990,7 @@ export namespace Prisma {
     collaborators?: CollaboratorOrderByRelationAggregateInput
     mods?: ModInstallationOrderByRelationAggregateInput
     snapshots?: ServerSnapshotOrderByRelationAggregateInput
+    modpack?: InstalledModpackOrderByWithRelationInput
     automations?: AutomationOrderByRelationAggregateInput
     hostLink?: ServerHostLinkOrderByWithRelationInput
     plannedSessions?: PlannedSessionOrderByRelationAggregateInput
@@ -30845,6 +32052,7 @@ export namespace Prisma {
     collaborators?: CollaboratorListRelationFilter
     mods?: ModInstallationListRelationFilter
     snapshots?: ServerSnapshotListRelationFilter
+    modpack?: XOR<InstalledModpackNullableRelationFilter, InstalledModpackWhereInput> | null
     automations?: AutomationListRelationFilter
     hostLink?: XOR<ServerHostLinkNullableRelationFilter, ServerHostLinkWhereInput> | null
     plannedSessions?: PlannedSessionListRelationFilter
@@ -31658,6 +32866,108 @@ export namespace Prisma {
     spec?: StringWithAggregatesFilter<"GameDefinition"> | string
     createdAt?: DateTimeWithAggregatesFilter<"GameDefinition"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"GameDefinition"> | Date | string
+  }
+
+  export type InstalledModpackWhereInput = {
+    AND?: InstalledModpackWhereInput | InstalledModpackWhereInput[]
+    OR?: InstalledModpackWhereInput[]
+    NOT?: InstalledModpackWhereInput | InstalledModpackWhereInput[]
+    id?: StringFilter<"InstalledModpack"> | string
+    serverId?: StringFilter<"InstalledModpack"> | string
+    kind?: StringFilter<"InstalledModpack"> | string
+    projectId?: StringNullableFilter<"InstalledModpack"> | string | null
+    fileId?: IntNullableFilter<"InstalledModpack"> | number | null
+    fileName?: StringNullableFilter<"InstalledModpack"> | string | null
+    packName?: StringFilter<"InstalledModpack"> | string
+    version?: StringFilter<"InstalledModpack"> | string
+    mcVersion?: StringNullableFilter<"InstalledModpack"> | string | null
+    loaderType?: StringNullableFilter<"InstalledModpack"> | string | null
+    loaderVersion?: StringNullableFilter<"InstalledModpack"> | string | null
+    packageIds?: StringNullableFilter<"InstalledModpack"> | string | null
+    installedAt?: DateTimeFilter<"InstalledModpack"> | Date | string
+    updatedAt?: DateTimeFilter<"InstalledModpack"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }
+
+  export type InstalledModpackOrderByWithRelationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    kind?: SortOrder
+    projectId?: SortOrderInput | SortOrder
+    fileId?: SortOrderInput | SortOrder
+    fileName?: SortOrderInput | SortOrder
+    packName?: SortOrder
+    version?: SortOrder
+    mcVersion?: SortOrderInput | SortOrder
+    loaderType?: SortOrderInput | SortOrder
+    loaderVersion?: SortOrderInput | SortOrder
+    packageIds?: SortOrderInput | SortOrder
+    installedAt?: SortOrder
+    updatedAt?: SortOrder
+    server?: ServerOrderByWithRelationInput
+  }
+
+  export type InstalledModpackWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    serverId?: string
+    AND?: InstalledModpackWhereInput | InstalledModpackWhereInput[]
+    OR?: InstalledModpackWhereInput[]
+    NOT?: InstalledModpackWhereInput | InstalledModpackWhereInput[]
+    kind?: StringFilter<"InstalledModpack"> | string
+    projectId?: StringNullableFilter<"InstalledModpack"> | string | null
+    fileId?: IntNullableFilter<"InstalledModpack"> | number | null
+    fileName?: StringNullableFilter<"InstalledModpack"> | string | null
+    packName?: StringFilter<"InstalledModpack"> | string
+    version?: StringFilter<"InstalledModpack"> | string
+    mcVersion?: StringNullableFilter<"InstalledModpack"> | string | null
+    loaderType?: StringNullableFilter<"InstalledModpack"> | string | null
+    loaderVersion?: StringNullableFilter<"InstalledModpack"> | string | null
+    packageIds?: StringNullableFilter<"InstalledModpack"> | string | null
+    installedAt?: DateTimeFilter<"InstalledModpack"> | Date | string
+    updatedAt?: DateTimeFilter<"InstalledModpack"> | Date | string
+    server?: XOR<ServerRelationFilter, ServerWhereInput>
+  }, "id" | "serverId">
+
+  export type InstalledModpackOrderByWithAggregationInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    kind?: SortOrder
+    projectId?: SortOrderInput | SortOrder
+    fileId?: SortOrderInput | SortOrder
+    fileName?: SortOrderInput | SortOrder
+    packName?: SortOrder
+    version?: SortOrder
+    mcVersion?: SortOrderInput | SortOrder
+    loaderType?: SortOrderInput | SortOrder
+    loaderVersion?: SortOrderInput | SortOrder
+    packageIds?: SortOrderInput | SortOrder
+    installedAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: InstalledModpackCountOrderByAggregateInput
+    _avg?: InstalledModpackAvgOrderByAggregateInput
+    _max?: InstalledModpackMaxOrderByAggregateInput
+    _min?: InstalledModpackMinOrderByAggregateInput
+    _sum?: InstalledModpackSumOrderByAggregateInput
+  }
+
+  export type InstalledModpackScalarWhereWithAggregatesInput = {
+    AND?: InstalledModpackScalarWhereWithAggregatesInput | InstalledModpackScalarWhereWithAggregatesInput[]
+    OR?: InstalledModpackScalarWhereWithAggregatesInput[]
+    NOT?: InstalledModpackScalarWhereWithAggregatesInput | InstalledModpackScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"InstalledModpack"> | string
+    serverId?: StringWithAggregatesFilter<"InstalledModpack"> | string
+    kind?: StringWithAggregatesFilter<"InstalledModpack"> | string
+    projectId?: StringNullableWithAggregatesFilter<"InstalledModpack"> | string | null
+    fileId?: IntNullableWithAggregatesFilter<"InstalledModpack"> | number | null
+    fileName?: StringNullableWithAggregatesFilter<"InstalledModpack"> | string | null
+    packName?: StringWithAggregatesFilter<"InstalledModpack"> | string
+    version?: StringWithAggregatesFilter<"InstalledModpack"> | string
+    mcVersion?: StringNullableWithAggregatesFilter<"InstalledModpack"> | string | null
+    loaderType?: StringNullableWithAggregatesFilter<"InstalledModpack"> | string | null
+    loaderVersion?: StringNullableWithAggregatesFilter<"InstalledModpack"> | string | null
+    packageIds?: StringNullableWithAggregatesFilter<"InstalledModpack"> | string | null
+    installedAt?: DateTimeWithAggregatesFilter<"InstalledModpack"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"InstalledModpack"> | Date | string
   }
 
   export type ModInstallationWhereInput = {
@@ -32897,6 +34207,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
@@ -32953,6 +34264,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
@@ -33009,6 +34321,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
@@ -33065,6 +34378,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
@@ -33977,6 +35291,124 @@ export namespace Prisma {
     installMethod?: StringFieldUpdateOperationsInput | string
     spec?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InstalledModpackCreateInput = {
+    id?: string
+    kind: string
+    projectId?: string | null
+    fileId?: number | null
+    fileName?: string | null
+    packName: string
+    version: string
+    mcVersion?: string | null
+    loaderType?: string | null
+    loaderVersion?: string | null
+    packageIds?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+    server: ServerCreateNestedOneWithoutModpackInput
+  }
+
+  export type InstalledModpackUncheckedCreateInput = {
+    id?: string
+    serverId: string
+    kind: string
+    projectId?: string | null
+    fileId?: number | null
+    fileName?: string | null
+    packName: string
+    version: string
+    mcVersion?: string | null
+    loaderType?: string | null
+    loaderVersion?: string | null
+    packageIds?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InstalledModpackUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    fileId?: NullableIntFieldUpdateOperationsInput | number | null
+    fileName?: NullableStringFieldUpdateOperationsInput | string | null
+    packName?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    mcVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderType?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    packageIds?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    server?: ServerUpdateOneRequiredWithoutModpackNestedInput
+  }
+
+  export type InstalledModpackUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    fileId?: NullableIntFieldUpdateOperationsInput | number | null
+    fileName?: NullableStringFieldUpdateOperationsInput | string | null
+    packName?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    mcVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderType?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    packageIds?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InstalledModpackCreateManyInput = {
+    id?: string
+    serverId: string
+    kind: string
+    projectId?: string | null
+    fileId?: number | null
+    fileName?: string | null
+    packName: string
+    version: string
+    mcVersion?: string | null
+    loaderType?: string | null
+    loaderVersion?: string | null
+    packageIds?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InstalledModpackUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    fileId?: NullableIntFieldUpdateOperationsInput | number | null
+    fileName?: NullableStringFieldUpdateOperationsInput | string | null
+    packName?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    mcVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderType?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    packageIds?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InstalledModpackUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    fileId?: NullableIntFieldUpdateOperationsInput | number | null
+    fileName?: NullableStringFieldUpdateOperationsInput | string | null
+    packName?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    mcVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderType?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    packageIds?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -35361,6 +36793,11 @@ export namespace Prisma {
     none?: ServerSnapshotWhereInput
   }
 
+  export type InstalledModpackNullableRelationFilter = {
+    is?: InstalledModpackWhereInput | null
+    isNot?: InstalledModpackWhereInput | null
+  }
+
   export type AutomationListRelationFilter = {
     every?: AutomationWhereInput
     some?: AutomationWhereInput
@@ -36036,6 +37473,65 @@ export namespace Prisma {
   export type GameDefinitionSumOrderByAggregateInput = {
     recommendedRamGB?: SortOrder
     requiredDiskGB?: SortOrder
+  }
+
+  export type InstalledModpackCountOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    kind?: SortOrder
+    projectId?: SortOrder
+    fileId?: SortOrder
+    fileName?: SortOrder
+    packName?: SortOrder
+    version?: SortOrder
+    mcVersion?: SortOrder
+    loaderType?: SortOrder
+    loaderVersion?: SortOrder
+    packageIds?: SortOrder
+    installedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type InstalledModpackAvgOrderByAggregateInput = {
+    fileId?: SortOrder
+  }
+
+  export type InstalledModpackMaxOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    kind?: SortOrder
+    projectId?: SortOrder
+    fileId?: SortOrder
+    fileName?: SortOrder
+    packName?: SortOrder
+    version?: SortOrder
+    mcVersion?: SortOrder
+    loaderType?: SortOrder
+    loaderVersion?: SortOrder
+    packageIds?: SortOrder
+    installedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type InstalledModpackMinOrderByAggregateInput = {
+    id?: SortOrder
+    serverId?: SortOrder
+    kind?: SortOrder
+    projectId?: SortOrder
+    fileId?: SortOrder
+    fileName?: SortOrder
+    packName?: SortOrder
+    version?: SortOrder
+    mcVersion?: SortOrder
+    loaderType?: SortOrder
+    loaderVersion?: SortOrder
+    packageIds?: SortOrder
+    installedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type InstalledModpackSumOrderByAggregateInput = {
+    fileId?: SortOrder
   }
 
   export type ModInstallationServerIdProviderPackageIdCompoundUniqueInput = {
@@ -37071,6 +38567,12 @@ export namespace Prisma {
     connect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
   }
 
+  export type InstalledModpackCreateNestedOneWithoutServerInput = {
+    create?: XOR<InstalledModpackCreateWithoutServerInput, InstalledModpackUncheckedCreateWithoutServerInput>
+    connectOrCreate?: InstalledModpackCreateOrConnectWithoutServerInput
+    connect?: InstalledModpackWhereUniqueInput
+  }
+
   export type AutomationCreateNestedManyWithoutServerInput = {
     create?: XOR<AutomationCreateWithoutServerInput, AutomationUncheckedCreateWithoutServerInput> | AutomationCreateWithoutServerInput[] | AutomationUncheckedCreateWithoutServerInput[]
     connectOrCreate?: AutomationCreateOrConnectWithoutServerInput | AutomationCreateOrConnectWithoutServerInput[]
@@ -37138,6 +38640,12 @@ export namespace Prisma {
     connectOrCreate?: ServerSnapshotCreateOrConnectWithoutServerInput | ServerSnapshotCreateOrConnectWithoutServerInput[]
     createMany?: ServerSnapshotCreateManyServerInputEnvelope
     connect?: ServerSnapshotWhereUniqueInput | ServerSnapshotWhereUniqueInput[]
+  }
+
+  export type InstalledModpackUncheckedCreateNestedOneWithoutServerInput = {
+    create?: XOR<InstalledModpackCreateWithoutServerInput, InstalledModpackUncheckedCreateWithoutServerInput>
+    connectOrCreate?: InstalledModpackCreateOrConnectWithoutServerInput
+    connect?: InstalledModpackWhereUniqueInput
   }
 
   export type AutomationUncheckedCreateNestedManyWithoutServerInput = {
@@ -37275,6 +38783,16 @@ export namespace Prisma {
     deleteMany?: ServerSnapshotScalarWhereInput | ServerSnapshotScalarWhereInput[]
   }
 
+  export type InstalledModpackUpdateOneWithoutServerNestedInput = {
+    create?: XOR<InstalledModpackCreateWithoutServerInput, InstalledModpackUncheckedCreateWithoutServerInput>
+    connectOrCreate?: InstalledModpackCreateOrConnectWithoutServerInput
+    upsert?: InstalledModpackUpsertWithoutServerInput
+    disconnect?: InstalledModpackWhereInput | boolean
+    delete?: InstalledModpackWhereInput | boolean
+    connect?: InstalledModpackWhereUniqueInput
+    update?: XOR<XOR<InstalledModpackUpdateToOneWithWhereWithoutServerInput, InstalledModpackUpdateWithoutServerInput>, InstalledModpackUncheckedUpdateWithoutServerInput>
+  }
+
   export type AutomationUpdateManyWithoutServerNestedInput = {
     create?: XOR<AutomationCreateWithoutServerInput, AutomationUncheckedCreateWithoutServerInput> | AutomationCreateWithoutServerInput[] | AutomationUncheckedCreateWithoutServerInput[]
     connectOrCreate?: AutomationCreateOrConnectWithoutServerInput | AutomationCreateOrConnectWithoutServerInput[]
@@ -37409,6 +38927,16 @@ export namespace Prisma {
     update?: ServerSnapshotUpdateWithWhereUniqueWithoutServerInput | ServerSnapshotUpdateWithWhereUniqueWithoutServerInput[]
     updateMany?: ServerSnapshotUpdateManyWithWhereWithoutServerInput | ServerSnapshotUpdateManyWithWhereWithoutServerInput[]
     deleteMany?: ServerSnapshotScalarWhereInput | ServerSnapshotScalarWhereInput[]
+  }
+
+  export type InstalledModpackUncheckedUpdateOneWithoutServerNestedInput = {
+    create?: XOR<InstalledModpackCreateWithoutServerInput, InstalledModpackUncheckedCreateWithoutServerInput>
+    connectOrCreate?: InstalledModpackCreateOrConnectWithoutServerInput
+    upsert?: InstalledModpackUpsertWithoutServerInput
+    disconnect?: InstalledModpackWhereInput | boolean
+    delete?: InstalledModpackWhereInput | boolean
+    connect?: InstalledModpackWhereUniqueInput
+    update?: XOR<XOR<InstalledModpackUpdateToOneWithWhereWithoutServerInput, InstalledModpackUpdateWithoutServerInput>, InstalledModpackUncheckedUpdateWithoutServerInput>
   }
 
   export type AutomationUncheckedUpdateManyWithoutServerNestedInput = {
@@ -37673,6 +39201,20 @@ export namespace Prisma {
     update?: ServerUpdateWithWhereUniqueWithoutDefinitionInput | ServerUpdateWithWhereUniqueWithoutDefinitionInput[]
     updateMany?: ServerUpdateManyWithWhereWithoutDefinitionInput | ServerUpdateManyWithWhereWithoutDefinitionInput[]
     deleteMany?: ServerScalarWhereInput | ServerScalarWhereInput[]
+  }
+
+  export type ServerCreateNestedOneWithoutModpackInput = {
+    create?: XOR<ServerCreateWithoutModpackInput, ServerUncheckedCreateWithoutModpackInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutModpackInput
+    connect?: ServerWhereUniqueInput
+  }
+
+  export type ServerUpdateOneRequiredWithoutModpackNestedInput = {
+    create?: XOR<ServerCreateWithoutModpackInput, ServerUncheckedCreateWithoutModpackInput>
+    connectOrCreate?: ServerCreateOrConnectWithoutModpackInput
+    upsert?: ServerUpsertWithoutModpackInput
+    connect?: ServerWhereUniqueInput
+    update?: XOR<XOR<ServerUpdateToOneWithWhereWithoutModpackInput, ServerUpdateWithoutModpackInput>, ServerUncheckedUpdateWithoutModpackInput>
   }
 
   export type ServerCreateNestedOneWithoutModsInput = {
@@ -38421,6 +39963,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
@@ -38476,6 +40019,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
@@ -39352,6 +40896,43 @@ export namespace Prisma {
     data: ServerSnapshotCreateManyServerInput | ServerSnapshotCreateManyServerInput[]
   }
 
+  export type InstalledModpackCreateWithoutServerInput = {
+    id?: string
+    kind: string
+    projectId?: string | null
+    fileId?: number | null
+    fileName?: string | null
+    packName: string
+    version: string
+    mcVersion?: string | null
+    loaderType?: string | null
+    loaderVersion?: string | null
+    packageIds?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InstalledModpackUncheckedCreateWithoutServerInput = {
+    id?: string
+    kind: string
+    projectId?: string | null
+    fileId?: number | null
+    fileName?: string | null
+    packName: string
+    version: string
+    mcVersion?: string | null
+    loaderType?: string | null
+    loaderVersion?: string | null
+    packageIds?: string | null
+    installedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type InstalledModpackCreateOrConnectWithoutServerInput = {
+    where: InstalledModpackWhereUniqueInput
+    create: XOR<InstalledModpackCreateWithoutServerInput, InstalledModpackUncheckedCreateWithoutServerInput>
+  }
+
   export type AutomationCreateWithoutServerInput = {
     id?: string
     name: string
@@ -39750,6 +41331,49 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"ServerSnapshot"> | Date | string
   }
 
+  export type InstalledModpackUpsertWithoutServerInput = {
+    update: XOR<InstalledModpackUpdateWithoutServerInput, InstalledModpackUncheckedUpdateWithoutServerInput>
+    create: XOR<InstalledModpackCreateWithoutServerInput, InstalledModpackUncheckedCreateWithoutServerInput>
+    where?: InstalledModpackWhereInput
+  }
+
+  export type InstalledModpackUpdateToOneWithWhereWithoutServerInput = {
+    where?: InstalledModpackWhereInput
+    data: XOR<InstalledModpackUpdateWithoutServerInput, InstalledModpackUncheckedUpdateWithoutServerInput>
+  }
+
+  export type InstalledModpackUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    fileId?: NullableIntFieldUpdateOperationsInput | number | null
+    fileName?: NullableStringFieldUpdateOperationsInput | string | null
+    packName?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    mcVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderType?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    packageIds?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type InstalledModpackUncheckedUpdateWithoutServerInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    projectId?: NullableStringFieldUpdateOperationsInput | string | null
+    fileId?: NullableIntFieldUpdateOperationsInput | number | null
+    fileName?: NullableStringFieldUpdateOperationsInput | string | null
+    packName?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    mcVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderType?: NullableStringFieldUpdateOperationsInput | string | null
+    loaderVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    packageIds?: NullableStringFieldUpdateOperationsInput | string | null
+    installedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AutomationUpsertWithWhereUniqueWithoutServerInput = {
     where: AutomationWhereUniqueInput
     update: XOR<AutomationUpdateWithoutServerInput, AutomationUncheckedUpdateWithoutServerInput>
@@ -39988,6 +41612,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
@@ -40043,6 +41668,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
@@ -40114,6 +41740,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
@@ -40169,6 +41796,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
@@ -40224,6 +41852,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
@@ -40279,6 +41908,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
@@ -40350,6 +41980,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
@@ -40405,6 +42036,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
@@ -40460,6 +42092,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
@@ -40515,6 +42148,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
@@ -40586,6 +42220,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
@@ -40641,6 +42276,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
@@ -40911,6 +42547,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
@@ -40966,6 +42603,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
@@ -41037,6 +42675,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
@@ -41092,6 +42731,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
@@ -41255,6 +42895,7 @@ export namespace Prisma {
     backups?: BackupCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
@@ -41310,6 +42951,7 @@ export namespace Prisma {
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
@@ -41432,6 +43074,7 @@ export namespace Prisma {
     backups?: BackupUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
@@ -41487,6 +43130,7 @@ export namespace Prisma {
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
@@ -41650,6 +43294,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
@@ -41705,6 +43350,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
@@ -41795,6 +43441,246 @@ export namespace Prisma {
     data: XOR<ServerUpdateManyMutationInput, ServerUncheckedUpdateManyWithoutDefinitionInput>
   }
 
+  export type ServerCreateWithoutModpackInput = {
+    id?: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
+    enableUpnp?: boolean
+    autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
+    ipAddress: string
+    port: number
+    paramValues?: string | null
+    pendingRestart?: boolean
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    backupRetention?: number
+    inviteCode?: string | null
+    statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
+    user: UserCreateNestedOneWithoutServersInput
+    definition?: GameDefinitionCreateNestedOneWithoutServersInput
+    backups?: BackupCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorCreateNestedManyWithoutServerInput
+    mods?: ModInstallationCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    automations?: AutomationCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
+    plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
+    discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerUncheckedCreateWithoutModpackInput = {
+    id?: string
+    userId: string
+    name: string
+    game: string
+    ramAllocation: number
+    region: string
+    status: string
+    runnerType?: string
+    localPath?: string | null
+    pid?: number | null
+    password?: string | null
+    rconPort?: number | null
+    rconPassword?: string | null
+    sftpPassword?: string | null
+    sftpPort?: number | null
+    tunnelEnabled?: boolean
+    tunnelUrl?: string | null
+    tunnelClaimUrl?: string | null
+    tunnelPid?: number | null
+    enableUpnp?: boolean
+    autoUpdate?: boolean
+    autoUpdateHour?: number
+    lastAutoUpdateAt?: Date | string | null
+    ipAddress: string
+    port: number
+    definitionId?: string | null
+    paramValues?: string | null
+    pendingRestart?: boolean
+    healthStatus?: string
+    cpuUsage?: number
+    memoryUsage?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    snapshotInterval?: number
+    lastSnapshotAt?: Date | string | null
+    backupRetention?: number
+    inviteCode?: string | null
+    statusShareCode?: string | null
+    autoStartLeadMinutes?: number
+    idleStopEnabled?: boolean
+    idleStopMinutes?: number
+    sessionAutoStopHours?: number
+    firstOnlineAt?: Date | string | null
+    backups?: BackupUncheckedCreateNestedManyWithoutServerInput
+    collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
+    mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
+    hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
+    plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
+    discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
+    playerAccess?: PlayerServerAccessUncheckedCreateNestedManyWithoutServerInput
+    telemetry?: ServerTelemetryUncheckedCreateNestedManyWithoutServerInput
+  }
+
+  export type ServerCreateOrConnectWithoutModpackInput = {
+    where: ServerWhereUniqueInput
+    create: XOR<ServerCreateWithoutModpackInput, ServerUncheckedCreateWithoutModpackInput>
+  }
+
+  export type ServerUpsertWithoutModpackInput = {
+    update: XOR<ServerUpdateWithoutModpackInput, ServerUncheckedUpdateWithoutModpackInput>
+    create: XOR<ServerCreateWithoutModpackInput, ServerUncheckedCreateWithoutModpackInput>
+    where?: ServerWhereInput
+  }
+
+  export type ServerUpdateToOneWithWhereWithoutModpackInput = {
+    where?: ServerWhereInput
+    data: XOR<ServerUpdateWithoutModpackInput, ServerUncheckedUpdateWithoutModpackInput>
+  }
+
+  export type ServerUpdateWithoutModpackInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    backupRetention?: IntFieldUpdateOperationsInput | number
+    inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
+    statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    user?: UserUpdateOneRequiredWithoutServersNestedInput
+    definition?: GameDefinitionUpdateOneWithoutServersNestedInput
+    backups?: BackupUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    automations?: AutomationUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
+    plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
+    discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUpdateManyWithoutServerNestedInput
+  }
+
+  export type ServerUncheckedUpdateWithoutModpackInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    game?: StringFieldUpdateOperationsInput | string
+    ramAllocation?: FloatFieldUpdateOperationsInput | number
+    region?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    runnerType?: StringFieldUpdateOperationsInput | string
+    localPath?: NullableStringFieldUpdateOperationsInput | string | null
+    pid?: NullableIntFieldUpdateOperationsInput | number | null
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    rconPort?: NullableIntFieldUpdateOperationsInput | number | null
+    rconPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    sftpPort?: NullableIntFieldUpdateOperationsInput | number | null
+    tunnelEnabled?: BoolFieldUpdateOperationsInput | boolean
+    tunnelUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelClaimUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    tunnelPid?: NullableIntFieldUpdateOperationsInput | number | null
+    enableUpnp?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdate?: BoolFieldUpdateOperationsInput | boolean
+    autoUpdateHour?: IntFieldUpdateOperationsInput | number
+    lastAutoUpdateAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ipAddress?: StringFieldUpdateOperationsInput | string
+    port?: IntFieldUpdateOperationsInput | number
+    definitionId?: NullableStringFieldUpdateOperationsInput | string | null
+    paramValues?: NullableStringFieldUpdateOperationsInput | string | null
+    pendingRestart?: BoolFieldUpdateOperationsInput | boolean
+    healthStatus?: StringFieldUpdateOperationsInput | string
+    cpuUsage?: FloatFieldUpdateOperationsInput | number
+    memoryUsage?: FloatFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    snapshotInterval?: IntFieldUpdateOperationsInput | number
+    lastSnapshotAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    backupRetention?: IntFieldUpdateOperationsInput | number
+    inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
+    statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
+    autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
+    idleStopMinutes?: IntFieldUpdateOperationsInput | number
+    sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
+    firstOnlineAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
+    collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
+    mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
+    hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
+    plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
+    discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
+    playerAccess?: PlayerServerAccessUncheckedUpdateManyWithoutServerNestedInput
+    telemetry?: ServerTelemetryUncheckedUpdateManyWithoutServerNestedInput
+  }
+
   export type ServerCreateWithoutModsInput = {
     id?: string
     name: string
@@ -41842,6 +43728,7 @@ export namespace Prisma {
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
@@ -41897,6 +43784,7 @@ export namespace Prisma {
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
@@ -41968,6 +43856,7 @@ export namespace Prisma {
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
@@ -42023,6 +43912,7 @@ export namespace Prisma {
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
@@ -42078,6 +43968,7 @@ export namespace Prisma {
     backups?: BackupCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
@@ -42133,6 +44024,7 @@ export namespace Prisma {
     backups?: BackupUncheckedCreateNestedManyWithoutServerInput
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
@@ -42204,6 +44096,7 @@ export namespace Prisma {
     backups?: BackupUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
@@ -42259,6 +44152,7 @@ export namespace Prisma {
     backups?: BackupUncheckedUpdateManyWithoutServerNestedInput
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
@@ -42315,6 +44209,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
@@ -42370,6 +44265,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
@@ -42441,6 +44337,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
@@ -42496,6 +44393,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
@@ -42551,6 +44449,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessCreateNestedManyWithoutServerInput
@@ -42606,6 +44505,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
     discordRoles?: DiscordRoleAccessUncheckedCreateNestedManyWithoutServerInput
@@ -42748,6 +44648,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUpdateManyWithoutServerNestedInput
@@ -42803,6 +44704,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
     discordRoles?: DiscordRoleAccessUncheckedUpdateManyWithoutServerNestedInput
@@ -43689,6 +45591,7 @@ export namespace Prisma {
     collaborators?: CollaboratorCreateNestedManyWithoutServerInput
     mods?: ModInstallationCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackCreateNestedOneWithoutServerInput
     automations?: AutomationCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionCreateNestedManyWithoutServerInput
@@ -43744,6 +45647,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedCreateNestedManyWithoutServerInput
     mods?: ModInstallationUncheckedCreateNestedManyWithoutServerInput
     snapshots?: ServerSnapshotUncheckedCreateNestedManyWithoutServerInput
+    modpack?: InstalledModpackUncheckedCreateNestedOneWithoutServerInput
     automations?: AutomationUncheckedCreateNestedManyWithoutServerInput
     hostLink?: ServerHostLinkUncheckedCreateNestedOneWithoutServerInput
     plannedSessions?: PlannedSessionUncheckedCreateNestedManyWithoutServerInput
@@ -43858,6 +45762,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
@@ -43913,6 +45818,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
@@ -44133,6 +46039,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
@@ -44188,6 +46095,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
@@ -44874,6 +46782,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUpdateOneWithoutServerNestedInput
     automations?: AutomationUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUpdateManyWithoutServerNestedInput
@@ -44929,6 +46838,7 @@ export namespace Prisma {
     collaborators?: CollaboratorUncheckedUpdateManyWithoutServerNestedInput
     mods?: ModInstallationUncheckedUpdateManyWithoutServerNestedInput
     snapshots?: ServerSnapshotUncheckedUpdateManyWithoutServerNestedInput
+    modpack?: InstalledModpackUncheckedUpdateOneWithoutServerNestedInput
     automations?: AutomationUncheckedUpdateManyWithoutServerNestedInput
     hostLink?: ServerHostLinkUncheckedUpdateOneWithoutServerNestedInput
     plannedSessions?: PlannedSessionUncheckedUpdateManyWithoutServerNestedInput
@@ -45211,6 +47121,10 @@ export namespace Prisma {
      * @deprecated Use GameDefinitionDefaultArgs instead
      */
     export type GameDefinitionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = GameDefinitionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use InstalledModpackDefaultArgs instead
+     */
+    export type InstalledModpackArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = InstalledModpackDefaultArgs<ExtArgs>
     /**
      * @deprecated Use ModInstallationDefaultArgs instead
      */

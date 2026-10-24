@@ -12,7 +12,7 @@ import {
   pickCompatibleCfFile, type CurseForgeFile,
 } from "@/lib/mods/curseforge";
 import {
-  planModpackFromZip, applyModpackPlan, packResultMessage, auditPackInstall,
+  planModpackFromZip, applyModpackPlan, packResultMessage, auditPackInstall, recordInstalledModpack,
   detectPackServerMcVersion, PackPreflightError,
 } from "@/lib/mods/packInstall";
 import fs from "fs";
@@ -136,6 +136,12 @@ export async function POST(
       console.log(`[Sandbox] Boot test passed for ${serverId}`);
 
       await auditPackInstall({ userId: user.id, serverName: server.name, plan, result, warnings });
+      await recordInstalledModpack({
+        serverId, plan, result,
+        projectId: String(projectId),
+        fileId: packFile.id,
+        fileName: packFile.fileName,
+      });
 
       return NextResponse.json({
         success: true,

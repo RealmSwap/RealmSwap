@@ -43,6 +43,7 @@ import {
   installOxideCore,
   installRustUmodPlugin,
   removeRustUmodPlugin,
+  checkUmodPluginUpdate,
   OXIDE_CORE_DOWNLOAD_URL,
   OXIDE_CORE_MARKER,
 } from "@/lib/mods/umod";
@@ -270,5 +271,67 @@ describe("installOxideCore / installRustUmodPlugin / removeRustUmodPlugin", () =
     removeRustUmodPlugin(tmp, "Kits");
     expect(fs.existsSync(path.join(tmp, "Oxide", "plugins", "Kits.cs"))).toBe(false);
     expect(() => removeRustUmodPlugin(tmp, "Kits")).not.toThrow();
+  });
+});
+
+describe("checkUmodPluginUpdate / fetchUmodPluginMeta", () => {
+  it("reports up-to-date when the installed version matches the latest release", async () => {
+    const fetchImpl = async () =>
+      new Response(JSON.stringify({ latest_release_version: "4.4.10", download_url: "https://umod.org/plugins/Kits.cs" }), { status: 200 });
+    const check = await checkUmodPluginUpdate({ packageId: "KitCheck1", currentVersion: "4.4.10", deps: { fetchImpl } });
+    expect(check).toEqual({ currentVersion: "4.4.10", latestVersion: "4.4.10", upToDate: true });
+  });
+
+  it("reports a newer release when one exists", async () => {
+    const fetchImpl = async () =>
+      new Response(JSON.stringify({ latest_release_version: "4.5.0" }), { status: 200 });
+    const check = await checkUmodPluginUpdate({ packageId: "KitCheck2", currentVersion: "4.4.10", deps: { fetchImpl } });
+    expect(check.upToDate).toBe(false);
+    expect(check.latestVersion).toBe("4.5.0");
+  });
+
+  it("returns upToDate null when uMod can't be reached (429)", async () => {
+    const fetchImpl = async () => new Response("slow down", { status: 429 });
+    const check = await checkUmodPluginUpdate({ packageId: "KitCheck3", currentVersion: "1.0.0", deps: { fetchImpl } });
+    expect(check.upToDate).toBeNull();
+    expect(check.latestVersion).toBeNull();
+  });
+});
+
+describe("installRustUmodPlugin collection drift warning", () => {
+  it("warns and installs latest when the exported version has moved on", async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "umod-drift-"));
+    try {
+      const warnings: string[] = [];
+      bag.bodies = (url) =>
+        url === OXIDE_CORE_DOWNLOAD_URL
+          ? zipFor({ "RustDedicated_Data/Managed/Oxide.Core.dll": "x" })
+          : url === "https://umod.org/plugins/DriftCheck.cs"
+            ? Buffer.from("// plugin")
+            : null;
+      await installRustUmodPlugin({
+        serverId: "s1",
+        rustDir: tmp,
+        packageId: "DriftCheck",
+        exportedVersion: "1.0.0",
+        warnings,
+        deps: {
+          fetchImpl: async (url: string) => {
+            if (url === "https://umod.org/plugins/DriftCheck.json") {
+              return new Response(
+                JSON.stringify({ latest_release_version: "2.0.0", download_url: "https://umod.org/plugins/DriftCheck.cs" }),
+                { status: 200 }
+              );
+            }
+            return new Response("nope", { status: 404 });
+          },
+        },
+      });
+      expect(warnings.some((w) => w.includes("DriftCheck") && w.includes("1.0.0") && w.includes("2.0.0"))).toBe(true);
+      const pluginUpsert = bag.upserts.find((u: any) => u.create?.packageId === "DriftCheck");
+      expect(pluginUpsert.create).toMatchObject({ packageId: "DriftCheck", version: "2.0.0" });
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
