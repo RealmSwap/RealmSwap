@@ -163,7 +163,8 @@ export async function POST(req: NextRequest) {
       password: z.string().optional(),
       enableUpnp: z.boolean().optional(),
       paramValues: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
-      runnerType: z.string().optional()
+      runnerType: z.string().optional(),
+      nodeId: z.string().optional()
     });
 
     const parsed = serverSchema.safeParse(body);
@@ -171,7 +172,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid payload", details: parsed.error.format() }, { status: 400 });
     }
 
-    const { name, definitionId, ramAllocation, password, enableUpnp, paramValues, runnerType: requestedRunner } = parsed.data;
+    const { name, definitionId, ramAllocation, password, enableUpnp, paramValues, runnerType: requestedRunner, nodeId: requestedNodeId } = parsed.data;
 
     const def = await prisma.gameDefinition.findFirst({
       where: { id: definitionId, OR: [{ ownerId: null }, { ownerId: user.id }] },
@@ -192,16 +193,51 @@ export async function POST(req: NextRequest) {
 
     const port = spec.defaultPort;
 
-    // --- Pre-flight Validations ---
-
-    // 1. Check Port Availability
-    const portFree = await isPortAvailable(port);
-    if (!portFree) {
-      return NextResponse.json({ error: `Port ${port} is currently in use by another application. Please stop the application or change the port.` }, { status: 400 });
+    const hasContainer = !!spec.container;
+    const dockerAvailable = requestedRunner === "DOCKER" ? await isDockerAvailable() : false;
+    // AGENT: the requested node must exist, belong to the requester (or the
+    // requester is ADMIN), and have completed enrollment.
+    let nodeEnrolled = false;
+    let assignedNodeId: string | null = null;
+    if (requestedRunner === "AGENT") {
+      if (!requestedNodeId) {
+        return NextResponse.json({ error: "A nodeId is required for the remote-node runtime." }, { status: 400 });
+      }
+      const node = await prisma.agentNode.findUnique({ where: { id: requestedNodeId } });
+      const ownsNode = node && (node.userId === user.id || user.role === "ADMIN");
+      nodeEnrolled = !!(node && ownsNode && node.status === "ACTIVE" && node.secret);
+      assignedNodeId = nodeEnrolled ? node!.id : null;
+    }
+    const runnerType = resolveRunnerType(requestedRunner, { hasContainer, dockerAvailable, nodeEnrolled });
+    if (requestedRunner === "DOCKER" && runnerType !== "DOCKER") {
+      return NextResponse.json(
+        { error: "Docker runtime is unavailable or unsupported for this game. Ensure Docker is running and the game supports containers." },
+        { status: 400 },
+      );
+    }
+    if (requestedRunner === "AGENT" && runnerType !== "AGENT") {
+      return NextResponse.json(
+        { error: "Remote node runtime is unavailable: the node must exist, be enrolled, and belong to you." },
+        { status: 400 },
+      );
     }
 
-    // 2. SteamCMD Check & Disk Space Check
-    if ('appId' in spec.install) {
+    // --- Pre-flight Validations ---
+
+    // 1. Check Port Availability (dashboard machine only — remote nodes
+    //    publish ports on their own host, validated by their own state)
+    if (runnerType !== "AGENT") {
+      const portFree = await isPortAvailable(port);
+      if (!portFree) {
+        return NextResponse.json({ error: `Port ${port} is currently in use by another application. Please stop the application or change the port.` }, { status: 400 });
+      }
+    }
+
+    // 2. SteamCMD Check & Disk Space Check (dashboard disk only)
+    if (runnerType === "AGENT") {
+      // Remote node hosting: the node's own disk/RAM (reported via sync) is
+      // what matters; dashboard-local checks would be meaningless.
+    } else if ('appId' in spec.install) {
       // It's a SteamCMD install
       // 3. Disk Space Check (Requires at least 250MB for SteamCMD + game size)
       const requiredGB = spec.install.requiredDiskGB || 0;
@@ -224,15 +260,6 @@ export async function POST(req: NextRequest) {
     }
     // --- End Pre-flight Validations ---
 
-    const hasContainer = !!spec.container;
-    const dockerAvailable = requestedRunner === "DOCKER" ? await isDockerAvailable() : false;
-    const runnerType = resolveRunnerType(requestedRunner, { hasContainer, dockerAvailable });
-    if (requestedRunner === "DOCKER" && runnerType !== "DOCKER") {
-      return NextResponse.json(
-        { error: "Docker runtime is unavailable or unsupported for this game. Ensure Docker is running and the game supports containers." },
-        { status: 400 },
-      );
-    }
     const region = "LOCALHOST";
     const ipAddress = "127.0.0.1";
 
@@ -247,6 +274,7 @@ export async function POST(req: NextRequest) {
         region,
         status: "STOPPED", // Server starts stopped, user can turn it on
         runnerType,
+        nodeId: assignedNodeId,
         ipAddress,
         port,
         password: password || null,
@@ -263,7 +291,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: user.id,
         action: "CREATE_SERVER",
-        details: `Deployed new ${runnerType === "DOCKER" ? "containerized" : "local"} ${def.slug} server '${name}' (${ramAllocation}GB RAM).`,
+        details: `Deployed new ${runnerType === "AGENT" ? "remote-node" : runnerType === "DOCKER" ? "containerized" : "local"} ${def.slug} server '${name}' (${ramAllocation}GB RAM).`,
       },
     });
 

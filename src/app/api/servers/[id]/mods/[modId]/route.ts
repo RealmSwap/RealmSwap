@@ -10,6 +10,7 @@ import { removeArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 import { uninstallPalworldPackage } from "@/lib/mods/palworld";
 import { removeFicsitMod } from "@/lib/mods/installers";
 import { removeRustUmodPlugin } from "@/lib/mods/umod";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 export async function DELETE(
   req: NextRequest,
@@ -29,6 +30,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
 
+    requireLocalServer(access.server, "Mod uninstalls");
     const game = access.server.game.toUpperCase();
 
     // Find the installation record

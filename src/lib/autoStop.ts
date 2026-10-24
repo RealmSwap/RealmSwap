@@ -2,6 +2,7 @@ import { prisma } from "./db";
 import { getRunner } from "./runners";
 import { serverEventBus } from "./eventBus";
 import { queryGameServer, GameQueryResult } from "./serverQuery";
+import { resolveGameHost } from "./gameHost";
 import { parseSpec } from "./definitions/serialize";
 import { sendNotification } from "./notifications";
 import { evaluateAutoStop, AutoStopKind, PLAYER_SAMPLE_INTERVAL_MS } from "./autoStopRules";
@@ -118,7 +119,7 @@ export async function maybeSamplePlayers(server: { id: string }): Promise<void> 
     let result: GameQueryResult | null = null;
     if (spec) {
       result = await withTimeout(
-        queryGameServer(fresh, spec),
+        queryGameServer(fresh, spec, { host: await resolveGameHost(fresh) }),
         PLAYER_QUERY_TIMEOUT_MS,
         { status: "offline", error: "Player query timed out" }
       );

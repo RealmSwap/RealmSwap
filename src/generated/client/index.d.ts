@@ -151,6 +151,16 @@ export type PlayerServerAccess = $Result.DefaultSelection<Prisma.$PlayerServerAc
  * 
  */
 export type PlayerAuditLog = $Result.DefaultSelection<Prisma.$PlayerAuditLogPayload>
+/**
+ * Model AgentNode
+ * 
+ */
+export type AgentNode = $Result.DefaultSelection<Prisma.$AgentNodePayload>
+/**
+ * Model AgentCommand
+ * 
+ */
+export type AgentCommand = $Result.DefaultSelection<Prisma.$AgentCommandPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -544,6 +554,26 @@ export class PrismaClient<
     * ```
     */
   get playerAuditLog(): Prisma.PlayerAuditLogDelegate<ExtArgs>;
+
+  /**
+   * `prisma.agentNode`: Exposes CRUD operations for the **AgentNode** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AgentNodes
+    * const agentNodes = await prisma.agentNode.findMany()
+    * ```
+    */
+  get agentNode(): Prisma.AgentNodeDelegate<ExtArgs>;
+
+  /**
+   * `prisma.agentCommand`: Exposes CRUD operations for the **AgentCommand** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AgentCommands
+    * const agentCommands = await prisma.agentCommand.findMany()
+    * ```
+    */
+  get agentCommand(): Prisma.AgentCommandDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -1011,7 +1041,9 @@ export namespace Prisma {
     PushSubscription: 'PushSubscription',
     Player: 'Player',
     PlayerServerAccess: 'PlayerServerAccess',
-    PlayerAuditLog: 'PlayerAuditLog'
+    PlayerAuditLog: 'PlayerAuditLog',
+    AgentNode: 'AgentNode',
+    AgentCommand: 'AgentCommand'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1027,7 +1059,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "s3Setting" | "collaborator" | "gameDefinition" | "installedModpack" | "modInstallation" | "serverSnapshot" | "serverTelemetry" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription" | "player" | "playerServerAccess" | "playerAuditLog"
+      modelProps: "user" | "discordLinkCode" | "subscription" | "server" | "discordRoleAccess" | "plannedSession" | "serverHostLink" | "archive" | "activityLog" | "backup" | "s3Setting" | "collaborator" | "gameDefinition" | "installedModpack" | "modInstallation" | "serverSnapshot" | "serverTelemetry" | "automation" | "automationCondition" | "automationAction" | "automationExecution" | "marketplaceTemplate" | "templateVote" | "pushSubscription" | "player" | "playerServerAccess" | "playerAuditLog" | "agentNode" | "agentCommand"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2918,6 +2950,146 @@ export namespace Prisma {
           count: {
             args: Prisma.PlayerAuditLogCountArgs<ExtArgs>
             result: $Utils.Optional<PlayerAuditLogCountAggregateOutputType> | number
+          }
+        }
+      }
+      AgentNode: {
+        payload: Prisma.$AgentNodePayload<ExtArgs>
+        fields: Prisma.AgentNodeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AgentNodeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNodePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AgentNodeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNodePayload>
+          }
+          findFirst: {
+            args: Prisma.AgentNodeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNodePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AgentNodeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNodePayload>
+          }
+          findMany: {
+            args: Prisma.AgentNodeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNodePayload>[]
+          }
+          create: {
+            args: Prisma.AgentNodeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNodePayload>
+          }
+          createMany: {
+            args: Prisma.AgentNodeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AgentNodeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNodePayload>[]
+          }
+          delete: {
+            args: Prisma.AgentNodeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNodePayload>
+          }
+          update: {
+            args: Prisma.AgentNodeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNodePayload>
+          }
+          deleteMany: {
+            args: Prisma.AgentNodeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AgentNodeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.AgentNodeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentNodePayload>
+          }
+          aggregate: {
+            args: Prisma.AgentNodeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAgentNode>
+          }
+          groupBy: {
+            args: Prisma.AgentNodeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AgentNodeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AgentNodeCountArgs<ExtArgs>
+            result: $Utils.Optional<AgentNodeCountAggregateOutputType> | number
+          }
+        }
+      }
+      AgentCommand: {
+        payload: Prisma.$AgentCommandPayload<ExtArgs>
+        fields: Prisma.AgentCommandFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AgentCommandFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentCommandPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AgentCommandFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentCommandPayload>
+          }
+          findFirst: {
+            args: Prisma.AgentCommandFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentCommandPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AgentCommandFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentCommandPayload>
+          }
+          findMany: {
+            args: Prisma.AgentCommandFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentCommandPayload>[]
+          }
+          create: {
+            args: Prisma.AgentCommandCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentCommandPayload>
+          }
+          createMany: {
+            args: Prisma.AgentCommandCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AgentCommandCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentCommandPayload>[]
+          }
+          delete: {
+            args: Prisma.AgentCommandDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentCommandPayload>
+          }
+          update: {
+            args: Prisma.AgentCommandUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentCommandPayload>
+          }
+          deleteMany: {
+            args: Prisma.AgentCommandDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AgentCommandUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.AgentCommandUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AgentCommandPayload>
+          }
+          aggregate: {
+            args: Prisma.AgentCommandAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAgentCommand>
+          }
+          groupBy: {
+            args: Prisma.AgentCommandGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AgentCommandGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AgentCommandCountArgs<ExtArgs>
+            result: $Utils.Optional<AgentCommandCountAggregateOutputType> | number
           }
         }
       }
@@ -6564,6 +6736,7 @@ export namespace Prisma {
     region: string | null
     status: string | null
     runnerType: string | null
+    nodeId: string | null
     localPath: string | null
     pid: number | null
     password: string | null
@@ -6610,6 +6783,7 @@ export namespace Prisma {
     region: string | null
     status: string | null
     runnerType: string | null
+    nodeId: string | null
     localPath: string | null
     pid: number | null
     password: string | null
@@ -6656,6 +6830,7 @@ export namespace Prisma {
     region: number
     status: number
     runnerType: number
+    nodeId: number
     localPath: number
     pid: number
     password: number
@@ -6738,6 +6913,7 @@ export namespace Prisma {
     region?: true
     status?: true
     runnerType?: true
+    nodeId?: true
     localPath?: true
     pid?: true
     password?: true
@@ -6784,6 +6960,7 @@ export namespace Prisma {
     region?: true
     status?: true
     runnerType?: true
+    nodeId?: true
     localPath?: true
     pid?: true
     password?: true
@@ -6830,6 +7007,7 @@ export namespace Prisma {
     region?: true
     status?: true
     runnerType?: true
+    nodeId?: true
     localPath?: true
     pid?: true
     password?: true
@@ -6963,6 +7141,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType: string
+    nodeId: string | null
     localPath: string | null
     pid: number | null
     password: string | null
@@ -7028,6 +7207,7 @@ export namespace Prisma {
     region?: boolean
     status?: boolean
     runnerType?: boolean
+    nodeId?: boolean
     localPath?: boolean
     pid?: boolean
     password?: boolean
@@ -7088,6 +7268,7 @@ export namespace Prisma {
     region?: boolean
     status?: boolean
     runnerType?: boolean
+    nodeId?: boolean
     localPath?: boolean
     pid?: boolean
     password?: boolean
@@ -7136,6 +7317,7 @@ export namespace Prisma {
     region?: boolean
     status?: boolean
     runnerType?: boolean
+    nodeId?: boolean
     localPath?: boolean
     pid?: boolean
     password?: boolean
@@ -7220,6 +7402,7 @@ export namespace Prisma {
       region: string
       status: string
       runnerType: string
+      nodeId: string | null
       localPath: string | null
       pid: number | null
       password: string | null
@@ -7669,6 +7852,7 @@ export namespace Prisma {
     readonly region: FieldRef<"Server", 'String'>
     readonly status: FieldRef<"Server", 'String'>
     readonly runnerType: FieldRef<"Server", 'String'>
+    readonly nodeId: FieldRef<"Server", 'String'>
     readonly localPath: FieldRef<"Server", 'String'>
     readonly pid: FieldRef<"Server", 'Int'>
     readonly password: FieldRef<"Server", 'String'>
@@ -31150,6 +31334,1988 @@ export namespace Prisma {
 
 
   /**
+   * Model AgentNode
+   */
+
+  export type AggregateAgentNode = {
+    _count: AgentNodeCountAggregateOutputType | null
+    _avg: AgentNodeAvgAggregateOutputType | null
+    _sum: AgentNodeSumAggregateOutputType | null
+    _min: AgentNodeMinAggregateOutputType | null
+    _max: AgentNodeMaxAggregateOutputType | null
+  }
+
+  export type AgentNodeAvgAggregateOutputType = {
+    totalRamMB: number | null
+    freeDiskGB: number | null
+  }
+
+  export type AgentNodeSumAggregateOutputType = {
+    totalRamMB: number | null
+    freeDiskGB: number | null
+  }
+
+  export type AgentNodeMinAggregateOutputType = {
+    id: string | null
+    name: string | null
+    userId: string | null
+    status: string | null
+    enrollTokenHash: string | null
+    enrollExpiresAt: Date | null
+    secret: string | null
+    platform: string | null
+    arch: string | null
+    agentVersion: string | null
+    dockerVersion: string | null
+    lanIp: string | null
+    totalRamMB: number | null
+    freeDiskGB: number | null
+    lastSeenAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type AgentNodeMaxAggregateOutputType = {
+    id: string | null
+    name: string | null
+    userId: string | null
+    status: string | null
+    enrollTokenHash: string | null
+    enrollExpiresAt: Date | null
+    secret: string | null
+    platform: string | null
+    arch: string | null
+    agentVersion: string | null
+    dockerVersion: string | null
+    lanIp: string | null
+    totalRamMB: number | null
+    freeDiskGB: number | null
+    lastSeenAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type AgentNodeCountAggregateOutputType = {
+    id: number
+    name: number
+    userId: number
+    status: number
+    enrollTokenHash: number
+    enrollExpiresAt: number
+    secret: number
+    platform: number
+    arch: number
+    agentVersion: number
+    dockerVersion: number
+    lanIp: number
+    totalRamMB: number
+    freeDiskGB: number
+    lastSeenAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type AgentNodeAvgAggregateInputType = {
+    totalRamMB?: true
+    freeDiskGB?: true
+  }
+
+  export type AgentNodeSumAggregateInputType = {
+    totalRamMB?: true
+    freeDiskGB?: true
+  }
+
+  export type AgentNodeMinAggregateInputType = {
+    id?: true
+    name?: true
+    userId?: true
+    status?: true
+    enrollTokenHash?: true
+    enrollExpiresAt?: true
+    secret?: true
+    platform?: true
+    arch?: true
+    agentVersion?: true
+    dockerVersion?: true
+    lanIp?: true
+    totalRamMB?: true
+    freeDiskGB?: true
+    lastSeenAt?: true
+    createdAt?: true
+  }
+
+  export type AgentNodeMaxAggregateInputType = {
+    id?: true
+    name?: true
+    userId?: true
+    status?: true
+    enrollTokenHash?: true
+    enrollExpiresAt?: true
+    secret?: true
+    platform?: true
+    arch?: true
+    agentVersion?: true
+    dockerVersion?: true
+    lanIp?: true
+    totalRamMB?: true
+    freeDiskGB?: true
+    lastSeenAt?: true
+    createdAt?: true
+  }
+
+  export type AgentNodeCountAggregateInputType = {
+    id?: true
+    name?: true
+    userId?: true
+    status?: true
+    enrollTokenHash?: true
+    enrollExpiresAt?: true
+    secret?: true
+    platform?: true
+    arch?: true
+    agentVersion?: true
+    dockerVersion?: true
+    lanIp?: true
+    totalRamMB?: true
+    freeDiskGB?: true
+    lastSeenAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type AgentNodeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentNode to aggregate.
+     */
+    where?: AgentNodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentNodes to fetch.
+     */
+    orderBy?: AgentNodeOrderByWithRelationInput | AgentNodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AgentNodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentNodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentNodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AgentNodes
+    **/
+    _count?: true | AgentNodeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AgentNodeAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AgentNodeSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AgentNodeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AgentNodeMaxAggregateInputType
+  }
+
+  export type GetAgentNodeAggregateType<T extends AgentNodeAggregateArgs> = {
+        [P in keyof T & keyof AggregateAgentNode]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAgentNode[P]>
+      : GetScalarType<T[P], AggregateAgentNode[P]>
+  }
+
+
+
+
+  export type AgentNodeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AgentNodeWhereInput
+    orderBy?: AgentNodeOrderByWithAggregationInput | AgentNodeOrderByWithAggregationInput[]
+    by: AgentNodeScalarFieldEnum[] | AgentNodeScalarFieldEnum
+    having?: AgentNodeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AgentNodeCountAggregateInputType | true
+    _avg?: AgentNodeAvgAggregateInputType
+    _sum?: AgentNodeSumAggregateInputType
+    _min?: AgentNodeMinAggregateInputType
+    _max?: AgentNodeMaxAggregateInputType
+  }
+
+  export type AgentNodeGroupByOutputType = {
+    id: string
+    name: string
+    userId: string
+    status: string
+    enrollTokenHash: string | null
+    enrollExpiresAt: Date | null
+    secret: string | null
+    platform: string | null
+    arch: string | null
+    agentVersion: string | null
+    dockerVersion: string | null
+    lanIp: string | null
+    totalRamMB: number | null
+    freeDiskGB: number | null
+    lastSeenAt: Date | null
+    createdAt: Date
+    _count: AgentNodeCountAggregateOutputType | null
+    _avg: AgentNodeAvgAggregateOutputType | null
+    _sum: AgentNodeSumAggregateOutputType | null
+    _min: AgentNodeMinAggregateOutputType | null
+    _max: AgentNodeMaxAggregateOutputType | null
+  }
+
+  type GetAgentNodeGroupByPayload<T extends AgentNodeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AgentNodeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AgentNodeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AgentNodeGroupByOutputType[P]>
+            : GetScalarType<T[P], AgentNodeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AgentNodeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    userId?: boolean
+    status?: boolean
+    enrollTokenHash?: boolean
+    enrollExpiresAt?: boolean
+    secret?: boolean
+    platform?: boolean
+    arch?: boolean
+    agentVersion?: boolean
+    dockerVersion?: boolean
+    lanIp?: boolean
+    totalRamMB?: boolean
+    freeDiskGB?: boolean
+    lastSeenAt?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["agentNode"]>
+
+  export type AgentNodeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    userId?: boolean
+    status?: boolean
+    enrollTokenHash?: boolean
+    enrollExpiresAt?: boolean
+    secret?: boolean
+    platform?: boolean
+    arch?: boolean
+    agentVersion?: boolean
+    dockerVersion?: boolean
+    lanIp?: boolean
+    totalRamMB?: boolean
+    freeDiskGB?: boolean
+    lastSeenAt?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["agentNode"]>
+
+  export type AgentNodeSelectScalar = {
+    id?: boolean
+    name?: boolean
+    userId?: boolean
+    status?: boolean
+    enrollTokenHash?: boolean
+    enrollExpiresAt?: boolean
+    secret?: boolean
+    platform?: boolean
+    arch?: boolean
+    agentVersion?: boolean
+    dockerVersion?: boolean
+    lanIp?: boolean
+    totalRamMB?: boolean
+    freeDiskGB?: boolean
+    lastSeenAt?: boolean
+    createdAt?: boolean
+  }
+
+
+  export type $AgentNodePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AgentNode"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      name: string
+      userId: string
+      status: string
+      enrollTokenHash: string | null
+      enrollExpiresAt: Date | null
+      secret: string | null
+      platform: string | null
+      arch: string | null
+      agentVersion: string | null
+      dockerVersion: string | null
+      lanIp: string | null
+      totalRamMB: number | null
+      freeDiskGB: number | null
+      lastSeenAt: Date | null
+      createdAt: Date
+    }, ExtArgs["result"]["agentNode"]>
+    composites: {}
+  }
+
+  type AgentNodeGetPayload<S extends boolean | null | undefined | AgentNodeDefaultArgs> = $Result.GetResult<Prisma.$AgentNodePayload, S>
+
+  type AgentNodeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<AgentNodeFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: AgentNodeCountAggregateInputType | true
+    }
+
+  export interface AgentNodeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AgentNode'], meta: { name: 'AgentNode' } }
+    /**
+     * Find zero or one AgentNode that matches the filter.
+     * @param {AgentNodeFindUniqueArgs} args - Arguments to find a AgentNode
+     * @example
+     * // Get one AgentNode
+     * const agentNode = await prisma.agentNode.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AgentNodeFindUniqueArgs>(args: SelectSubset<T, AgentNodeFindUniqueArgs<ExtArgs>>): Prisma__AgentNodeClient<$Result.GetResult<Prisma.$AgentNodePayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one AgentNode that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {AgentNodeFindUniqueOrThrowArgs} args - Arguments to find a AgentNode
+     * @example
+     * // Get one AgentNode
+     * const agentNode = await prisma.agentNode.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AgentNodeFindUniqueOrThrowArgs>(args: SelectSubset<T, AgentNodeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AgentNodeClient<$Result.GetResult<Prisma.$AgentNodePayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first AgentNode that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNodeFindFirstArgs} args - Arguments to find a AgentNode
+     * @example
+     * // Get one AgentNode
+     * const agentNode = await prisma.agentNode.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AgentNodeFindFirstArgs>(args?: SelectSubset<T, AgentNodeFindFirstArgs<ExtArgs>>): Prisma__AgentNodeClient<$Result.GetResult<Prisma.$AgentNodePayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first AgentNode that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNodeFindFirstOrThrowArgs} args - Arguments to find a AgentNode
+     * @example
+     * // Get one AgentNode
+     * const agentNode = await prisma.agentNode.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AgentNodeFindFirstOrThrowArgs>(args?: SelectSubset<T, AgentNodeFindFirstOrThrowArgs<ExtArgs>>): Prisma__AgentNodeClient<$Result.GetResult<Prisma.$AgentNodePayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more AgentNodes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNodeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AgentNodes
+     * const agentNodes = await prisma.agentNode.findMany()
+     * 
+     * // Get first 10 AgentNodes
+     * const agentNodes = await prisma.agentNode.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const agentNodeWithIdOnly = await prisma.agentNode.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AgentNodeFindManyArgs>(args?: SelectSubset<T, AgentNodeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentNodePayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a AgentNode.
+     * @param {AgentNodeCreateArgs} args - Arguments to create a AgentNode.
+     * @example
+     * // Create one AgentNode
+     * const AgentNode = await prisma.agentNode.create({
+     *   data: {
+     *     // ... data to create a AgentNode
+     *   }
+     * })
+     * 
+     */
+    create<T extends AgentNodeCreateArgs>(args: SelectSubset<T, AgentNodeCreateArgs<ExtArgs>>): Prisma__AgentNodeClient<$Result.GetResult<Prisma.$AgentNodePayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many AgentNodes.
+     * @param {AgentNodeCreateManyArgs} args - Arguments to create many AgentNodes.
+     * @example
+     * // Create many AgentNodes
+     * const agentNode = await prisma.agentNode.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AgentNodeCreateManyArgs>(args?: SelectSubset<T, AgentNodeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AgentNodes and returns the data saved in the database.
+     * @param {AgentNodeCreateManyAndReturnArgs} args - Arguments to create many AgentNodes.
+     * @example
+     * // Create many AgentNodes
+     * const agentNode = await prisma.agentNode.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AgentNodes and only return the `id`
+     * const agentNodeWithIdOnly = await prisma.agentNode.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AgentNodeCreateManyAndReturnArgs>(args?: SelectSubset<T, AgentNodeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentNodePayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a AgentNode.
+     * @param {AgentNodeDeleteArgs} args - Arguments to delete one AgentNode.
+     * @example
+     * // Delete one AgentNode
+     * const AgentNode = await prisma.agentNode.delete({
+     *   where: {
+     *     // ... filter to delete one AgentNode
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AgentNodeDeleteArgs>(args: SelectSubset<T, AgentNodeDeleteArgs<ExtArgs>>): Prisma__AgentNodeClient<$Result.GetResult<Prisma.$AgentNodePayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one AgentNode.
+     * @param {AgentNodeUpdateArgs} args - Arguments to update one AgentNode.
+     * @example
+     * // Update one AgentNode
+     * const agentNode = await prisma.agentNode.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AgentNodeUpdateArgs>(args: SelectSubset<T, AgentNodeUpdateArgs<ExtArgs>>): Prisma__AgentNodeClient<$Result.GetResult<Prisma.$AgentNodePayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more AgentNodes.
+     * @param {AgentNodeDeleteManyArgs} args - Arguments to filter AgentNodes to delete.
+     * @example
+     * // Delete a few AgentNodes
+     * const { count } = await prisma.agentNode.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AgentNodeDeleteManyArgs>(args?: SelectSubset<T, AgentNodeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentNodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNodeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AgentNodes
+     * const agentNode = await prisma.agentNode.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AgentNodeUpdateManyArgs>(args: SelectSubset<T, AgentNodeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one AgentNode.
+     * @param {AgentNodeUpsertArgs} args - Arguments to update or create a AgentNode.
+     * @example
+     * // Update or create a AgentNode
+     * const agentNode = await prisma.agentNode.upsert({
+     *   create: {
+     *     // ... data to create a AgentNode
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AgentNode we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AgentNodeUpsertArgs>(args: SelectSubset<T, AgentNodeUpsertArgs<ExtArgs>>): Prisma__AgentNodeClient<$Result.GetResult<Prisma.$AgentNodePayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of AgentNodes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNodeCountArgs} args - Arguments to filter AgentNodes to count.
+     * @example
+     * // Count the number of AgentNodes
+     * const count = await prisma.agentNode.count({
+     *   where: {
+     *     // ... the filter for the AgentNodes we want to count
+     *   }
+     * })
+    **/
+    count<T extends AgentNodeCountArgs>(
+      args?: Subset<T, AgentNodeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AgentNodeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AgentNode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNodeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AgentNodeAggregateArgs>(args: Subset<T, AgentNodeAggregateArgs>): Prisma.PrismaPromise<GetAgentNodeAggregateType<T>>
+
+    /**
+     * Group by AgentNode.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentNodeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AgentNodeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AgentNodeGroupByArgs['orderBy'] }
+        : { orderBy?: AgentNodeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AgentNodeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAgentNodeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AgentNode model
+   */
+  readonly fields: AgentNodeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AgentNode.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AgentNodeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AgentNode model
+   */ 
+  interface AgentNodeFieldRefs {
+    readonly id: FieldRef<"AgentNode", 'String'>
+    readonly name: FieldRef<"AgentNode", 'String'>
+    readonly userId: FieldRef<"AgentNode", 'String'>
+    readonly status: FieldRef<"AgentNode", 'String'>
+    readonly enrollTokenHash: FieldRef<"AgentNode", 'String'>
+    readonly enrollExpiresAt: FieldRef<"AgentNode", 'DateTime'>
+    readonly secret: FieldRef<"AgentNode", 'String'>
+    readonly platform: FieldRef<"AgentNode", 'String'>
+    readonly arch: FieldRef<"AgentNode", 'String'>
+    readonly agentVersion: FieldRef<"AgentNode", 'String'>
+    readonly dockerVersion: FieldRef<"AgentNode", 'String'>
+    readonly lanIp: FieldRef<"AgentNode", 'String'>
+    readonly totalRamMB: FieldRef<"AgentNode", 'Int'>
+    readonly freeDiskGB: FieldRef<"AgentNode", 'Float'>
+    readonly lastSeenAt: FieldRef<"AgentNode", 'DateTime'>
+    readonly createdAt: FieldRef<"AgentNode", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AgentNode findUnique
+   */
+  export type AgentNodeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelect<ExtArgs> | null
+    /**
+     * Filter, which AgentNode to fetch.
+     */
+    where: AgentNodeWhereUniqueInput
+  }
+
+  /**
+   * AgentNode findUniqueOrThrow
+   */
+  export type AgentNodeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelect<ExtArgs> | null
+    /**
+     * Filter, which AgentNode to fetch.
+     */
+    where: AgentNodeWhereUniqueInput
+  }
+
+  /**
+   * AgentNode findFirst
+   */
+  export type AgentNodeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelect<ExtArgs> | null
+    /**
+     * Filter, which AgentNode to fetch.
+     */
+    where?: AgentNodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentNodes to fetch.
+     */
+    orderBy?: AgentNodeOrderByWithRelationInput | AgentNodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentNodes.
+     */
+    cursor?: AgentNodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentNodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentNodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentNodes.
+     */
+    distinct?: AgentNodeScalarFieldEnum | AgentNodeScalarFieldEnum[]
+  }
+
+  /**
+   * AgentNode findFirstOrThrow
+   */
+  export type AgentNodeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelect<ExtArgs> | null
+    /**
+     * Filter, which AgentNode to fetch.
+     */
+    where?: AgentNodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentNodes to fetch.
+     */
+    orderBy?: AgentNodeOrderByWithRelationInput | AgentNodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentNodes.
+     */
+    cursor?: AgentNodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentNodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentNodes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentNodes.
+     */
+    distinct?: AgentNodeScalarFieldEnum | AgentNodeScalarFieldEnum[]
+  }
+
+  /**
+   * AgentNode findMany
+   */
+  export type AgentNodeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelect<ExtArgs> | null
+    /**
+     * Filter, which AgentNodes to fetch.
+     */
+    where?: AgentNodeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentNodes to fetch.
+     */
+    orderBy?: AgentNodeOrderByWithRelationInput | AgentNodeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AgentNodes.
+     */
+    cursor?: AgentNodeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentNodes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentNodes.
+     */
+    skip?: number
+    distinct?: AgentNodeScalarFieldEnum | AgentNodeScalarFieldEnum[]
+  }
+
+  /**
+   * AgentNode create
+   */
+  export type AgentNodeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelect<ExtArgs> | null
+    /**
+     * The data needed to create a AgentNode.
+     */
+    data: XOR<AgentNodeCreateInput, AgentNodeUncheckedCreateInput>
+  }
+
+  /**
+   * AgentNode createMany
+   */
+  export type AgentNodeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AgentNodes.
+     */
+    data: AgentNodeCreateManyInput | AgentNodeCreateManyInput[]
+  }
+
+  /**
+   * AgentNode createManyAndReturn
+   */
+  export type AgentNodeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many AgentNodes.
+     */
+    data: AgentNodeCreateManyInput | AgentNodeCreateManyInput[]
+  }
+
+  /**
+   * AgentNode update
+   */
+  export type AgentNodeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelect<ExtArgs> | null
+    /**
+     * The data needed to update a AgentNode.
+     */
+    data: XOR<AgentNodeUpdateInput, AgentNodeUncheckedUpdateInput>
+    /**
+     * Choose, which AgentNode to update.
+     */
+    where: AgentNodeWhereUniqueInput
+  }
+
+  /**
+   * AgentNode updateMany
+   */
+  export type AgentNodeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AgentNodes.
+     */
+    data: XOR<AgentNodeUpdateManyMutationInput, AgentNodeUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentNodes to update
+     */
+    where?: AgentNodeWhereInput
+  }
+
+  /**
+   * AgentNode upsert
+   */
+  export type AgentNodeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelect<ExtArgs> | null
+    /**
+     * The filter to search for the AgentNode to update in case it exists.
+     */
+    where: AgentNodeWhereUniqueInput
+    /**
+     * In case the AgentNode found by the `where` argument doesn't exist, create a new AgentNode with this data.
+     */
+    create: XOR<AgentNodeCreateInput, AgentNodeUncheckedCreateInput>
+    /**
+     * In case the AgentNode was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AgentNodeUpdateInput, AgentNodeUncheckedUpdateInput>
+  }
+
+  /**
+   * AgentNode delete
+   */
+  export type AgentNodeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelect<ExtArgs> | null
+    /**
+     * Filter which AgentNode to delete.
+     */
+    where: AgentNodeWhereUniqueInput
+  }
+
+  /**
+   * AgentNode deleteMany
+   */
+  export type AgentNodeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentNodes to delete
+     */
+    where?: AgentNodeWhereInput
+  }
+
+  /**
+   * AgentNode without action
+   */
+  export type AgentNodeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentNode
+     */
+    select?: AgentNodeSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AgentCommand
+   */
+
+  export type AggregateAgentCommand = {
+    _count: AgentCommandCountAggregateOutputType | null
+    _min: AgentCommandMinAggregateOutputType | null
+    _max: AgentCommandMaxAggregateOutputType | null
+  }
+
+  export type AgentCommandMinAggregateOutputType = {
+    id: string | null
+    nodeId: string | null
+    serverId: string | null
+    type: string | null
+    payload: string | null
+    status: string | null
+    result: string | null
+    createdAt: Date | null
+    sentAt: Date | null
+    completedAt: Date | null
+  }
+
+  export type AgentCommandMaxAggregateOutputType = {
+    id: string | null
+    nodeId: string | null
+    serverId: string | null
+    type: string | null
+    payload: string | null
+    status: string | null
+    result: string | null
+    createdAt: Date | null
+    sentAt: Date | null
+    completedAt: Date | null
+  }
+
+  export type AgentCommandCountAggregateOutputType = {
+    id: number
+    nodeId: number
+    serverId: number
+    type: number
+    payload: number
+    status: number
+    result: number
+    createdAt: number
+    sentAt: number
+    completedAt: number
+    _all: number
+  }
+
+
+  export type AgentCommandMinAggregateInputType = {
+    id?: true
+    nodeId?: true
+    serverId?: true
+    type?: true
+    payload?: true
+    status?: true
+    result?: true
+    createdAt?: true
+    sentAt?: true
+    completedAt?: true
+  }
+
+  export type AgentCommandMaxAggregateInputType = {
+    id?: true
+    nodeId?: true
+    serverId?: true
+    type?: true
+    payload?: true
+    status?: true
+    result?: true
+    createdAt?: true
+    sentAt?: true
+    completedAt?: true
+  }
+
+  export type AgentCommandCountAggregateInputType = {
+    id?: true
+    nodeId?: true
+    serverId?: true
+    type?: true
+    payload?: true
+    status?: true
+    result?: true
+    createdAt?: true
+    sentAt?: true
+    completedAt?: true
+    _all?: true
+  }
+
+  export type AgentCommandAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentCommand to aggregate.
+     */
+    where?: AgentCommandWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentCommands to fetch.
+     */
+    orderBy?: AgentCommandOrderByWithRelationInput | AgentCommandOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AgentCommandWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentCommands from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentCommands.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AgentCommands
+    **/
+    _count?: true | AgentCommandCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AgentCommandMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AgentCommandMaxAggregateInputType
+  }
+
+  export type GetAgentCommandAggregateType<T extends AgentCommandAggregateArgs> = {
+        [P in keyof T & keyof AggregateAgentCommand]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAgentCommand[P]>
+      : GetScalarType<T[P], AggregateAgentCommand[P]>
+  }
+
+
+
+
+  export type AgentCommandGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AgentCommandWhereInput
+    orderBy?: AgentCommandOrderByWithAggregationInput | AgentCommandOrderByWithAggregationInput[]
+    by: AgentCommandScalarFieldEnum[] | AgentCommandScalarFieldEnum
+    having?: AgentCommandScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AgentCommandCountAggregateInputType | true
+    _min?: AgentCommandMinAggregateInputType
+    _max?: AgentCommandMaxAggregateInputType
+  }
+
+  export type AgentCommandGroupByOutputType = {
+    id: string
+    nodeId: string
+    serverId: string
+    type: string
+    payload: string
+    status: string
+    result: string | null
+    createdAt: Date
+    sentAt: Date | null
+    completedAt: Date | null
+    _count: AgentCommandCountAggregateOutputType | null
+    _min: AgentCommandMinAggregateOutputType | null
+    _max: AgentCommandMaxAggregateOutputType | null
+  }
+
+  type GetAgentCommandGroupByPayload<T extends AgentCommandGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AgentCommandGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AgentCommandGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AgentCommandGroupByOutputType[P]>
+            : GetScalarType<T[P], AgentCommandGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AgentCommandSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nodeId?: boolean
+    serverId?: boolean
+    type?: boolean
+    payload?: boolean
+    status?: boolean
+    result?: boolean
+    createdAt?: boolean
+    sentAt?: boolean
+    completedAt?: boolean
+  }, ExtArgs["result"]["agentCommand"]>
+
+  export type AgentCommandSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    nodeId?: boolean
+    serverId?: boolean
+    type?: boolean
+    payload?: boolean
+    status?: boolean
+    result?: boolean
+    createdAt?: boolean
+    sentAt?: boolean
+    completedAt?: boolean
+  }, ExtArgs["result"]["agentCommand"]>
+
+  export type AgentCommandSelectScalar = {
+    id?: boolean
+    nodeId?: boolean
+    serverId?: boolean
+    type?: boolean
+    payload?: boolean
+    status?: boolean
+    result?: boolean
+    createdAt?: boolean
+    sentAt?: boolean
+    completedAt?: boolean
+  }
+
+
+  export type $AgentCommandPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AgentCommand"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      nodeId: string
+      serverId: string
+      type: string
+      payload: string
+      status: string
+      result: string | null
+      createdAt: Date
+      sentAt: Date | null
+      completedAt: Date | null
+    }, ExtArgs["result"]["agentCommand"]>
+    composites: {}
+  }
+
+  type AgentCommandGetPayload<S extends boolean | null | undefined | AgentCommandDefaultArgs> = $Result.GetResult<Prisma.$AgentCommandPayload, S>
+
+  type AgentCommandCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<AgentCommandFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: AgentCommandCountAggregateInputType | true
+    }
+
+  export interface AgentCommandDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AgentCommand'], meta: { name: 'AgentCommand' } }
+    /**
+     * Find zero or one AgentCommand that matches the filter.
+     * @param {AgentCommandFindUniqueArgs} args - Arguments to find a AgentCommand
+     * @example
+     * // Get one AgentCommand
+     * const agentCommand = await prisma.agentCommand.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AgentCommandFindUniqueArgs>(args: SelectSubset<T, AgentCommandFindUniqueArgs<ExtArgs>>): Prisma__AgentCommandClient<$Result.GetResult<Prisma.$AgentCommandPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one AgentCommand that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {AgentCommandFindUniqueOrThrowArgs} args - Arguments to find a AgentCommand
+     * @example
+     * // Get one AgentCommand
+     * const agentCommand = await prisma.agentCommand.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AgentCommandFindUniqueOrThrowArgs>(args: SelectSubset<T, AgentCommandFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AgentCommandClient<$Result.GetResult<Prisma.$AgentCommandPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first AgentCommand that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentCommandFindFirstArgs} args - Arguments to find a AgentCommand
+     * @example
+     * // Get one AgentCommand
+     * const agentCommand = await prisma.agentCommand.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AgentCommandFindFirstArgs>(args?: SelectSubset<T, AgentCommandFindFirstArgs<ExtArgs>>): Prisma__AgentCommandClient<$Result.GetResult<Prisma.$AgentCommandPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first AgentCommand that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentCommandFindFirstOrThrowArgs} args - Arguments to find a AgentCommand
+     * @example
+     * // Get one AgentCommand
+     * const agentCommand = await prisma.agentCommand.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AgentCommandFindFirstOrThrowArgs>(args?: SelectSubset<T, AgentCommandFindFirstOrThrowArgs<ExtArgs>>): Prisma__AgentCommandClient<$Result.GetResult<Prisma.$AgentCommandPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more AgentCommands that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentCommandFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AgentCommands
+     * const agentCommands = await prisma.agentCommand.findMany()
+     * 
+     * // Get first 10 AgentCommands
+     * const agentCommands = await prisma.agentCommand.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const agentCommandWithIdOnly = await prisma.agentCommand.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AgentCommandFindManyArgs>(args?: SelectSubset<T, AgentCommandFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentCommandPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a AgentCommand.
+     * @param {AgentCommandCreateArgs} args - Arguments to create a AgentCommand.
+     * @example
+     * // Create one AgentCommand
+     * const AgentCommand = await prisma.agentCommand.create({
+     *   data: {
+     *     // ... data to create a AgentCommand
+     *   }
+     * })
+     * 
+     */
+    create<T extends AgentCommandCreateArgs>(args: SelectSubset<T, AgentCommandCreateArgs<ExtArgs>>): Prisma__AgentCommandClient<$Result.GetResult<Prisma.$AgentCommandPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many AgentCommands.
+     * @param {AgentCommandCreateManyArgs} args - Arguments to create many AgentCommands.
+     * @example
+     * // Create many AgentCommands
+     * const agentCommand = await prisma.agentCommand.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AgentCommandCreateManyArgs>(args?: SelectSubset<T, AgentCommandCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AgentCommands and returns the data saved in the database.
+     * @param {AgentCommandCreateManyAndReturnArgs} args - Arguments to create many AgentCommands.
+     * @example
+     * // Create many AgentCommands
+     * const agentCommand = await prisma.agentCommand.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AgentCommands and only return the `id`
+     * const agentCommandWithIdOnly = await prisma.agentCommand.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AgentCommandCreateManyAndReturnArgs>(args?: SelectSubset<T, AgentCommandCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AgentCommandPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a AgentCommand.
+     * @param {AgentCommandDeleteArgs} args - Arguments to delete one AgentCommand.
+     * @example
+     * // Delete one AgentCommand
+     * const AgentCommand = await prisma.agentCommand.delete({
+     *   where: {
+     *     // ... filter to delete one AgentCommand
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AgentCommandDeleteArgs>(args: SelectSubset<T, AgentCommandDeleteArgs<ExtArgs>>): Prisma__AgentCommandClient<$Result.GetResult<Prisma.$AgentCommandPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one AgentCommand.
+     * @param {AgentCommandUpdateArgs} args - Arguments to update one AgentCommand.
+     * @example
+     * // Update one AgentCommand
+     * const agentCommand = await prisma.agentCommand.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AgentCommandUpdateArgs>(args: SelectSubset<T, AgentCommandUpdateArgs<ExtArgs>>): Prisma__AgentCommandClient<$Result.GetResult<Prisma.$AgentCommandPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more AgentCommands.
+     * @param {AgentCommandDeleteManyArgs} args - Arguments to filter AgentCommands to delete.
+     * @example
+     * // Delete a few AgentCommands
+     * const { count } = await prisma.agentCommand.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AgentCommandDeleteManyArgs>(args?: SelectSubset<T, AgentCommandDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AgentCommands.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentCommandUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AgentCommands
+     * const agentCommand = await prisma.agentCommand.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AgentCommandUpdateManyArgs>(args: SelectSubset<T, AgentCommandUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one AgentCommand.
+     * @param {AgentCommandUpsertArgs} args - Arguments to update or create a AgentCommand.
+     * @example
+     * // Update or create a AgentCommand
+     * const agentCommand = await prisma.agentCommand.upsert({
+     *   create: {
+     *     // ... data to create a AgentCommand
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AgentCommand we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AgentCommandUpsertArgs>(args: SelectSubset<T, AgentCommandUpsertArgs<ExtArgs>>): Prisma__AgentCommandClient<$Result.GetResult<Prisma.$AgentCommandPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of AgentCommands.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentCommandCountArgs} args - Arguments to filter AgentCommands to count.
+     * @example
+     * // Count the number of AgentCommands
+     * const count = await prisma.agentCommand.count({
+     *   where: {
+     *     // ... the filter for the AgentCommands we want to count
+     *   }
+     * })
+    **/
+    count<T extends AgentCommandCountArgs>(
+      args?: Subset<T, AgentCommandCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AgentCommandCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AgentCommand.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentCommandAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AgentCommandAggregateArgs>(args: Subset<T, AgentCommandAggregateArgs>): Prisma.PrismaPromise<GetAgentCommandAggregateType<T>>
+
+    /**
+     * Group by AgentCommand.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AgentCommandGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AgentCommandGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AgentCommandGroupByArgs['orderBy'] }
+        : { orderBy?: AgentCommandGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AgentCommandGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAgentCommandGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AgentCommand model
+   */
+  readonly fields: AgentCommandFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AgentCommand.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AgentCommandClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AgentCommand model
+   */ 
+  interface AgentCommandFieldRefs {
+    readonly id: FieldRef<"AgentCommand", 'String'>
+    readonly nodeId: FieldRef<"AgentCommand", 'String'>
+    readonly serverId: FieldRef<"AgentCommand", 'String'>
+    readonly type: FieldRef<"AgentCommand", 'String'>
+    readonly payload: FieldRef<"AgentCommand", 'String'>
+    readonly status: FieldRef<"AgentCommand", 'String'>
+    readonly result: FieldRef<"AgentCommand", 'String'>
+    readonly createdAt: FieldRef<"AgentCommand", 'DateTime'>
+    readonly sentAt: FieldRef<"AgentCommand", 'DateTime'>
+    readonly completedAt: FieldRef<"AgentCommand", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AgentCommand findUnique
+   */
+  export type AgentCommandFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelect<ExtArgs> | null
+    /**
+     * Filter, which AgentCommand to fetch.
+     */
+    where: AgentCommandWhereUniqueInput
+  }
+
+  /**
+   * AgentCommand findUniqueOrThrow
+   */
+  export type AgentCommandFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelect<ExtArgs> | null
+    /**
+     * Filter, which AgentCommand to fetch.
+     */
+    where: AgentCommandWhereUniqueInput
+  }
+
+  /**
+   * AgentCommand findFirst
+   */
+  export type AgentCommandFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelect<ExtArgs> | null
+    /**
+     * Filter, which AgentCommand to fetch.
+     */
+    where?: AgentCommandWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentCommands to fetch.
+     */
+    orderBy?: AgentCommandOrderByWithRelationInput | AgentCommandOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentCommands.
+     */
+    cursor?: AgentCommandWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentCommands from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentCommands.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentCommands.
+     */
+    distinct?: AgentCommandScalarFieldEnum | AgentCommandScalarFieldEnum[]
+  }
+
+  /**
+   * AgentCommand findFirstOrThrow
+   */
+  export type AgentCommandFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelect<ExtArgs> | null
+    /**
+     * Filter, which AgentCommand to fetch.
+     */
+    where?: AgentCommandWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentCommands to fetch.
+     */
+    orderBy?: AgentCommandOrderByWithRelationInput | AgentCommandOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AgentCommands.
+     */
+    cursor?: AgentCommandWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentCommands from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentCommands.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AgentCommands.
+     */
+    distinct?: AgentCommandScalarFieldEnum | AgentCommandScalarFieldEnum[]
+  }
+
+  /**
+   * AgentCommand findMany
+   */
+  export type AgentCommandFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelect<ExtArgs> | null
+    /**
+     * Filter, which AgentCommands to fetch.
+     */
+    where?: AgentCommandWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AgentCommands to fetch.
+     */
+    orderBy?: AgentCommandOrderByWithRelationInput | AgentCommandOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AgentCommands.
+     */
+    cursor?: AgentCommandWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AgentCommands from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AgentCommands.
+     */
+    skip?: number
+    distinct?: AgentCommandScalarFieldEnum | AgentCommandScalarFieldEnum[]
+  }
+
+  /**
+   * AgentCommand create
+   */
+  export type AgentCommandCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelect<ExtArgs> | null
+    /**
+     * The data needed to create a AgentCommand.
+     */
+    data: XOR<AgentCommandCreateInput, AgentCommandUncheckedCreateInput>
+  }
+
+  /**
+   * AgentCommand createMany
+   */
+  export type AgentCommandCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AgentCommands.
+     */
+    data: AgentCommandCreateManyInput | AgentCommandCreateManyInput[]
+  }
+
+  /**
+   * AgentCommand createManyAndReturn
+   */
+  export type AgentCommandCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many AgentCommands.
+     */
+    data: AgentCommandCreateManyInput | AgentCommandCreateManyInput[]
+  }
+
+  /**
+   * AgentCommand update
+   */
+  export type AgentCommandUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelect<ExtArgs> | null
+    /**
+     * The data needed to update a AgentCommand.
+     */
+    data: XOR<AgentCommandUpdateInput, AgentCommandUncheckedUpdateInput>
+    /**
+     * Choose, which AgentCommand to update.
+     */
+    where: AgentCommandWhereUniqueInput
+  }
+
+  /**
+   * AgentCommand updateMany
+   */
+  export type AgentCommandUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AgentCommands.
+     */
+    data: XOR<AgentCommandUpdateManyMutationInput, AgentCommandUncheckedUpdateManyInput>
+    /**
+     * Filter which AgentCommands to update
+     */
+    where?: AgentCommandWhereInput
+  }
+
+  /**
+   * AgentCommand upsert
+   */
+  export type AgentCommandUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelect<ExtArgs> | null
+    /**
+     * The filter to search for the AgentCommand to update in case it exists.
+     */
+    where: AgentCommandWhereUniqueInput
+    /**
+     * In case the AgentCommand found by the `where` argument doesn't exist, create a new AgentCommand with this data.
+     */
+    create: XOR<AgentCommandCreateInput, AgentCommandUncheckedCreateInput>
+    /**
+     * In case the AgentCommand was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AgentCommandUpdateInput, AgentCommandUncheckedUpdateInput>
+  }
+
+  /**
+   * AgentCommand delete
+   */
+  export type AgentCommandDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelect<ExtArgs> | null
+    /**
+     * Filter which AgentCommand to delete.
+     */
+    where: AgentCommandWhereUniqueInput
+  }
+
+  /**
+   * AgentCommand deleteMany
+   */
+  export type AgentCommandDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AgentCommands to delete
+     */
+    where?: AgentCommandWhereInput
+  }
+
+  /**
+   * AgentCommand without action
+   */
+  export type AgentCommandDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AgentCommand
+     */
+    select?: AgentCommandSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -31210,6 +33376,7 @@ export namespace Prisma {
     region: 'region',
     status: 'status',
     runnerType: 'runnerType',
+    nodeId: 'nodeId',
     localPath: 'localPath',
     pid: 'pid',
     password: 'password',
@@ -31588,6 +33755,44 @@ export namespace Prisma {
   export type PlayerAuditLogScalarFieldEnum = (typeof PlayerAuditLogScalarFieldEnum)[keyof typeof PlayerAuditLogScalarFieldEnum]
 
 
+  export const AgentNodeScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    userId: 'userId',
+    status: 'status',
+    enrollTokenHash: 'enrollTokenHash',
+    enrollExpiresAt: 'enrollExpiresAt',
+    secret: 'secret',
+    platform: 'platform',
+    arch: 'arch',
+    agentVersion: 'agentVersion',
+    dockerVersion: 'dockerVersion',
+    lanIp: 'lanIp',
+    totalRamMB: 'totalRamMB',
+    freeDiskGB: 'freeDiskGB',
+    lastSeenAt: 'lastSeenAt',
+    createdAt: 'createdAt'
+  };
+
+  export type AgentNodeScalarFieldEnum = (typeof AgentNodeScalarFieldEnum)[keyof typeof AgentNodeScalarFieldEnum]
+
+
+  export const AgentCommandScalarFieldEnum: {
+    id: 'id',
+    nodeId: 'nodeId',
+    serverId: 'serverId',
+    type: 'type',
+    payload: 'payload',
+    status: 'status',
+    result: 'result',
+    createdAt: 'createdAt',
+    sentAt: 'sentAt',
+    completedAt: 'completedAt'
+  };
+
+  export type AgentCommandScalarFieldEnum = (typeof AgentCommandScalarFieldEnum)[keyof typeof AgentCommandScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -31890,6 +34095,7 @@ export namespace Prisma {
     region?: StringFilter<"Server"> | string
     status?: StringFilter<"Server"> | string
     runnerType?: StringFilter<"Server"> | string
+    nodeId?: StringNullableFilter<"Server"> | string | null
     localPath?: StringNullableFilter<"Server"> | string | null
     pid?: IntNullableFilter<"Server"> | number | null
     password?: StringNullableFilter<"Server"> | string | null
@@ -31949,6 +34155,7 @@ export namespace Prisma {
     region?: SortOrder
     status?: SortOrder
     runnerType?: SortOrder
+    nodeId?: SortOrderInput | SortOrder
     localPath?: SortOrderInput | SortOrder
     pid?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
@@ -32013,6 +34220,7 @@ export namespace Prisma {
     region?: StringFilter<"Server"> | string
     status?: StringFilter<"Server"> | string
     runnerType?: StringFilter<"Server"> | string
+    nodeId?: StringNullableFilter<"Server"> | string | null
     localPath?: StringNullableFilter<"Server"> | string | null
     pid?: IntNullableFilter<"Server"> | number | null
     password?: StringNullableFilter<"Server"> | string | null
@@ -32070,6 +34278,7 @@ export namespace Prisma {
     region?: SortOrder
     status?: SortOrder
     runnerType?: SortOrder
+    nodeId?: SortOrderInput | SortOrder
     localPath?: SortOrderInput | SortOrder
     pid?: SortOrderInput | SortOrder
     password?: SortOrderInput | SortOrder
@@ -32124,6 +34333,7 @@ export namespace Prisma {
     region?: StringWithAggregatesFilter<"Server"> | string
     status?: StringWithAggregatesFilter<"Server"> | string
     runnerType?: StringWithAggregatesFilter<"Server"> | string
+    nodeId?: StringNullableWithAggregatesFilter<"Server"> | string | null
     localPath?: StringNullableWithAggregatesFilter<"Server"> | string | null
     pid?: IntNullableWithAggregatesFilter<"Server"> | number | null
     password?: StringNullableWithAggregatesFilter<"Server"> | string | null
@@ -33896,6 +36106,192 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"PlayerAuditLog"> | Date | string
   }
 
+  export type AgentNodeWhereInput = {
+    AND?: AgentNodeWhereInput | AgentNodeWhereInput[]
+    OR?: AgentNodeWhereInput[]
+    NOT?: AgentNodeWhereInput | AgentNodeWhereInput[]
+    id?: StringFilter<"AgentNode"> | string
+    name?: StringFilter<"AgentNode"> | string
+    userId?: StringFilter<"AgentNode"> | string
+    status?: StringFilter<"AgentNode"> | string
+    enrollTokenHash?: StringNullableFilter<"AgentNode"> | string | null
+    enrollExpiresAt?: DateTimeNullableFilter<"AgentNode"> | Date | string | null
+    secret?: StringNullableFilter<"AgentNode"> | string | null
+    platform?: StringNullableFilter<"AgentNode"> | string | null
+    arch?: StringNullableFilter<"AgentNode"> | string | null
+    agentVersion?: StringNullableFilter<"AgentNode"> | string | null
+    dockerVersion?: StringNullableFilter<"AgentNode"> | string | null
+    lanIp?: StringNullableFilter<"AgentNode"> | string | null
+    totalRamMB?: IntNullableFilter<"AgentNode"> | number | null
+    freeDiskGB?: FloatNullableFilter<"AgentNode"> | number | null
+    lastSeenAt?: DateTimeNullableFilter<"AgentNode"> | Date | string | null
+    createdAt?: DateTimeFilter<"AgentNode"> | Date | string
+  }
+
+  export type AgentNodeOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    enrollTokenHash?: SortOrderInput | SortOrder
+    enrollExpiresAt?: SortOrderInput | SortOrder
+    secret?: SortOrderInput | SortOrder
+    platform?: SortOrderInput | SortOrder
+    arch?: SortOrderInput | SortOrder
+    agentVersion?: SortOrderInput | SortOrder
+    dockerVersion?: SortOrderInput | SortOrder
+    lanIp?: SortOrderInput | SortOrder
+    totalRamMB?: SortOrderInput | SortOrder
+    freeDiskGB?: SortOrderInput | SortOrder
+    lastSeenAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AgentNodeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    enrollTokenHash?: string
+    AND?: AgentNodeWhereInput | AgentNodeWhereInput[]
+    OR?: AgentNodeWhereInput[]
+    NOT?: AgentNodeWhereInput | AgentNodeWhereInput[]
+    name?: StringFilter<"AgentNode"> | string
+    userId?: StringFilter<"AgentNode"> | string
+    status?: StringFilter<"AgentNode"> | string
+    enrollExpiresAt?: DateTimeNullableFilter<"AgentNode"> | Date | string | null
+    secret?: StringNullableFilter<"AgentNode"> | string | null
+    platform?: StringNullableFilter<"AgentNode"> | string | null
+    arch?: StringNullableFilter<"AgentNode"> | string | null
+    agentVersion?: StringNullableFilter<"AgentNode"> | string | null
+    dockerVersion?: StringNullableFilter<"AgentNode"> | string | null
+    lanIp?: StringNullableFilter<"AgentNode"> | string | null
+    totalRamMB?: IntNullableFilter<"AgentNode"> | number | null
+    freeDiskGB?: FloatNullableFilter<"AgentNode"> | number | null
+    lastSeenAt?: DateTimeNullableFilter<"AgentNode"> | Date | string | null
+    createdAt?: DateTimeFilter<"AgentNode"> | Date | string
+  }, "id" | "enrollTokenHash">
+
+  export type AgentNodeOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    enrollTokenHash?: SortOrderInput | SortOrder
+    enrollExpiresAt?: SortOrderInput | SortOrder
+    secret?: SortOrderInput | SortOrder
+    platform?: SortOrderInput | SortOrder
+    arch?: SortOrderInput | SortOrder
+    agentVersion?: SortOrderInput | SortOrder
+    dockerVersion?: SortOrderInput | SortOrder
+    lanIp?: SortOrderInput | SortOrder
+    totalRamMB?: SortOrderInput | SortOrder
+    freeDiskGB?: SortOrderInput | SortOrder
+    lastSeenAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: AgentNodeCountOrderByAggregateInput
+    _avg?: AgentNodeAvgOrderByAggregateInput
+    _max?: AgentNodeMaxOrderByAggregateInput
+    _min?: AgentNodeMinOrderByAggregateInput
+    _sum?: AgentNodeSumOrderByAggregateInput
+  }
+
+  export type AgentNodeScalarWhereWithAggregatesInput = {
+    AND?: AgentNodeScalarWhereWithAggregatesInput | AgentNodeScalarWhereWithAggregatesInput[]
+    OR?: AgentNodeScalarWhereWithAggregatesInput[]
+    NOT?: AgentNodeScalarWhereWithAggregatesInput | AgentNodeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AgentNode"> | string
+    name?: StringWithAggregatesFilter<"AgentNode"> | string
+    userId?: StringWithAggregatesFilter<"AgentNode"> | string
+    status?: StringWithAggregatesFilter<"AgentNode"> | string
+    enrollTokenHash?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
+    enrollExpiresAt?: DateTimeNullableWithAggregatesFilter<"AgentNode"> | Date | string | null
+    secret?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
+    platform?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
+    arch?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
+    agentVersion?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
+    dockerVersion?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
+    lanIp?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
+    totalRamMB?: IntNullableWithAggregatesFilter<"AgentNode"> | number | null
+    freeDiskGB?: FloatNullableWithAggregatesFilter<"AgentNode"> | number | null
+    lastSeenAt?: DateTimeNullableWithAggregatesFilter<"AgentNode"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"AgentNode"> | Date | string
+  }
+
+  export type AgentCommandWhereInput = {
+    AND?: AgentCommandWhereInput | AgentCommandWhereInput[]
+    OR?: AgentCommandWhereInput[]
+    NOT?: AgentCommandWhereInput | AgentCommandWhereInput[]
+    id?: StringFilter<"AgentCommand"> | string
+    nodeId?: StringFilter<"AgentCommand"> | string
+    serverId?: StringFilter<"AgentCommand"> | string
+    type?: StringFilter<"AgentCommand"> | string
+    payload?: StringFilter<"AgentCommand"> | string
+    status?: StringFilter<"AgentCommand"> | string
+    result?: StringNullableFilter<"AgentCommand"> | string | null
+    createdAt?: DateTimeFilter<"AgentCommand"> | Date | string
+    sentAt?: DateTimeNullableFilter<"AgentCommand"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"AgentCommand"> | Date | string | null
+  }
+
+  export type AgentCommandOrderByWithRelationInput = {
+    id?: SortOrder
+    nodeId?: SortOrder
+    serverId?: SortOrder
+    type?: SortOrder
+    payload?: SortOrder
+    status?: SortOrder
+    result?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    sentAt?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+  }
+
+  export type AgentCommandWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AgentCommandWhereInput | AgentCommandWhereInput[]
+    OR?: AgentCommandWhereInput[]
+    NOT?: AgentCommandWhereInput | AgentCommandWhereInput[]
+    nodeId?: StringFilter<"AgentCommand"> | string
+    serverId?: StringFilter<"AgentCommand"> | string
+    type?: StringFilter<"AgentCommand"> | string
+    payload?: StringFilter<"AgentCommand"> | string
+    status?: StringFilter<"AgentCommand"> | string
+    result?: StringNullableFilter<"AgentCommand"> | string | null
+    createdAt?: DateTimeFilter<"AgentCommand"> | Date | string
+    sentAt?: DateTimeNullableFilter<"AgentCommand"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"AgentCommand"> | Date | string | null
+  }, "id">
+
+  export type AgentCommandOrderByWithAggregationInput = {
+    id?: SortOrder
+    nodeId?: SortOrder
+    serverId?: SortOrder
+    type?: SortOrder
+    payload?: SortOrder
+    status?: SortOrder
+    result?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    sentAt?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    _count?: AgentCommandCountOrderByAggregateInput
+    _max?: AgentCommandMaxOrderByAggregateInput
+    _min?: AgentCommandMinOrderByAggregateInput
+  }
+
+  export type AgentCommandScalarWhereWithAggregatesInput = {
+    AND?: AgentCommandScalarWhereWithAggregatesInput | AgentCommandScalarWhereWithAggregatesInput[]
+    OR?: AgentCommandScalarWhereWithAggregatesInput[]
+    NOT?: AgentCommandScalarWhereWithAggregatesInput | AgentCommandScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AgentCommand"> | string
+    nodeId?: StringWithAggregatesFilter<"AgentCommand"> | string
+    serverId?: StringWithAggregatesFilter<"AgentCommand"> | string
+    type?: StringWithAggregatesFilter<"AgentCommand"> | string
+    payload?: StringWithAggregatesFilter<"AgentCommand"> | string
+    status?: StringWithAggregatesFilter<"AgentCommand"> | string
+    result?: StringNullableWithAggregatesFilter<"AgentCommand"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"AgentCommand"> | Date | string
+    sentAt?: DateTimeNullableWithAggregatesFilter<"AgentCommand"> | Date | string | null
+    completedAt?: DateTimeNullableWithAggregatesFilter<"AgentCommand"> | Date | string | null
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -34167,6 +36563,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -34225,6 +36622,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -34281,6 +36679,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34339,6 +36738,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34396,6 +36796,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -34441,6 +36842,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -34486,6 +36888,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -36406,6 +38809,230 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AgentNodeCreateInput = {
+    id?: string
+    name: string
+    userId: string
+    status?: string
+    enrollTokenHash?: string | null
+    enrollExpiresAt?: Date | string | null
+    secret?: string | null
+    platform?: string | null
+    arch?: string | null
+    agentVersion?: string | null
+    dockerVersion?: string | null
+    lanIp?: string | null
+    totalRamMB?: number | null
+    freeDiskGB?: number | null
+    lastSeenAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type AgentNodeUncheckedCreateInput = {
+    id?: string
+    name: string
+    userId: string
+    status?: string
+    enrollTokenHash?: string | null
+    enrollExpiresAt?: Date | string | null
+    secret?: string | null
+    platform?: string | null
+    arch?: string | null
+    agentVersion?: string | null
+    dockerVersion?: string | null
+    lanIp?: string | null
+    totalRamMB?: number | null
+    freeDiskGB?: number | null
+    lastSeenAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type AgentNodeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    enrollTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    enrollExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    secret?: NullableStringFieldUpdateOperationsInput | string | null
+    platform?: NullableStringFieldUpdateOperationsInput | string | null
+    arch?: NullableStringFieldUpdateOperationsInput | string | null
+    agentVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    dockerVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    lanIp?: NullableStringFieldUpdateOperationsInput | string | null
+    totalRamMB?: NullableIntFieldUpdateOperationsInput | number | null
+    freeDiskGB?: NullableFloatFieldUpdateOperationsInput | number | null
+    lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentNodeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    enrollTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    enrollExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    secret?: NullableStringFieldUpdateOperationsInput | string | null
+    platform?: NullableStringFieldUpdateOperationsInput | string | null
+    arch?: NullableStringFieldUpdateOperationsInput | string | null
+    agentVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    dockerVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    lanIp?: NullableStringFieldUpdateOperationsInput | string | null
+    totalRamMB?: NullableIntFieldUpdateOperationsInput | number | null
+    freeDiskGB?: NullableFloatFieldUpdateOperationsInput | number | null
+    lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentNodeCreateManyInput = {
+    id?: string
+    name: string
+    userId: string
+    status?: string
+    enrollTokenHash?: string | null
+    enrollExpiresAt?: Date | string | null
+    secret?: string | null
+    platform?: string | null
+    arch?: string | null
+    agentVersion?: string | null
+    dockerVersion?: string | null
+    lanIp?: string | null
+    totalRamMB?: number | null
+    freeDiskGB?: number | null
+    lastSeenAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type AgentNodeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    enrollTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    enrollExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    secret?: NullableStringFieldUpdateOperationsInput | string | null
+    platform?: NullableStringFieldUpdateOperationsInput | string | null
+    arch?: NullableStringFieldUpdateOperationsInput | string | null
+    agentVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    dockerVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    lanIp?: NullableStringFieldUpdateOperationsInput | string | null
+    totalRamMB?: NullableIntFieldUpdateOperationsInput | number | null
+    freeDiskGB?: NullableFloatFieldUpdateOperationsInput | number | null
+    lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentNodeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    enrollTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
+    enrollExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    secret?: NullableStringFieldUpdateOperationsInput | string | null
+    platform?: NullableStringFieldUpdateOperationsInput | string | null
+    arch?: NullableStringFieldUpdateOperationsInput | string | null
+    agentVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    dockerVersion?: NullableStringFieldUpdateOperationsInput | string | null
+    lanIp?: NullableStringFieldUpdateOperationsInput | string | null
+    totalRamMB?: NullableIntFieldUpdateOperationsInput | number | null
+    freeDiskGB?: NullableFloatFieldUpdateOperationsInput | number | null
+    lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AgentCommandCreateInput = {
+    id?: string
+    nodeId: string
+    serverId: string
+    type: string
+    payload: string
+    status?: string
+    result?: string | null
+    createdAt?: Date | string
+    sentAt?: Date | string | null
+    completedAt?: Date | string | null
+  }
+
+  export type AgentCommandUncheckedCreateInput = {
+    id?: string
+    nodeId: string
+    serverId: string
+    type: string
+    payload: string
+    status?: string
+    result?: string | null
+    createdAt?: Date | string
+    sentAt?: Date | string | null
+    completedAt?: Date | string | null
+  }
+
+  export type AgentCommandUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nodeId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    payload?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    result?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AgentCommandUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nodeId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    payload?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    result?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AgentCommandCreateManyInput = {
+    id?: string
+    nodeId: string
+    serverId: string
+    type: string
+    payload: string
+    status?: string
+    result?: string | null
+    createdAt?: Date | string
+    sentAt?: Date | string | null
+    completedAt?: Date | string | null
+  }
+
+  export type AgentCommandUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nodeId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    payload?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    result?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type AgentCommandUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    nodeId?: StringFieldUpdateOperationsInput | string
+    serverId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    payload?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    result?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -36874,6 +39501,7 @@ export namespace Prisma {
     region?: SortOrder
     status?: SortOrder
     runnerType?: SortOrder
+    nodeId?: SortOrder
     localPath?: SortOrder
     pid?: SortOrder
     password?: SortOrder
@@ -36937,6 +39565,7 @@ export namespace Prisma {
     region?: SortOrder
     status?: SortOrder
     runnerType?: SortOrder
+    nodeId?: SortOrder
     localPath?: SortOrder
     pid?: SortOrder
     password?: SortOrder
@@ -36983,6 +39612,7 @@ export namespace Prisma {
     region?: SortOrder
     status?: SortOrder
     runnerType?: SortOrder
+    nodeId?: SortOrder
     localPath?: SortOrder
     pid?: SortOrder
     password?: SortOrder
@@ -38087,6 +40717,112 @@ export namespace Prisma {
     details?: SortOrder
     performedBy?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type AgentNodeCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    enrollTokenHash?: SortOrder
+    enrollExpiresAt?: SortOrder
+    secret?: SortOrder
+    platform?: SortOrder
+    arch?: SortOrder
+    agentVersion?: SortOrder
+    dockerVersion?: SortOrder
+    lanIp?: SortOrder
+    totalRamMB?: SortOrder
+    freeDiskGB?: SortOrder
+    lastSeenAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AgentNodeAvgOrderByAggregateInput = {
+    totalRamMB?: SortOrder
+    freeDiskGB?: SortOrder
+  }
+
+  export type AgentNodeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    enrollTokenHash?: SortOrder
+    enrollExpiresAt?: SortOrder
+    secret?: SortOrder
+    platform?: SortOrder
+    arch?: SortOrder
+    agentVersion?: SortOrder
+    dockerVersion?: SortOrder
+    lanIp?: SortOrder
+    totalRamMB?: SortOrder
+    freeDiskGB?: SortOrder
+    lastSeenAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AgentNodeMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    userId?: SortOrder
+    status?: SortOrder
+    enrollTokenHash?: SortOrder
+    enrollExpiresAt?: SortOrder
+    secret?: SortOrder
+    platform?: SortOrder
+    arch?: SortOrder
+    agentVersion?: SortOrder
+    dockerVersion?: SortOrder
+    lanIp?: SortOrder
+    totalRamMB?: SortOrder
+    freeDiskGB?: SortOrder
+    lastSeenAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AgentNodeSumOrderByAggregateInput = {
+    totalRamMB?: SortOrder
+    freeDiskGB?: SortOrder
+  }
+
+  export type AgentCommandCountOrderByAggregateInput = {
+    id?: SortOrder
+    nodeId?: SortOrder
+    serverId?: SortOrder
+    type?: SortOrder
+    payload?: SortOrder
+    status?: SortOrder
+    result?: SortOrder
+    createdAt?: SortOrder
+    sentAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type AgentCommandMaxOrderByAggregateInput = {
+    id?: SortOrder
+    nodeId?: SortOrder
+    serverId?: SortOrder
+    type?: SortOrder
+    payload?: SortOrder
+    status?: SortOrder
+    result?: SortOrder
+    createdAt?: SortOrder
+    sentAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type AgentCommandMinOrderByAggregateInput = {
+    id?: SortOrder
+    nodeId?: SortOrder
+    serverId?: SortOrder
+    type?: SortOrder
+    payload?: SortOrder
+    status?: SortOrder
+    result?: SortOrder
+    createdAt?: SortOrder
+    sentAt?: SortOrder
+    completedAt?: SortOrder
   }
 
   export type GameDefinitionCreateNestedManyWithoutOwnerInput = {
@@ -39924,6 +42660,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -39980,6 +42717,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -40325,6 +43063,7 @@ export namespace Prisma {
     region?: StringFilter<"Server"> | string
     status?: StringFilter<"Server"> | string
     runnerType?: StringFilter<"Server"> | string
+    nodeId?: StringNullableFilter<"Server"> | string | null
     localPath?: StringNullableFilter<"Server"> | string | null
     pid?: IntNullableFilter<"Server"> | number | null
     password?: StringNullableFilter<"Server"> | string | null
@@ -41572,6 +44311,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -41629,6 +44369,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -41700,6 +44441,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41757,6 +44499,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41812,6 +44555,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -41869,6 +44613,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -41940,6 +44685,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -41997,6 +44743,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42052,6 +44799,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -42109,6 +44857,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -42180,6 +44929,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42237,6 +44987,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42508,6 +45259,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -42565,6 +45317,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -42636,6 +45389,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42693,6 +45447,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -42856,6 +45611,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -42913,6 +45669,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -43035,6 +45792,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -43092,6 +45850,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -43255,6 +46014,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -43312,6 +46072,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -43449,6 +46210,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -43506,6 +46268,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -43577,6 +46340,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -43634,6 +46398,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -43689,6 +46454,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -43746,6 +46512,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -43817,6 +46584,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -43874,6 +46642,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -43929,6 +46698,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -43986,6 +46756,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -44057,6 +46828,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -44114,6 +46886,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -44169,6 +46942,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -44226,6 +47000,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -44297,6 +47072,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -44354,6 +47130,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -44409,6 +47186,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -44466,6 +47244,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -44608,6 +47387,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -44665,6 +47445,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -45551,6 +48332,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -45608,6 +48390,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -45722,6 +48505,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -45779,6 +48563,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -45850,6 +48635,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -46000,6 +48786,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -46056,6 +48843,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -46112,6 +48900,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -46699,6 +49488,7 @@ export namespace Prisma {
     region: string
     status: string
     runnerType?: string
+    nodeId?: string | null
     localPath?: string | null
     pid?: number | null
     password?: string | null
@@ -46743,6 +49533,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -46800,6 +49591,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -46856,6 +49648,7 @@ export namespace Prisma {
     region?: StringFieldUpdateOperationsInput | string
     status?: StringFieldUpdateOperationsInput | string
     runnerType?: StringFieldUpdateOperationsInput | string
+    nodeId?: NullableStringFieldUpdateOperationsInput | string | null
     localPath?: NullableStringFieldUpdateOperationsInput | string | null
     pid?: NullableIntFieldUpdateOperationsInput | number | null
     password?: NullableStringFieldUpdateOperationsInput | string | null
@@ -47177,6 +49970,14 @@ export namespace Prisma {
      * @deprecated Use PlayerAuditLogDefaultArgs instead
      */
     export type PlayerAuditLogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PlayerAuditLogDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use AgentNodeDefaultArgs instead
+     */
+    export type AgentNodeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AgentNodeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use AgentCommandDefaultArgs instead
+     */
+    export type AgentCommandArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AgentCommandDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

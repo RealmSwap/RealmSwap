@@ -82,3 +82,40 @@ Desktop/native runs need none of these — defaults preserve existing behavior.
 4. Deploy a Valheim or Zomboid server with the Docker runtime → goes Online.
 5. Players panel shows real counts (game-host reachability working).
 6. Take a backup → a zip appears under `./data/local-backups/<serverId>/`.
+
+## Remote nodes (the agent)
+
+Host game servers on OTHER machines while managing them from this dashboard:
+each node runs the RealmSwap agent, a dependency-free Node process that dials
+home over one HMAC-secured channel (nothing listens on the node, no database
+on the node). The dashboard ships fully-resolved launch plans; the agent just
+writes config files and runs Docker containers.
+
+Setup:
+
+1. Dashboard → **Nodes** → add a node (ADMIN). You get a single-use,
+   24-hour enrollment token.
+2. On the target machine (needs Node 22 + Docker):
+
+   ```sh
+   npm run agent -- register --server http://<dashboard-host>:3000 --token <token>
+   npm run agent -- run
+   ```
+
+   State lives in `~/.realmswap-agent/agent.json` (chmod 600); set
+   `REALMSWAP_AGENT_HOME` to relocate it.
+3. The node appears online in **Nodes**, and the server create form gains a
+   **Remote Node** runtime with a node picker.
+
+What works for remote-node servers today: start/stop/restart, console
+(logs + commands, streamed through the same pipeline as local servers),
+telemetry, status page, player counts, RCON (save-flush before backups of
+LOCAL machines is unaffected), join info via the node's LAN IP, crash
+auto-restart (dashboard-owned, same policy as the Docker runner).
+
+What honestly refuses for remote-node servers (it operates on the
+dashboard's disk): backups, mod installs/config, the config editor, world
+import/export, vault archives, SFTP panel, RealmSync invites, playit
+tunnels, and cloud transfer. Each returns a clear message instead of
+silently doing the wrong thing. Moving those behind the agent is the next
+phase of this thread.

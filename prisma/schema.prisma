@@ -68,7 +68,8 @@ model Server {
   ramAllocation    Float // GB allocated
   region           String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
   status           String // "RUNNING", "STOPPED", "STARTING"
-  runnerType       String              @default("CLOUD") // "LOCAL" | "DOCKER"; default is a legacy value — resolveRunnerType always sets this explicitly at create, and the factory falls through to LOCAL for anything not "DOCKER"
+  runnerType       String              @default("CLOUD") // "LOCAL" | "DOCKER" | "AGENT"; default is a legacy value — resolveRunnerType always sets this explicitly at create, and the factory falls through to LOCAL for anything not "DOCKER" or "AGENT"
+  nodeId           String? // Set when runnerType is "AGENT": the AgentNode hosting this server
   localPath        String? // File path for local server storage
   pid              Int? // Process ID for local runner execution
   password         String? // Unhashed password for Valheim/game server configs
@@ -454,4 +455,41 @@ model PlayerAuditLog {
   details            String
   performedBy        String             // User ID of the admin who performed it
   createdAt          DateTime           @default(now())
+}
+
+model AgentNode {
+  id               String    @id @default(cuid())
+  name             String
+  userId           String    // Admin who created the enrollment
+  status           String    @default("PENDING") // "PENDING" (awaiting agent enrollment) | "ACTIVE" | "REVOKED"
+  enrollTokenHash  String?   @unique // sha256 of the one-time enrollment token (never stored in plaintext)
+  enrollExpiresAt  DateTime?
+  secret           String? // The node's HMAC secret — encrypted at rest via AGENT_NODE_SECRET_FIELDS; the agent holds the only other copy
+  platform         String? // os.platform() of the agent host
+  arch             String?
+  agentVersion     String?
+  dockerVersion    String?
+  lanIp            String? // Agent-reported LAN address — what friends connect to
+  totalRamMB       Int?
+  freeDiskGB       Float?
+  lastSeenAt       DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model AgentCommand {
+  id          String    @id @default(cuid())
+  nodeId      String
+  serverId    String
+  type        String // "START" | "STOP" | "UPDATE" | "SEND_COMMAND"
+  payload     String // JSON — fully-resolved launch plan (dashboard owns all game knowledge)
+  status      String    @default("PENDING") // "PENDING" | "SENT" | "DONE" | "FAILED"
+  result      String? // JSON — { ok, error?, exitCode? }
+  createdAt   DateTime  @default(now())
+  sentAt      DateTime?
+  completedAt DateTime?
+
+  @@index([nodeId, status])
+  @@index([serverId])
 }

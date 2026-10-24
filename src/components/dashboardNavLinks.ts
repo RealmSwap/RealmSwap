@@ -7,6 +7,7 @@ import {
   Users,
   History,
   HardDrive,
+  Network,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,6 +28,7 @@ export const DASHBOARD_NAV_LINKS: DashboardNavLink[] = [
   { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
   { label: "Automation", icon: Clock, href: "/dashboard/schedules" },
   { label: "Game Players", icon: Users, href: "/dashboard/players" },
+  { label: "Nodes", icon: Network, href: "/dashboard/nodes" },
   { label: "App Access", icon: Users, href: "/dashboard/team" },
   { label: "Audit Logs", icon: History, href: "/dashboard/logs" },
   { label: "File Locations", icon: HardDrive, href: "/dashboard/storage" },

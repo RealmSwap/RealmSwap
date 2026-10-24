@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { parseSpec } from "@/lib/definitions/serialize";
 import { queryGameServer } from "@/lib/serverQuery";
+import { resolveGameHost } from "@/lib/gameHost";
 import {
   bucketPlayerHistory,
   bucketWeeklyHeatmap,
@@ -59,7 +60,7 @@ export async function GET(
           current = cached.current;
           maxPlayers = cached.maxPlayers;
         } else {
-          const result = await queryGameServer(server, spec);
+          const result = await queryGameServer(server, spec, { host: await resolveGameHost(server) });
           if (result.status === "online") {
             current = result.players;
             maxPlayers = result.maxplayers;

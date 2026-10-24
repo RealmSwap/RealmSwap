@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // GET: per-server secrets for the SFTP panel (ADMIN only). Kept out of the
 // shared servers-list payload so team members never receive them.
@@ -13,6 +14,8 @@ export async function GET(
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const access = await verifyServerAccess(params.id, user.id, "ADMIN");
+    if (!access) return NextResponse.json({ error: "Server not found or insufficient permissions" }, { status: 403 });
+    requireLocalServer(access.server, "The SFTP panel");
     if (!access) {
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }

@@ -38,8 +38,10 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
   const router = useRouter();
 
   const [name, setName] = useState("");
-  const [runtime, setRuntime] = useState<"LOCAL" | "DOCKER">("LOCAL");
+  const [runtime, setRuntime] = useState<"LOCAL" | "DOCKER" | "AGENT">("LOCAL");
   const [dockerAvailable, setDockerAvailable] = useState(false);
+  const [nodes, setNodes] = useState<{ id: string; name: string; online: boolean }[]>([]);
+  const [nodeId, setNodeId] = useState("");
   const [defs, setDefs] = useState<any[]>([]);
   const [selectedGame, setSelectedGame] = useState<any | null>(null);
   const [ram, setRam] = useState(4);
@@ -89,6 +91,11 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
       .then((r) => (r.ok ? r.json() : { available: false }))
       .then((d) => { if (!cancelled) setDockerAvailable(!!d.available); })
       .catch(() => { if (!cancelled) setDockerAvailable(false); });
+    // Remote agent nodes — the picker only shows when at least one exists.
+    fetch("/api/nodes")
+      .then((r) => (r.ok ? r.json() : { nodes: [] }))
+      .then((d) => { if (!cancelled) setNodes(d.nodes || []); })
+      .catch(() => { if (!cancelled) setNodes([]); });
     return () => { cancelled = true; };
   }, []);
 
@@ -127,6 +134,10 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
     setError(null);
 
     try {
+      if (runtime === "AGENT" && !nodeId) {
+        setError("Choose a node to deploy to.");
+        return;
+      }
       const res = await fetch("/api/servers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -138,6 +149,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
           enableUpnp,
           paramValues,
           runnerType: runtime,
+          ...(runtime === "AGENT" && nodeId ? { nodeId } : {}),
         }),
       });
 
@@ -226,8 +238,8 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
 
   // Reset to LOCAL when the selected game no longer supports Docker
   useEffect(() => {
-    if (!dockerSelectable) setRuntime("LOCAL");
-  }, [dockerSelectable]);
+    if (!dockerSelectable && runtime === "DOCKER") setRuntime("LOCAL");
+  }, [dockerSelectable, runtime]);
 
   // Derive install notice text generically from definition fields
   const installNotice = selectedGame ? (() => {
@@ -559,9 +571,38 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                 >
                   Docker
                 </button>
+                {nodes.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setRuntime("AGENT")}
+                    title="Run this server on a remote agent node"
+                    className={`px-3 py-2 rounded-lg border text-sm ${runtime === "AGENT" ? "border-accent text-accent" : "border-white/10 text-mutedText"}`}
+                  >
+                    Remote Node
+                  </button>
+                )}
               </div>
               {runtime === "DOCKER" && (
                 <p className="text-xs text-mutedText mt-2">Runs in a Linux container via SteamCMD. Requires Docker Desktop running.</p>
+              )}
+              {runtime === "AGENT" && (
+                <div className="mt-2">
+                  <select
+                    value={nodeId}
+                    onChange={(e) => setNodeId(e.target.value)}
+                    className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-accent"
+                  >
+                    <option value="">Choose a node…</option>
+                    {nodes.map((n) => (
+                      <option key={n.id} value={n.id}>
+                        {n.name}{n.online ? "" : " (offline)"}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-mutedText mt-2">
+                    Runs in Docker on the agent machine. Backups, mods, and the config editor aren&apos;t available for remote nodes yet.
+                  </p>
+                </div>
               )}
             </div>
 

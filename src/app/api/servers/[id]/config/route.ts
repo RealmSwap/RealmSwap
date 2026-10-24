@@ -8,6 +8,7 @@ import { safeJoin } from "@/lib/safePath";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
+import { assertLocalServer } from "@/lib/agents/perimeter";
 
 // Resolve config file info from the server's definition spec
 async function getConfigInfo(
@@ -56,6 +57,7 @@ export async function GET(
     // server.properties), so reading them sits behind the same ADMIN gate as
     // the dedicated secrets route.
     const access = await verifyServerAccess(params.id, user.id, "ADMIN");
+    await assertLocalServer(params.id, "The config editor");
     if (!access) {
       return NextResponse.json({ error: "Server not found" }, { status: 404 });
     }

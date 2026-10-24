@@ -5,6 +5,7 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { resolveModUpdate, UpdateResolutionError } from "@/lib/mods/updateApply";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // POST: check for and install a newer version of an installed mod.
 // Snapshot -> replace files -> sandbox test -> rollback on failure, same
@@ -23,6 +24,7 @@ export async function POST(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
+    requireLocalServer(server, "Mod updates");
     const serverId = server.id;
     const game = server.game.toUpperCase();
 

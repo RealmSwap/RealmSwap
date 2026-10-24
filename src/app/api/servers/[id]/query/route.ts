@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { parseSpec } from "@/lib/definitions/serialize";
 import { queryGameServer } from "@/lib/serverQuery";
+import { resolveGameHost } from "@/lib/gameHost";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ status: "offline", error: "Definition not found" });
     }
 
-    const result = await queryGameServer(server, parseSpec(record.spec));
+    const result = await queryGameServer(server, parseSpec(record.spec), { host: await resolveGameHost(server) });
     if (result.status !== "online") {
       return NextResponse.json({ status: "offline", error: result.error });
     }

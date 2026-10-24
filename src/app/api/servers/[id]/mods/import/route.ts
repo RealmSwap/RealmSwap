@@ -17,6 +17,7 @@ import {
   installArkWorkshopMod, installFicsitMod,
 } from "@/lib/mods/installers";
 import { installOxideCore, installRustUmodPlugin, OXIDE_CORE_PACKAGE_ID } from "@/lib/mods/umod";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 const LOADER_LABELS: Record<string, string> = {
   fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
@@ -43,6 +44,7 @@ export async function POST(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
+    requireLocalServer(server, "Mod imports");
 
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json({ error: "Please stop the server before importing collections." }, { status: 400 });

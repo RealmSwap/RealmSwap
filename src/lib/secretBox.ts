@@ -92,3 +92,6 @@ export const SERVER_SECRET_FIELDS = ["password", "rconPassword", "sftpPassword"]
 
 /** The S3Setting fields managed by the same transparent encryption. */
 export const S3_SECRET_FIELDS = ["accessKey", "secretKey"] as const;
+
+/** The agent node's HMAC secret — verified on every sync, never displayed. */
+export const AGENT_NODE_SECRET_FIELDS = ["secret"] as const;

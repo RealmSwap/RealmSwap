@@ -5,6 +5,7 @@ import path from "path";
 import * as tar from "tar";
 import fs from "fs";
 import { Readable, PassThrough } from "stream";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -25,6 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     });
 
     if (!server) return new NextResponse("Server not found", { status: 404 });
+    requireLocalServer(server, "World export");
 
     // A GET must never stop a running server as a side effect (a prefetch or
     // link preview could kill someone's session). Export requires a stopped
