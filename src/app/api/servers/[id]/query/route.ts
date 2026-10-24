@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { parseSpec } from "@/lib/definitions/serialize";
-import { DefinitionContext } from "@/lib/definitions/types";
-import { renderTemplate } from "@/lib/definitions/template";
-import { GameDig } from "gamedig";
+import { queryGameServer } from "@/lib/serverQuery";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -32,12 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       }
     }
 
-    // Must be running to query
-    if (server.status !== "RUNNING") {
-      return NextResponse.json({ status: "offline", error: "Server is not running" });
-    }
-
-    let record = server.definitionId 
+    const record = server.definitionId
       ? await prisma.gameDefinition.findUnique({ where: { id: server.definitionId } })
       : await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug: server.game.toUpperCase() } });
 
@@ -45,44 +38,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ status: "offline", error: "Definition not found" });
     }
 
-    const spec = parseSpec(record.spec);
-
-    if (!spec.queryType) {
-      return NextResponse.json({ status: "offline", error: "Query protocol not supported for this game" });
+    const result = await queryGameServer(server, parseSpec(record.spec));
+    if (result.status !== "online") {
+      return NextResponse.json({ status: "offline", error: result.error });
     }
 
-    const paramValues = typeof server.paramValues === "string" ? JSON.parse(server.paramValues) : {};
-    const ctx: DefinitionContext = {
-      name: server.name,
-      nameSanitized: server.name.replace(/[^a-zA-Z0-9]/g, "_"),
-      password: server.password || "",
-      port: server.port,
-      ram: server.ramAllocation,
-      ...paramValues,
-    };
-
-    let queryPort = server.port;
-    if (spec.queryPort) {
-      queryPort = parseInt(renderTemplate(spec.queryPort, ctx), 10);
-    }
-
-    try {
-      const state = await GameDig.query({
-        type: spec.queryType as any,
-        host: "127.0.0.1",
-        port: queryPort,
-      });
-
-      return NextResponse.json({
-        status: "online",
-        name: state.name,
-        players: state.players.length,
-        maxplayers: state.maxplayers,
-        playerList: state.players,
-      });
-    } catch (e: any) {
-      return NextResponse.json({ status: "offline", error: e.message || "Query failed" });
-    }
+    return NextResponse.json({
+      status: "online",
+      name: result.name,
+      players: result.players,
+      maxplayers: result.maxplayers,
+      playerList: result.playerList,
+    });
   } catch (error) {
     console.error("GET /api/servers/[id]/query error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

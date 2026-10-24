@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import QRCode from "qrcode";
 import {
-  AlertTriangle, Check, Copy, Loader2, QrCode, RefreshCw,
+  AlertTriangle, Check, Copy, ExternalLink, Globe, Loader2, QrCode, RefreshCw,
   ShieldCheck, X, XCircle,
 } from "lucide-react";
 
@@ -43,6 +43,27 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
   const [inviteCode, setInviteCode] = useState<string | null>(server.inviteCode ?? null);
   const [inviteBusy, setInviteBusy] = useState(false);
   const [inviteMappingWarning, setInviteMappingWarning] = useState(false);
+  const [shareCode, setShareCode] = useState<string | null>(server.statusShareCode ?? null);
+  const [shareBusy, setShareBusy] = useState(false);
+
+  const manageStatusShare = async (action: "enable" | "disable" | "rotate") => {
+    setShareBusy(true);
+    try {
+      const res = await fetch(`/api/servers/${server.id}/status-share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to update the status link");
+      setShareCode(json.code);
+      setCopied(null);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setShareBusy(false);
+    }
+  };
 
   const toggleTunnel = async (enable: boolean) => {
     setTunnelBusy(true);
@@ -87,6 +108,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
       if (!res.ok) throw new Error(json.error || "Failed to load connection info");
       setData(json);
       if (json.tunnel) setTunnelOn(!!json.tunnel.enabled);
+      if (json.statusShare) setShareCode(json.statusShare.code);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -272,6 +294,71 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
               <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-bold">
                 Tunnel address saved but no agent is running — toggle off and on to restart it.
               </div>
+            )}
+          </div>
+
+          {/* Public status page — the no-login link to share anywhere */}
+          <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5 space-y-2">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-sky-400" />
+              <h4 className="text-sm font-bold text-slate-200">Public status page</h4>
+            </div>
+            {shareCode ? (
+              <>
+                <p className="text-xs text-slate-500">
+                  Anyone with this link can see when the server is up, how many players are online, and the next planned session — no login, no passwords.
+                </p>
+                <div className="flex items-center gap-2">
+                  <code className="text-[11px] text-slate-300 font-mono bg-black/40 px-3 py-1.5 rounded border border-white/10 flex-1 truncate">
+                    {typeof window !== "undefined" ? window.location.origin : ""}/s/{shareCode}
+                  </code>
+                  <button
+                    onClick={() => copy(`${window.location.origin}/s/${shareCode}`, "share")}
+                    className="p-2 rounded bg-white/5 hover:bg-white/10 text-slate-300 flex-shrink-0"
+                    title="Copy status link"
+                  >
+                    {copied === "share" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                  <a
+                    href={`/s/${shareCode}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2 rounded bg-white/5 hover:bg-white/10 text-slate-300 flex-shrink-0"
+                    title="Open the status page"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => manageStatusShare("rotate")}
+                    disabled={shareBusy}
+                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-accentPurple/50 hover:bg-accentPurple/10 text-slate-300 text-[11px] font-bold transition-colors disabled:opacity-40"
+                  >
+                    New link
+                  </button>
+                  <button
+                    onClick={() => manageStatusShare("disable")}
+                    disabled={shareBusy}
+                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/10 text-slate-300 hover:text-red-400 text-[11px] font-bold transition-colors disabled:opacity-40"
+                  >
+                    Turn off
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-slate-500">
+                  Create a no-login link that shows when the server is up, how many players are online, and the next planned session — perfect for pinning in Discord.
+                </p>
+                <button
+                  onClick={() => manageStatusShare("enable")}
+                  disabled={shareBusy}
+                  className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-sky-500/50 hover:bg-sky-500/10 text-white text-xs font-bold transition-colors disabled:opacity-40"
+                >
+                  {shareBusy ? "Working…" : "Create public status link"}
+                </button>
+              </>
             )}
           </div>
 

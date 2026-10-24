@@ -3,6 +3,7 @@ import { getRunner } from "./runners";
 import { Server } from "@/generated/client";
 import { serverEventBus } from "./eventBus";
 import { maybePruneTelemetry } from "./telemetryRetention";
+import { getServerDiskBytes, bytesToMB } from "./diskUsage";
 
 // Global store for process monitoring intervals and history
 const globalForMonitor = globalThis as unknown as {
@@ -84,12 +85,17 @@ export function startMonitoring(server: Server): void {
         },
       }).catch(() => {}); // Silently fail if server was deleted
 
-      // Log to historical telemetry table
+      // Log to historical telemetry table. diskMB is stamped cache-first —
+      // the folder walk re-runs at most every ~5 min in the background, so
+      // this 10s tick never waits on the filesystem. Null until the first
+      // walk completes (or when the server has no local install folder).
+      const diskBytes = await getServerDiskBytes(serverId).catch(() => null);
       await prisma.serverTelemetry.create({
         data: {
           serverId,
           cpu: stats.cpuPercent,
-          ramMB: stats.memoryMB
+          ramMB: stats.memoryMB,
+          diskMB: bytesToMB(diskBytes)
         }
       }).catch(() => {});
 

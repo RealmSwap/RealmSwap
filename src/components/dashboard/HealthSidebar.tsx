@@ -36,6 +36,7 @@ export function HealthSidebar({
   const [crashOpen, setCrashOpen] = React.useState(false);
   const [crashData, setCrashData] = React.useState<{ crashes: any[]; weekCount: number } | null>(null);
   const [latestBackup, setLatestBackup] = React.useState<any | null>(null);
+  const [network, setNetwork] = React.useState<{ overall: "ready" | "maybe" | "blocked"; issue: { label: string; detail: string } | null; tunnelAlive: boolean } | null>(null);
 
   // Latest backup row (desc by createdAt) — feeds the Last Backup card and
   // its verification status.
@@ -109,9 +110,44 @@ export function HealthSidebar({
     return () => { cancelled = true; clearInterval(interval); };
   }, [server?.id]);
 
+  // Network truth (#110 connectivity checks + live tunnel liveness). Re-checked
+  // on a gentle poll — router state and the playit agent can change at any time.
+  React.useEffect(() => {
+    if (!server) return;
+    let cancelled = false;
+    async function fetchNetwork() {
+      try {
+        const res = await fetch(`/api/servers/${server.id}/network-status`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && data.available !== false) {
+            setNetwork({ overall: data.overall, issue: data.issue, tunnelAlive: data.tunnelAlive });
+          }
+        }
+      } catch {
+        // Leave the previous verdict — transient errors shouldn't blank the row.
+      }
+    }
+    fetchNetwork();
+    const interval = setInterval(fetchNetwork, 60000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [server?.id]);
+
   if (!server) return <div className="w-80 shrink-0"></div>;
 
   const isHealthy = server.healthStatus !== "DEGRADED" && server.status !== "CRASHED";
+
+  // Network row: real verdict from the connectivity checks. A stopped server
+  // isn't "blocked" — it's just off, so say that instead of alarming.
+  const networkView = (() => {
+    if (!network) return { iconCls: "bg-blue-500/10 text-blue-400", cls: "text-slate-400", text: "Checking…" };
+    if (server.status !== "RUNNING") return { iconCls: "bg-slate-800/60 text-slate-500", cls: "text-slate-500", text: "Offline — start to accept players" };
+    if (network.overall === "ready") return { iconCls: "bg-emerald-500/10 text-emerald-400", cls: "text-emerald-400", text: "Ready for players" };
+    if (network.overall === "maybe") return { iconCls: "bg-amber-500/10 text-amber-400", cls: "text-amber-400", text: "May be hard to join" };
+    return { iconCls: "bg-red-500/10 text-red-400", cls: "text-red-400", text: "Players can't join" };
+  })();
+  const networkTitle = network?.issue?.detail
+    ?? (network?.overall === "ready" ? "Server is running and reachable — no issues found." : undefined);
   
   // Format last backup date if it exists (prefer the newest Backup row;
   // fall back to server.lastSnapshotAt while the list is loading)
@@ -156,12 +192,12 @@ export function HealthSidebar({
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400">
+            <div className={`p-2 rounded-xl ${networkView.iconCls}`}>
               <Wifi className="w-4 h-4" />
             </div>
             <div>
               <div className="text-sm font-bold text-slate-200">Network</div>
-              <div className="text-xs text-slate-400">No routing issues</div>
+              <div className={`text-xs ${networkView.cls}`} title={networkTitle}>{networkView.text}</div>
             </div>
           </div>
           <div className="flex items-start gap-3">

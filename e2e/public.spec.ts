@@ -46,4 +46,14 @@ test.describe("public surface @public", () => {
     expect(typeof publicKey).toBe("string");
     expect(publicKey.length).toBeGreaterThan(80);
   });
+
+  test("public status API 404s for an unknown code", async ({ request }) => {
+    const res = await request.get("/api/s/deadbeef");
+    expect(res.status()).toBe(404);
+  });
+
+  test("public status page renders the off/unknown card for an unknown code", async ({ page }) => {
+    await page.goto("/s/deadbeef");
+    await expect(page.getByText(/status link is off or doesn't exist/i)).toBeVisible();
+  });
 });

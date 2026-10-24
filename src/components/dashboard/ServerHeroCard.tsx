@@ -51,6 +51,32 @@ export function ServerHeroCard({
   const isRunning = server.status === "RUNNING" || server.status === "STARTING" || server.status === "UPDATING";
   const isLocal = server.runnerType === "LOCAL";
 
+  // Real disk numbers for the Disk tile: server folder size + host free
+  // space + recent size history (from the telemetry table's diskMB stamps).
+  const [disk, setDisk] = React.useState<{ folderGB: number | null; freeGB: number | null; history: number[] } | null>(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/servers/${server.id}/disk`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => { if (!cancelled && data && !data.error) setDisk(data); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [server.id]);
+
+  const diskText = disk === null ? "…" : disk.folderGB === null ? "—" : `${disk.folderGB.toFixed(1)}G`;
+  const diskBarPct =
+    disk?.folderGB != null && disk?.freeGB != null && disk.freeGB > 0
+      ? Math.min((disk.folderGB / (disk.folderGB + disk.freeGB)) * 100, 100)
+      : 0;
+  const diskTitle =
+    disk === null
+      ? "Measuring…"
+      : disk.folderGB === null
+        ? "No local install folder found"
+        : disk.freeGB != null
+          ? `${disk.folderGB.toFixed(2)} GB on disk · ${disk.freeGB.toFixed(1)} GB free on this machine`
+          : `${disk.folderGB.toFixed(2)} GB on disk`;
+
   // Game thumbnail gradients
   const getThumbnailStyle = (game: string) => {
     switch(game) {
@@ -233,15 +259,15 @@ export function ServerHeroCard({
           </div>
           <Sparkline data={serverStats?.memory || []} color="#60a5fa" height={16} width={80} className="opacity-50" />
         </div>
-        <div>
+        <div title={diskTitle}>
           <div className="flex justify-between text-xs mb-1">
             <span className="text-slate-400 font-medium flex items-center gap-1"><Save className="w-3 h-3"/> Disk</span>
-            <span className="text-white font-bold">~1.2G</span>
+            <span className="text-white font-bold">{diskText}</span>
           </div>
           <div className="h-1 w-full bg-slate-800 rounded-full mb-1 overflow-hidden">
-            <div className="h-full bg-emerald-400 rounded-full" style={{ width: "25%" }} />
+            <div className="h-full bg-emerald-400 rounded-full transition-all" style={{ width: `${diskBarPct}%` }} />
           </div>
-          <Sparkline data={[1.2, 1.2, 1.2, 1.2, 1.2]} color="#34d399" height={16} width={80} className="opacity-50" />
+          <Sparkline data={disk?.history ?? []} color="#34d399" height={16} width={80} className="opacity-50" />
         </div>
       </div>
 

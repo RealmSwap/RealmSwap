@@ -29,11 +29,17 @@ export async function GET(
       : await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug: server.game.toUpperCase() } });
     if (!def) return NextResponse.json({ error: "Unsupported game" }, { status: 400 });
 
-    const report = await runConnectivityChecks(server, parseSpec(def.spec));
     const tunnelAlive = isTunnelAlive(server.id);
+    // The checks must see the real liveness map — the default dep reports
+    // every tunnel as dead, which downgraded a live tunnel to "address saved
+    // but no agent is running" in the diagnosis below.
+    const report = await runConnectivityChecks(server, parseSpec(def.spec), { tunnelAlive: isTunnelAlive });
 
     return NextResponse.json({
       report,
+      statusShare: {
+        code: server.statusShareCode ?? null,
+      },
       invite: {
         gameDisplayName: def.displayName,
         serverName: server.name,
