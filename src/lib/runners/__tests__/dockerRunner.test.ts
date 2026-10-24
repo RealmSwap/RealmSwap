@@ -112,9 +112,15 @@ vi.mock("../../definitions/plan", () => ({
   planInstall: () => ({ appId: "258550" }),
 }));
 
-vi.mock("../../appPaths", () => ({
-  dataRoot: () => "/tmp/realswap-docker-runner-test",
-}));
+vi.mock("../../appPaths", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../appPaths")>();
+  return {
+    ...actual,
+    dataRoot: () => "/tmp/realswap-docker-runner-test",
+    // Real env-driven behavior with the test dataRoot as the fallback.
+    dockerMountRoot: () => process.env.GAMEVAULT_HOST_DATA_DIR?.trim() || "/tmp/realswap-docker-runner-test",
+  };
+});
 
 import { DockerRunner } from "../DockerRunner";
 import { CRASH_MAX_RETRIES } from "../../crashPolicy";
@@ -223,6 +229,27 @@ describe("DockerRunner", () => {
       expect(bag.spawned.map((p) => p.args[0])).toEqual(["logs", "wait"]);
       expect(bag.startMonitoring).toHaveBeenCalledTimes(1);
       expect(bag.statuses.some((s: any) => s.status === "STARTING")).toBe(true);
+    });
+
+    it("containerized dashboard: mount source comes from GAMEVAULT_HOST_DATA_DIR, writes still go to dataRoot", async () => {
+      seedDefinition();
+      seedServer();
+      const prev = process.env.GAMEVAULT_HOST_DATA_DIR;
+      process.env.GAMEVAULT_HOST_DATA_DIR = "/mnt/raid/realmswap";
+      try {
+        await runner.start(bag.server);
+
+        // The daemon must see the HOST path, not the container-internal one.
+        expect(bag.docker.mock.calls[1][0]).toContain(
+          "/mnt/raid/realmswap/local-servers/srv:/data"
+        );
+        expect(bag.docker.mock.calls[1][0]).not.toContain(
+          "/tmp/realswap-docker-runner-test/local-servers/srv:/data"
+        );
+      } finally {
+        if (prev === undefined) delete process.env.GAMEVAULT_HOST_DATA_DIR;
+        else process.env.GAMEVAULT_HOST_DATA_DIR = prev;
+      }
     });
   });
 

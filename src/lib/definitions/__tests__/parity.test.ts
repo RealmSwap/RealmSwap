@@ -152,7 +152,9 @@ describe("container: Valheim", () => {
     expect(p.image).toBe("cm2network/steamcmd");
     expect(p.installSubDir).toBe("valheim-server");
     expect(p.executable).toBe("valheim_server.x86_64");
-    expect(p.env).toEqual({ LD_LIBRARY_PATH: "./linux64", SteamAppId: "892970" });
+    // HOME is redirected onto the /data bind mount so Valheim's worlds
+    // survive the rm -f + run cycle on every container start.
+    expect(p.env).toEqual({ LD_LIBRARY_PATH: "./linux64", SteamAppId: "892970", HOME: "/data/valheim-data" });
     expect(p.args).toEqual([
       "-nographics", "-batchmode", "-name", "Viking Realm", "-port", "2456",
       "-world", "Dedicated", "-password", "viking123", "-public", "1", "-crossplay",

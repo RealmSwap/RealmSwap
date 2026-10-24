@@ -3,7 +3,7 @@ import { Server } from "@/generated/client";
 import { ServerRunner, ProcessStats } from "./types";
 import { docker, dockerSpawn, buildRunArgs, buildStartEntrypoint, parseDockerStats } from "./docker/dockerCli";
 import { prisma } from "../db";
-import { dataRoot } from "../appPaths";
+import { dataRoot, dockerMountRoot } from "../appPaths";
 import { parseSpec } from "../definitions/serialize";
 import { buildContext } from "../definitions/context";
 import { planContainer, planPorts, planInstall } from "../definitions/plan";
@@ -34,8 +34,17 @@ const crashCounters = g.dockerCrashCounters;
 function containerName(serverId: string): string {
   return `realmswap-server-${serverId}`;
 }
-function hostDataDir(serverId: string): string {
+// Where this process reads/writes server files (configs, logs). Under
+// GAMEVAULT_DATA_DIR, or cwd in dev.
+function serverDataDir(serverId: string): string {
   return path.join(dataRoot(), "local-servers", serverId);
+}
+// Path prefix to hand the Docker daemon as the bind-mount SOURCE. When the
+// dashboard itself is containerized, dataRoot() is container-internal and
+// meaningless to the host daemon — dockerMountRoot() (GAMEVAULT_HOST_DATA_DIR)
+// is the host-side path of the same volume.
+function dockerMountSource(serverId: string): string {
+  return path.join(dockerMountRoot(), "local-servers", serverId);
 }
 
 async function resolveDefinition(server: { definitionId: string | null; game: string }):
@@ -91,8 +100,8 @@ export class DockerRunner implements ServerRunner {
     await setStatus(serverId, "STARTING", { pid: null, cpuUsage: 0, memoryUsage: 0 });
     setProgress(serverId, { phase: "steam", percent: null, label: "Preparing container…" });
 
-    // Write config files onto the host bind-mount path (reuses existing writers).
-    const baseDir = hostDataDir(serverId);
+    // Write config files onto the server data dir (reuses existing writers).
+    const baseDir = serverDataDir(serverId);
     const installDir = container.installSubDir ? path.join(baseDir, container.installSubDir) : baseDir;
     fs.mkdirSync(installDir, { recursive: true });
     applyConfigFiles(spec, ctx, { installDir, server: { name: record.name, password: record.password } });
@@ -106,7 +115,7 @@ export class DockerRunner implements ServerRunner {
     const runArgs = buildRunArgs({
       containerName: containerName(serverId),
       image: container.image,
-      hostDataDir: baseDir,
+      hostDataDir: dockerMountSource(serverId),
       ports,
       env: container.env,
       entrypoint,
@@ -301,7 +310,7 @@ export class DockerRunner implements ServerRunner {
       ` +app_update ${installPlan.appId} validate +quit`;
     const res = await docker([
       "run", "--rm",
-      "-v", `${hostDataDir(serverId)}:/data`,
+      "-v", `${dockerMountSource(serverId)}:/data`,
       container.image, "bash", "-lc", cmd,
     ]);
     if (res.code !== 0) {

@@ -9,13 +9,12 @@
     "installMethod": "DOWNLOAD",
     "spec": {
       "install": {
-        "url": "https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar",
+        "url": "https://piston-data.mojang.com/v1/objects/823e2250d24b3ddac457a60c92a6a941943fcd6a/server.jar",
         "fileName": "server.jar",
         "checkFile": "server.jar"
       },
       "requiresJava": true,
       "javaMajor": 25,
-      "queryType": "minecraft",
       "launch": {
         "executable": "java",
         "executableOnPath": true,
@@ -26,11 +25,80 @@
           "server.jar",
           "nogui"
         ],
-        "stdinStopCommand": "stop\n",
-        "readyPattern": "Done \\([\\d.]+s\\)!"
+        "stdinStopCommand": "stop\n"
       },
       "defaultPort": 25565,
-      "params": [],
+      "params": [
+        {
+          "key": "motd",
+          "label": "Server description (MOTD)",
+          "type": "text",
+          "default": "A RealmSwap Minecraft Server",
+          "group": "Presentation",
+          "help": "Shown in the server browser. Also editable later in Game Settings."
+        },
+        {
+          "key": "maxPlayers",
+          "label": "Max players",
+          "type": "number",
+          "default": 10,
+          "min": 1,
+          "max": 100,
+          "group": "Gameplay",
+          "help": "How many players can join at once."
+        },
+        {
+          "key": "difficulty",
+          "label": "Difficulty",
+          "type": "enum",
+          "default": "normal",
+          "options": [
+            "peaceful",
+            "easy",
+            "normal",
+            "hard"
+          ],
+          "group": "Gameplay"
+        },
+        {
+          "key": "gamemode",
+          "label": "Game mode",
+          "type": "enum",
+          "default": "survival",
+          "options": [
+            "survival",
+            "creative",
+            "adventure",
+            "spectator"
+          ],
+          "group": "Gameplay"
+        },
+        {
+          "key": "pvp",
+          "label": "PvP enabled",
+          "type": "boolean",
+          "default": true,
+          "group": "Gameplay"
+        },
+        {
+          "key": "onlineMode",
+          "label": "Online mode (verify accounts)",
+          "type": "boolean",
+          "default": false,
+          "group": "Network",
+          "help": "Require genuine Minecraft accounts. Leave off for LAN/offline play."
+        },
+        {
+          "key": "viewDistance",
+          "label": "View distance (chunks)",
+          "type": "number",
+          "default": 10,
+          "min": 3,
+          "max": 32,
+          "group": "Performance",
+          "help": "Higher values look better but cost CPU/RAM."
+        }
+      ],
       "configFiles": [
         {
           "path": "eula.txt",
@@ -40,7 +108,7 @@
         {
           "path": "server.properties",
           "strategy": "template",
-          "template": "server-port={port}\nquery.port=25565\nonline-mode=false\nmax-players=10\nmotd=RealmSwap Local Runner Minecraft Server - {name}"
+          "template": "server-port={port}\nquery.port=25565\nonline-mode={onlineMode}\nmax-players={maxPlayers}\nmotd={motd}\ndifficulty={difficulty}\ngamemode={gamemode}\npvp={pvp}\nview-distance={viewDistance}\n"
         }
       ],
       "editableConfigPath": "server.properties",
@@ -53,7 +121,13 @@
           "protocol": "UDP",
           "port": "25565"
         }
-      ]
+      ],
+      "playerSync": {
+        "strategy": "minecraft_json",
+        "whitelistPath": "whitelist.json",
+        "banlistPath": "banned-players.json",
+        "opsPath": "ops.json"
+      }
     }
   },
   {
@@ -86,7 +160,7 @@
           "-port",
           "2456",
           "-world",
-          "Dedicated",
+          "{worldName}",
           "-password",
           "{password}",
           "-public",
@@ -99,15 +173,15 @@
             "updateField": "ipAddress",
             "transform": "joinCode"
           }
-        ],
-        "readyPattern": "Game server connected"
+        ]
       },
       "container": {
         "executable": "valheim_server.x86_64",
         "installSubDir": "valheim-server",
         "env": {
           "LD_LIBRARY_PATH": "./linux64",
-          "SteamAppId": "892970"
+          "SteamAppId": "892970",
+          "HOME": "/data/valheim-data"
         },
         "args": [
           "-nographics",
@@ -117,7 +191,7 @@
           "-port",
           "2456",
           "-world",
-          "Dedicated",
+          "{worldName}",
           "-password",
           "{password}",
           "-public",
@@ -126,7 +200,16 @@
         ]
       },
       "defaultPort": 2456,
-      "params": [],
+      "params": [
+        {
+          "key": "worldName",
+          "label": "World name",
+          "type": "text",
+          "default": "Dedicated",
+          "group": "World",
+          "help": "Which local world the server loads/creates. Changing it starts a fresh world."
+        }
+      ],
       "configFiles": [],
       "ports": [
         {
@@ -141,7 +224,13 @@
           "protocol": "UDP",
           "port": "2458"
         }
-      ]
+      ],
+      "playerSync": {
+        "strategy": "valheim_txt",
+        "whitelistPath": "valheim-server/permittedlist.txt",
+        "banlistPath": "valheim-server/bannedlist.txt",
+        "opsPath": "valheim-server/adminlist.txt"
+      }
     }
   },
   {
@@ -165,7 +254,18 @@
         "args": []
       },
       "defaultPort": 15637,
-      "params": [],
+      "params": [
+        {
+          "key": "slotCount",
+          "label": "Player slots",
+          "type": "number",
+          "default": 16,
+          "min": 1,
+          "max": 16,
+          "group": "Gameplay",
+          "help": "Enshrouded caps dedicated servers at 16 slots."
+        }
+      ],
       "configFiles": [
         {
           "path": "enshrouded_server.json",
@@ -218,8 +318,7 @@
           "-cachedir=./zomboid-data",
           "-servername",
           "servertest"
-        ],
-        "readyPattern": "LOG\\s*:\\s*General\\s*,\\s*Server started"
+        ]
       },
       "container": {
         "executable": "start-server.sh",
@@ -276,13 +375,13 @@
         "args": [
           {
             "value": [
-              "TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers=20"
+              "TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"
             ],
             "includeWhen": "password"
           },
           {
             "value": [
-              "TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers=20"
+              "TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"
             ],
             "includeWhen": "passwordEmpty"
           },
@@ -290,8 +389,7 @@
           "-nosound",
           "-QueryPort=27015",
           "-automanagemods"
-        ],
-        "readyPattern": "Full Startup:"
+        ]
       },
       "container": {
         "executable": "ShooterGame/Binaries/Linux/ShooterGameServer",
@@ -299,13 +397,13 @@
         "args": [
           {
             "value": [
-              "TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers=20"
+              "TheIsland?SessionName={name}?ServerPassword={password}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"
             ],
             "includeWhen": "password"
           },
           {
             "value": [
-              "TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers=20"
+              "TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"
             ],
             "includeWhen": "passwordEmpty"
           },
@@ -316,7 +414,17 @@
         ]
       },
       "defaultPort": 7777,
-      "params": [],
+      "params": [
+        {
+          "key": "maxPlayers",
+          "label": "Max players",
+          "type": "number",
+          "default": 20,
+          "min": 1,
+          "max": 200,
+          "group": "Gameplay"
+        }
+      ],
       "configFiles": [],
       "ports": [
         {
@@ -352,14 +460,11 @@
       "launch": {
         "executable": "TerrariaServer.exe",
         "cwdSubDir": "terraria-server",
-        "preLaunchDirs": [
-          "worlds"
-        ],
         "args": [
           "-port",
           "7777",
           "-players",
-          "8",
+          "{maxPlayers}",
           {
             "value": [
               "-pass",
@@ -373,8 +478,7 @@
           "{nameSanitized}",
           "-world",
           "worlds/{nameSanitized}.wld"
-        ],
-        "readyPattern": "Server started"
+        ]
       },
       "container": {
         "executable": "TerrariaServer.bin.x86_64",
@@ -383,7 +487,7 @@
           "-port",
           "7777",
           "-players",
-          "8",
+          "{maxPlayers}",
           {
             "value": [
               "-pass",
@@ -400,7 +504,17 @@
         ]
       },
       "defaultPort": 7777,
-      "params": [],
+      "params": [
+        {
+          "key": "maxPlayers",
+          "label": "Max players",
+          "type": "number",
+          "default": 8,
+          "min": 1,
+          "max": 32,
+          "group": "Gameplay"
+        }
+      ],
       "configFiles": [],
       "ports": [
         {
@@ -435,13 +549,13 @@
         "args": [
           {
             "value": [
-              "?port=8211?players=16?AdminPassword={password}"
+              "?port=8211?players={maxPlayers}?AdminPassword={password}"
             ],
             "includeWhen": "password"
           },
           {
             "value": [
-              "?port=8211?players=16"
+              "?port=8211?players={maxPlayers}"
             ],
             "includeWhen": "passwordEmpty"
           },
@@ -456,13 +570,13 @@
         "args": [
           {
             "value": [
-              "?port=8211?players=16?AdminPassword={password}"
+              "?port=8211?players={maxPlayers}?AdminPassword={password}"
             ],
             "includeWhen": "password"
           },
           {
             "value": [
-              "?port=8211?players=16"
+              "?port=8211?players={maxPlayers}"
             ],
             "includeWhen": "passwordEmpty"
           },
@@ -472,8 +586,36 @@
         ]
       },
       "defaultPort": 8211,
-      "params": [],
-      "configFiles": [],
+      "params": [
+        {
+          "key": "maxPlayers",
+          "label": "Max players",
+          "type": "number",
+          "default": 16,
+          "min": 1,
+          "max": 32,
+          "group": "Gameplay"
+        },
+        {
+          "key": "difficulty",
+          "label": "Difficulty",
+          "type": "enum",
+          "default": "None",
+          "options": [
+            "None",
+            "Normal",
+            "Hard"
+          ],
+          "group": "Gameplay"
+        }
+      ],
+      "configFiles": [
+        {
+          "path": "Pal/Saved/Config/WindowsServer/PalWorldSettings.ini",
+          "strategy": "template",
+          "template": "[/Script/Pal.PalGameWorldSettings]\nOptionSettings=(Difficulty={difficulty},ServerPlayerMaxNum={maxPlayers},ServerName=\"{name}\",AdminPassword=\"{password}\")\n"
+        }
+      ],
       "editableConfigPath": "palworld-server/Pal/Saved/Config/WindowsServer/PalWorldSettings.ini",
       "ports": [
         {
@@ -512,11 +654,11 @@
           "+server.identity",
           "servertest",
           "+server.seed",
-          "12345",
+          "{seed}",
           "+server.worldsize",
-          "3000",
+          "{worldSize}",
           "+server.maxplayers",
-          "10",
+          "{maxPlayers}",
           "+server.hostname",
           "{name}",
           "+rcon.port",
@@ -525,8 +667,7 @@
           "{password}",
           "+rcon.web",
           "1"
-        ],
-        "readyPattern": "Server startup complete"
+        ]
       },
       "container": {
         "executable": "RustDedicated",
@@ -541,11 +682,11 @@
           "+server.identity",
           "servertest",
           "+server.seed",
-          "12345",
+          "{seed}",
           "+server.worldsize",
-          "3000",
+          "{worldSize}",
           "+server.maxplayers",
-          "10",
+          "{maxPlayers}",
           "+server.hostname",
           "{name}",
           "+rcon.port",
@@ -557,7 +698,35 @@
         ]
       },
       "defaultPort": 28015,
-      "params": [],
+      "params": [
+        {
+          "key": "maxPlayers",
+          "label": "Max players",
+          "type": "number",
+          "default": 10,
+          "min": 1,
+          "max": 500,
+          "group": "Gameplay"
+        },
+        {
+          "key": "worldSize",
+          "label": "World size",
+          "type": "number",
+          "default": 3000,
+          "min": 1000,
+          "max": 6000,
+          "group": "World",
+          "help": "Map edge length in units (1000 = small, 3000 = default, 6000 = huge)."
+        },
+        {
+          "key": "seed",
+          "label": "World seed",
+          "type": "number",
+          "default": 12345,
+          "group": "World",
+          "help": "Changing this generates a brand-new map."
+        }
+      ],
       "configFiles": [],
       "editableConfigPath": "rust-server/server/servertest/cfg/server.cfg",
       "ports": [
@@ -581,13 +750,32 @@
     "recommendedRamGB": 8,
     "installMethod": "STEAMCMD",
     "spec": {
-      "install": { "appId": "4129620", "installSubDir": "windrose-server", "checkFile": "WindroseServer.exe", "requiredDiskGB": 35 },
-      "launch": { "executable": "WindroseServer.exe", "cwdSubDir": "windrose-server", "args": [], "inviteCodeFile": "R5/ServerDescription.json" },
+      "install": {
+        "appId": "4129620",
+        "installSubDir": "windrose-server",
+        "checkFile": "WindroseServer.exe",
+        "requiredDiskGB": 35
+      },
+      "launch": {
+        "executable": "WindroseServer.exe",
+        "cwdSubDir": "windrose-server",
+        "args": [],
+        "inviteCodeFile": "R5/ServerDescription.json"
+      },
       "defaultPort": 7777,
       "params": [],
       "configFiles": [],
       "editableConfigPath": "windrose-server/R5/ServerDescription.json",
-      "ports": [{ "protocol": "TCP", "port": "7777" }, { "protocol": "UDP", "port": "7777" }]
+      "ports": [
+        {
+          "protocol": "TCP",
+          "port": "7777"
+        },
+        {
+          "protocol": "UDP",
+          "port": "7777"
+        }
+      ]
     }
   },
   {
@@ -599,12 +787,33 @@
     "recommendedRamGB": 8,
     "installMethod": "STEAMCMD",
     "spec": {
-      "install": { "appId": "1690800", "installSubDir": "satisfactory-server", "checkFile": "FactoryServer.exe", "requiredDiskGB": 15 },
-      "launch": { "executable": "FactoryServer.exe", "cwdSubDir": "satisfactory-server", "args": ["-log", "-unattended"] },
+      "install": {
+        "appId": "1690800",
+        "installSubDir": "satisfactory-server",
+        "checkFile": "FactoryServer.exe",
+        "requiredDiskGB": 15
+      },
+      "launch": {
+        "executable": "FactoryServer.exe",
+        "cwdSubDir": "satisfactory-server",
+        "args": [
+          "-log",
+          "-unattended"
+        ]
+      },
       "defaultPort": 7777,
       "params": [],
       "configFiles": [],
-      "ports": [{ "protocol": "TCP", "port": "7777" }, { "protocol": "UDP", "port": "7777" }]
+      "ports": [
+        {
+          "protocol": "TCP",
+          "port": "7777"
+        },
+        {
+          "protocol": "UDP",
+          "port": "7777"
+        }
+      ]
     }
   },
   {
@@ -616,13 +825,41 @@
     "recommendedRamGB": 6,
     "installMethod": "STEAMCMD",
     "spec": {
-      "install": { "appId": "1829350", "installSubDir": "vrising-server", "checkFile": "VRisingServer.exe", "requiredDiskGB": 5 },
-      "launch": { "executable": "VRisingServer.exe", "cwdSubDir": "vrising-server", "preLaunchDirs": ["save-data"], "args": ["-persistentDataPath", "./save-data", "-serverName", "{name}", "-saveName", "world1"] },
+      "install": {
+        "appId": "1829350",
+        "installSubDir": "vrising-server",
+        "checkFile": "VRisingServer.exe",
+        "requiredDiskGB": 5
+      },
+      "launch": {
+        "executable": "VRisingServer.exe",
+        "cwdSubDir": "vrising-server",
+        "preLaunchDirs": [
+          "save-data"
+        ],
+        "args": [
+          "-persistentDataPath",
+          "./save-data",
+          "-serverName",
+          "{name}",
+          "-saveName",
+          "world1"
+        ]
+      },
       "defaultPort": 9876,
       "params": [],
       "configFiles": [],
       "editableConfigPath": "vrising-server/save-data/Settings/ServerHostSettings.json",
-      "ports": [{ "protocol": "UDP", "port": "9876" }, { "protocol": "UDP", "port": "9877" }]
+      "ports": [
+        {
+          "protocol": "UDP",
+          "port": "9876"
+        },
+        {
+          "protocol": "UDP",
+          "port": "9877"
+        }
+      ]
     }
   }
 ]

@@ -43,7 +43,10 @@ vi.mock("@/lib/db", () => ({
     },
   },
 }));
-vi.mock("@/lib/appPaths", () => ({ dataRoot: () => bag.dataRoot }));
+vi.mock("@/lib/appPaths", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/appPaths")>();
+  return { ...actual, dataRoot: () => bag.dataRoot };
+});
 
 import { reconcileInstalledMods } from "@/lib/mods/reconcile";
 

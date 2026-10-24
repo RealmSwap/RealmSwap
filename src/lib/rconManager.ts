@@ -1,5 +1,6 @@
 import { Rcon } from "rcon-client";
 import { prisma } from "./db";
+import { gameHost } from "./appPaths";
 
 class RconManager {
   private connections: Map<string, Rcon> = new Map();
@@ -23,7 +24,7 @@ class RconManager {
 
     try {
       const rcon = await Rcon.connect({
-        host: "127.0.0.1",
+        host: gameHost(),
         port: server.rconPort,
         password: server.rconPassword,
         // Default 2000ms rejects `save-all flush` on large Minecraft worlds

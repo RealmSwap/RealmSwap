@@ -97,7 +97,10 @@ vi.mock("@/lib/runners/sandbox", () => ({
     }
   },
 }));
-vi.mock("@/lib/appPaths", () => ({ dataRoot: () => bag.dataRoot }));
+vi.mock("@/lib/appPaths", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/appPaths")>();
+  return { ...actual, dataRoot: () => bag.dataRoot };
+});
 
 import { GET as getPack, POST as updatePack } from "@/app/api/servers/[id]/mods/update-pack/route";
 
