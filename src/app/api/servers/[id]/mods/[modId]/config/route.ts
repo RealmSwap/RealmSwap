@@ -62,7 +62,7 @@ function findConfigFile(configDir: string, packageId: string): string | null {
  * its config/<modid>.toml — the package id the row carries is a store id
  * (numeric for CurseForge) and usually matches nothing on disk.
  */
-export function readJarConfigStem(jarPath: string): string | null {
+function readJarConfigStem(jarPath: string): string | null {
   try {
     const zip = new AdmZip(jarPath);
     for (const [entryName, pattern] of [
