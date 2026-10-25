@@ -6,8 +6,8 @@ import { parseSpec } from "@/lib/definitions/serialize";
 import { buildContext } from "@/lib/definitions/context";
 import { planContainer, planPorts, planInstall } from "@/lib/definitions/plan";
 import { applyConfigFiles } from "@/lib/definitions/applyConfigFiles";
-import { buildStartEntrypoint } from "./dockerCli";
-import type { GameDefinitionSpec } from "@/lib/definitions/types";
+import { buildContainerStartEntrypoint } from "./dockerCli";
+import type { GameDefinitionSpec, InstallMethod } from "@/lib/definitions/types";
 import type { StartCommandPayload } from "@/lib/agents/protocol";
 
 /**
@@ -72,8 +72,8 @@ export async function planDockerStart(record: {
   paramValues: string | null;
 }): Promise<DockerStartPlan> {
   const { spec, installMethod } = await resolveDefinition(record);
-  if (installMethod !== "STEAMCMD") {
-    throw new Error("Remote nodes currently support SteamCMD games only.");
+  if (installMethod !== "STEAMCMD" && installMethod !== "DOWNLOAD") {
+    throw new Error("Remote nodes currently support SteamCMD and download games only.");
   }
   const ctx = buildContext({
     name: record.name, password: record.password, port: record.port,
@@ -84,7 +84,7 @@ export async function planDockerStart(record: {
   if (!container) {
     throw new Error(`${record.game} has no container definition; it cannot run on a remote node.`);
   }
-  const installPlan = planInstall(spec, "STEAMCMD");
+  const installPlan = planInstall(spec, installMethod as InstallMethod);
   const ports = planPorts(spec, ctx);
 
   return {
@@ -97,9 +97,7 @@ export async function planDockerStart(record: {
       image: container.image,
       ports: ports.map((p) => ({ port: p.port, protocol: p.protocol })),
       env: container.env ?? null,
-      entrypoint: buildStartEntrypoint(
-        installPlan.appId!, container.installSubDir, container.executable, container.args,
-      ),
+      entrypoint: buildContainerStartEntrypoint(installPlan, container),
       // Parity with DockerRunner: no container game declares a readyPattern,
       // so the 5-minute fallback is the readiness signal for all of them.
       readyFallbackMs: 5 * 60 * 1000,

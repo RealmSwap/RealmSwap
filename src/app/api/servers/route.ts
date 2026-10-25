@@ -217,7 +217,11 @@ export async function POST(req: NextRequest) {
     }
     if (requestedRunner === "AGENT" && runnerType !== "AGENT") {
       return NextResponse.json(
-        { error: "Remote node runtime is unavailable: the node must exist, be enrolled, and belong to you." },
+        {
+          error: nodeEnrolled
+            ? "Remote node runtime is unavailable for this game: it has no container plan yet."
+            : "Remote node runtime is unavailable: the node must exist, be enrolled, and belong to you.",
+        },
         { status: 400 },
       );
     }

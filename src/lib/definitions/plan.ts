@@ -107,6 +107,7 @@ export interface ContainerPlan {
   executable: string;
   args: string[];
   env?: Record<string, string>;
+  executableOnPath?: boolean;
 }
 
 export function planContainer(spec: GameDefinitionSpec, ctx: DefinitionContext): ContainerPlan | null {
@@ -123,5 +124,6 @@ export function planContainer(spec: GameDefinitionSpec, ctx: DefinitionContext):
     executable: c.executable,
     args: renderArgs(c.args ?? [], ctx),
     env,
+    executableOnPath: c.executableOnPath,
   };
 }

@@ -16,6 +16,7 @@ const bag = {
   notifications: [] as any[],
   definitions: {} as Record<string, { spec: string; installMethod: string }>,
   planContainerResult: null as any,
+  planInstallResult: null as any,
   fireCrashAutomations: vi.fn(),
   setProgress: vi.fn(),
   clearProgress: vi.fn(),
@@ -109,7 +110,7 @@ vi.mock("../../definitions/context", () => ({
 vi.mock("../../definitions/plan", () => ({
   planContainer: () => bag.planContainerResult,
   planPorts: () => [],
-  planInstall: () => ({ appId: "258550" }),
+  planInstall: () => bag.planInstallResult ?? { method: "STEAMCMD", appId: "258550" },
 }));
 
 vi.mock("../../appPaths", async (importOriginal) => {
@@ -172,6 +173,7 @@ describe("DockerRunner", () => {
     bag.notifications = [];
     bag.definitions = {};
     bag.planContainerResult = null;
+    bag.planInstallResult = null;
     bag.fireCrashAutomations = vi.fn().mockResolvedValue(undefined);
     bag.startMonitoring = vi.fn();
     bag.stopMonitoring = vi.fn();
@@ -179,13 +181,35 @@ describe("DockerRunner", () => {
   });
 
   describe("start", () => {
-    it("refuses non-SteamCMD games before touching docker", async () => {
+    it("refuses install methods with no container story before touching docker", async () => {
       seedDefinition("MANUAL");
       seedServer();
 
-      await expect(runner.start(bag.server)).rejects.toThrow(/SteamCMD games only/i);
+      await expect(runner.start(bag.server)).rejects.toThrow(/SteamCMD and download games only/i);
       expect(bag.docker).not.toHaveBeenCalled();
       expect(bag.statuses).toHaveLength(0);
+    });
+
+    it("starts DOWNLOAD games: docker run carries the download entrypoint", async () => {
+      seedDefinition("DOWNLOAD");
+      seedServer();
+      bag.planInstallResult = {
+        method: "DOWNLOAD",
+        url: "https://piston-data.mojang.com/v1/objects/abc/server.jar",
+        fileName: "server.jar",
+      };
+      bag.planContainerResult.image = "eclipse-temurin:25-jre";
+
+      await runner.start(bag.server);
+
+      const runArgs = bag.docker.mock.calls[1][0];
+      expect(runArgs).toContain("eclipse-temurin:25-jre");
+      // Real buildContainerStartEntrypoint dispatch: the entrypoint must be the
+      // download-if-missing shell, not a steamcmd invocation.
+      const ep = runArgs[runArgs.length - 1];
+      expect(ep).toContain("curl -fsSL -o");
+      expect(ep).toContain("server.jar");
+      expect(ep).not.toContain("app_update");
     });
 
     it("refuses games without a container definition", async () => {
