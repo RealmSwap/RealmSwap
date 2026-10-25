@@ -92,6 +92,37 @@ describe("GET /api/nodes", () => {
     expect(data.nodes[1].assignedRamGB).toBe(0);
     expect(JSON.stringify(data)).not.toContain("should-not-leave");
     expect(JSON.stringify(data)).not.toContain("enrollTokenHash");
+    // The re-displayable enrollment token never rides for members.
+    expect(JSON.stringify(data)).not.toContain("enrollTokenEnc");
+    expect(JSON.stringify(data)).not.toContain('"enroll"');
+  });
+
+  it("re-serves the enrollment token to an ADMIN while the node is PENDING and unexpired", async () => {
+    bag.user = { id: "admin-1", role: "ADMIN" };
+    const future = new Date(Date.now() + 60 * 60 * 1000);
+    bag.nodes = [
+      { id: "n1", name: "NAS", status: "PENDING", platform: null, arch: null, agentVersion: null, dockerVersion: null, lanIp: null, totalRamMB: null, freeDiskGB: null, lastSeenAt: null, createdAt: new Date(), enrollTokenEnc: "tok-plain", enrollExpiresAt: future },
+    ];
+    const res = await nodesGET();
+    const data = await res.json();
+    // Setup instructions survive leaving the page: token re-served on the row.
+    expect(data.nodes[0].enroll).toEqual({ token: "tok-plain", expiresAt: future.toISOString() });
+    // The raw encrypted-storage field itself never leaves.
+    expect(data.nodes[0].enrollTokenEnc).toBeUndefined();
+  });
+
+  it("never re-serves the token once enrolled, expired, or revoked", async () => {
+    bag.user = { id: "admin-1", role: "ADMIN" };
+    const past = new Date(Date.now() - 60 * 60 * 1000);
+    bag.nodes = [
+      { id: "n1", name: "Gone", status: "ACTIVE", platform: null, arch: null, agentVersion: null, dockerVersion: null, lanIp: null, totalRamMB: null, freeDiskGB: null, lastSeenAt: new Date(), createdAt: new Date(), enrollTokenEnc: "leftover-should-not-serve", enrollExpiresAt: past },
+      { id: "n2", name: "Stale", status: "PENDING", platform: null, arch: null, agentVersion: null, dockerVersion: null, lanIp: null, totalRamMB: null, freeDiskGB: null, lastSeenAt: null, createdAt: new Date(), enrollTokenEnc: "tok-expired", enrollExpiresAt: past },
+      { id: "n3", name: "Dead", status: "REVOKED", platform: null, arch: null, agentVersion: null, dockerVersion: null, lanIp: null, totalRamMB: null, freeDiskGB: null, lastSeenAt: null, createdAt: new Date(), enrollTokenEnc: "tok-revoked", enrollExpiresAt: new Date(Date.now() + 3600_000) },
+    ];
+    const data = await (await nodesGET()).json();
+    expect(data.nodes.map((n: any) => n.enroll)).toEqual([undefined, undefined, undefined]);
+    expect(JSON.stringify(data)).not.toContain("tok-expired");
+    expect(JSON.stringify(data)).not.toContain("tok-revoked");
   });
 
   it("requires auth", async () => {
@@ -114,6 +145,9 @@ describe("POST /api/nodes", () => {
     // Stored form is a sha256 hex of the token, never the token itself.
     expect(bag.created.enrollTokenHash).toMatch(/^[0-9a-f]{64}$/);
     expect(bag.created.enrollTokenHash).not.toBe(data.enrollToken);
+    // The plaintext copy for re-display is stored on the enc field (encrypted
+    // transparently by the real db extension; the boundary mock sees plaintext).
+    expect(bag.created.enrollTokenEnc).toBe(data.enrollToken);
   });
 
   it("is ADMIN-only", async () => {

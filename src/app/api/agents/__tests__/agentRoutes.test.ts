@@ -112,6 +112,9 @@ describe("POST /api/agents/register", () => {
     expect(bag.nodes["node-1"].status).toBe("ACTIVE");
     expect(bag.nodes["node-1"].secret).toBe(data.nodeSecret);
     expect(bag.nodes["node-1"].enrollTokenHash).toBeNull();
+    // The re-displayable token copy must be wiped too — once enrolled, the
+    // token can never be served again (GET /api/nodes).
+    expect(bag.nodes["node-1"].enrollTokenEnc).toBeNull();
   });
 
   it("rejects an unknown or already-used token", async () => {
