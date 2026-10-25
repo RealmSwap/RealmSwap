@@ -49,6 +49,46 @@ export function signResponse(nodeSecret: string, rawBody: string): string {
   return crypto.createHmac("sha256", nodeSecret).update(rawBody).digest("hex");
 }
 
+// --- Raw-transfer endpoints (backup upload/download) ---
+// Bodies here are multi-GB binaries, so the signature covers
+// nodeId+timestamp+method+path instead of the body; received archives are
+// verified structurally (zip inflate / tar listing) before anything trusts
+// them, which is where corruption or tampering is actually caught.
+
+export function pathSigningString(nodeId: string, timestamp: string, method: string, path: string): string {
+  return `${nodeId}\n${timestamp}\n${method}\n${path}`;
+}
+
+export function signPath(nodeSecret: string, nodeId: string, timestamp: string, method: string, path: string): string {
+  return crypto.createHmac("sha256", nodeSecret).update(pathSigningString(nodeId, timestamp, method, path)).digest("hex");
+}
+
+export interface PathAuthResult {
+  ok: boolean;
+  reason?: "bad_headers" | "unknown_node" | "not_enrolled" | "revoked" | "bad_timestamp" | "bad_signature";
+}
+
+export function verifyPathAuth(
+  headers: { nodeId?: string | null; timestamp?: string | null; signature?: string | null },
+  method: string,
+  path: string,
+  node: { id: string; status: string; secret: string | null } | null,
+  now = Date.now()
+): PathAuthResult {
+  const { nodeId, timestamp, signature } = headers;
+  if (!nodeId || !timestamp || !signature) return { ok: false, reason: "bad_headers" };
+  if (!node || node.id !== nodeId) return { ok: false, reason: "unknown_node" };
+  if (node.status === "REVOKED") return { ok: false, reason: "revoked" };
+  if (!node.secret) return { ok: false, reason: "not_enrolled" };
+  const ts = Number(timestamp);
+  if (!Number.isFinite(ts) || Math.abs(now - ts) > TIMESTAMP_WINDOW_MS) {
+    return { ok: false, reason: "bad_timestamp" };
+  }
+  const expected = signPath(node.secret, nodeId, timestamp, method, path);
+  if (!secureSecretEquals(expected, signature)) return { ok: false, reason: "bad_signature" };
+  return { ok: true };
+}
+
 export interface SyncAuthResult {
   ok: boolean;
   reason?: "bad_headers" | "unknown_node" | "not_enrolled" | "revoked" | "bad_timestamp" | "bad_signature";

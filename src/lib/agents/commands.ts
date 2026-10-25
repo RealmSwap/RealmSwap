@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import type { CommandPayload } from "./protocol";
+import { NODE_ONLINE_WINDOW_MS, type CommandPayload } from "./protocol";
 
 /**
  * The dashboard→agent work queue, drained by the agent's sync loop. The agent
@@ -12,10 +12,29 @@ import type { CommandPayload } from "./protocol";
 const RECLAIM_SENT_AFTER_MS = 60000;
 const RESULT_POLL_MS = 500;
 
+/** Node checks shared by every dispatcher that enqueues commands directly
+ *  (backup flows, RemoteRunner has its own private copy). Throws with a
+ *  message the user can act on. */
+export async function resolveUsableNode(serverId: string) {
+  const row = await prisma.server.findUnique({ where: { id: serverId }, select: { nodeId: true } });
+  if (!row?.nodeId) throw new Error("Server has no node assigned.");
+  const node = await prisma.agentNode.findUnique({ where: { id: row.nodeId } });
+  if (!node) throw new Error("Assigned node no longer exists.");
+  if (node.status !== "ACTIVE" || !node.secret) {
+    throw new Error(`Node '${node.name}' has not completed enrollment.`);
+  }
+  if (!node.lastSeenAt || Date.now() - node.lastSeenAt.getTime() > NODE_ONLINE_WINDOW_MS) {
+    throw new Error(`Node '${node.name}' is offline (last seen ${node.lastSeenAt?.toISOString() ?? "never"}).`);
+  }
+  return node;
+}
+
+export type AgentCommandType = "START" | "STOP" | "UPDATE" | "SEND_COMMAND" | "BACKUP_CREATE" | "BACKUP_RESTORE";
+
 export async function enqueueCommand(
   nodeId: string,
   serverId: string,
-  type: "START" | "STOP" | "UPDATE" | "SEND_COMMAND",
+  type: AgentCommandType,
   payload: CommandPayload
 ): Promise<{ id: string }> {
   const row = await prisma.agentCommand.create({

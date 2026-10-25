@@ -5,10 +5,11 @@ import { Server } from "@/generated/client";
  *
  * Everything that reads or writes `<dataRoot>/local-servers/<id>` on the
  * dashboard machine describes the WRONG disk when the game container lives on
- * a node: backups, snapshots, vault archives, the mod system, the raw config
- * editor, world import/export, the SFTP panel, RealmSync invites, cloud
- * transfer. Rather than silently operating on nothing, each of those routes
- * refuses AGENT servers with a message that says what IS supported.
+ * a node: vault archives, the mod system, the raw config editor, world
+ * import/export, the SFTP panel, RealmSync invites, cloud transfer. Rather
+ * than silently operating on nothing, each of those routes refuses AGENT
+ * servers with a message that says what IS supported. (Backups USED to be on
+ * this list — they now flow through the agent's tar/upload/restore pipeline.)
  */
 export function remoteNodeRefusal(feature: string): Error {
   return new Error(

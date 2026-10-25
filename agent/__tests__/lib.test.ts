@@ -95,3 +95,77 @@ describe("agent timingSafeEqualHex", () => {
     expect(timingSafeEqualHex(a, "short")).toBe(false);
   });
 });
+
+import { buildTarArgs, installStagedTree } from "../lib";
+
+describe("agent buildTarArgs", () => {
+  it("roots the archive at baseDir", () => {
+    expect(buildTarArgs("/data", ["srv/world"], "/tmp/out.tar")).toEqual([
+      "-cf", "/tmp/out.tar", "-C", "/data", "srv/world",
+    ]);
+  });
+});
+
+describe("agent installStagedTree", () => {
+  let root: string;
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), "agent-swap-test-"));
+  });
+
+  it("swap replaces the dest dir wholesale and cleans up the backup", () => {
+    const dest = path.join(root, "world");
+    fs.mkdirSync(dest);
+    fs.writeFileSync(path.join(dest, "old.txt"), "old");
+    const staged = path.join(root, "staged");
+    fs.mkdirSync(staged);
+    fs.writeFileSync(path.join(staged, "new.txt"), "new");
+
+    expect(installStagedTree(staged, dest, "swap")).toEqual({ ok: true });
+    expect(fs.readdirSync(dest)).toEqual(["new.txt"]);
+    expect(fs.existsSync(`${dest}.pre-restore`)).toBe(false);
+  });
+
+  it("overlay adds and overwrites without deleting sibling files (Valheim worlds)", () => {
+    const dest = path.join(root, "worlds");
+    fs.mkdirSync(dest);
+    fs.writeFileSync(path.join(dest, "OtherWorld.db"), "keep");
+    fs.writeFileSync(path.join(dest, "Dedicated.db"), "stale");
+    const staged = path.join(root, "staged");
+    fs.mkdirSync(staged);
+    fs.writeFileSync(path.join(staged, "Dedicated.db"), "fresh");
+
+    expect(installStagedTree(staged, dest, "overlay")).toEqual({ ok: true });
+    expect(fs.readdirSync(dest).sort()).toEqual(["Dedicated.db", "OtherWorld.db"]);
+    expect(fs.readFileSync(path.join(dest, "Dedicated.db"), "utf-8")).toBe("fresh");
+    expect(fs.readFileSync(path.join(dest, "OtherWorld.db"), "utf-8")).toBe("keep");
+  });
+
+  it("swap failure rolls the old dir back into place", () => {
+    const dest = path.join(root, "world");
+    fs.mkdirSync(dest);
+    fs.writeFileSync(path.join(dest, "old.txt"), "old");
+    const staged = path.join(root, "staged");
+    fs.mkdirSync(staged);
+    fs.writeFileSync(path.join(staged, "new.txt"), "new");
+    // Force the second rename to fail: dest is suddenly occupied again by an
+    // adversary between the two renames — simulate via a directory that can't
+    // be moved over (non-empty existing dir where dest must go).
+    const blocker = path.join(root, "blocker");
+    fs.mkdirSync(blocker);
+    const realRename = fs.renameSync;
+    let calls = 0;
+    (fs as any).renameSync = (...args: [fs.PathLike, fs.PathLike]) => {
+      calls += 1;
+      if (calls === 2) throw new Error("simulated failure");
+      return realRename(args[0], args[1]);
+    };
+    try {
+      const result = installStagedTree(staged, dest, "swap");
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.error).toContain("simulated failure");
+      expect(fs.readFileSync(path.join(dest, "old.txt"), "utf-8")).toBe("old");
+    } finally {
+      (fs as any).renameSync = realRename;
+    }
+  });
+});

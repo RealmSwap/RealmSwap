@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import crypto from "crypto";
 import {
   mintEnrollToken, mintNodeSecret, sha256Hex,
-  syncSigningString, signSync, signResponse, verifySyncAuth, TIMESTAMP_WINDOW_MS,
+  syncSigningString, signSync, signResponse, verifySyncAuth,
+  signPath, verifyPathAuth, TIMESTAMP_WINDOW_MS,
 } from "../auth";
 
 /**
@@ -86,5 +87,38 @@ describe("agent auth", () => {
       "different-body",
       node
     ).reason).toBe("bad_signature");
+  });
+});
+
+describe("path auth (raw transfer endpoints)", () => {
+  it("accepts a correctly-signed method+path and binds both into the signature", () => {
+    const ts = Date.now().toString();
+    const sig = signPath(secret, nodeId, ts, "POST", "/api/agents/upload?serverId=srv");
+    expect(verifyPathAuth(
+      { nodeId, timestamp: ts, signature: sig }, "POST", "/api/agents/upload?serverId=srv", node,
+    )).toEqual({ ok: true });
+    // A different method or path (including query changes) invalidates it.
+    expect(verifyPathAuth(
+      { nodeId, timestamp: ts, signature: sig }, "GET", "/api/agents/upload?serverId=srv", node,
+    ).reason).toBe("bad_signature");
+    expect(verifyPathAuth(
+      { nodeId, timestamp: ts, signature: sig }, "POST", "/api/agents/download/abc", node,
+    ).reason).toBe("bad_signature");
+  });
+
+  it("rejects stale timestamps, unknown nodes, and revoked nodes", () => {
+    const stale = (Date.now() - TIMESTAMP_WINDOW_MS - 1000).toString();
+    const sig = signPath(secret, nodeId, stale, "POST", "/api/agents/upload");
+    expect(verifyPathAuth(
+      { nodeId, timestamp: stale, signature: sig }, "POST", "/api/agents/upload", node,
+    ).reason).toBe("bad_timestamp");
+    expect(verifyPathAuth(
+      { nodeId, timestamp: Date.now().toString(), signature: signPath(secret, nodeId, Date.now().toString(), "POST", "/api/agents/upload") },
+      "POST", "/api/agents/upload", null,
+    ).reason).toBe("unknown_node");
+    expect(verifyPathAuth(
+      { nodeId, timestamp: Date.now().toString(), signature: signPath(secret, nodeId, Date.now().toString(), "POST", "/api/agents/upload") },
+      "POST", "/api/agents/upload", { ...node, status: "REVOKED" },
+    ).reason).toBe("revoked");
   });
 });
