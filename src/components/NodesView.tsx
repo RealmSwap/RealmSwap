@@ -21,6 +21,9 @@ interface AgentNodeRow {
   lanIp: string | null;
   totalRamMB: number | null;
   freeDiskGB: number | null;
+  assignedRamGB: number;
+  totalServers: number;
+  runningServers: number;
   lastSeenAt: string | null;
   online: boolean;
 }
@@ -161,8 +164,11 @@ export default function NodesView({ user }: { user: { id: string; role: string }
                   {[
                     n.platform && n.arch ? `${n.platform}/${n.arch}` : null,
                     n.dockerVersion ? `Docker ${n.dockerVersion}` : null,
-                    n.totalRamMB ? `${(n.totalRamMB / 1024).toFixed(1)} GB RAM` : null,
+                    n.totalRamMB
+                      ? `${(n.assignedRamGB || 0).toFixed(0)}/${(n.totalRamMB / 1024).toFixed(0)} GB RAM assigned`
+                      : null,
                     n.freeDiskGB != null ? `${n.freeDiskGB} GB free` : null,
+                    n.totalServers ? `${n.runningServers} of ${n.totalServers} servers running` : "no servers",
                     n.lanIp ? n.lanIp : null,
                     n.lastSeenAt ? `last seen ${new Date(n.lastSeenAt).toLocaleTimeString()}` : "never seen",
                   ].filter(Boolean).join(" · ")}

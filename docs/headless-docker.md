@@ -73,6 +73,30 @@ Desktop/native runs need none of these — defaults preserve existing behavior.
 - **Rootless Docker**: mount the rootless socket path instead of
   `/var/run/docker.sock`.
 
+## Shared storage (NAS mounts)
+
+Server data can live on shared storage by pointing the data dirs at an
+NFS/SMB mount:
+
+- **Dashboard container**: bind-mount the mount into the container and set
+  `GAMEVAULT_DATA_DIR` (and `REALMSWAP_HOST_DATA_DIR`) at it — server files,
+  backups, and snapshots land on the share.
+- **Agent**: set `REALMSWAP_AGENT_HOME` at a mount and every node's server
+  data + backups collect on the same storage.
+
+One hard rule: **keep the SQLite database on local disk**. SQLite over NFS
+is documented by the SQLite project as prone to corruption (its file-locking
+assumptions don't hold on network filesystems). The dashboard keeps the DB
+separate from server data by design (`DATABASE_URL=file:/data/realmswap.db`
+with `/data` local; mount the share at a different path and point
+`GAMEVAULT_DATA_DIR` at it instead... except the DB lives under the data
+dir — so on a shared-storage setup, move ONLY the heavy trees: bind-mount
+the share over `local-servers/`, `local-backups/`, and `snapshots/`
+subdirectories, and leave the DB file on local disk).
+
+Also mind latency: game servers write saves frequently; a 1GbE mount is
+fine, Wi-Fi-attached storage is not.
+
 ## Verifying a fresh install
 
 1. `docker compose logs realmswap` — expect `[migrate-on-boot] Applied N pending migration(s).`

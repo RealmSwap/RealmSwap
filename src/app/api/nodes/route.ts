@@ -39,10 +39,32 @@ export async function GET() {
     },
   });
 
+  // What the scheduler needs per node: RAM already promised to RealmSwap
+  // servers and how many it hosts (total + running). Everything else about
+  // the node's load is invisible to us — see scheduling.ts.
+  const [assignments, running] = await Promise.all([
+    prisma.server.groupBy({
+      by: ["nodeId"],
+      where: { runnerType: "AGENT", nodeId: { not: null } },
+      _count: { _all: true },
+      _sum: { ramAllocation: true },
+    }),
+    prisma.server.groupBy({
+      by: ["nodeId"],
+      where: { runnerType: "AGENT", status: { in: ["RUNNING", "STARTING"] } },
+      _count: { _all: true },
+    }),
+  ]);
+  const assignedByNode = new Map(assignments.map((a) => [a.nodeId, a]));
+  const runningByNode = new Map(running.map((r) => [r.nodeId, r]));
+
   return NextResponse.json({
     nodes: nodes.map((n) => ({
       ...n,
       online: n.status === "ACTIVE" && nodeOnline(n.lastSeenAt),
+      assignedRamGB: assignedByNode.get(n.id)?._sum.ramAllocation ?? 0,
+      totalServers: assignedByNode.get(n.id)?._count._all ?? 0,
+      runningServers: runningByNode.get(n.id)?._count._all ?? 0,
     })),
   });
 }
