@@ -285,6 +285,22 @@
         }
       ],
       "editableConfigPath": "enshrouded-server/enshrouded_server.json",
+      "container": {
+        "image": "didstopia/base:nodejs-22-wine-steamcmd-ubuntu-24.04",
+        "executable": "xvfb-run",
+        "executableOnPath": true,
+        "installSubDir": "enshrouded-server",
+        "env": {
+          "WINEPREFIX": "/data/.wine-enshrouded",
+          "WINEDEBUG": "-all",
+          "CHOWN_DIRS": "/app,/steamcmd,/data"
+        },
+        "args": [
+          "--auto-servernum",
+          "wine",
+          "enshrouded_server.exe"
+        ]
+      },
       "ports": [
         {
           "protocol": "TCP",
@@ -778,6 +794,23 @@
       "params": [],
       "configFiles": [],
       "editableConfigPath": "windrose-server/R5/ServerDescription.json",
+      "container": {
+        "image": "didstopia/base:nodejs-22-wine-steamcmd-ubuntu-24.04",
+        "executable": "xvfb-run",
+        "executableOnPath": true,
+        "installSubDir": "windrose-server",
+        "env": {
+          "WINEPREFIX": "/data/.wine-windrose",
+          "WINEDEBUG": "-all",
+          "CHOWN_DIRS": "/app,/steamcmd,/data"
+        },
+        "args": [
+          "--auto-servernum",
+          "wine",
+          "R5/Binaries/Win64/WindroseServer-Win64-Shipping.exe",
+          "-log"
+        ]
+      },
       "ports": [
         {
           "protocol": "TCP",

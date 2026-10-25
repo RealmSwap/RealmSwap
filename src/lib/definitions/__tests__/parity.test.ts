@@ -282,6 +282,59 @@ describe("container: V Rising (Wine pilot)", () => {
   });
 });
 
+describe("container: Enshrouded (Wine)", () => {
+  it("runs the Windows exe under Wine with a persisted prefix", () => {
+    const c = ctxFor("ENSHROUDED", { name: "Ember", password: null, ram: 8 });
+    const p = planContainer(def("ENSHROUDED").spec, c)!;
+    expect(p).not.toBeNull();
+    expect(p.image).toBe("didstopia/base:nodejs-22-wine-steamcmd-ubuntu-24.04");
+    expect(p.installSubDir).toBe("enshrouded-server");
+    expect(p.executable).toBe("xvfb-run");
+    expect(p.executableOnPath).toBe(true);
+    expect(p.args).toEqual(["--auto-servernum", "wine", "enshrouded_server.exe"]);
+    expect(p.env).toMatchObject({
+      WINEPREFIX: "/data/.wine-enshrouded",
+      CHOWN_DIRS: "/app,/steamcmd,/data",
+    });
+  });
+});
+
+describe("container: Windrose (Wine)", () => {
+  it("execs the UE shipping binary directly under xvfb-run + wine", () => {
+    const c = ctxFor("WINDROSE", { name: "Sea Dogs", password: null, ram: 8 });
+    const p = planContainer(def("WINDROSE").spec, c)!;
+    expect(p).not.toBeNull();
+    expect(p.image).toBe("didstopia/base:nodejs-22-wine-steamcmd-ubuntu-24.04");
+    expect(p.installSubDir).toBe("windrose-server");
+    // The root WindroseServer.exe is a Windows launcher; under Wine the
+    // community-proven path is the shipping binary itself.
+    expect(p.executable).toBe("xvfb-run");
+    expect(p.executableOnPath).toBe(true);
+    expect(p.args).toEqual([
+      "--auto-servernum", "wine",
+      "R5/Binaries/Win64/WindroseServer-Win64-Shipping.exe", "-log",
+    ]);
+    expect(p.env).toMatchObject({
+      WINEPREFIX: "/data/.wine-windrose",
+      CHOWN_DIRS: "/app,/steamcmd,/data",
+    });
+  });
+});
+
+describe("container coverage", () => {
+  // Remote nodes / Docker can only run games with a container plan; a builtin
+  // without one is silently stranded on the Local runner. New games must ship
+  // a plan (native Linux, Wine, or a download image) or extend this list
+  // deliberately.
+  const EXPECTED_CONTAINERLESS: string[] = [];
+  it("every builtin game has a container plan", () => {
+    for (const d of BUILTIN_DEFINITIONS) {
+      if (EXPECTED_CONTAINERLESS.includes(d.slug)) continue;
+      expect(d.spec.container, `${d.slug} has no container plan`).toBeDefined();
+    }
+  });
+});
+
 describe("container: ARK", () => {
   it("produces a Linux container plan with correct executable path", () => {
     const c = ctxFor("ARK", { name: "The Island", password: "pw", ram: 12 });

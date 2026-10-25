@@ -118,6 +118,23 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       ],
       configFiles: [{ path: "enshrouded_server.json", strategy: "enshroudedJson" }],
       editableConfigPath: "enshrouded-server/enshrouded_server.json",
+      // No native Linux build (Windows-only launch config in the Steam app
+      // manifest) — the Windows exe runs under Wine on the didstopia base,
+      // same pattern as V Rising. Community reference (indifferentbroccoli's
+      // image): xvfb-run --auto-servernum wine enshrouded_server.exe, no
+      // steamclient.so path or winetricks needed, WINEPREFIX overridable.
+      container: {
+        image: "didstopia/base:nodejs-22-wine-steamcmd-ubuntu-24.04",
+        executable: "xvfb-run",
+        executableOnPath: true,
+        installSubDir: "enshrouded-server",
+        env: {
+          WINEPREFIX: "/data/.wine-enshrouded",
+          WINEDEBUG: "-all",
+          CHOWN_DIRS: "/app,/steamcmd,/data",
+        },
+        args: ["--auto-servernum", "wine", "enshrouded_server.exe"],
+      },
       ports: [
         { protocol: "TCP", port: "15636" }, { protocol: "UDP", port: "15636" },
         { protocol: "TCP", port: "15637" }, { protocol: "UDP", port: "15637" },
@@ -307,6 +324,26 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       params: [],
       configFiles: [],
       editableConfigPath: "windrose-server/R5/ServerDescription.json",
+      // No native Linux build — Windows exe under Wine (didstopia base), same
+      // pattern as V Rising/Enshrouded. Windrose is Unreal: the community
+      // reference (indifferentbroccoli/windrose-server-docker) execs the UE
+      // shipping binary DIRECTLY — the root WindroseServer.exe is a Windows
+      // launcher — with plain -log; no steamclient.so path needed.
+      container: {
+        image: "didstopia/base:nodejs-22-wine-steamcmd-ubuntu-24.04",
+        executable: "xvfb-run",
+        executableOnPath: true,
+        installSubDir: "windrose-server",
+        env: {
+          WINEPREFIX: "/data/.wine-windrose",
+          WINEDEBUG: "-all",
+          CHOWN_DIRS: "/app,/steamcmd,/data",
+        },
+        args: [
+          "--auto-servernum", "wine",
+          "R5/Binaries/Win64/WindroseServer-Win64-Shipping.exe", "-log",
+        ],
+      },
       ports: [{ protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" }],
     },
   },
