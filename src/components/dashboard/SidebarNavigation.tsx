@@ -15,6 +15,7 @@ import {
   Terminal,
   History,
   Users,
+  Network,
   HardDrive,
   LogOut,
   ChevronRight
@@ -39,8 +40,9 @@ export function SidebarNavigation({ user }: { user: any }) {
       links: [
         { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
         { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
-        { label: "Server Settings", icon: Settings, href: "/dashboard/config" },
-        { label: "Schedules", icon: Clock, href: "/dashboard/schedules" },
+        { label: "Server Config", icon: Settings, href: "/dashboard/config" },
+        { label: "Automation", icon: Clock, href: "/dashboard/schedules" },
+        { label: "Nodes", icon: Network, href: "/dashboard/nodes" },
       ]
     },
     {
@@ -48,8 +50,8 @@ export function SidebarNavigation({ user }: { user: any }) {
       links: [
         { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
         { label: "Audit Logs", icon: History, href: "/dashboard/logs" },
-        { label: "Players", icon: Users, href: "/dashboard/players" },
-        { label: "Team Members", icon: Users, href: "/dashboard/team" },
+        { label: "Game Players", icon: Users, href: "/dashboard/players" },
+        { label: "App Access", icon: Users, href: "/dashboard/team" },
         { label: "File Locations", icon: HardDrive, href: "/dashboard/storage" },
       ]
     }
