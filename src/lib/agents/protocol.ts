@@ -54,11 +54,41 @@ export interface SendCommandPayload {
   command: string;
 }
 
+/** Zip-on-the-dashboard, tar-on-the-node: the agent tars its save dir with
+ *  system tar and uploads it; the dashboard extracts and runs the normal
+ *  backup machinery (verify, retention, offsite). */
+export interface BackupCreateCommandPayload {
+  kind: "BACKUP_CREATE";
+  dataDirName: string;
+  /** Save dir relative to the server data dir (same layout DOCKER uses). */
+  srcRelDir: string;
+  /** Valheim-only: archive just these files from srcRelDir (whatever exists). */
+  includeFiles?: string[];
+  /** Where to POST the tar (HMAC-authenticated). */
+  uploadPath: string;
+}
+
+/** Restore = dashboard extracts the Backup zip, tars it, agent pulls it via a
+ *  one-shot token, extracts to staging, and swaps into place. */
+export interface BackupRestoreCommandPayload {
+  kind: "BACKUP_RESTORE";
+  dataDirName: string;
+  /** Destination dir relative to the server data dir (same layout DOCKER uses). */
+  destRelDir: string;
+  /** One-shot download path (HMAC-authenticated). */
+  downloadPath: string;
+  /** swap = replace dest dir; overlay = add/overwrite files, keep the rest
+   *  (Valheim worlds live alongside other worlds in the same dir). */
+  mode: "swap" | "overlay";
+}
+
 export type CommandPayload =
   | StartCommandPayload
   | StopCommandPayload
   | UpdateCommandPayload
-  | SendCommandPayload;
+  | SendCommandPayload
+  | BackupCreateCommandPayload
+  | BackupRestoreCommandPayload;
 
 /** What the agent reports per server it manages. */
 export interface ServerReport {
@@ -88,7 +118,7 @@ export interface SyncRequest {
 
 export interface SyncCommand {
   id: string;
-  type: "START" | "STOP" | "UPDATE" | "SEND_COMMAND";
+  type: "START" | "STOP" | "UPDATE" | "SEND_COMMAND" | "BACKUP_CREATE" | "BACKUP_RESTORE";
   serverId: string;
   payload: CommandPayload;
 }

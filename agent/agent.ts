@@ -21,10 +21,11 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { promisify } from "util";
-import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex } from "./lib";
+import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, installStagedTree } from "./lib";
 import type {
   SyncRequest, SyncResponse, SyncCommand, RegisterResponse,
   StartCommandPayload, StopCommandPayload, UpdateCommandPayload, SendCommandPayload,
+  BackupCreateCommandPayload, BackupRestoreCommandPayload,
   ServerReport,
 } from "../src/lib/agents/protocol";
 
@@ -230,6 +231,123 @@ async function execSendCommand(serverId: string, p: SendCommandPayload): Promise
   return { ok: true };
 }
 
+async function execBackupCreate(serverId: string, p: BackupCreateCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const dataDir = path.join(agentDataRoot(), p.dataDirName);
+  const srcAbs = path.resolve(path.join(dataDir, p.srcRelDir));
+  if (!srcAbs.startsWith(path.resolve(dataDir) + path.sep)) {
+    return { ok: false, error: `Backup source escapes the server data dir: ${p.srcRelDir}` };
+  }
+  fs.mkdirSync(stateDir, { recursive: true });
+  const tarPath = path.join(stateDir, `backup-${serverId}-${Date.now()}.tar`);
+  try {
+    let entries: string[];
+    let baseDir: string;
+    if (p.includeFiles && p.includeFiles.length > 0) {
+      // Valheim: archive just the world files that exist.
+      baseDir = srcAbs;
+      entries = p.includeFiles.filter((f: string) => fs.existsSync(path.join(srcAbs, f)));
+      if (entries.length === 0) {
+        return { ok: false, error: "No world files found to back up — start the server once to generate a world." };
+      }
+    } else {
+      if (!fs.existsSync(srcAbs)) {
+        return { ok: false, error: "No save files found — start the server once to generate a world." };
+      }
+      baseDir = dataDir;
+      entries = [p.srcRelDir];
+    }
+    await runTar(buildTarArgs(baseDir, entries, tarPath));
+
+    // Upload: HMAC path-auth over method+path (multi-GB body is not hashed;
+    // the dashboard verifies the archive structurally after extraction).
+    const timestamp = Date.now().toString();
+    const signature = crypto.createHmac("sha256", requireState().nodeSecret)
+      .update(`${requireState().nodeId}\n${timestamp}\nPOST\n${p.uploadPath}`)
+      .digest("hex");
+    const res = await fetch(`${requireState().serverUrl.replace(/\/$/, "")}${p.uploadPath}`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-tar",
+        "x-node-id": requireState().nodeId,
+        "x-node-timestamp": timestamp,
+        "x-node-signature": signature,
+      },
+      body: fs.createReadStream(tarPath),
+      duplex: "half",
+      signal: AbortSignal.timeout(30 * 60 * 1000),
+    } as any);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: `Upload failed: ${data.error ?? res.status}` };
+    }
+    return { ok: true, output: JSON.stringify({ uploadId: data.uploadId }) };
+  } finally {
+    try { if (fs.existsSync(tarPath)) fs.unlinkSync(tarPath); } catch { /* best-effort */ }
+  }
+}
+
+async function execBackupRestore(serverId: string, p: BackupRestoreCommandPayload): Promise<{ ok: boolean; error?: string }> {
+  const dataDir = path.join(agentDataRoot(), p.dataDirName);
+  const destAbs = path.resolve(path.join(dataDir, p.destRelDir));
+  if (!destAbs.startsWith(path.resolve(dataDir) + path.sep)) {
+    return { ok: false, error: `Restore destination escapes the server data dir: ${p.destRelDir}` };
+  }
+  fs.mkdirSync(stateDir, { recursive: true });
+  const tarPath = path.join(stateDir, `restore-${serverId}-${Date.now()}.tar`);
+  const stagingDir = `${destAbs}.restore-staging`;
+  try {
+    const timestamp = Date.now().toString();
+    const signature = crypto.createHmac("sha256", requireState().nodeSecret)
+      .update(`${requireState().nodeId}\n${timestamp}\nGET\n${p.downloadPath}`)
+      .digest("hex");
+    const res = await fetch(`${requireState().serverUrl.replace(/\/$/, "")}${p.downloadPath}`, {
+      headers: {
+        "x-node-id": requireState().nodeId,
+        "x-node-timestamp": timestamp,
+        "x-node-signature": signature,
+      },
+      signal: AbortSignal.timeout(30 * 60 * 1000),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return { ok: false, error: `Download failed: ${data.error ?? res.status}` };
+    }
+    await streamToFile(res.body!, tarPath);
+    if (!fs.existsSync(tarPath) || fs.statSync(tarPath).size === 0) {
+      return { ok: false, error: "Downloaded archive was empty." };
+    }
+
+    // Stage first: a corrupt archive or full disk fails with the live world
+    // intact (dashboard restore semantics, mirrored).
+    fs.rmSync(stagingDir, { recursive: true, force: true });
+    await runTar(["-xf", tarPath, "-C", stagingDir]);
+    const stagedEntries = fs.readdirSync(stagingDir);
+    if (stagedEntries.length === 0) {
+      return { ok: false, error: "Restored archive staged empty — refusing to touch the live world." };
+    }
+    const result = installStagedTree(stagingDir, destAbs, p.mode);
+    if (!result.ok) return { ok: false, error: result.error };
+    return { ok: true };
+  } finally {
+    fs.rmSync(stagingDir, { recursive: true, force: true });
+    try { if (fs.existsSync(tarPath)) fs.unlinkSync(tarPath); } catch { /* best-effort */ }
+  }
+}
+
+async function runTar(args: string[]): Promise<void> {
+  try {
+    await execFile("tar", args, { timeout: 30 * 60 * 1000, windowsHide: true, maxBuffer: 10 * 1024 * 1024 });
+  } catch (err: any) {
+    throw new Error(`tar failed (is tar on PATH?): ${err?.stderr?.toString?.() || err?.message || err}`);
+  }
+}
+
+async function streamToFile(body: ReadableStream, filePath: string): Promise<void> {
+  const { Readable } = await import("stream");
+  const { pipeline } = await import("stream/promises");
+  await pipeline(Readable.fromWeb(body as any), fs.createWriteStream(filePath));
+}
+
 async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok: boolean; error?: string; output?: string }> {
   try {
     let result: { ok: boolean; error?: string; output?: string };
@@ -238,6 +356,8 @@ async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok
       case "STOP": result = await execStop(cmd.serverId, cmd.payload); break;
       case "UPDATE": result = await execUpdate(cmd.serverId, cmd.payload); break;
       case "SEND_COMMAND": result = await execSendCommand(cmd.serverId, cmd.payload); break;
+      case "BACKUP_CREATE": result = await execBackupCreate(cmd.serverId, cmd.payload); break;
+      case "BACKUP_RESTORE": result = await execBackupRestore(cmd.serverId, cmd.payload); break;
       default: result = { ok: false, error: `Unknown command kind` };
     }
     return { commandId: cmd.id, ...result };
@@ -248,6 +368,14 @@ async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok
 
 // ---------------------------------------------------------------------------
 // Reporting + sync loop
+
+// Enrollment state, set once at startup (register or run) — command
+// executors reach the dashboard through it.
+let agentState: AgentState | null = null;
+function requireState(): AgentState {
+  if (!agentState) throw new Error("Agent not enrolled.");
+  return agentState;
+}
 
 const reportQueue: ServerReport[] = [];
 function queueReport(report: ServerReport): void {
@@ -359,16 +487,16 @@ async function syncOnce(state: AgentState, agentVersion: string): Promise<void> 
   const timestamp = Date.now().toString();
   const signature = crypto
     .createHmac("sha256", state.nodeSecret)
-    .update(`${state.nodeId}\n${timestamp}\n${raw}`)
+    .update(`${requireState().nodeId}\n${timestamp}\n${raw}`)
     .digest("hex");
 
   let res: Response;
   try {
-    res = await fetch(`${state.serverUrl.replace(/\/$/, "")}/api/agents/sync`, {
+    res = await fetch(`${requireState().serverUrl.replace(/\/$/, "")}/api/agents/sync`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-node-id": state.nodeId,
+        "x-node-id": requireState().nodeId,
         "x-node-timestamp": timestamp,
         "x-node-signature": signature,
       },
@@ -389,7 +517,7 @@ async function syncOnce(state: AgentState, agentVersion: string): Promise<void> 
   }
 
   const rawResponse = await res.text();
-  const expectedSig = crypto.createHmac("sha256", state.nodeSecret).update(rawResponse).digest("hex");
+  const expectedSig = crypto.createHmac("sha256", requireState().nodeSecret).update(rawResponse).digest("hex");
   const gotSig = res.headers.get("x-node-resp-signature");
   if (!gotSig || !timingSafeEqualHex(expectedSig, gotSig)) {
     console.error("[sync] response signature invalid — ignoring (possible tampering).");
@@ -408,6 +536,7 @@ async function syncOnce(state: AgentState, agentVersion: string): Promise<void> 
 const results: { commandId: string; ok: boolean; error?: string; output?: string }[] = [];
 
 async function runLoop(state: AgentState, agentVersion: string): Promise<void> {
+  agentState = state;
   console.log(`Agent ${agentVersion} running for node ${state.nodeId} → ${state.serverUrl}`);
   const dockerVer = await dockerVersion();
   console.log(dockerVer ? `Docker ${dockerVer} detected.` : "WARNING: Docker daemon not reachable — commands will fail.");
@@ -455,6 +584,7 @@ async function main(): Promise<void> {
       process.exit(1);
     }
     saveState({ serverUrl: args.server, nodeId: reg.nodeId, nodeSecret: reg.nodeSecret });
+    agentState = { serverUrl: args.server, nodeId: reg.nodeId, nodeSecret: reg.nodeSecret };
     console.log(`Registered as node '${reg.nodeName}' (${reg.nodeId}). Start with: agent run`);
     return;
   }

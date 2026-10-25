@@ -67,3 +67,58 @@ export function timingSafeEqualHex(a: string, b: string): boolean {
   if (ba.length !== bb.length) return false;
   return crypto.timingSafeEqual(ba, bb);
 }
+
+/** tar argv for an upload (system tar — Linux + Windows 10+ bsdtar). */
+export function buildTarArgs(baseDir: string, entries: string[], tarPath: string): string[] {
+  return ["-cf", tarPath, "-C", baseDir, ...entries];
+}
+
+/**
+ * Install a staged restore tree onto the live one with the atomicFs
+ * semantics the dashboard uses: rename-swap with rollback for `swap` mode
+ * (world dir replaced wholesale), pure overlay for `overlay` mode (Valheim's
+ * worlds dir holds other worlds — files are added/overwritten, never
+ * deleted). Returns the rollback of a failed swap itself.
+ */
+export function installStagedTree(
+  stagedDir: string,
+  destDir: string,
+  mode: "swap" | "overlay",
+): { ok: true } | { ok: false; error: string } {
+  try {
+    if (mode === "overlay") {
+      overlayDir(stagedDir, destDir);
+      return { ok: true };
+    }
+    fs.mkdirSync(path.dirname(destDir), { recursive: true });
+    const backupDir = `${destDir}.pre-restore`;
+    fs.rmSync(backupDir, { recursive: true, force: true });
+    let swapped = false;
+    if (fs.existsSync(destDir)) {
+      fs.renameSync(destDir, backupDir);
+      swapped = true;
+    }
+    try {
+      fs.renameSync(stagedDir, destDir);
+    } catch (err: any) {
+      if (swapped) {
+        try { fs.renameSync(backupDir, destDir); } catch { /* best-effort rollback */ }
+      }
+      return { ok: false, error: `Failed to swap restored world into place: ${err?.message ?? err}` };
+    }
+    fs.rmSync(backupDir, { recursive: true, force: true });
+    return { ok: true };
+  } catch (err: any) {
+    return { ok: false, error: err?.message ?? String(err) };
+  }
+}
+
+function overlayDir(from: string, to: string): void {
+  fs.mkdirSync(to, { recursive: true });
+  for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
+    const src = path.join(from, entry.name);
+    const dst = path.join(to, entry.name);
+    if (entry.isDirectory()) overlayDir(src, dst);
+    else fs.copyFileSync(src, dst);
+  }
+}

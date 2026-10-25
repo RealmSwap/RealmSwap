@@ -109,12 +109,15 @@ Setup:
 
 What works for remote-node servers today: start/stop/restart, console
 (logs + commands, streamed through the same pipeline as local servers),
-telemetry, status page, player counts, RCON (save-flush before backups of
-LOCAL machines is unaffected), join info via the node's LAN IP, crash
-auto-restart (dashboard-owned, same policy as the Docker runner).
+telemetry, status page, player counts, RCON, join info via the node's LAN
+IP, crash auto-restart (dashboard-owned, same policy as the Docker runner),
+and **backups** — the agent tars the world with the system tar, uploads it
+over the signed channel, and the dashboard runs the normal machinery
+(verify, retention, offsite S3). Restores stream back the same way, staged
+and swapped atomically on the node.
 
 What honestly refuses for remote-node servers (it operates on the
-dashboard's disk): backups, mod installs/config, the config editor, world
+dashboard's disk): mod installs/config, the config editor, world
 import/export, vault archives, SFTP panel, RealmSync invites, playit
 tunnels, and cloud transfer. Each returns a clear message instead of
 silently doing the wrong thing. Moving those behind the agent is the next
