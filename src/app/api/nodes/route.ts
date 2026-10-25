@@ -9,9 +9,12 @@ import { NODE_ONLINE_WINDOW_MS } from "@/lib/agents/protocol";
  * Agent node registry.
  *
  * GET  /api/nodes — any authed member: node list for the deploy-to picker and
- *      the Nodes page. Secrets/tokens never leave the API.
+ *      the Nodes page. Secrets never leave the API. For ADMINs, a still-PENDING
+ *      node also carries its enrollment token (re-served until the agent
+ *      registers or the token expires, so the setup instructions survive
+ *      leaving the page).
  * POST /api/nodes — ADMIN: mint an enrollment (one-time token, 24h expiry).
- *      The token is returned in plaintext exactly once.
+ *      The token is returned in plaintext and stored encrypted for re-display.
  */
 
 const createSchema = z.object({
@@ -36,6 +39,7 @@ export async function GET() {
       id: true, name: true, status: true, platform: true, arch: true,
       agentVersion: true, dockerVersion: true, lanIp: true,
       totalRamMB: true, freeDiskGB: true, lastSeenAt: true, createdAt: true,
+      enrollTokenEnc: true, enrollExpiresAt: true,
     },
   });
 
@@ -58,14 +62,25 @@ export async function GET() {
   const assignedByNode = new Map(assignments.map((a) => [a.nodeId, a]));
   const runningByNode = new Map(running.map((r) => [r.nodeId, r]));
 
+  const isAdmin = user.role === "ADMIN";
   return NextResponse.json({
-    nodes: nodes.map((n) => ({
-      ...n,
-      online: n.status === "ACTIVE" && nodeOnline(n.lastSeenAt),
-      assignedRamGB: assignedByNode.get(n.id)?._sum.ramAllocation ?? 0,
-      totalServers: assignedByNode.get(n.id)?._count._all ?? 0,
-      runningServers: runningByNode.get(n.id)?._count._all ?? 0,
-    })),
+    nodes: nodes.map((n) => {
+      // Enrollment token re-display: ADMIN + still pending + unexpired. Once
+      // the agent registers (or the token is revoked/expired) it never rides
+      // again. Members never see it.
+      const enrollVisible =
+        isAdmin && n.status === "PENDING" && !!n.enrollTokenEnc &&
+        (!n.enrollExpiresAt || n.enrollExpiresAt.getTime() > Date.now());
+      const { enrollTokenEnc, enrollExpiresAt, ...row } = n;
+      return {
+        ...row,
+        online: n.status === "ACTIVE" && nodeOnline(n.lastSeenAt),
+        assignedRamGB: assignedByNode.get(n.id)?._sum.ramAllocation ?? 0,
+        totalServers: assignedByNode.get(n.id)?._count._all ?? 0,
+        runningServers: runningByNode.get(n.id)?._count._all ?? 0,
+        ...(enrollVisible ? { enroll: { token: enrollTokenEnc, expiresAt: enrollExpiresAt } } : {}),
+      };
+    }),
   });
 }
 
@@ -91,6 +106,9 @@ export async function POST(req: NextRequest) {
       status: "PENDING",
       enrollTokenHash: sha256Hex(token),
       enrollExpiresAt: new Date(Date.now() + ENROLL_TOKEN_TTL_MS),
+      // Encrypted transparently by the db extension; powers re-display on the
+      // node's card until the agent enrolls. The hash stays the auth source.
+      enrollTokenEnc: token,
     },
   });
 

@@ -30,7 +30,7 @@ export async function DELETE(
 
   await prisma.agentNode.update({
     where: { id: node.id },
-    data: { status: "REVOKED", secret: null, enrollTokenHash: null, enrollExpiresAt: null },
+    data: { status: "REVOKED", secret: null, enrollTokenHash: null, enrollExpiresAt: null, enrollTokenEnc: null },
   });
 
   const stranded = await prisma.server.findMany({

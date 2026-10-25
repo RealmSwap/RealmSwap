@@ -27,6 +27,19 @@ interface AgentNodeRow {
   runningServers: number;
   lastSeenAt: string | null;
   online: boolean;
+  /** Present for ADMINs while the node is still PENDING and the token is
+   *  unexpired — the setup instructions survive leaving the page. */
+  enroll?: { token: string; expiresAt: string | null };
+}
+
+/** One paste on the node machine: clone the repo, install, enroll, run. */
+function setupCommand(token: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "http://<dashboard-ip>:3000";
+  return (
+    `git clone https://github.com/RealmSwap/RealmSwap.git && cd RealmSwap && ` +
+    `npm install && npm run agent -- register --server ${origin} --token ${token} && ` +
+    `npm run agent -- run`
+  );
 }
 
 export default function NodesView({ user }: { user: { id: string; role: string; name?: string } }) {
@@ -35,9 +48,15 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
   const [enroll, setEnroll] = useState<{ nodeName: string; token: string; expiresAt: string } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const isAdmin = user.role === "ADMIN";
+
+  const copy = (key: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 1500);
+  };
 
   const load = () =>
     fetch("/api/nodes")
@@ -84,11 +103,6 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
     }
     load();
   };
-
-  // The agent ships in this repo (npm run agent) — no standalone package yet.
-  const registerCommand = enroll
-    ? `npm run agent -- register --server ${typeof window !== "undefined" ? window.location.origin : ""} --token ${enroll.token}`
-    : "";
 
   return (
     <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
@@ -143,29 +157,21 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
             </h2>
             <div className="p-4 rounded-xl bg-accentPurple/10 border border-accentPurple/30 space-y-2 animate-slide-down">
               <p className="text-xs text-mutedText leading-relaxed">
-                On the node machine (needs Node 22 + Docker): clone/download this repo, run{" "}
-                <code className="font-mono text-slate-300">npm install</code>, then (token is single-use,
-                expires in 24h, shown once):
+                On the node machine (needs Node 22, Docker, and git) — paste this once; it clones the
+                repo, installs, enrolls with the single-use token, and starts the agent (token expires
+                in 24h; the command stays on this node&rsquo;s card below until the agent enrolls, so
+                you can leave this page):
               </p>
               <div className="flex items-center gap-2 bg-black/40 rounded-lg px-3 py-2 font-mono text-xs break-all">
-                <span className="flex-1">{registerCommand}</span>
+                <span className="flex-1">{setupCommand(enroll.token)}</span>
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(registerCommand);
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 1500);
-                  }}
+                  onClick={() => copy("banner", setupCommand(enroll.token))}
                   className="shrink-0 text-mutedText hover:text-white transition-colors"
                   title="Copy"
                 >
-                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  {copiedKey === "banner" ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="text-xs text-mutedText">
-                Then start the agent with{" "}
-                <code className="font-mono text-slate-300">npm run agent -- run</code> (keep it running —
-                tmux, systemd, or a startup task).
-              </p>
             </div>
           </section>
         )}
@@ -250,6 +256,35 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
                           />
                         </div>
                       </div>
+                    )}
+                    {isAdmin && n.status === "PENDING" && (
+                      n.enroll ? (
+                        <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                            Waiting for enrollment — paste this on the node (needs Node 22, Docker, git):
+                          </div>
+                          <div className="flex items-center gap-2 bg-black/40 rounded-lg px-3 py-2 font-mono text-xs break-all">
+                            <span className="flex-1">{setupCommand(n.enroll.token)}</span>
+                            <button
+                              onClick={() => copy(n.id, setupCommand(n.enroll!.token))}
+                              className="shrink-0 text-mutedText hover:text-white transition-colors"
+                              title="Copy"
+                            >
+                              {copiedKey === n.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                            </button>
+                          </div>
+                          {n.enroll.expiresAt && (
+                            <p className="text-[10px] text-mutedText">
+                              Token expires {new Date(n.enroll.expiresAt).toLocaleString()} — this block
+                              disappears once the agent enrolls.
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-3 pt-3 border-t border-white/5 text-xs text-amber-400">
+                          Enrollment token expired or consumed — revoke this node and add it again to mint a fresh one.
+                        </div>
+                      )
                     )}
                   </div>
                 );

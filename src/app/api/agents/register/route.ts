@@ -42,6 +42,8 @@ export async function POST(req: Request) {
       secret,
       enrollTokenHash: null,
       enrollExpiresAt: null,
+      // Enrollment complete — the token must never be re-served again.
+      enrollTokenEnc: null,
     },
   });
 

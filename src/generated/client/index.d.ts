@@ -31362,6 +31362,7 @@ export namespace Prisma {
     status: string | null
     enrollTokenHash: string | null
     enrollExpiresAt: Date | null
+    enrollTokenEnc: string | null
     secret: string | null
     platform: string | null
     arch: string | null
@@ -31381,6 +31382,7 @@ export namespace Prisma {
     status: string | null
     enrollTokenHash: string | null
     enrollExpiresAt: Date | null
+    enrollTokenEnc: string | null
     secret: string | null
     platform: string | null
     arch: string | null
@@ -31400,6 +31402,7 @@ export namespace Prisma {
     status: number
     enrollTokenHash: number
     enrollExpiresAt: number
+    enrollTokenEnc: number
     secret: number
     platform: number
     arch: number
@@ -31431,6 +31434,7 @@ export namespace Prisma {
     status?: true
     enrollTokenHash?: true
     enrollExpiresAt?: true
+    enrollTokenEnc?: true
     secret?: true
     platform?: true
     arch?: true
@@ -31450,6 +31454,7 @@ export namespace Prisma {
     status?: true
     enrollTokenHash?: true
     enrollExpiresAt?: true
+    enrollTokenEnc?: true
     secret?: true
     platform?: true
     arch?: true
@@ -31469,6 +31474,7 @@ export namespace Prisma {
     status?: true
     enrollTokenHash?: true
     enrollExpiresAt?: true
+    enrollTokenEnc?: true
     secret?: true
     platform?: true
     arch?: true
@@ -31575,6 +31581,7 @@ export namespace Prisma {
     status: string
     enrollTokenHash: string | null
     enrollExpiresAt: Date | null
+    enrollTokenEnc: string | null
     secret: string | null
     platform: string | null
     arch: string | null
@@ -31613,6 +31620,7 @@ export namespace Prisma {
     status?: boolean
     enrollTokenHash?: boolean
     enrollExpiresAt?: boolean
+    enrollTokenEnc?: boolean
     secret?: boolean
     platform?: boolean
     arch?: boolean
@@ -31632,6 +31640,7 @@ export namespace Prisma {
     status?: boolean
     enrollTokenHash?: boolean
     enrollExpiresAt?: boolean
+    enrollTokenEnc?: boolean
     secret?: boolean
     platform?: boolean
     arch?: boolean
@@ -31651,6 +31660,7 @@ export namespace Prisma {
     status?: boolean
     enrollTokenHash?: boolean
     enrollExpiresAt?: boolean
+    enrollTokenEnc?: boolean
     secret?: boolean
     platform?: boolean
     arch?: boolean
@@ -31674,6 +31684,7 @@ export namespace Prisma {
       status: string
       enrollTokenHash: string | null
       enrollExpiresAt: Date | null
+      enrollTokenEnc: string | null
       secret: string | null
       platform: string | null
       arch: string | null
@@ -32083,6 +32094,7 @@ export namespace Prisma {
     readonly status: FieldRef<"AgentNode", 'String'>
     readonly enrollTokenHash: FieldRef<"AgentNode", 'String'>
     readonly enrollExpiresAt: FieldRef<"AgentNode", 'DateTime'>
+    readonly enrollTokenEnc: FieldRef<"AgentNode", 'String'>
     readonly secret: FieldRef<"AgentNode", 'String'>
     readonly platform: FieldRef<"AgentNode", 'String'>
     readonly arch: FieldRef<"AgentNode", 'String'>
@@ -33762,6 +33774,7 @@ export namespace Prisma {
     status: 'status',
     enrollTokenHash: 'enrollTokenHash',
     enrollExpiresAt: 'enrollExpiresAt',
+    enrollTokenEnc: 'enrollTokenEnc',
     secret: 'secret',
     platform: 'platform',
     arch: 'arch',
@@ -36116,6 +36129,7 @@ export namespace Prisma {
     status?: StringFilter<"AgentNode"> | string
     enrollTokenHash?: StringNullableFilter<"AgentNode"> | string | null
     enrollExpiresAt?: DateTimeNullableFilter<"AgentNode"> | Date | string | null
+    enrollTokenEnc?: StringNullableFilter<"AgentNode"> | string | null
     secret?: StringNullableFilter<"AgentNode"> | string | null
     platform?: StringNullableFilter<"AgentNode"> | string | null
     arch?: StringNullableFilter<"AgentNode"> | string | null
@@ -36135,6 +36149,7 @@ export namespace Prisma {
     status?: SortOrder
     enrollTokenHash?: SortOrderInput | SortOrder
     enrollExpiresAt?: SortOrderInput | SortOrder
+    enrollTokenEnc?: SortOrderInput | SortOrder
     secret?: SortOrderInput | SortOrder
     platform?: SortOrderInput | SortOrder
     arch?: SortOrderInput | SortOrder
@@ -36157,6 +36172,7 @@ export namespace Prisma {
     userId?: StringFilter<"AgentNode"> | string
     status?: StringFilter<"AgentNode"> | string
     enrollExpiresAt?: DateTimeNullableFilter<"AgentNode"> | Date | string | null
+    enrollTokenEnc?: StringNullableFilter<"AgentNode"> | string | null
     secret?: StringNullableFilter<"AgentNode"> | string | null
     platform?: StringNullableFilter<"AgentNode"> | string | null
     arch?: StringNullableFilter<"AgentNode"> | string | null
@@ -36176,6 +36192,7 @@ export namespace Prisma {
     status?: SortOrder
     enrollTokenHash?: SortOrderInput | SortOrder
     enrollExpiresAt?: SortOrderInput | SortOrder
+    enrollTokenEnc?: SortOrderInput | SortOrder
     secret?: SortOrderInput | SortOrder
     platform?: SortOrderInput | SortOrder
     arch?: SortOrderInput | SortOrder
@@ -36203,6 +36220,7 @@ export namespace Prisma {
     status?: StringWithAggregatesFilter<"AgentNode"> | string
     enrollTokenHash?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
     enrollExpiresAt?: DateTimeNullableWithAggregatesFilter<"AgentNode"> | Date | string | null
+    enrollTokenEnc?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
     secret?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
     platform?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
     arch?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
@@ -38816,6 +38834,7 @@ export namespace Prisma {
     status?: string
     enrollTokenHash?: string | null
     enrollExpiresAt?: Date | string | null
+    enrollTokenEnc?: string | null
     secret?: string | null
     platform?: string | null
     arch?: string | null
@@ -38835,6 +38854,7 @@ export namespace Prisma {
     status?: string
     enrollTokenHash?: string | null
     enrollExpiresAt?: Date | string | null
+    enrollTokenEnc?: string | null
     secret?: string | null
     platform?: string | null
     arch?: string | null
@@ -38854,6 +38874,7 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     enrollTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     enrollExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    enrollTokenEnc?: NullableStringFieldUpdateOperationsInput | string | null
     secret?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: NullableStringFieldUpdateOperationsInput | string | null
     arch?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38873,6 +38894,7 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     enrollTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     enrollExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    enrollTokenEnc?: NullableStringFieldUpdateOperationsInput | string | null
     secret?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: NullableStringFieldUpdateOperationsInput | string | null
     arch?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38892,6 +38914,7 @@ export namespace Prisma {
     status?: string
     enrollTokenHash?: string | null
     enrollExpiresAt?: Date | string | null
+    enrollTokenEnc?: string | null
     secret?: string | null
     platform?: string | null
     arch?: string | null
@@ -38911,6 +38934,7 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     enrollTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     enrollExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    enrollTokenEnc?: NullableStringFieldUpdateOperationsInput | string | null
     secret?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: NullableStringFieldUpdateOperationsInput | string | null
     arch?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38930,6 +38954,7 @@ export namespace Prisma {
     status?: StringFieldUpdateOperationsInput | string
     enrollTokenHash?: NullableStringFieldUpdateOperationsInput | string | null
     enrollExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    enrollTokenEnc?: NullableStringFieldUpdateOperationsInput | string | null
     secret?: NullableStringFieldUpdateOperationsInput | string | null
     platform?: NullableStringFieldUpdateOperationsInput | string | null
     arch?: NullableStringFieldUpdateOperationsInput | string | null
@@ -40726,6 +40751,7 @@ export namespace Prisma {
     status?: SortOrder
     enrollTokenHash?: SortOrder
     enrollExpiresAt?: SortOrder
+    enrollTokenEnc?: SortOrder
     secret?: SortOrder
     platform?: SortOrder
     arch?: SortOrder
@@ -40750,6 +40776,7 @@ export namespace Prisma {
     status?: SortOrder
     enrollTokenHash?: SortOrder
     enrollExpiresAt?: SortOrder
+    enrollTokenEnc?: SortOrder
     secret?: SortOrder
     platform?: SortOrder
     arch?: SortOrder
@@ -40769,6 +40796,7 @@ export namespace Prisma {
     status?: SortOrder
     enrollTokenHash?: SortOrder
     enrollExpiresAt?: SortOrder
+    enrollTokenEnc?: SortOrder
     secret?: SortOrder
     platform?: SortOrder
     arch?: SortOrder

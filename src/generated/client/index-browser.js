@@ -474,6 +474,7 @@ exports.Prisma.AgentNodeScalarFieldEnum = {
   status: 'status',
   enrollTokenHash: 'enrollTokenHash',
   enrollExpiresAt: 'enrollExpiresAt',
+  enrollTokenEnc: 'enrollTokenEnc',
   secret: 'secret',
   platform: 'platform',
   arch: 'arch',
