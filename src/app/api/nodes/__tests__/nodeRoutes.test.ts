@@ -32,6 +32,10 @@ vi.mock("@/lib/db", () => ({
       },
     },
     server: {
+      groupBy: async ({ where }: any) => {
+        if (where.status) return [{ nodeId: "n1", _count: { _all: 1 } }];
+        return [{ nodeId: "n1", _count: { _all: 2 }, _sum: { ramAllocation: 12 } }];
+      },
       findMany: async () => bag.servers,
       update: async ({ where, data }: any) => {
         bag.serverUpdates = bag.serverUpdates || [];
@@ -81,6 +85,11 @@ describe("GET /api/nodes", () => {
     const data = await res.json();
     expect(data.nodes[0].online).toBe(true);
     expect(data.nodes[1].online).toBe(false);
+    // Scheduler aggregates: RAM promised to RealmSwap servers + running count.
+    expect(data.nodes[0].assignedRamGB).toBe(12);
+    expect(data.nodes[0].totalServers).toBe(2);
+    expect(data.nodes[0].runningServers).toBe(1);
+    expect(data.nodes[1].assignedRamGB).toBe(0);
     expect(JSON.stringify(data)).not.toContain("should-not-leave");
     expect(JSON.stringify(data)).not.toContain("enrollTokenHash");
   });

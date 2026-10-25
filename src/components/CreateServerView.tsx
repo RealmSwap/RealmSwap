@@ -28,6 +28,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
+import { evaluateNode, recommendNode, type SchedulingNode } from "@/lib/agents/scheduling";
 import DefinitionParamFields from "./DefinitionParamFields";
 
 interface CreateServerViewProps {
@@ -40,7 +41,9 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
   const [name, setName] = useState("");
   const [runtime, setRuntime] = useState<"LOCAL" | "DOCKER" | "AGENT">("LOCAL");
   const [dockerAvailable, setDockerAvailable] = useState(false);
-  const [nodes, setNodes] = useState<{ id: string; name: string; online: boolean }[]>([]);
+  const [nodes, setNodes] = useState<
+    { id: string; name: string; online: boolean; totalRamMB: number | null; freeDiskGB: number | null; assignedRamGB: number; runningServers: number }[]
+  >([]);
   const [nodeId, setNodeId] = useState("");
   const [defs, setDefs] = useState<any[]>([]);
   const [selectedGame, setSelectedGame] = useState<any | null>(null);
@@ -235,6 +238,22 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
 
   const selectedHasContainer = !!selectedGame?.spec?.container;
   const dockerSelectable = dockerAvailable && selectedHasContainer;
+
+  // Recommend-only scheduling: the best-fit node is badged and pre-selected,
+  // never silently chosen. Ineligible nodes say why.
+  const schedulingNodes: SchedulingNode[] = nodes.map((n) => ({
+    id: n.id, name: n.name, online: n.online, totalRamMB: n.totalRamMB,
+    freeDiskGB: n.freeDiskGB, assignedRamGB: n.assignedRamGB ?? 0,
+    runningServers: n.runningServers ?? 0,
+  }));
+  const requirements = {
+    requiredRamGB: ram,
+    requiredDiskGB: selectedGame?.spec?.install?.requiredDiskGB as number | undefined,
+  };
+  const recommendation = runtime === "AGENT" ? recommendNode(schedulingNodes, requirements) : null;
+  const verdicts = new Map(
+    schedulingNodes.map((n) => [n.id, evaluateNode(n, requirements)])
+  );
 
   // Reset to LOCAL when the selected game no longer supports Docker
   useEffect(() => {
@@ -574,7 +593,15 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                 {nodes.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => setRuntime("AGENT")}
+                    onClick={() => {
+                      setRuntime("AGENT");
+                      const rec = recommendNode(nodes.map((n) => ({
+                        id: n.id, name: n.name, online: n.online, totalRamMB: n.totalRamMB,
+                        freeDiskGB: n.freeDiskGB, assignedRamGB: n.assignedRamGB ?? 0,
+                        runningServers: n.runningServers ?? 0,
+                      })), { requiredRamGB: ram, requiredDiskGB: selectedGame?.spec?.install?.requiredDiskGB });
+                      if (!nodeId && rec) setNodeId(rec.node.id);
+                    }}
                     title="Run this server on a remote agent node"
                     className={`px-3 py-2 rounded-lg border text-sm ${runtime === "AGENT" ? "border-accent text-accent" : "border-white/10 text-mutedText"}`}
                   >
@@ -593,14 +620,32 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-accent"
                   >
                     <option value="">Choose a node…</option>
-                    {nodes.map((n) => (
-                      <option key={n.id} value={n.id}>
-                        {n.name}{n.online ? "" : " (offline)"}
-                      </option>
-                    ))}
+                    {nodes.map((n) => {
+                      const verdict = verdicts.get(n.id);
+                      const suffix = recommendation?.node.id === n.id
+                        ? " — Recommended"
+                        : !verdict?.eligible
+                        ? ` (${verdict?.reason ?? "unavailable"})`
+                        : "";
+                      return (
+                        <option key={n.id} value={n.id} disabled={!verdict?.eligible}>
+                          {n.name}{suffix}
+                        </option>
+                      );
+                    })}
                   </select>
+                  {recommendation && nodeId === recommendation.node.id && (
+                    <p className="text-xs text-green-400 mt-2">
+                      Recommended: {recommendation.reason}
+                    </p>
+                  )}
+                  {!recommendation && nodes.some((n) => n.online) && (
+                    <p className="text-xs text-amber-400 mt-2">
+                      No node fits this server&apos;s RAM and disk requirements right now — free up resources or lower the RAM allocation.
+                    </p>
+                  )}
                   <p className="text-xs text-mutedText mt-2">
-                    Runs in Docker on the agent machine. Backups, mods, and the config editor aren&apos;t available for remote nodes yet.
+                    Runs in Docker on the agent machine. Backups work; mods, the config editor, and world import/export aren&apos;t available for remote nodes yet.
                   </p>
                 </div>
               )}
