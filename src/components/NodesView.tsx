@@ -81,8 +81,9 @@ export default function NodesView({ user }: { user: { id: string; role: string }
     load();
   };
 
+  // The agent ships in this repo (npm run agent) — no standalone package yet.
   const registerCommand = enroll
-    ? `npx realmswap-agent register --server ${typeof window !== "undefined" ? window.location.origin : ""} --token ${enroll.token}`
+    ? `npm run agent -- register --server ${typeof window !== "undefined" ? window.location.origin : ""} --token ${enroll.token}`
     : "";
 
   return (
@@ -93,7 +94,7 @@ export default function NodesView({ user }: { user: { id: string; role: string }
         </h1>
         <p className="text-sm text-mutedText mt-1">
           Machines running the RealmSwap agent host game servers in Docker, managed from this dashboard.
-          Deploy to a node from the server create form.
+          The agent dials home — nothing listens on the node. Deploy to a node from the server create form.
         </p>
       </div>
 
@@ -122,7 +123,8 @@ export default function NodesView({ user }: { user: { id: string; role: string }
         <div className="border border-accent/40 bg-accent/5 rounded-xl p-4 space-y-2">
           <div className="text-sm font-medium">Enroll &lsquo;{enroll.nodeName}&rsquo;</div>
           <p className="text-xs text-mutedText">
-            On the node machine, run (token is single-use, expires in 24h, shown once):
+            On the node machine (needs Node 22 + Docker): clone/download this repo, run{" "}
+            <code className="font-mono">npm install</code>, then (token is single-use, expires in 24h, shown once):
           </p>
           <div className="flex items-center gap-2 bg-black/40 rounded-lg px-3 py-2 font-mono text-xs break-all">
             <span className="flex-1">{registerCommand}</span>
