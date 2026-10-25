@@ -144,6 +144,43 @@ describe("parity: V Rising", () => {
   });
 });
 
+describe("container: Minecraft", () => {
+  it("pins a Java image (SteamCMD image has none) and mirrors the launch argv", () => {
+    const c = ctxFor("MINECRAFT", { name: "Survival World", password: null, ram: 6 });
+    const p = planContainer(def("MINECRAFT").spec, c)!;
+    expect(p).not.toBeNull();
+    expect(p.image).toBe("eclipse-temurin:25-jre");
+    // java lives in the image, not the data dir — must exec by name (no ./).
+    expect(p.executable).toBe("java");
+    expect(p.executableOnPath).toBe(true);
+    // Same heap sizing as the local runner, rendered from {ram}.
+    expect(p.args).toEqual(["-Xms512M", "-Xmx6G", "-jar", "server.jar", "nogui"]);
+    // Files live at the data-dir root (no installSubDir), like the local install.
+    expect(p.installSubDir).toBe("");
+  });
+});
+
+describe("container: Satisfactory", () => {
+  it("wraps the native Linux launcher via bash and stays on the default image", () => {
+    const c = ctxFor("SATISFACTORY", { name: "Factory", password: null, ram: 8 });
+    const p = planContainer(def("SATISFACTORY").spec, c)!;
+    expect(p).not.toBeNull();
+    expect(p.image).toBe("cm2network/steamcmd"); // the Steam app ships a native Linux build
+    expect(p.installSubDir).toBe("satisfactory-server");
+    // FactoryServer.sh via bash: Steam depots don't guarantee the exec bit on
+    // wrapper scripts, so the shell interpreter is invoked by name instead.
+    expect(p.executable).toBe("bash");
+    expect(p.executableOnPath).toBe(true);
+    expect(p.args).toEqual(["FactoryServer.sh", "-log", "-unattended"]);
+  });
+  it("publishes the beacon port alongside the game port", () => {
+    const c = ctxFor("SATISFACTORY", { name: "Factory", password: null, ram: 8 });
+    expect(planPorts(def("SATISFACTORY").spec, c)).toEqual([
+      { protocol: "TCP", port: 7777 }, { protocol: "UDP", port: 7777 }, { protocol: "UDP", port: 8888 },
+    ]);
+  });
+});
+
 describe("container: Valheim", () => {
   it("produces a Linux container plan with rendered args and env", () => {
     const c = ctxFor("VALHEIM", { name: "Viking Realm", password: "abc", ram: 6 }); // short pw -> viking123

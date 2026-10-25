@@ -56,6 +56,7 @@ export interface ContainerSpec {
   args?: ArgSpec[];               // reuses ArgSpec (string | { value, includeWhen })
   env?: Record<string, string>;   // extra env vars set inside the container
   installSubDir?: string;         // defaults to the steamcmd install.installSubDir
+  executableOnPath?: boolean;     // true: exec by name from PATH (e.g. "java", "bash" wrapper scripts); false/omitted: ./executable from the install dir
 }
 
 export interface PlayerSyncSpec {

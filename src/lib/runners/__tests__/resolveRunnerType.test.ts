@@ -13,8 +13,11 @@ describe("resolveRunnerType", () => {
     expect(resolveRunnerType("DOCKER", { hasContainer: false, dockerAvailable: true })).toBe("LOCAL");
     expect(resolveRunnerType("DOCKER", { hasContainer: true, dockerAvailable: false })).toBe("LOCAL");
   });
-  it("returns AGENT only when requested and the node is enrolled", () => {
-    expect(resolveRunnerType("AGENT", { hasContainer: false, dockerAvailable: false, nodeEnrolled: true })).toBe("AGENT");
+  it("returns AGENT only when requested, the node is enrolled, and the game has a container plan", () => {
+    expect(resolveRunnerType("AGENT", { hasContainer: true, dockerAvailable: false, nodeEnrolled: true })).toBe("AGENT");
+    // Without a container plan the deploy would only fail at first START —
+    // refuse it here instead of silently falling back to LOCAL.
+    expect(resolveRunnerType("AGENT", { hasContainer: false, dockerAvailable: false, nodeEnrolled: true })).toBe("LOCAL");
     expect(resolveRunnerType("AGENT", { hasContainer: true, dockerAvailable: true, nodeEnrolled: false })).toBe("LOCAL");
     expect(resolveRunnerType("AGENT", { hasContainer: true, dockerAvailable: true })).toBe("LOCAL");
   });

@@ -25,6 +25,17 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         args: ["-Xms512M", "-Xmx{ram}G", "-jar", "server.jar", "nogui"],
         stdinStopCommand: "stop\n",
       },
+      // Container runtime (Docker / remote nodes): the SteamCMD image has no
+      // Java, so Minecraft pins its own image. The entrypoint downloads
+      // server.jar on first boot (the temurin image ships no downloader —
+      // see buildDownloadStartEntrypoint) and files live at the data-dir root
+      // (no installSubDir), matching the local layout.
+      container: {
+        image: "eclipse-temurin:25-jre",
+        executable: "java",
+        executableOnPath: true,
+        args: ["-Xms512M", "-Xmx{ram}G", "-jar", "server.jar", "nogui"],
+      },
       defaultPort: 25565,
       params: [
         { key: "motd", label: "Server description (MOTD)", type: "text", default: "A RealmSwap Minecraft Server", group: "Presentation",
@@ -313,9 +324,21 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         executable: "FactoryServer.exe", cwdSubDir: "satisfactory-server",
         args: ["-log", "-unattended"],
       },
+      // The Steam app ships a native Linux build; FactoryServer.sh wraps the
+      // FactoryServer binary. It is exec'd via bash because Steam depots are
+      // not guaranteed to preserve the executable bit on wrapper scripts.
+      container: {
+        executable: "bash",
+        executableOnPath: true,
+        installSubDir: "satisfactory-server",
+        args: ["FactoryServer.sh", "-log", "-unattended"],
+      },
       defaultPort: 7777,
       params: [], configFiles: [],
-      ports: [{ protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" }],
+      ports: [
+        { protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" },
+        { protocol: "UDP", port: "8888" },
+      ],
     },
   },
   {

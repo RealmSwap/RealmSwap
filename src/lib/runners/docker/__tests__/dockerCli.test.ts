@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
-  shellQuote, parseMemToMB, parseDockerStats, buildStartEntrypoint, buildRunArgs, isDockerAvailable,
+  shellQuote, parseMemToMB, parseDockerStats, buildStartEntrypoint, buildDownloadStartEntrypoint,
+  buildContainerStartEntrypoint, buildRunArgs, isDockerAvailable,
 } from "../dockerCli";
 
 describe("shellQuote", () => {
@@ -59,6 +60,64 @@ describe("buildStartEntrypoint", () => {
     const ep = buildStartEntrypoint("480", "cs2", "cs2.sh", []);
     expect(ep).toContain("exec ./cs2.sh");
     expect(ep).not.toContain("exec ./cs2.sh "); // no trailing space
+  });
+});
+
+describe("buildDownloadStartEntrypoint", () => {
+  it("downloads the file only when missing, then execs a PATH command by name", () => {
+    const ep = buildDownloadStartEntrypoint({
+      url: "https://piston-data.mojang.com/v1/objects/abc/server.jar",
+      fileName: "server.jar",
+      installSubDir: "",
+      executable: "java",
+      args: ["-Xms512M", "-Xmx4G", "-jar", "server.jar", "nogui"],
+      executableOnPath: true,
+    });
+    // Files live at the data-dir root when there is no installSubDir.
+    expect(ep).toContain("cd /data && ");
+    // Skip-if-present: later starts must not re-download.
+    expect(ep).toContain('if [ ! -f server.jar ]; then');
+    // temurin images ship without curl AND wget — the chain must end in an apt fallback.
+    expect(ep).toContain("command -v curl");
+    expect(ep).toContain("command -v wget");
+    expect(ep).toContain("apt-get install -y -qq curl");
+    expect(ep).toContain("$fetch server.jar https://piston-data.mojang.com/v1/objects/abc/server.jar");
+    // PATH command exec'd by name (no ./ prefix — java lives in the image, not /data).
+    expect(ep).toContain("exec java -Xms512M -Xmx4G -jar server.jar nogui");
+  });
+  it("cds into the install dir and prefixes install-dir binaries with ./", () => {
+    const ep = buildDownloadStartEntrypoint({
+      url: "https://example.com/some game.zip",
+      fileName: "game.zip",
+      installSubDir: "game-server",
+      executable: "server-bin",
+      args: [],
+    });
+    expect(ep).toContain("cd /data/game-server");
+    expect(ep).toContain("exec ./server-bin");
+    // Hostile URLs are quoted as one shell token.
+    expect(ep).toContain("'https://example.com/some game.zip'");
+  });
+});
+
+describe("buildContainerStartEntrypoint", () => {
+  const steam = { installSubDir: "valheim-server", executable: "valheim_server.x86_64", args: ["-port", "2456"] };
+  it("dispatches STEAMCMD plans to the steamcmd entrypoint", () => {
+    const ep = buildContainerStartEntrypoint({ method: "STEAMCMD", appId: "896660" }, steam);
+    expect(ep).toContain("+app_update 896660 validate");
+    expect(ep).toContain("exec ./valheim_server.x86_64 -port 2456");
+  });
+  it("dispatches DOWNLOAD plans to the download entrypoint", () => {
+    const ep = buildContainerStartEntrypoint(
+      { method: "DOWNLOAD", url: "https://example.com/server.jar", fileName: "server.jar" },
+      { installSubDir: "", executable: "java", args: ["-jar", "server.jar"], executableOnPath: true },
+    );
+    expect(ep).toContain("curl -fsSL -o");
+    expect(ep).toContain("exec java -jar server.jar");
+  });
+  it("refuses methods with no container story", () => {
+    expect(() => buildContainerStartEntrypoint({ method: "CUSTOM_SCRIPT", installScript: "x.sh" }, steam))
+      .toThrow("Unsupported container install method");
   });
 });
 

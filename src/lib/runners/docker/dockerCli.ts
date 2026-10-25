@@ -1,5 +1,5 @@
 import { execFile, spawn, type ChildProcessWithoutNullStreams } from "child_process";
-import type { PortPlan } from "../../definitions/plan";
+import type { InstallPlan, PortPlan } from "../../definitions/plan";
 import type { ProcessStats } from "../types";
 
 /** Quote a single shell token for a `bash -lc` command line. Safe tokens
@@ -33,6 +33,14 @@ export function parseDockerStats(output: string): ProcessStats {
   return { cpuPercent, memoryMB: parseMemToMB(memUsed) };
 }
 
+/** Exec line for the server process: install-dir binaries get the explicit
+ *  ./ prefix; PATH commands (e.g. "java", "bash") are exec'd by name. */
+function buildExecLine(executable: string, args: string[], executableOnPath?: boolean): string {
+  const quoted = args.map(shellQuote).join(" ");
+  const exe = executableOnPath ? executable : `./${executable}`;
+  return quoted ? `exec ${exe} ${quoted}` : `exec ${exe}`;
+}
+
 /** Shell command run as the container entrypoint: SteamCMD install/validate,
  *  then exec the server binary from the install dir. */
 export function buildStartEntrypoint(
@@ -41,8 +49,7 @@ export function buildStartEntrypoint(
   executable: string,
   args: string[],
 ): string {
-  const quoted = args.map(shellQuote).join(" ");
-  const execLine = quoted ? `exec ./${executable} ${quoted}` : `exec ./${executable}`;
+  const execLine = buildExecLine(executable, args);
   // Resolve the SteamCMD launcher portably: SteamCMD base images (e.g.
   // cm2network/steamcmd) ship it at $STEAMCMDDIR/steamcmd.sh and do NOT put a
   // `steamcmd` command on PATH; fall back to a PATH `steamcmd` for images that do.
@@ -58,6 +65,57 @@ export function buildStartEntrypoint(
     `[ "\$n" -ge 3 ] && echo "SteamCMD failed after \$n attempts" && exit 1; ` +
     `echo "SteamCMD retry \$n (cold cache)"; sleep 5; done`;
   return `${resolve}; ${installWithRetry} && cd /data/${installSubDir} && ${execLine}`;
+}
+
+/** Shell command run as the container entrypoint for DOWNLOAD installs (e.g.
+ *  Minecraft): fetch the file if missing, then exec the server. The download
+ *  tool is resolved defensively because minimal runtime images ship without
+ *  one — eclipse-temurin JRE images purge curl AND wget, so the last resort
+ *  apt-installs curl (Ubuntu-based images run as root). Only the first boot
+ *  pays that cost; the existence check makes later starts instant. */
+export function buildDownloadStartEntrypoint(o: {
+  url: string;
+  fileName: string;
+  installSubDir: string;
+  executable: string;
+  args: string[];
+  executableOnPath?: boolean;
+}): string {
+  const cd = o.installSubDir ? `cd /data/${o.installSubDir}` : "cd /data";
+  const fetch =
+    `if [ ! -f ${shellQuote(o.fileName)} ]; then ` +
+    `fetch=""; command -v curl >/dev/null 2>&1 && fetch="curl -fsSL -o"; ` +
+    `if [ -z "\$fetch" ] && command -v wget >/dev/null 2>&1; then fetch="wget -q -O"; fi; ` +
+    `if [ -z "\$fetch" ]; then (apt-get update -qq && apt-get install -y -qq curl >/dev/null 2>&1) && fetch="curl -fsSL -o"; fi; ` +
+    `if [ -z "\$fetch" ]; then echo "No download tool available in image" >&2; exit 1; fi; ` +
+    `\$fetch ${shellQuote(o.fileName)} ${shellQuote(o.url)} || { echo "Download failed" >&2; exit 1; }; ` +
+    `fi`;
+  return `${cd} && ${fetch} && ${buildExecLine(o.executable, o.args, o.executableOnPath)}`;
+}
+
+/** Entrypoint for any container plan, dispatching on the install method.
+ *  DockerRunner and the agent payload builder both go through here so the
+ *  two runtimes cannot drift. CUSTOM_SCRIPT has no container story yet. */
+export function buildContainerStartEntrypoint(
+  installPlan: InstallPlan,
+  container: { installSubDir: string; executable: string; args: string[]; executableOnPath?: boolean },
+): string {
+  if (installPlan.method === "STEAMCMD" && installPlan.appId) {
+    return buildStartEntrypoint(
+      installPlan.appId, container.installSubDir, container.executable, container.args,
+    );
+  }
+  if (installPlan.method === "DOWNLOAD" && installPlan.url && installPlan.fileName) {
+    return buildDownloadStartEntrypoint({
+      url: installPlan.url,
+      fileName: installPlan.fileName,
+      installSubDir: container.installSubDir,
+      executable: container.executable,
+      args: container.args,
+      executableOnPath: container.executableOnPath,
+    });
+  }
+  throw new Error(`Unsupported container install method: ${installPlan.method}`);
 }
 
 export interface DockerRunOptions {

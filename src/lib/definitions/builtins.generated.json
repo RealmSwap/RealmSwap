@@ -27,6 +27,18 @@
         ],
         "stdinStopCommand": "stop\n"
       },
+      "container": {
+        "image": "eclipse-temurin:25-jre",
+        "executable": "java",
+        "executableOnPath": true,
+        "args": [
+          "-Xms512M",
+          "-Xmx{ram}G",
+          "-jar",
+          "server.jar",
+          "nogui"
+        ]
+      },
       "defaultPort": 25565,
       "params": [
         {
@@ -801,6 +813,16 @@
           "-unattended"
         ]
       },
+      "container": {
+        "executable": "bash",
+        "executableOnPath": true,
+        "installSubDir": "satisfactory-server",
+        "args": [
+          "FactoryServer.sh",
+          "-log",
+          "-unattended"
+        ]
+      },
       "defaultPort": 7777,
       "params": [],
       "configFiles": [],
@@ -812,6 +834,10 @@
         {
           "protocol": "UDP",
           "port": "7777"
+        },
+        {
+          "protocol": "UDP",
+          "port": "8888"
         }
       ]
     }

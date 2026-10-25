@@ -1,7 +1,7 @@
 import path from "path";
 import { Server } from "@/generated/client";
 import { ServerRunner, ProcessStats } from "./types";
-import { docker, dockerSpawn, buildRunArgs, buildStartEntrypoint, parseDockerStats } from "./docker/dockerCli";
+import { docker, dockerSpawn, buildRunArgs, buildContainerStartEntrypoint, parseDockerStats } from "./docker/dockerCli";
 import { prisma } from "../db";
 import { dataRoot, dockerMountRoot } from "../appPaths";
 import { parseSpec } from "../definitions/serialize";
@@ -14,7 +14,7 @@ import { markFirstOnline } from "../firstOnline";
 import { setProgress, clearProgress, parseSteamProgress } from "../downloadProgress";
 import { startMonitoring, stopMonitoring, clearStatsHistory } from "../processMonitor";
 import { isCrashExit, evaluateCrash, CRASH_MAX_RETRIES, type CrashCounter } from "../crashPolicy";
-import type { GameDefinitionSpec } from "../definitions/types";
+import type { GameDefinitionSpec, InstallMethod } from "../definitions/types";
 import fs from "fs";
 
 // Per-server helper processes (log follower + exit watcher), tracked on globalThis
@@ -69,8 +69,9 @@ function setStatus(serverId: string, status: string, extra: Record<string, unkno
 
 export class DockerRunner implements ServerRunner {
   async install(): Promise<void> {
-    // Install is implicit: the container entrypoint runs `steamcmd +app_update`
-    // on every start (see buildStartEntrypoint). Nothing to do here.
+    // Install is implicit: the container entrypoint runs the install step
+    // (SteamCMD app_update or first-boot download) on every start (see
+    // buildContainerStartEntrypoint). Nothing to do here.
   }
 
   async start(server: Server): Promise<void> {
@@ -81,8 +82,8 @@ export class DockerRunner implements ServerRunner {
     if (!record) throw new Error("Server record not found in database.");
 
     const { spec, installMethod } = await resolveDefinition(record);
-    if (installMethod !== "STEAMCMD") {
-      throw new Error("Docker runner currently supports SteamCMD games only.");
+    if (installMethod !== "STEAMCMD" && installMethod !== "DOWNLOAD") {
+      throw new Error("Docker runner currently supports SteamCMD and download games only.");
     }
     const ctx = buildContext({
       name: record.name, password: record.password, port: record.port,
@@ -93,7 +94,7 @@ export class DockerRunner implements ServerRunner {
     if (!container) {
       throw new Error(`${record.game} has no container definition; it can only run with the Local runner.`);
     }
-    const installPlan = planInstall(spec, "STEAMCMD");
+    const installPlan = planInstall(spec, installMethod as InstallMethod);
     const ports = planPorts(spec, ctx);
 
     clearLogs(serverId);
@@ -109,9 +110,7 @@ export class DockerRunner implements ServerRunner {
     // Remove any stale container so start is idempotent.
     await docker(["rm", "-f", containerName(serverId)]);
 
-    const entrypoint = buildStartEntrypoint(
-      installPlan.appId!, container.installSubDir, container.executable, container.args,
-    );
+    const entrypoint = buildContainerStartEntrypoint(installPlan, container);
     const runArgs = buildRunArgs({
       containerName: containerName(serverId),
       image: container.image,

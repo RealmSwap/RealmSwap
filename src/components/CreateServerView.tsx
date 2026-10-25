@@ -255,10 +255,11 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
     schedulingNodes.map((n) => [n.id, evaluateNode(n, requirements)])
   );
 
-  // Reset to LOCAL when the selected game no longer supports Docker
+  // Reset to LOCAL when the selected game no longer supports Docker / nodes
   useEffect(() => {
     if (!dockerSelectable && runtime === "DOCKER") setRuntime("LOCAL");
-  }, [dockerSelectable, runtime]);
+    if (!selectedHasContainer && runtime === "AGENT") setRuntime("LOCAL");
+  }, [dockerSelectable, selectedHasContainer, runtime]);
 
   // Derive install notice text generically from definition fields
   const installNotice = selectedGame ? (() => {
@@ -593,6 +594,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                 {nodes.length > 0 && (
                   <button
                     type="button"
+                    disabled={!selectedHasContainer}
                     onClick={() => {
                       setRuntime("AGENT");
                       const rec = recommendNode(nodes.map((n) => ({
@@ -602,8 +604,8 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                       })), { requiredRamGB: ram, requiredDiskGB: selectedGame?.spec?.install?.requiredDiskGB });
                       if (!nodeId && rec) setNodeId(rec.node.id);
                     }}
-                    title="Run this server on a remote agent node"
-                    className={`px-3 py-2 rounded-lg border text-sm ${runtime === "AGENT" ? "border-accent text-accent" : "border-white/10 text-mutedText"}`}
+                    title={selectedHasContainer ? "Run this server on a remote agent node" : "This game does not support remote nodes yet"}
+                    className={`px-3 py-2 rounded-lg border text-sm ${runtime === "AGENT" ? "border-accent text-accent" : "border-white/10 text-mutedText"} ${!selectedHasContainer ? "opacity-40 cursor-not-allowed" : ""}`}
                   >
                     Remote Node
                   </button>
