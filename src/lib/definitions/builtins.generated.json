@@ -872,6 +872,32 @@
           "world1"
         ]
       },
+      "container": {
+        "image": "didstopia/base:nodejs-22-wine-steamcmd-ubuntu-24.04",
+        "executable": "xvfb-run",
+        "executableOnPath": true,
+        "installSubDir": "vrising-server",
+        "env": {
+          "WINEPREFIX": "/data/.wine-vrising",
+          "WINEDEBUG": "-all",
+          "CHOWN_DIRS": "/app,/steamcmd,/data",
+          "LD_LIBRARY_PATH": "/data/vrising-server/VRisingServer_Data/Plugins/x86_64"
+        },
+        "args": [
+          "--auto-servernum",
+          "--server-args=-screen 0 640x480x24:32 -nolisten tcp -nolisten unix",
+          "wine",
+          "VRisingServer.exe",
+          "-persistentDataPath",
+          "./save-data",
+          "-serverName",
+          "{name}",
+          "-saveName",
+          "world1",
+          "-job-worker-count",
+          "8"
+        ]
+      },
       "defaultPort": 9876,
       "params": [],
       "configFiles": [],

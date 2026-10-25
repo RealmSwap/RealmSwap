@@ -254,6 +254,34 @@ describe("container: Rust", () => {
   });
 });
 
+describe("container: V Rising (Wine pilot)", () => {
+  it("runs the Windows exe under Wine with a persisted prefix and the game's steamclient.so", () => {
+    const c = ctxFor("VRISING", { name: "Castle", password: null, ram: 6 });
+    const p = planContainer(def("VRISING").spec, c)!;
+    expect(p).not.toBeNull();
+    // No native Linux build — the Wine-capable base image is mandatory here.
+    expect(p.image).toBe("didstopia/base:nodejs-22-wine-steamcmd-ubuntu-24.04");
+    expect(p.installSubDir).toBe("vrising-server");
+    // xvfb-run wraps wine directly (argv args, no bash -c re-parsing).
+    expect(p.executable).toBe("xvfb-run");
+    expect(p.executableOnPath).toBe(true);
+    expect(p.args).toEqual([
+      "--auto-servernum",
+      "--server-args=-screen 0 640x480x24:32 -nolisten tcp -nolisten unix",
+      "wine", "VRisingServer.exe",
+      "-persistentDataPath", "./save-data", "-serverName", "Castle", "-saveName", "world1",
+      "-job-worker-count", "8",
+    ]);
+    // Prefix on the bind mount (survives the rm -f + run start cycle) and the
+    // game's own 64-bit steamclient.so first on the loader path.
+    expect(p.env).toMatchObject({
+      WINEPREFIX: "/data/.wine-vrising",
+      LD_LIBRARY_PATH: "/data/vrising-server/VRisingServer_Data/Plugins/x86_64",
+      CHOWN_DIRS: "/app,/steamcmd,/data",
+    });
+  });
+});
+
 describe("container: ARK", () => {
   it("produces a Linux container plan with correct executable path", () => {
     const c = ctxFor("ARK", { name: "The Island", password: "pw", ram: 12 });
