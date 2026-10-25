@@ -48,8 +48,9 @@ export function buildStartEntrypoint(
   installSubDir: string,
   executable: string,
   args: string[],
+  executableOnPath?: boolean,
 ): string {
-  const execLine = buildExecLine(executable, args);
+  const execLine = buildExecLine(executable, args, executableOnPath);
   // Resolve the SteamCMD launcher portably: SteamCMD base images (e.g.
   // cm2network/steamcmd) ship it at $STEAMCMDDIR/steamcmd.sh and do NOT put a
   // `steamcmd` command on PATH; fall back to a PATH `steamcmd` for images that do.
@@ -103,6 +104,7 @@ export function buildContainerStartEntrypoint(
   if (installPlan.method === "STEAMCMD" && installPlan.appId) {
     return buildStartEntrypoint(
       installPlan.appId, container.installSubDir, container.executable, container.args,
+      container.executableOnPath,
     );
   }
   if (installPlan.method === "DOWNLOAD" && installPlan.url && installPlan.fileName) {

@@ -61,6 +61,14 @@ describe("buildStartEntrypoint", () => {
     expect(ep).toContain("exec ./cs2.sh");
     expect(ep).not.toContain("exec ./cs2.sh "); // no trailing space
   });
+  it("execs PATH commands by name (wine wrappers), not from the install dir", () => {
+    const ep = buildStartEntrypoint(
+      "1829350", "vrising-server", "xvfb-run",
+      ["--auto-servernum", "wine", "VRisingServer.exe"], true,
+    );
+    expect(ep).toContain("+app_update 1829350 validate");
+    expect(ep).toContain("exec xvfb-run --auto-servernum wine VRisingServer.exe");
+  });
 });
 
 describe("buildDownloadStartEntrypoint", () => {

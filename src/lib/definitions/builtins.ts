@@ -356,6 +356,37 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         preLaunchDirs: ["save-data"],
         args: ["-persistentDataPath", "./save-data", "-serverName", "{name}", "-saveName", "world1"],
       },
+      // V Rising has NO native Linux build (Windows-only launch config in the
+      // Steam app manifest). Containers run the Windows exe under Wine on the
+      // didstopia base image (WineHQ stable + steamcmd + xvfb; registry-verified:
+      // ENTRYPOINT exec-gosu's our bash -lc through, steamcmd lands on PATH,
+      // CHOWN_DIRS grants the docker user write access to /data).
+      container: {
+        image: "didstopia/base:nodejs-22-wine-steamcmd-ubuntu-24.04",
+        executable: "xvfb-run",
+        executableOnPath: true,
+        installSubDir: "vrising-server",
+        env: {
+          // Wine prefix persists on the bind mount — without this every start
+          // (containers are rm -f + run) re-initializes a fresh prefix.
+          WINEPREFIX: "/data/.wine-vrising",
+          WINEDEBUG: "-all",
+          // Entrypoint chowns these comma-separated dirs to its docker user.
+          CHOWN_DIRS: "/app,/steamcmd,/data",
+          // The game ships its own 64-bit steamclient.so (Didstopia's launch
+          // script sets this; without it Steam API init fails under Wine).
+          LD_LIBRARY_PATH: "/data/vrising-server/VRisingServer_Data/Plugins/x86_64",
+        },
+        args: [
+          "--auto-servernum",
+          "--server-args=-screen 0 640x480x24:32 -nolisten tcp -nolisten unix",
+          "wine", "VRisingServer.exe",
+          "-persistentDataPath", "./save-data", "-serverName", "{name}", "-saveName", "world1",
+          // Unity >2048-allocator SEH crash on high-core-count hosts; a lower
+          // worker count is always honored (Didstopia pins 8 the same way).
+          "-job-worker-count", "8",
+        ],
+      },
       defaultPort: 9876, params: [], configFiles: [],
       editableConfigPath: "vrising-server/save-data/Settings/ServerHostSettings.json",
       ports: [{ protocol: "UDP", port: "9876" }, { protocol: "UDP", port: "9877" }],
