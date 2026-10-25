@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Server, Plus, Copy, Check, Trash2, Loader2, CircleDot } from "lucide-react";
+import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
+import { Server, Plus, Copy, Check, Trash2, Loader2 } from "lucide-react";
 
 /**
  * Remote agent nodes — machines running the RealmSwap agent that host game
@@ -28,7 +29,7 @@ interface AgentNodeRow {
   online: boolean;
 }
 
-export default function NodesView({ user }: { user: { id: string; role: string } }) {
+export default function NodesView({ user }: { user: { id: string; role: string; name?: string } }) {
   const [nodes, setNodes] = useState<AgentNodeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
@@ -84,109 +85,179 @@ export default function NodesView({ user }: { user: { id: string; role: string }
     load();
   };
 
+  // The agent ships in this repo (npm run agent) — no standalone package yet.
   const registerCommand = enroll
-    ? `npx realmswap-agent register --server ${typeof window !== "undefined" ? window.location.origin : ""} --token ${enroll.token}`
+    ? `npm run agent -- register --server ${typeof window !== "undefined" ? window.location.origin : ""} --token ${enroll.token}`
     : "";
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold flex items-center gap-2">
-          <Server className="w-6 h-6 text-accent" /> Nodes
-        </h1>
-        <p className="text-sm text-mutedText mt-1">
+    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+      <SidebarNavigation user={user} />
+
+      <main className="flex-1 p-8 max-w-4xl">
+        <div className="flex items-center gap-3 mb-2">
+          <Server className="w-6 h-6 text-accentPurple" />
+          <h1 className="text-2xl font-bold">Nodes</h1>
+        </div>
+        <p className="text-sm text-mutedText mb-6 leading-relaxed max-w-2xl">
           Machines running the RealmSwap agent host game servers in Docker, managed from this dashboard.
-          Deploy to a node from the server create form.
+          The agent dials home — nothing listens on the node. Deploy to a node from the server create form.
         </p>
-      </div>
 
-      {error && <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">{error}</div>}
-
-      {isAdmin && (
-        <div className="flex gap-2 items-center">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Node name (e.g. Synology NAS)"
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-accent"
-          />
-          <button
-            onClick={createNode}
-            disabled={creating || !name.trim()}
-            className="flex items-center gap-2 bg-accent text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-40"
-          >
-            {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            Add Node
-          </button>
-        </div>
-      )}
-
-      {enroll && (
-        <div className="border border-accent/40 bg-accent/5 rounded-xl p-4 space-y-2">
-          <div className="text-sm font-medium">Enroll &lsquo;{enroll.nodeName}&rsquo;</div>
-          <p className="text-xs text-mutedText">
-            On the node machine, run (token is single-use, expires in 24h, shown once):
-          </p>
-          <div className="flex items-center gap-2 bg-black/40 rounded-lg px-3 py-2 font-mono text-xs break-all">
-            <span className="flex-1">{registerCommand}</span>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(registerCommand);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1500);
-              }}
-              className="shrink-0"
-              title="Copy"
-            >
-              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-            </button>
+        {error && (
+          <div className="p-4 mb-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3 animate-slide-down">
+            {error}
           </div>
-        </div>
-      )}
+        )}
 
-      {loading ? (
-        <div className="text-sm text-mutedText">Loading…</div>
-      ) : nodes.length === 0 ? (
-        <div className="text-sm text-mutedText border border-white/10 rounded-xl p-6 text-center">
-          No nodes yet. {isAdmin ? "Add one, then run the register command on the target machine." : "Ask an admin to add one."}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {nodes.map((n) => (
-            <div key={n.id} className="border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <CircleDot className={`w-4 h-4 ${n.online ? "text-green-400" : n.status === "ACTIVE" ? "text-amber-400" : "text-mutedText"}`} />
-                  <span className="font-medium truncate">{n.name}</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full border border-white/10 text-mutedText">{n.status}</span>
-                </div>
-                <div className="text-xs text-mutedText mt-1 truncate">
-                  {[
-                    n.platform && n.arch ? `${n.platform}/${n.arch}` : null,
-                    n.dockerVersion ? `Docker ${n.dockerVersion}` : null,
-                    n.totalRamMB
-                      ? `${(n.assignedRamGB || 0).toFixed(0)}/${(n.totalRamMB / 1024).toFixed(0)} GB RAM assigned`
-                      : null,
-                    n.freeDiskGB != null ? `${n.freeDiskGB} GB free` : null,
-                    n.totalServers ? `${n.runningServers} of ${n.totalServers} servers running` : "no servers",
-                    n.lanIp ? n.lanIp : null,
-                    n.lastSeenAt ? `last seen ${new Date(n.lastSeenAt).toLocaleTimeString()}` : "never seen",
-                  ].filter(Boolean).join(" · ")}
-                </div>
-              </div>
-              {isAdmin && (
-                <button
-                  onClick={() => revoke(n.id, n.name)}
-                  className="shrink-0 text-mutedText hover:text-red-400"
-                  title="Revoke node"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
+        {isAdmin && (
+          <section className="mb-8">
+            <h2 className="text-lg font-bold text-white mb-1">Add a node</h2>
+            <p className="text-xs text-mutedText mb-4">
+              Mint a single-use enrollment token, then run the register command on the target machine.
+            </p>
+            <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5 flex gap-2 items-center">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && createNode()}
+                placeholder="Node name (e.g. Synology NAS)"
+                className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-accentPurple"
+              />
+              <button
+                onClick={createNode}
+                disabled={creating || !name.trim()}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accentPurple hover:bg-accentPurpleHover disabled:bg-accentPurple/50 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors"
+              >
+                {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                Add Node
+              </button>
             </div>
-          ))}
-        </div>
-      )}
+          </section>
+        )}
+
+        {enroll && (
+          <section className="mb-8">
+            <h2 className="text-lg font-bold text-white mb-1">
+              Enroll &lsquo;{enroll.nodeName}&rsquo;
+            </h2>
+            <div className="p-4 rounded-xl bg-accentPurple/10 border border-accentPurple/30 space-y-2 animate-slide-down">
+              <p className="text-xs text-mutedText leading-relaxed">
+                On the node machine (needs Node 22 + Docker): clone/download this repo, run{" "}
+                <code className="font-mono text-slate-300">npm install</code>, then (token is single-use,
+                expires in 24h, shown once):
+              </p>
+              <div className="flex items-center gap-2 bg-black/40 rounded-lg px-3 py-2 font-mono text-xs break-all">
+                <span className="flex-1">{registerCommand}</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(registerCommand);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  }}
+                  className="shrink-0 text-mutedText hover:text-white transition-colors"
+                  title="Copy"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className="text-xs text-mutedText">
+                Then start the agent with{" "}
+                <code className="font-mono text-slate-300">npm run agent -- run</code> (keep it running —
+                tmux, systemd, or a startup task).
+              </p>
+            </div>
+          </section>
+        )}
+
+        <section>
+          <h2 className="text-lg font-bold text-white mb-1">Your nodes</h2>
+          <p className="text-xs text-mutedText mb-4">
+            {nodes.length > 0
+              ? `${nodes.filter((n) => n.online).length} of ${nodes.length} online · refreshes every 10s`
+              : "Enrolled machines appear here with their live resources."}
+          </p>
+
+          {loading ? (
+            <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5 text-sm text-mutedText">
+              Loading nodes…
+            </div>
+          ) : nodes.length === 0 ? (
+            <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5 text-sm text-mutedText">
+              No nodes yet. {isAdmin ? "Add one above, then run the register command on the target machine." : "Ask an admin to add one."}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {nodes.map((n) => {
+                const totalGB = n.totalRamMB ? n.totalRamMB / 1024 : null;
+                const assignedPct = totalGB ? Math.min(100, ((n.assignedRamGB || 0) / totalGB) * 100) : 0;
+                return (
+                  <div key={n.id} className="p-4 rounded-xl bg-slate-900/40 border border-white/5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 ${
+                              n.online ? "bg-emerald-400 animate-pulse" : n.status === "ACTIVE" ? "bg-amber-400" : "bg-slate-600"
+                            }`}
+                          />
+                          <span className="text-sm font-bold truncate">{n.name}</span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                              n.online
+                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                                : n.status === "ACTIVE"
+                                  ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                                  : "bg-white/5 border-white/10 text-mutedText"
+                            }`}
+                          >
+                            {n.online ? "ONLINE" : n.status === "ACTIVE" ? "STALE" : n.status}
+                          </span>
+                        </div>
+                        <div className="text-xs text-mutedText mt-1 truncate">
+                          {[
+                            n.platform && n.arch ? `${n.platform}/${n.arch}` : null,
+                            n.dockerVersion ? `Docker ${n.dockerVersion}` : null,
+                            n.freeDiskGB != null ? `${n.freeDiskGB} GB disk free` : null,
+                            n.totalServers ? `${n.runningServers} of ${n.totalServers} servers running` : "no servers",
+                            n.lanIp ? n.lanIp : null,
+                            n.lastSeenAt ? `last seen ${new Date(n.lastSeenAt).toLocaleTimeString()}` : "never seen",
+                          ].filter(Boolean).join(" · ")}
+                        </div>
+                      </div>
+                      {isAdmin && (
+                        <button
+                          onClick={() => revoke(n.id, n.name)}
+                          className="shrink-0 text-mutedText hover:text-red-400 transition-colors"
+                          title="Revoke node"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    {totalGB != null && (
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+                          <span>RAM assigned to RealmSwap</span>
+                          <span className="text-slate-400">
+                            {(n.assignedRamGB || 0).toFixed(0)} / {totalGB.toFixed(0)} GB
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${assignedPct > 85 ? "bg-amber-400" : "bg-accentPurple"}`}
+                            style={{ width: `${Math.max(assignedPct, 2)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }

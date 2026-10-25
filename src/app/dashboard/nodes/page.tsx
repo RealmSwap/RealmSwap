@@ -11,5 +11,5 @@ export default async function NodesPage() {
     redirect("/login");
   }
 
-  return <NodesView user={{ id: user.id, role: user.role }} />;
+  return <NodesView user={user} />;
 }
