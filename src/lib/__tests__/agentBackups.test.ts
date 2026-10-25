@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import fs from "fs";
 import os from "os";
 import path from "path";
@@ -107,9 +107,15 @@ function onlineNode() {
 }
 
 let tmp: string;
+let savedDataDir: string | undefined;
 
 beforeEach(() => {
   tmp = fs.mkdtempSync(path.join(os.tmpdir(), "agent-backup-test-"));
+  // The flows run the REAL createBackup machinery, which writes zips under
+  // dataRoot() — point it at the temp dir or the repo tree fills with
+  // runtime artifacts (this exact litter caused the #144 merge conflict).
+  savedDataDir = process.env.GAMEVAULT_DATA_DIR;
+  process.env.GAMEVAULT_DATA_DIR = path.join(tmp, "data");
   bag.server = agentServer();
   bag.nodes = { "node-1": onlineNode() };
   bag.createdBackups = [];
@@ -119,6 +125,11 @@ beforeEach(() => {
   bag.enqueued = [];
   bag.uploadId = "";
   bag.awaitOutcome = { ok: true, output: "" };
+});
+
+afterEach(() => {
+  if (savedDataDir === undefined) delete process.env.GAMEVAULT_DATA_DIR;
+  else process.env.GAMEVAULT_DATA_DIR = savedDataDir;
 });
 
 /** Stage a tar the way the agent's upload endpoint would, and point the
