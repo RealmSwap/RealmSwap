@@ -21,7 +21,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { promisify } from "util";
-import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, installStagedTree, readServerFile, writeServerFile, listServerDir, applyConfigEntries, deletePathsInDataDir, scanTreeFor, modSnapshotTarName } from "./lib";
+import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, installStagedTree, readServerFile, writeServerFile, listServerDir, applyConfigEntries, deletePathsInDataDir, scanTreeFor, modSnapshotTarName, tunnelBinPath, tunnelSecretPath, tunnelSocketPath, tunnelPidPath, downloadToFile, reconcileTunnelOrphans } from "./lib";
 import type {
   SyncRequest, SyncResponse, SyncCommand, RegisterResponse,
   StartCommandPayload, StopCommandPayload, UpdateCommandPayload, SendCommandPayload,
@@ -29,6 +29,7 @@ import type {
   FileReadCommandPayload, FileWriteCommandPayload, FileListCommandPayload, ConfigApplyCommandPayload,
   FilesApplyCommandPayload, FilesRestoreCommandPayload, FileDeleteCommandPayload,
   DockerRunCommandPayload, DirScanCommandPayload, PathsSnapshotCommandPayload,
+  TunnelStartCommandPayload, TunnelStopCommandPayload,
   ServerReport,
 } from "../src/lib/agents/protocol";
 
@@ -98,6 +99,10 @@ interface TrackedServer {
   reportedRunning: boolean;
 }
 const tracked = new Map<string, TrackedServer>();
+
+// Playit tunnel daemons, keyed by serverId (their lifecycle is independent of
+// the game containers but reported in the same heartbeat).
+const tunnelProcs = new Map<string, ReturnType<typeof spawn>>();
 
 function track(serverId: string, containerName: string): TrackedServer {
   let t = tracked.get(serverId);
@@ -503,6 +508,58 @@ async function execDirScan(serverId: string, p: DirScanCommandPayload): Promise<
   return { ok: true, output: JSON.stringify({ files: result.files }) };
 }
 
+async function execTunnelStart(serverId: string, p: TunnelStartCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  fs.mkdirSync(stateDir, { recursive: true });
+  const binPath = tunnelBinPath(stateDir);
+  if (!fs.existsSync(binPath)) {
+    await downloadToFile(p.binaryUrl, binPath);
+    if (process.platform !== "win32") fs.chmodSync(binPath, 0o755);
+  }
+  const secretPath = tunnelSecretPath(stateDir, serverId);
+  // The daemon's own config format: a single-field TOML file (SecretConfig).
+  fs.writeFileSync(secretPath, `secret_key = "${p.secret}"\n`, { mode: 0o600 });
+
+  // Replacing a live daemon for the same server: kill it first (the dashboard
+  // dispatches TUNNEL_START idempotently on boot reconcile).
+  await execTunnelStop(serverId, { kind: "TUNNEL_STOP" });
+
+  const proc = spawn(binPath, [
+    "--secret-path", secretPath,
+    "--socket-path", tunnelSocketPath(stateDir, serverId),
+  ], { cwd: stateDir, stdio: "ignore", detached: false });
+  tunnelProcs.set(serverId, proc);
+  try {
+    fs.writeFileSync(tunnelPidPath(stateDir, serverId), String(proc.pid ?? 0));
+  } catch { /* best-effort */ }
+  proc.on("close", () => {
+    if (tunnelProcs.get(serverId) === proc) tunnelProcs.delete(serverId);
+  });
+
+  // Give the daemon a moment — an instantly-dead binary (bad download,
+  // unsupported glibc) must fail the command rather than go false-ok.
+  await new Promise((r) => setTimeout(r, 2000));
+  if (proc.exitCode !== null) {
+    tunnelProcs.delete(serverId);
+    return { ok: false, error: `playit daemon exited immediately (code ${proc.exitCode}).` };
+  }
+  return { ok: true, output: JSON.stringify({ pid: proc.pid ?? null }) };
+}
+
+async function execTunnelStop(serverId: string, _p: TunnelStopCommandPayload): Promise<{ ok: boolean }> {
+  const proc = tunnelProcs.get(serverId);
+  if (proc) {
+    tunnelProcs.delete(serverId);
+    try { proc.kill("SIGTERM"); } catch { /* already gone */ }
+    const gone = new Promise<void>((resolve) => proc.once("close", () => resolve()));
+    const timer = setTimeout(() => {
+      try { proc.kill("SIGKILL"); } catch { /* best-effort */ }
+    }, 3000);
+    await gone.finally(() => clearTimeout(timer));
+  }
+  try { fs.unlinkSync(tunnelPidPath(stateDir, serverId)); } catch { /* best-effort */ }
+  return { ok: true };
+}
+
 async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok: boolean; error?: string; output?: string }> {
   try {
     let result: { ok: boolean; error?: string; output?: string };
@@ -523,6 +580,8 @@ async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok
       case "DOCKER_RUN": result = await execDockerRun(cmd.serverId, cmd.payload); break;
       case "DIR_SCAN": result = await execDirScan(cmd.serverId, cmd.payload); break;
       case "PATHS_SNAPSHOT": result = await execPathsSnapshot(cmd.serverId, cmd.payload); break;
+      case "TUNNEL_START": result = await execTunnelStart(cmd.serverId, cmd.payload); break;
+      case "TUNNEL_STOP": result = await execTunnelStop(cmd.serverId, cmd.payload); break;
       default: result = { ok: false, error: `Unknown command kind` };
     }
     return { commandId: cmd.id, ...result };
@@ -646,6 +705,7 @@ async function syncOnce(state: AgentState, agentVersion: string): Promise<void> 
     freeDiskGB: freeDiskGB(),
     servers,
     results: results.splice(0, results.length),
+    tunnelsAlive: Array.from(tunnelProcs.keys()),
   };
 
   const raw = JSON.stringify(body);
@@ -706,6 +766,7 @@ async function runLoop(state: AgentState, agentVersion: string): Promise<void> {
   const dockerVer = await dockerVersion();
   console.log(dockerVer ? `Docker ${dockerVer} detected.` : "WARNING: Docker daemon not reachable — commands will fail.");
   cleanupStaleModSnapshots();
+  reconcileTunnelOrphans(stateDir, tunnelProcs);
   for (;;) {
     try {
       await syncOnce(state, agentVersion);
