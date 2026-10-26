@@ -135,9 +135,13 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         },
         args: ["--auto-servernum", "wine", "enshrouded_server.exe"],
       },
+      // UDP only — the server has no TCP listener. Current builds bind just
+      // the queryPort (15637, the join address); 15636 is the legacy gamePort
+      // kept for older installs. Declaring TCP here made the troubleshooter
+      // TCP-probe a UDP game and UPnP request mappings nothing serves.
       ports: [
-        { protocol: "TCP", port: "15636" }, { protocol: "UDP", port: "15636" },
-        { protocol: "TCP", port: "15637" }, { protocol: "UDP", port: "15637" },
+        { protocol: "UDP", port: "15636" },
+        { protocol: "UDP", port: "15637" },
       ],
     },
   },
