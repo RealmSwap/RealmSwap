@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { verifySyncAuth, signResponse } from "@/lib/agents/auth";
 import { claimPendingCommands, completeCommand } from "@/lib/agents/commands";
 import { applyServerReport } from "@/lib/agents/syncState";
+import { noteAgentTunnels } from "@/lib/tunnels";
 import {
   AGENT_PROTOCOL_VERSION,
   SYNC_LONGPOLL_MS,
@@ -60,6 +61,14 @@ export async function POST(req: Request) {
       await completeCommand(result.commandId, result.ok === true, result.error, result.output);
     }
   }
+
+  // Node-reported live tunnel daemons feed isTunnelAlive (full set,
+  // replaced each sync — a daemon the node no longer runs goes stale here).
+  noteAgentTunnels(
+    Array.isArray(parsed.tunnelsAlive)
+      ? parsed.tunnelsAlive.filter((x: unknown): x is string => typeof x === "string")
+      : []
+  );
 
   // Node heartbeat: capabilities + liveness.
   await prisma.agentNode.update({

@@ -45,7 +45,9 @@ export type AgentCommandType =
   | "FILE_DELETE"
   | "DOCKER_RUN"
   | "DIR_SCAN"
-  | "PATHS_SNAPSHOT";
+  | "PATHS_SNAPSHOT"
+  | "TUNNEL_START"
+  | "TUNNEL_STOP";
 
 export async function enqueueCommand(
   nodeId: string,

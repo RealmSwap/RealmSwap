@@ -197,6 +197,24 @@ export interface PathsSnapshotCommandPayload {
   backupPaths: string[];
 }
 
+/** Run a playit daemon on the node for this server's game port. The
+ *  dashboard has already run the claim/exchange handshake (the secret is
+ *  HMAC-protected in transit) and keeps mirroring playit's rundata
+ *  dashboard-side; the node only downloads the binary, writes the secret
+ *  file, and keeps the daemon alive. Result output JSON: `{ pid }`. */
+export interface TunnelStartCommandPayload {
+  kind: "TUNNEL_START";
+  /** Release asset URL for the node's platform (resolved dashboard-side). */
+  binaryUrl: string;
+  /** Playit agent secret from the claim exchange. */
+  secret: string;
+}
+
+/** Kill the node's playit daemon for this server (best-effort stop). */
+export interface TunnelStopCommandPayload {
+  kind: "TUNNEL_STOP";
+}
+
 export type CommandPayload =
   | StartCommandPayload
   | StopCommandPayload
@@ -213,7 +231,9 @@ export type CommandPayload =
   | FileDeleteCommandPayload
   | DockerRunCommandPayload
   | DirScanCommandPayload
-  | PathsSnapshotCommandPayload;
+  | PathsSnapshotCommandPayload
+  | TunnelStartCommandPayload
+  | TunnelStopCommandPayload;
 
 /** What the agent reports per server it manages. */
 export interface ServerReport {
@@ -239,6 +259,9 @@ export interface SyncRequest {
   freeDiskGB: number | null;
   servers: ServerReport[];
   results: { commandId: string; ok: boolean; error?: string; output?: string }[];
+  /** ServerIds whose playit tunnel daemon is alive on this node right now —
+   *  the full set, replaced wholesale by the dashboard on every sync. */
+  tunnelsAlive?: string[];
 }
 
 export interface SyncCommand {
@@ -259,7 +282,9 @@ export interface SyncCommand {
     | "FILE_DELETE"
     | "DOCKER_RUN"
     | "DIR_SCAN"
-    | "PATHS_SNAPSHOT";
+    | "PATHS_SNAPSHOT"
+    | "TUNNEL_START"
+    | "TUNNEL_STOP";
   serverId: string;
   payload: CommandPayload;
 }

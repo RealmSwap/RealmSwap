@@ -192,6 +192,72 @@ export function modSnapshotTarName(serverId: string, snapshotId: string): string
   return `modsnap-${serverId}-${snapshotId}.tar`;
 }
 
+// ─── Playit tunnel daemons ──────────────────────────────────────────────────
+
+/** Where the agent keeps the playit binary + per-server daemon state. */
+export function tunnelBinPath(stateDir: string): string {
+  return path.join(stateDir, "bin", process.platform === "win32" ? "playit.exe" : "playit");
+}
+
+export function tunnelSecretPath(stateDir: string, serverId: string): string {
+  if (!/^[A-Za-z0-9_-]+$/.test(serverId)) throw new Error("Invalid server id.");
+  return path.join(stateDir, `playit-${serverId}.toml`);
+}
+
+export function tunnelSocketPath(stateDir: string, serverId: string): string {
+  if (!/^[A-Za-z0-9_-]+$/.test(serverId)) throw new Error("Invalid server id.");
+  return process.platform === "win32"
+    ? `\\\\.\\pipe\\realmswap-agent-playitd-${serverId}`
+    : path.join(stateDir, `playitd-${serverId}.sock`);
+}
+
+export function tunnelPidPath(stateDir: string, serverId: string): string {
+  if (!/^[A-Za-z0-9_-]+$/.test(serverId)) throw new Error("Invalid server id.");
+  return path.join(stateDir, `playit-${serverId}.pid`);
+}
+
+/** Stream a URL to a .part file and rename it into place (atomic-ish
+ *  download for the playit binary; chmod happens caller-side on POSIX). */
+export async function downloadToFile(url: string, destPath: string): Promise<void> {
+  const res = await fetch(url, { signal: AbortSignal.timeout(5 * 60_000), redirect: "follow" });
+  if (!res.ok || !res.body) throw new Error(`Binary download failed (${res.status}).`);
+  const { Readable } = await import("stream");
+  const { pipeline } = await import("stream/promises");
+  await pipeline(Readable.fromWeb(res.body as any), fs.createWriteStream(`${destPath}.part`));
+  fs.renameSync(`${destPath}.part`, destPath);
+}
+
+/** Kill daemons orphaned by a dead agent run (pid files mirror the local
+ *  dashboard's boot reconcile). Pids that are our own children are skipped —
+ *  the caller passes its tracked map. */
+export function reconcileTunnelOrphans(
+  stateDir: string,
+  tracked: Map<string, unknown>
+): void {
+  let names: string[];
+  try {
+    names = fs.readdirSync(stateDir);
+  } catch {
+    return;
+  }
+  for (const name of names) {
+    const match = /^playit-(.+)\.pid$/.exec(name);
+    if (!match) continue;
+    const serverId = match[1];
+    if (tracked.has(serverId)) continue;
+    const pidPath = path.join(stateDir, name);
+    try {
+      const pid = parseInt(fs.readFileSync(pidPath, "utf-8").trim(), 10);
+      if (Number.isInteger(pid) && pid > 0) {
+        try {
+          process.kill(pid, "SIGTERM");
+        } catch { /* already gone */ }
+      }
+    } catch { /* unreadable — clean up below */ }
+    try { fs.unlinkSync(pidPath); } catch { /* best-effort */ }
+  }
+}
+
 /** docker run argv for a START payload — mirrors buildRunArgs in dockerCli.ts. */
 export function buildDockerRunArgs(p: StartCommandPayload, dataDir: string): string[] {
   const args = ["run", "-d", "--name", p.containerName, "-v", `${dataDir}:/data`];

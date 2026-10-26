@@ -297,3 +297,44 @@ describe("agent writeConfigFiles merge semantics", () => {
     expect(merged).toContain("Mods=BB_X");
   });
 });
+
+// Playit tunnel daemon helpers: path validation and the orphan reconcile
+// that mirrors the dashboard's boot cleanup on the node.
+
+import { tunnelSecretPath, tunnelSocketPath, tunnelPidPath, reconcileTunnelOrphans } from "../lib";
+import { spawn } from "child_process";
+
+describe("agent tunnel paths", () => {
+  it("derives per-server paths and refuses hostile server ids", () => {
+    const stateDir = "/state";
+    expect(tunnelSecretPath(stateDir, "srv1")).toBe(path.join(stateDir, "playit-srv1.toml"));
+    expect(tunnelPidPath(stateDir, "srv1")).toBe(path.join(stateDir, "playit-srv1.pid"));
+    expect(tunnelSocketPath(stateDir, "srv1")).toContain("playitd-srv1.sock");
+    expect(() => tunnelSecretPath(stateDir, "../../etc")).toThrow();
+    expect(() => tunnelPidPath(stateDir, "a/b")).toThrow();
+  });
+});
+
+describe("reconcileTunnelOrphans", () => {
+  it("kills untracked daemons by pid file and cleans up; skips tracked ones", () => {
+    const stateDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-tunnel-test-"));
+    const killed: number[] = [];
+    const realKill = process.kill;
+    (process as any).kill = (pid: number, signal?: string) => {
+      if (pid > 100000) { killed.push(pid); return true; } // fake pids only
+      return realKill(pid, signal as never);
+    };
+    try {
+      fs.writeFileSync(path.join(stateDir, "playit-orphan.pid"), "100001");
+      fs.writeFileSync(path.join(stateDir, "playit-tracked.pid"), "100002");
+      const tracked = new Map([["tracked", {}]]);
+      reconcileTunnelOrphans(stateDir, tracked);
+      expect(killed).toEqual([100001]);
+      expect(fs.existsSync(path.join(stateDir, "playit-orphan.pid"))).toBe(false);
+      expect(fs.existsSync(path.join(stateDir, "playit-tracked.pid"))).toBe(true);
+    } finally {
+      (process as any).kill = realKill;
+      fs.rmSync(stateDir, { recursive: true, force: true });
+    }
+  });
+});
