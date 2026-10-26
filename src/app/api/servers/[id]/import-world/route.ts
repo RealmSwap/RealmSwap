@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import { swapDirIntoPlace, withServerLock } from "@/lib/atomicFs";
+import { importAgentWorld } from "@/lib/agents/agentWorlds";
 import fs from "fs";
 import path from "path";
 import { requireLocalServer } from "@/lib/agents/perimeter";
@@ -104,8 +105,6 @@ export async function POST(
       return NextResponse.json({ error: "Server not found" }, { status: 404 });
     }
     const { server } = access;
-    requireLocalServer(server, "World imports");
-
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json(
         { error: "Please stop the server before importing map files." },
@@ -115,6 +114,26 @@ export async function POST(
 
     const game = server.game.toUpperCase();
     const isDir = fs.statSync(resolvedSource).isDirectory();
+
+    if (server.runnerType === "AGENT") {
+      // Validate here, ship to the node: the agent stages the tar and
+      // swaps/overlays it into the save dir with backup-restore mechanics
+      // (a failed import never touches the live world).
+      try {
+        await importAgentWorld(serverId, game, resolvedSource, isDir);
+      } catch (err: any) {
+        return NextResponse.json({ error: err.message }, { status: 400 });
+      }
+      await prisma.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "IMPORT_WORLD",
+          details: `Imported map files from '${resolvedSource}' into node server '${server.name}' (${server.game}).`,
+        },
+      });
+      return NextResponse.json({ success: true, message: "Map imported successfully!" });
+    }
+    requireLocalServer(server, "World imports");
 
     // Map targets depending on the game type
     if (game === "MINECRAFT") {

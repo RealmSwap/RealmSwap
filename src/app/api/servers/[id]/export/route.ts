@@ -6,6 +6,7 @@ import * as tar from "tar";
 import fs from "fs";
 import { Readable, PassThrough } from "stream";
 import { requireLocalServer } from "@/lib/agents/perimeter";
+import { stageAgentServerTree } from "@/lib/agents/agentWorlds";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -26,7 +27,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     });
 
     if (!server) return new NextResponse("Server not found", { status: 404 });
-    requireLocalServer(server, "World export");
 
     // A GET must never stop a running server as a side effect (a prefetch or
     // link preview could kill someone's session). Export requires a stopped
@@ -34,16 +34,27 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return new NextResponse("Stop the server before exporting it.", { status: 409 });
     }
+    if (server.runnerType !== "AGENT") {
+      requireLocalServer(server, "World export");
+    }
 
     const dataDir = process.env.GAMEVAULT_DATA_DIR || process.cwd();
     const serverPath = server.localPath || path.join(dataDir, "local-servers", server.id);
 
-    if (!fs.existsSync(serverPath)) {
-      fs.mkdirSync(serverPath, { recursive: true });
+    // AGENT servers: the tree lives on the node — stage it here via the
+    // backup upload pipeline, then treat the staging dir as serverPath.
+    let stagedDir: string | null = null;
+    if (server.runnerType === "AGENT") {
+      stagedDir = await stageAgentServerTree(server.id);
+    }
+    const exportRoot = stagedDir ?? serverPath;
+
+    if (!fs.existsSync(exportRoot)) {
+      fs.mkdirSync(exportRoot, { recursive: true });
     }
 
     // Write realm.json
-    const realmJsonPath = path.join(serverPath, "realm.json");
+    const realmJsonPath = path.join(exportRoot, "realm.json");
     const manifest = {
       formatVersion: 1,
       exportDate: new Date().toISOString(),
@@ -83,17 +94,20 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     fs.writeFileSync(realmJsonPath, JSON.stringify(manifest, null, 2));
 
+    const cleanup = () => {
+      try { if (fs.existsSync(realmJsonPath)) fs.unlinkSync(realmJsonPath); } catch { /* best-effort */ }
+      if (stagedDir) {
+        try { fs.rmSync(stagedDir, { recursive: true, force: true }); } catch { /* best-effort */ }
+      }
+    };
+
     const tarStream = tar.c({
       gzip: true,
-      cwd: serverPath,
+      cwd: exportRoot,
     }, ["."]);
 
-    tarStream.on("end", () => {
-      if (fs.existsSync(realmJsonPath)) fs.unlinkSync(realmJsonPath);
-    });
-    tarStream.on("error", () => {
-      if (fs.existsSync(realmJsonPath)) fs.unlinkSync(realmJsonPath);
-    });
+    tarStream.on("end", cleanup);
+    tarStream.on("error", cleanup);
 
     const passThrough = new PassThrough();
     tarStream.pipe(passThrough);
