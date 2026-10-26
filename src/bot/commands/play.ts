@@ -67,12 +67,14 @@ export default {
       await i.update({ content: `⚡ Starting **${server.name}**...`, components: [] });
 
       try {
-        // Use the internal API so Next.js handles it and emits SSE events to the dashboard
-        const res = await fetch("http://localhost:3000/api/bot/action", {
+        // Use the internal API so Next.js handles it and emits SSE events to the dashboard.
+        // The packaged app serves on a dynamic port; dev defaults to 3000.
+        const PORT = process.env.PORT || "3000";
+        const res = await fetch(`http://127.0.0.1:${PORT}/api/bot/action`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.DISCORD_BOT_TOKEN}`
+            "Authorization": `Bearer ${process.env.BOT_API_SECRET || process.env.DISCORD_BOT_TOKEN}`
           },
           body: JSON.stringify({ action: "start", serverId: server.id })
         });
