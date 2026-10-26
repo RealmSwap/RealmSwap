@@ -1,13 +1,18 @@
 import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
+import { prisma } from "@/lib/db";
 import { dataRoot } from "@/lib/appPaths";
 import { safeJoin } from "@/lib/safePath";
 import { downloadFile } from "@/lib/download";
 import { detectMinecraftVersion, readLoaderMarker } from "@/lib/mods/mcLoaders";
-import { resolveInstallCandidate } from "@/lib/mods/modrinth";
+import {
+  resolveInstallCandidate, collectRequiredDependencies, fetchVersions,
+  pickCompatibleVersion, primaryFile,
+} from "@/lib/mods/modrinth";
 import {
   getCurseForgeModFiles, pickCompatibleCfFile, curseForgeDownloadUrl,
+  collectRequiredCfFiles, getCurseForgeFiles, getCurseForgeMods,
 } from "@/lib/mods/curseforge";
 import {
   communityForGame,
@@ -34,7 +39,9 @@ export interface ResolvedModUpdate {
   newVersionNumber: string;
   applyUpdate: () => Promise<void>;
   /** Extra column updates the route must persist after a successful apply. */
-  rowPatch?: { workshopModId?: string };
+  rowPatch?: { workshopModId?: string; dependencies?: string };
+  /** Non-fatal notes (unresolvable new dependencies) the route surfaces. */
+  warnings?: string[];
 }
 
 /** Resolution failed for a client-facing reason (unsupported provider/game,
@@ -66,14 +73,56 @@ export async function resolveModUpdate(
       throw new UpdateResolutionError("Modrinth mod updates are supported for Minecraft servers only.");
     }
     const marker = readLoaderMarker(serverRoot);
+    const gameVersion = detectMinecraftVersion(serverRoot);
+    const loader = marker?.type ?? null;
     const candidate = await resolveInstallCandidate(installation.packageId, {
-      gameVersion: detectMinecraftVersion(serverRoot),
-      loader: marker?.type ?? null,
+      gameVersion,
+      loader,
     });
     const dest = safeJoin(path.join(serverRoot, "mods"), `${installation.packageId}.jar`);
+
+    // The new version may require dependencies the old one didn't — resolve
+    // the required graph now (pre-snapshot) and install it inside the apply.
+    const installedProjectIds = new Set(
+      (await prisma.modInstallation.findMany({ where: { serverId }, select: { packageId: true } }))
+        .map((m) => m.packageId)
+    );
+    const warnings: string[] = [];
+    const { order: depVersions, missingProjects } = await collectRequiredDependencies(
+      candidate.version,
+      async (projectId) => {
+        const depVersions = await fetchVersions(projectId);
+        const depVersion = pickCompatibleVersion(depVersions, { gameVersion, loader });
+        return depVersion && primaryFile(depVersion) ? depVersion : null;
+      },
+      (id) => installedProjectIds.has(id)
+    );
+    for (const depId of missingProjects) {
+      warnings.push(
+        `Dependency ${depId} has no compatible version${gameVersion ? ` for Minecraft ${gameVersion}` : ""} — the mod may not work without it.`
+      );
+    }
+    const depFiles = depVersions.map((v) => {
+      const file = primaryFile(v)!;
+      return { projectId: v.project_id, versionNumber: v.version_number, url: file.url };
+    });
+
     return {
       newVersionNumber: candidate.version.version_number,
+      warnings: warnings.length ? warnings : undefined,
+      rowPatch: { dependencies: JSON.stringify(depFiles.map((d) => d.projectId)) },
       applyUpdate: async () => {
+        for (const dep of depFiles) {
+          await downloadFile(dep.url, safeJoin(path.join(serverRoot, "mods"), `${dep.projectId}.jar`));
+          await prisma.modInstallation.upsert({
+            where: { serverId_provider_packageId: { serverId, provider: "modrinth", packageId: dep.projectId } },
+            update: { version: dep.versionNumber },
+            create: {
+              serverId, provider: "modrinth", packageId: dep.projectId,
+              version: dep.versionNumber, name: dep.projectId,
+            },
+          });
+        }
         await downloadFile(candidate.file.url, dest);
       },
     };
@@ -97,9 +146,42 @@ export async function resolveModUpdate(
       throw new UpdateResolutionError(`No compatible CurseForge file found for '${installation.name ?? installation.packageId}'.`, 404);
     }
     const dest = safeJoin(path.join(serverRoot, "mods"), `${installation.packageId}.jar`);
+
+    // The new file may require dependencies the old one didn't — resolve the
+    // required graph now (pre-snapshot) and install it inside the apply.
+    const installedModIds = new Set(
+      (await prisma.modInstallation.findMany({ where: { serverId }, select: { packageId: true } }))
+        .map((m) => m.packageId)
+    );
+    const { order: depFiles, missingFileIds } = await collectRequiredCfFiles(
+      candidate,
+      async (fileId) => (await getCurseForgeFiles([fileId]))[0] ?? null,
+      (depModId) => installedModIds.has(depModId.toString())
+    );
+    const warnings: string[] = missingFileIds.map(
+      (fileId) => `Dependency file ${fileId} could not be resolved on CurseForge — the mod may not work without it.`
+    );
+    const depModIds = Array.from(new Set(depFiles.map((f) => f.modId)));
+    const depNames = depModIds.length > 0
+      ? new Map((await getCurseForgeMods(depModIds)).map((m) => [m.id, m.name]))
+      : new Map<number, string>();
+
     return {
       newVersionNumber: candidate.displayName,
+      warnings: warnings.length ? warnings : undefined,
+      rowPatch: { dependencies: JSON.stringify(depFiles.map((d) => d.modId.toString())) },
       applyUpdate: async () => {
+        for (const dep of depFiles) {
+          await downloadFile(curseForgeDownloadUrl(dep), safeJoin(path.join(serverRoot, "mods"), `${dep.modId}.jar`));
+          await prisma.modInstallation.upsert({
+            where: { serverId_provider_packageId: { serverId, provider: "curseforge", packageId: dep.modId.toString() } },
+            update: { version: dep.displayName },
+            create: {
+              serverId, provider: "curseforge", packageId: dep.modId.toString(),
+              version: dep.displayName, name: depNames.get(dep.modId) || dep.fileName,
+            },
+          });
+        }
         await downloadFile(curseForgeDownloadUrl(candidate), dest);
       },
     };

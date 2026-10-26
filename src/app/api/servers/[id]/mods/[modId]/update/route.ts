@@ -49,6 +49,7 @@ export async function POST(
     let newVersionNumber: string;
     let applyUpdate: () => Promise<void>;
     let rowPatch: Record<string, string> = {};
+    let warnings: string[] = [];
     try {
       const resolved = isAgent
         ? await resolveRemoteModUpdate(installation, game, serverId)
@@ -56,6 +57,7 @@ export async function POST(
       newVersionNumber = resolved.newVersionNumber;
       applyUpdate = resolved.applyUpdate;
       rowPatch = resolved.rowPatch ?? {};
+      warnings = resolved.warnings ?? [];
     } catch (err: any) {
       if (err instanceof UpdateResolutionError) {
         return NextResponse.json({ error: err.message }, { status: err.status });
@@ -125,7 +127,7 @@ export async function POST(
         updated: true,
         from: installation.version,
         to: newVersionNumber,
-        message: `${installation.name} updated to ${newVersionNumber} and passed sandbox testing.`,
+        message: `${installation.name} updated to ${newVersionNumber} and passed sandbox testing.${warnings.length ? ` Warnings: ${warnings.join(" ")}` : ""}`,
       });
     } catch (err: any) {
       await restoreSnapshot(snapshot.id);

@@ -26,6 +26,7 @@ import {
   readCurseForgeManifest, cfLoaderRequirement, cfOverridesPrefix, resolveCfPackFiles,
   curseForgeDownloadUrl, curseForgeSha1, type CfManifest,
 } from "@/lib/mods/curseforge";
+import { resolveVanillaServerJar, applyVanillaServerSwap, type VanillaServerJar } from "@/lib/mods/mcServerJar";
 
 const LOADER_LABELS: Record<string, string> = {
   fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
@@ -41,6 +42,9 @@ export interface ModpackPlan {
   packVersion: string;
   packMcVersion?: string;
   packLoader: { type: "fabric" | "quilt" | "forge" | "neoforge"; version: string } | null;
+  /** Pack targets a different Minecraft release than the server runs —
+   * resolved at plan time (pre-snapshot), swapped at apply time. */
+  mcSwitch: { from: string; to: string; jar: VanillaServerJar } | null;
   cfManifest: CfManifest | null;
   cfPlan: Awaited<ReturnType<typeof resolveCfPackFiles>> | null;
   mrpackIndex: MrpackIndex | null;
@@ -67,6 +71,7 @@ export async function planModpackFromZip(args: {
   let mrpackIndex: MrpackIndex | null = null;
   let packMcVersion: string | undefined;
   let packLoader: ModpackPlan["packLoader"] = null;
+  let mcSwitch: ModpackPlan["mcSwitch"] = null;
   let overridesPrefixes: string[] = ["overrides/", "server-overrides/"];
 
   try {
@@ -87,10 +92,19 @@ export async function planModpackFromZip(args: {
     throw new PackPreflightError(parseError.message);
   }
 
+  // A pack dictates its Minecraft version: instead of refusing, plan a swap
+  // of the vanilla server.jar to the pack's release. Resolution happens here
+  // (before any snapshot) so a bad version name or a dead manifest costs
+  // nothing; the actual download+swap runs inside the snapshot window.
   if (packMcVersion && packMcVersion !== serverMcVersion) {
-    throw new PackPreflightError(
-      `This pack targets Minecraft ${packMcVersion}, but the server runs ${serverMcVersion}.`
-    );
+    try {
+      const jar = await resolveVanillaServerJar(packMcVersion);
+      mcSwitch = { from: serverMcVersion, to: packMcVersion, jar };
+    } catch (error: any) {
+      throw new PackPreflightError(
+        `This pack targets Minecraft ${packMcVersion}, which the server doesn't run: ${error.message}`
+      );
+    }
   }
 
   if (packLoader && loaderType && loaderType !== packLoader.type) {
@@ -108,6 +122,7 @@ export async function planModpackFromZip(args: {
     packVersion: cfManifest?.version ?? mrpackIndex?.versionId ?? "unknown",
     packMcVersion,
     packLoader,
+    mcSwitch,
     cfManifest,
     cfPlan,
     mrpackIndex,
@@ -119,12 +134,15 @@ export interface PackApplyResult {
   installedCount: number;
   clientOnlyCount: number;
   overridesCount: number;
+  /** Set when the apply swapped server.jar to the pack's Minecraft release. */
+  mcSwitchedTo?: string;
   /** ModInstallation packageIds this pack owns — the retirement set for updates. */
   installedPackageIds: string[];
 }
 
 /**
- * Apply a planned pack: loader install (pack-pinned), every manifest file
+ * Apply a planned pack: Minecraft version swap (when the pack targets a
+ * different release), loader install (pack-pinned), every manifest file
  * (downloaded and hash-verified), then overrides. Assumes the caller took a
  * snapshot and will boot-test + roll back.
  */
@@ -137,23 +155,40 @@ export async function applyModpackPlan(args: {
 }): Promise<PackApplyResult> {
   const { plan, serverId, serverRoot, serverMcVersion, warnings } = args;
 
-  // Packs that pin a loader: install it first, exactly like the explicit
-  // "Install Loader" flow.
+  // The Minecraft release comes first: loaders and mods are built for it.
+  if (plan.mcSwitch) {
+    console.log(`[Modpack] Switching server.jar: Minecraft ${plan.mcSwitch.from} → ${plan.mcSwitch.to}`);
+    await applyVanillaServerSwap({ serverRoot, jar: plan.mcSwitch.jar });
+  }
+  const effectiveMcVersion = plan.mcSwitch ? plan.mcSwitch.to : serverMcVersion;
+
+  // Packs that pin a loader: install it, exactly like the explicit
+  // "Install Loader" flow. A version swap invalidates an existing loader's
+  // libraries (they target the old release), so the pinned loader is
+  // reinstalled even when the type already matches.
   if (plan.packLoader) {
     const marker = readLoaderMarker(serverRoot);
-    if (!marker || marker.type !== plan.packLoader.type) {
+    if (!marker || marker.type !== plan.packLoader.type || plan.mcSwitch) {
       const onLog = (msg: string) => console.log(`[Modpack] ${msg}`);
       if (plan.packLoader.type === "fabric") {
-        await installFabricServer(serverRoot, serverMcVersion, onLog);
+        await installFabricServer(serverRoot, effectiveMcVersion, onLog);
       } else if (plan.packLoader.type === "forge") {
-        await installForgeServer(serverRoot, serverMcVersion, { pinnedVersion: plan.packLoader.version, onLog });
+        await installForgeServer(serverRoot, effectiveMcVersion, { pinnedVersion: plan.packLoader.version, onLog });
       } else if (plan.packLoader.type === "quilt") {
-        await installQuiltServer(serverRoot, serverMcVersion, { pinnedVersion: plan.packLoader.version, onLog });
+        await installQuiltServer(serverRoot, effectiveMcVersion, { pinnedVersion: plan.packLoader.version, onLog });
       } else {
-        await installNeoForgeServer(serverRoot, serverMcVersion, { pinnedVersion: plan.packLoader.version, onLog });
+        await installNeoForgeServer(serverRoot, effectiveMcVersion, { pinnedVersion: plan.packLoader.version, onLog });
       }
     } else if (marker.loaderVersion !== plan.packLoader.version) {
       warnings.push(`Pack pins ${LOADER_LABELS[plan.packLoader.type]} loader ${plan.packLoader.version}; server has ${marker.loaderVersion}.`);
+    }
+  } else if (plan.mcSwitch) {
+    const marker = readLoaderMarker(serverRoot);
+    if (marker) {
+      warnings.push(
+        `The previously installed ${LOADER_LABELS[marker.type] ?? marker.type} loader targets Minecraft ${plan.mcSwitch.from}; ` +
+        `its libraries won't run on ${plan.mcSwitch.to} — reinstall it from the Mod Manager if this pack's mods need it.`
+      );
     }
   }
 
@@ -256,7 +291,11 @@ export async function applyModpackPlan(args: {
   // Overrides go on last so pack-provided files win over manifest downloads.
   const overridesCount = extractMrpackOverrides(plan.zip, serverRoot, plan.overridesPrefixes);
 
-  return { installedCount, clientOnlyCount, overridesCount, installedPackageIds };
+  return {
+    installedCount, clientOnlyCount, overridesCount,
+    ...(plan.mcSwitch ? { mcSwitchedTo: plan.mcSwitch.to } : {}),
+    installedPackageIds,
+  };
 }
 
 /** Shared response copy for both pack routes. */
@@ -269,6 +308,7 @@ export function packResultMessage(args: {
   return (
     `Imported '${plan.packName}' (${plan.packVersion}): ${result.installedCount} files installed, ` +
     `${result.clientOnlyCount} client-only skipped, ${result.overridesCount} overrides applied.` +
+    (result.mcSwitchedTo ? ` Server switched to Minecraft ${result.mcSwitchedTo}.` : "") +
     (warnings.length ? ` Warnings: ${warnings.join(" ")}` : "")
   );
 }
@@ -286,7 +326,7 @@ export async function auditPackInstall(args: {
     data: {
       userId,
       action: "INSTALL_MODPACK",
-      details: `Imported ${plan.kind === "curseforge" ? "CurseForge " : ""}modpack '${plan.packName}' (${plan.packVersion}) onto server '${serverName}': ${result.installedCount} files installed, ${result.clientOnlyCount} client-only skipped, ${result.overridesCount} overrides applied.${warnings.length ? ` Warnings: ${warnings.join(" ")}` : ""}`,
+      details: `Imported ${plan.kind === "curseforge" ? "CurseForge " : ""}modpack '${plan.packName}' (${plan.packVersion}) onto server '${serverName}': ${result.installedCount} files installed, ${result.clientOnlyCount} client-only skipped, ${result.overridesCount} overrides applied.${result.mcSwitchedTo ? ` Server switched to Minecraft ${result.mcSwitchedTo}.` : ""}${warnings.length ? ` Warnings: ${warnings.join(" ")}` : ""}`,
     },
   });
 }

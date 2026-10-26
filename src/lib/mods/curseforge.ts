@@ -26,6 +26,8 @@ export interface CurseForgeMod {
   slug: string;
   summary: string;
   downloadCount: number;
+  /** Top-level CF section (6 = mods, 4471 = modpacks); absent on some responses. */
+  classId?: number;
   dateModified?: string;
   authors?: { name: string }[];
   categories?: { id: number; name: string; slug?: string }[];
@@ -83,7 +85,7 @@ export const CURSEFORGE_GAME_IDS: Record<string, number> = {
 export const CURSEFORGE_LOADER_IDS = { forge: 1, fabric: 4, quilt: 5, neoforge: 6 } as const;
 
 /** CFCore class ids (top-level section filters for /mods/search). */
-export const CURSEFORGE_CLASS_IDS = { modpacks: 4471 } as const;
+export const CURSEFORGE_CLASS_IDS = { mods: 6, modpacks: 4471 } as const;
 
 /** CFCore sort-field enum (subset we expose). */
 export const CURSEFORGE_SORT_FIELDS = { featured: 1, popularity: 2, lastUpdated: 3, name: 4, totalDownloads: 6 } as const;
@@ -272,6 +274,14 @@ export async function resolveCfInstall(
     throw new Error(`'${modId}' is not a CurseForge mod id.`);
   }
   const mod = await getCurseForgeMod(id, deps);
+  if (mod.classId === CURSEFORGE_CLASS_IDS.modpacks) {
+    // A modpack zip filed into mods/ would boot fine on vanilla (the folder
+    // is ignored) and "succeed" while doing nothing — refuse with the route
+    // that actually handles packs.
+    throw new Error(
+      `'${mod.name}' is a CurseForge modpack, not a single mod — install it from the Packs tab in the Mod Manager. Pack installs bring their own loader and Minecraft version.`
+    );
+  }
   if (opts.fileId) {
     const files = await getCurseForgeFiles([opts.fileId], deps);
     const file = files.find((f) => f.modId === id);

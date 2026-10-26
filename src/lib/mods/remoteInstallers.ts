@@ -686,6 +686,8 @@ export interface ResolvedRemoteUpdate {
   newVersionNumber: string;
   applyUpdate: () => Promise<void>;
   rowPatch?: { workshopModId?: string };
+  /** Reserved for parity with the local resolver; remote updates set it never. */
+  warnings?: string[];
 }
 
 /**

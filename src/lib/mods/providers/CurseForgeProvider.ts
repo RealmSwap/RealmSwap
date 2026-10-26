@@ -88,6 +88,9 @@ export class CurseForgeProvider implements ModProvider {
         offset: options?.offset,
         sortField,
         categoryId,
+        // Mods section only — without this, modpacks (and texture packs etc.)
+        // surface as regular mods and "install" as a useless zip in mods/.
+        classId: CURSEFORGE_CLASS_IDS.mods,
       });
 
       return data.map((mod) => ({

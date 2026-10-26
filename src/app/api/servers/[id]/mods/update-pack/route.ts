@@ -178,7 +178,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         data: {
           userId: user.id,
           action: "UPDATE_MODPACK",
-          details: `Updated modpack '${installed.packName}' (${installed.version}) → '${plan.packName}' (${plan.packVersion}) on server '${server.name}': ${result.installedCount} files installed${retired.length ? `, ${retired.length} retired` : ""}.${warnings.length ? ` Warnings: ${warnings.join(" ")}` : ""}`,
+          details: `Updated modpack '${installed.packName}' (${installed.version}) → '${plan.packName}' (${plan.packVersion}) on server '${server.name}': ${result.installedCount} files installed${retired.length ? `, ${retired.length} retired` : ""}.${result.mcSwitchedTo ? ` Server switched to Minecraft ${result.mcSwitchedTo}.` : ""}${warnings.length ? ` Warnings: ${warnings.join(" ")}` : ""}`,
         },
       });
 
@@ -187,7 +187,8 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         updated: true,
         message:
           `Updated '${plan.packName}' to ${plan.packVersion}: ${result.installedCount} files installed` +
-          `${retired.length ? `, ${retired.length} mod(s) retired` : ""}.` +
+          `${retired.length ? `, ${retired.length} mod(s) retired` : ""}` +
+          `${result.mcSwitchedTo ? `. Server switched to Minecraft ${result.mcSwitchedTo}` : ""}.` +
           (warnings.length ? ` Warnings: ${warnings.join(" ")}` : ""),
         warnings,
       });
