@@ -44,11 +44,11 @@ export interface LoaderMarker {
 }
 
 const MARKER_FILE = "realmswap-loader.json";
-const FABRIC_META = "https://meta.fabricmc.net/v2";
-const QUILT_META = "https://meta.quiltmc.org/v3";
-const FORGE_PROMOTIONS = "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json";
-const FORGE_MAVEN = "https://maven.minecraftforge.net";
-const NEOFORGE_MAVEN = "https://maven.neoforged.net";
+export const FABRIC_META = "https://meta.fabricmc.net/v2";
+export const QUILT_META = "https://meta.quiltmc.org/v3";
+export const FORGE_PROMOTIONS = "https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json";
+export const FORGE_MAVEN = "https://maven.minecraftforge.net";
+export const NEOFORGE_MAVEN = "https://maven.neoforged.net";
 
 export function loaderMarkerPath(installDir: string): string {
   return path.join(installDir, MARKER_FILE);

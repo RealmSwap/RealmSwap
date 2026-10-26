@@ -124,6 +124,79 @@ export interface ConfigApplyCommandPayload {
   files: { relPath: string; content: string; merge?: boolean }[];
 }
 
+/** Ship a tree of mod files to the node: dashboard downloads/stages/extracts
+ *  everything locally, tars it, and the agent pulls it via a one-shot token
+ *  (the BACKUP_RESTORE download flow) and overlays it onto the data dir.
+ *  `backupPaths` tar-asides the affected dirs on the node first (rollback
+ *  token in the result output: `{ snapshotId }`). Result output JSON:
+ *  `{ applied: number; snapshotId?: string }`. */
+export interface FilesApplyCommandPayload {
+  kind: "FILES_APPLY";
+  dataDirName: string;
+  /** One-shot download path for the tar (HMAC-authenticated). */
+  downloadPath: string;
+  /** Data-dir-relative paths to remove before overlaying (updates/uninstalls). */
+  deletes?: string[];
+  /** Data-dir-relative dirs/files to tar aside on the node for rollback. */
+  backupPaths?: string[];
+}
+
+/** Roll a FILES_APPLY back: restores the node-side tar the agent kept
+ *  (overlaying pre-install versions back over the affected paths).
+ *  `clearPaths` removes files the failed apply added first, when the
+ *  dashboard still knows them. */
+export interface FilesRestoreCommandPayload {
+  kind: "FILES_RESTORE";
+  dataDirName: string;
+  /** Snapshot id returned by the FILES_APPLY that created it. */
+  snapshotId: string;
+  /** Data-dir-relative paths the failed apply shipped (cleared before
+ *  overlaying the snapshot back). */
+  clearPaths?: string[];
+}
+
+/** Delete data-dir-relative paths (mod uninstalls that ship nothing). */
+export interface FileDeleteCommandPayload {
+  kind: "FILE_DELETE";
+  dataDirName: string;
+  paths: string[];
+}
+
+/** Run a fully-resolved `bash -lc` command in a throwaway container with the
+ *  server data dir mounted at /data (SteamCMD workshop downloads, Java loader
+ *  installers). The dashboard owns the command string; the agent stays
+ *  game-agnostic. Result output JSON: `{ output }` (last 4 KB). */
+export interface DockerRunCommandPayload {
+  kind: "DOCKER_RUN";
+  dataDirName: string;
+  image: string;
+  cmd: string;
+  timeoutMs?: number;
+}
+
+/** Recursively find files by name under a data-dir-relative dir and extract
+ *  regex fields from their contents (e.g. `id=` lines from mod.info) — the
+ *  generic read-back for downloads that happen on the node. Result output
+ *  JSON: `{ files: { relPath: string; fields: Record<string, string> }[] }`. */
+export interface DirScanCommandPayload {
+  kind: "DIR_SCAN";
+  dataDirName: string;
+  relDir: string;
+  /** Basename to match (case-sensitive), e.g. "mod.info". */
+  fileName: string;
+  /** Each pattern: key → first regex capture group in the file (multiline). */
+  patterns: { key: string; regex: string }[];
+}
+
+/** Tar-aside data-dir-relative paths on the node WITHOUT shipping anything —
+ *  the pre-step for on-node installer runs (loader installers) whose file
+ *  effects can't ride a FILES_APPLY. Result output JSON: `{ snapshotId }`. */
+export interface PathsSnapshotCommandPayload {
+  kind: "PATHS_SNAPSHOT";
+  dataDirName: string;
+  backupPaths: string[];
+}
+
 export type CommandPayload =
   | StartCommandPayload
   | StopCommandPayload
@@ -134,7 +207,13 @@ export type CommandPayload =
   | FileReadCommandPayload
   | FileWriteCommandPayload
   | FileListCommandPayload
-  | ConfigApplyCommandPayload;
+  | ConfigApplyCommandPayload
+  | FilesApplyCommandPayload
+  | FilesRestoreCommandPayload
+  | FileDeleteCommandPayload
+  | DockerRunCommandPayload
+  | DirScanCommandPayload
+  | PathsSnapshotCommandPayload;
 
 /** What the agent reports per server it manages. */
 export interface ServerReport {
@@ -174,7 +253,13 @@ export interface SyncCommand {
     | "FILE_READ"
     | "FILE_WRITE"
     | "FILE_LIST"
-    | "CONFIG_APPLY";
+    | "CONFIG_APPLY"
+    | "FILES_APPLY"
+    | "FILES_RESTORE"
+    | "FILE_DELETE"
+    | "DOCKER_RUN"
+    | "DIR_SCAN"
+    | "PATHS_SNAPSHOT";
   serverId: string;
   payload: CommandPayload;
 }

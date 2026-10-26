@@ -8,6 +8,7 @@ import { parseSpec } from "@/lib/definitions/serialize";
 import { buildContext } from "@/lib/definitions/context";
 import { planContainer, planPorts, planInstall } from "@/lib/definitions/plan";
 import { applyConfigFiles } from "@/lib/definitions/applyConfigFiles";
+import { readLoaderMarker, applyLoaderLaunch, type LoaderMarker } from "@/lib/mods/mcLoaders";
 import { buildContainerStartEntrypoint } from "./dockerCli";
 import type { GameDefinitionSpec, InstallMethod } from "@/lib/definitions/types";
 import type { StartCommandPayload } from "@/lib/agents/protocol";
@@ -96,6 +97,26 @@ export function buildAgentConfigEntries(
   }));
 }
 
+/** A Minecraft server's loader marker: DOCKER servers keep it on the
+ *  dashboard disk (the bind-mounted data dir); AGENT servers keep it on the
+ *  node, so it's read over the command queue. Null when absent/corrupt. */
+async function resolveContainerLoaderMarker(
+  serverId: string,
+  runnerType: string | null | undefined
+): Promise<LoaderMarker | null> {
+  if (runnerType === "AGENT") {
+    const { readRemoteLoaderMarker } = await import("@/lib/mods/remoteInstallers");
+    return readRemoteLoaderMarker(serverId);
+  }
+  const installDir = path.join(dataRoot(), "local-servers", serverId);
+  const marker = readLoaderMarker(installDir);
+  if (!marker?.launch) return null;
+  // Local parity with LocalRunner: the launch file must actually exist —
+  // a marker whose files a snapshot restore removed must not redirect boot.
+  if (!fs.existsSync(path.join(installDir, marker.launch.file))) return null;
+  return marker;
+}
+
 export async function planDockerStart(record: {
   id: string;
   name: string;
@@ -105,6 +126,7 @@ export async function planDockerStart(record: {
   ramAllocation: number;
   password: string | null;
   paramValues: string | null;
+  runnerType?: string | null;
 }): Promise<DockerStartPlan> {
   const { spec, installMethod } = await resolveDefinition(record);
   if (installMethod !== "STEAMCMD" && installMethod !== "DOWNLOAD") {
@@ -125,6 +147,19 @@ export async function planDockerStart(record: {
   const installPlan = planInstall(spec, installMethod as InstallMethod);
   const ports = planPorts(spec, ctx);
 
+  // A Minecraft server with an installed loader must boot THROUGH it — the
+  // vanilla `-jar server.jar` line silently ignores mods/. Same swap
+  // LocalRunner does, applied to the container args (fabric/quilt jar swap,
+  // forge/neoforge @args-file). Remote markers are existence-verified at
+  // write time; local ones are checked against the dashboard disk above.
+  let containerArgs = container.args;
+  if (record.game.toUpperCase() === "MINECRAFT") {
+    const marker = await resolveContainerLoaderMarker(record.id, record.runnerType);
+    if (marker) {
+      containerArgs = applyLoaderLaunch(containerArgs, marker, () => true);
+    }
+  }
+
   return {
     spec,
     payload: {
@@ -135,7 +170,7 @@ export async function planDockerStart(record: {
       image: container.image,
       ports: ports.map((p) => ({ port: p.port, protocol: p.protocol })),
       env: container.env ?? null,
-      entrypoint: buildContainerStartEntrypoint(installPlan, container),
+      entrypoint: buildContainerStartEntrypoint(installPlan, { ...container, args: containerArgs }),
       // Parity with DockerRunner: no container game declares a readyPattern,
       // so the 5-minute fallback is the readiness signal for all of them.
       readyFallbackMs: 5 * 60 * 1000,

@@ -5,12 +5,14 @@ import { prisma } from "@/lib/db";
 import fs from "fs";
 import path from "path";
 import { dataRoot } from "@/lib/appPaths";
-import { removeZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
-import { removeArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
+import { removeZomboidWorkshopMod, removeZomboidWorkshopModContent, zomboidServerIniPath } from "@/lib/mods/zomboid";
+import { removeArkActiveMod, removeArkActiveModContent, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 import { uninstallPalworldPackage } from "@/lib/mods/palworld";
 import { removeFicsitMod } from "@/lib/mods/installers";
 import { removeRustUmodPlugin } from "@/lib/mods/umod";
 import { removeTmlWorkshopMod } from "@/lib/mods/tml";
+import { agentReadServerFile, agentWriteServerFile } from "@/lib/agents/agentFiles";
+import { deleteNodePaths } from "@/lib/agents/agentMods";
 import { requireLocalServer } from "@/lib/agents/perimeter";
 
 export async function DELETE(
@@ -31,8 +33,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
 
-    requireLocalServer(access.server, "Mod uninstalls");
     const game = access.server.game.toUpperCase();
+    if (access.server.runnerType === "AGENT") {
+      return await uninstallOnAgentNode(access.server, game, modId, user.id);
+    }
+    requireLocalServer(access.server, "Mod uninstalls");
 
     // Find the installation record
     const installation = await prisma.modInstallation.findFirst({
@@ -146,4 +151,83 @@ export async function DELETE(
     console.error(`DELETE /api/servers/[id]/mods/${params.modId} error:`, error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
+}
+
+/**
+ * AGENT-server uninstall: the same per-game deletions, expressed as
+ * data-dir-relative paths for the node (or ini edits ferried over the file
+ * commands). Unknown paths are skipped agent-side.
+ */
+async function uninstallOnAgentNode(
+  server: { id: string; name: string; game: string },
+  game: string,
+  modId: string,
+  userId: string
+) {
+  const serverId = server.id;
+
+  const installation = await prisma.modInstallation.findFirst({
+    where: { serverId, packageId: modId },
+  });
+  if (!installation) {
+    return NextResponse.json({ error: "Mod not found in database" }, { status: 404 });
+  }
+
+  if (game === "VALHEIM" || game === "VRISING") {
+    const subDir = game === "VALHEIM" ? "valheim-server" : "vrising-server";
+    await deleteNodePaths(serverId, [
+      `${subDir}/BepInEx/plugins/${modId}`,
+      `${subDir}/BepInEx/plugins/${modId}.dll`,
+      `${subDir}/BepInEx/plugins/${modId}.zip`,
+    ]);
+  } else if (game === "RUST") {
+    await deleteNodePaths(serverId, [`rust-server/Oxide/plugins/${modId}.cs`]);
+  } else if (game === "MINECRAFT") {
+    await deleteNodePaths(serverId, [`mods/${modId}.jar`]);
+  } else if (game === "ZOMBOID") {
+    const iniRel = "zomboid-server/zomboid-data/Server/servertest.ini";
+    const remote = await agentReadServerFile(serverId, iniRel);
+    if (remote.exists && remote.content !== null) {
+      const updated = removeZomboidWorkshopModContent(
+        remote.content,
+        installation.packageId,
+        installation.workshopModId ? installation.workshopModId.split(";").filter(Boolean) : []
+      );
+      await agentWriteServerFile(serverId, iniRel, updated, { backup: true });
+    }
+  } else if (game === "ARK") {
+    const iniRel = "ark-server/ShooterGame/Saved/Config/WindowsServer/GameUserSettings.ini";
+    const remote = await agentReadServerFile(serverId, iniRel);
+    if (remote.exists && remote.content !== null) {
+      const updated = removeArkActiveModContent(remote.content, installation.packageId);
+      if (updated !== null) {
+        await agentWriteServerFile(serverId, iniRel, updated, { backup: true });
+      }
+    }
+  } else {
+    return NextResponse.json(
+      { error: `Mod uninstalls for '${server.game}' aren't supported on remote-node servers yet.` },
+      { status: 400 }
+    );
+  }
+
+  await prisma.modInstallation.delete({
+    where: {
+      serverId_provider_packageId: {
+        serverId,
+        provider: installation.provider,
+        packageId: modId,
+      },
+    },
+  });
+
+  await prisma.activityLog.create({
+    data: {
+      userId,
+      action: "UNINSTALL_MOD",
+      details: `Uninstalled mod '${installation.name}' from node server '${server.name}' (${server.game}).`,
+    },
+  }).catch(() => {});
+
+  return NextResponse.json({ success: true });
 }

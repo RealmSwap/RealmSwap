@@ -49,23 +49,39 @@ export function readZomboidModLists(iniPath: string): { workshopIds: string[]; m
   };
 }
 
+/** Content-based add (shared by the fs writer and the node flow, which
+ *  reads/writes the ini over the agent file commands). */
+export function addZomboidWorkshopModContent(content: string, workshopId: string, modIds: string[]): string {
+  if (!readList(content, "WorkshopItems").includes(workshopId)) {
+    content = upsertList(content, "WorkshopItems", [...readList(content, "WorkshopItems"), workshopId]);
+  }
+  const mods = readList(content, "Mods");
+  const missing = modIds.filter((id) => !mods.includes(id));
+  if (missing.length > 0) {
+    content = upsertList(content, "Mods", [...mods, ...missing]);
+  }
+  return content;
+}
+
+/** Content-based remove. */
+export function removeZomboidWorkshopModContent(content: string, workshopId: string, modIds: string[]): string {
+  const workshopItems = readList(content, "WorkshopItems").filter((x) => x !== workshopId);
+  content = upsertList(content, "WorkshopItems", workshopItems);
+  if (modIds.length > 0) {
+    const remove = new Set(modIds);
+    const mods = readList(content, "Mods").filter((x) => !remove.has(x));
+    content = upsertList(content, "Mods", mods);
+  }
+  return content;
+}
+
 /**
  * Register a workshop mod on both keys. Idempotent per id; safe on a missing
  * ini. One workshop item can ship several mod folders — pass every mod ID.
  */
 export function addZomboidWorkshopMod(iniPath: string, workshopId: string, modId: string | string[]): void {
   const modIds = Array.isArray(modId) ? modId : [modId];
-  editIni(iniPath, (content) => {
-    if (!readList(content, "WorkshopItems").includes(workshopId)) {
-      content = upsertList(content, "WorkshopItems", [...readList(content, "WorkshopItems"), workshopId]);
-    }
-    const mods = readList(content, "Mods");
-    const missing = modIds.filter((id) => !mods.includes(id));
-    if (missing.length > 0) {
-      content = upsertList(content, "Mods", [...mods, ...missing]);
-    }
-    return content;
-  });
+  editIni(iniPath, (content) => addZomboidWorkshopModContent(content, workshopId, modIds));
 }
 
 /**
@@ -77,14 +93,5 @@ export function addZomboidWorkshopMod(iniPath: string, workshopId: string, modId
 export function removeZomboidWorkshopMod(iniPath: string, workshopId: string, modId: string | string[] | null): void {
   if (!fs.existsSync(iniPath)) return;
   const modIds = modId === null ? [] : Array.isArray(modId) ? modId : [modId];
-  editIni(iniPath, (content) => {
-    const workshopItems = readList(content, "WorkshopItems").filter((x) => x !== workshopId);
-    content = upsertList(content, "WorkshopItems", workshopItems);
-    if (modIds.length > 0) {
-      const remove = new Set(modIds);
-      const mods = readList(content, "Mods").filter((x) => !remove.has(x));
-      content = upsertList(content, "Mods", mods);
-    }
-    return content;
-  });
+  editIni(iniPath, (content) => removeZomboidWorkshopModContent(content, workshopId, modIds));
 }
