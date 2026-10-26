@@ -45,6 +45,21 @@ describe("pure helpers", () => {
     expect(stmts[0]).toContain("CREATE TABLE");
   });
 
+  it("a semicolon inside a comment line does not fracture the following statement", () => {
+    // Shape of 20261022000002_pending_restart, which broke the v0.5.0 release build:
+    // the old splitter emitted "cleared on the next start.\nALTER TABLE ..." as SQL.
+    const sql =
+      `-- Settings changed while the server was running; cleared on the next start.\n` +
+      `ALTER TABLE "Server" ADD COLUMN "pendingRestart" BOOLEAN NOT NULL DEFAULT false;\n` +
+      `-- Enrollment tokens are single-use; all-NULL hash column before enrollment.\n` +
+      `CREATE TABLE "Node" ("id" TEXT NOT NULL PRIMARY KEY);\n`;
+    const stmts = splitStatements(sql);
+    expect(stmts).toEqual([
+      `ALTER TABLE "Server" ADD COLUMN "pendingRestart" BOOLEAN NOT NULL DEFAULT false`,
+      `CREATE TABLE "Node" ("id" TEXT NOT NULL PRIMARY KEY)`,
+    ]);
+  });
+
   it("checksum is a stable sha256 hex of the content", () => {
     expect(checksum("abc")).toBe(
       "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
