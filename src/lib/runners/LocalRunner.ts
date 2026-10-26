@@ -24,7 +24,8 @@ import { applyConfigFiles } from "../definitions/applyConfigFiles";
 import { readLoaderMarker, applyLoaderLaunch } from "../mods/mcLoaders";
 import { parseWindroseInviteCode } from "../definitions/windrose";
 import type { GameDefinitionSpec } from "../definitions/types";
-import { setProgress, clearProgress, parseSteamProgress, computePercent, isMissingConfigError } from "../downloadProgress";
+import { setProgress, clearProgress, computePercent } from "../downloadProgress";
+import { runSteamAppUpdate } from "../steamcmd/appUpdate";
 import { dataRoot } from "../appPaths";
 import { isCrashExit, evaluateCrash, CRASH_MAX_RETRIES, type CrashCounter } from "../crashPolicy";
 import { appendLog, clearLogs, serverLogFile, getServerLogTail } from "../serverLogs";
@@ -269,79 +270,18 @@ function installSteamCmdApp(
       onLog(`Starting ${appName} installation via SteamCMD (App ID ${appId})...`);
       onLog("This is a background download and may take several minutes depending on connection speeds. Please wait...");
 
-      const cleanInstallDir = installDir.replace(/\\/g, "/");
-      const MAX_ATTEMPTS = 3;
-
-      // Runs one SteamCMD app_update and resolves with the exit code plus the
-      // last captured error line. Never rejects — the caller decides on retry.
-      //
-      // +app_info_update 1 refreshes the app-metadata cache before the install.
-      // On a freshly bootstrapped SteamCMD the cache is still empty, so the first
-      // app_update can fail with "Missing configuration" (exit code 8); the next
-      // attempt warms the cache and succeeds, so we retry that specific failure.
-      const runAppUpdate = (): Promise<{ code: number | null; detail: string }> =>
-        new Promise((res) => {
-          const child = spawn(steamcmdExe, [
-            "+force_install_dir", cleanInstallDir,
-            "+login", "anonymous",
-            "+app_info_update", "1",
-            "+app_update", appId,
-            "validate",
-            "+quit"
-          ]);
-
-          // Capture SteamCMD's real error so failures report the cause, not just an exit code.
-          let steamErrorDetail = "";
-          child.stdout.on("data", (data) => {
-            const line = data.toString().trim();
-            if (line) {
-              const cleanLine = line.replace(/[\r\n]+/g, " ");
-              const pct = parseSteamProgress(cleanLine);
-              if (pct !== null) {
-                onProgress?.({ percent: pct, label: `Downloading ${appName} ${Math.round(pct)}%` });
-              }
-              if (/ERROR!|Failed to install|No subscription|Invalid Password|Disk write failure/i.test(cleanLine)) {
-                steamErrorDetail = cleanLine;
-                onLog(`[SteamCMD Error] ${cleanLine}`);
-              } else if (cleanLine.includes("progress") || cleanLine.includes("Downloading") || cleanLine.includes("Update state")) {
-                onLog(`[SteamCMD Status] ${cleanLine}`);
-              }
-            }
-          });
-
-          child.stderr.on("data", (data) => {
-            const line = data.toString().trim();
-            if (line) {
-              steamErrorDetail = line.replace(/[\r\n]+/g, " ");
-              onLog(`[SteamCMD warning] ${line}`);
-            }
-          });
-
-          child.on("close", (code) => res({ code, detail: steamErrorDetail }));
-        });
-
-      let lastCode: number | null = null;
-      let lastDetail = "";
-      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-        const { code, detail } = await runAppUpdate();
-        if (code === 0 || fs.existsSync(exePath)) {
-          onLog(`${appName} download completed!`);
-          resolve();
-          return;
-        }
-        lastCode = code;
-        lastDetail = detail;
-        if (isMissingConfigError(code, detail) && attempt < MAX_ATTEMPTS) {
-          onProgress?.({ percent: null, label: "Preparing SteamCMD…" });
-          onLog(`[SteamCMD] App metadata cache was cold ("Missing configuration", exit ${code}). Retrying (attempt ${attempt + 1}/${MAX_ATTEMPTS})...`);
-          await new Promise((r) => setTimeout(r, 3000));
-          continue;
-        }
-        break;
-      }
-
-      const detail = lastDetail ? ` - ${lastDetail}` : " (see steamcmd/logs/console_log.txt for details)";
-      reject(new Error(`SteamCMD App ${appId} download process exited with code ${lastCode}${detail}`));
+      await runSteamAppUpdate({
+        steamcmdExe,
+        installDir,
+        appId,
+        onLog,
+        onProgress: (pct) => onProgress?.({ percent: pct, label: `Downloading ${appName} ${Math.round(pct)}%` }),
+        onRetry: () => onProgress?.({ percent: null, label: "Preparing SteamCMD…" }),
+        successCheck: () => fs.existsSync(exePath),
+        tags: { error: "[SteamCMD Error]", status: "[SteamCMD Status]" },
+      });
+      onLog(`${appName} download completed!`);
+      resolve();
     } catch (err: any) {
       reject(err);
     }
@@ -1062,60 +1002,17 @@ async function updateGameServer(serverId: string): Promise<void> {
     setProgress(serverId, { phase: "steam", percent: null, label: "Updating SteamCMD…" });
     await ensureSteamCmdUpdated(steamcmdExe, logWriter);
 
-    const cleanInstallDir = installDir.replace(/\\/g, "/");
-
-    await new Promise<void>((resolve, reject) => {
-      // +app_info_update 1 forces a metadata cache refresh before app_update — without it a
-      // cold SteamCMD cache yields "Missing configuration" (exit code 8).
-      const child = spawn(steamcmdExe, [
-        "+force_install_dir", cleanInstallDir,
-        "+login", "anonymous",
-        "+app_info_update", "1",
-        "+app_update", installPlan.appId!,
-        "validate",
-        "+quit"
-      ]);
-
-      let steamErrorDetail = "";
-      child.stdout.on("data", (data) => {
-        const line = data.toString().trim();
-        if (line) {
-          const cleanLine = line.replace(/[\r\n]+/g, " ");
-          const pct = parseSteamProgress(cleanLine);
-          if (pct !== null) {
-            setProgress(serverId, {
-              phase: "steam",
-              percent: pct,
-              label: `Updating ${server.game} ${Math.round(pct)}%`,
-            });
-          }
-          if (/ERROR!|Failed to install|No subscription|Invalid Password|Disk write failure/i.test(cleanLine)) {
-            steamErrorDetail = cleanLine;
-            logWriter(`[Update Error] ${cleanLine}`);
-          } else if (cleanLine.includes("progress") || cleanLine.includes("Downloading") || cleanLine.includes("Update state") || cleanLine.includes("Success")) {
-            logWriter(`[Update Status] ${cleanLine}`);
-          }
-        }
-      });
-
-      child.stderr.on("data", (data) => {
-        const line = data.toString().trim();
-        if (line) {
-          steamErrorDetail = line.replace(/[\r\n]+/g, " ");
-          logWriter(`[Update Warning] ${line}`);
-        }
-      });
-
-      child.on("close", (code) => {
-        if (code === 0) {
-          logWriter(`[Update] ${server.game} update completed successfully!`);
-          resolve();
-        } else {
-          const detail = steamErrorDetail ? ` - ${steamErrorDetail}` : " (see steamcmd/logs/console_log.txt for details)";
-          reject(new Error(`SteamCMD update exited with code ${code}${detail}`));
-        }
-      });
+    await runSteamAppUpdate({
+      steamcmdExe,
+      installDir,
+      appId: installPlan.appId!,
+      onLog: logWriter,
+      onProgress: (pct) =>
+        setProgress(serverId, { phase: "steam", percent: pct, label: `Updating ${server.game} ${Math.round(pct)}%` }),
+      onRetry: () => setProgress(serverId, { phase: "steam", percent: null, label: "Retrying SteamCMD…" }),
+      tags: { error: "[Update Error]", status: "[Update Status]" },
     });
+    logWriter(`[Update] ${server.game} update completed successfully!`);
 
     clearProgress(serverId);
 
@@ -1235,42 +1132,18 @@ export async function runSteamUpdate(serverId: string): Promise<{ ran: boolean; 
   const steamcmdExe = await setupSteamCMD((m) => logWriter(m));
   await ensureSteamCmdUpdated(steamcmdExe, (m) => logWriter(m));
 
-  const cleanInstallDir = installDir.replace(/\\/g, "/");
-  return new Promise((resolve) => {
-    let sawAlreadyUpToDate = false;
-    let errorDetail = "";
-    const child = spawn(steamcmdExe, [
-      "+force_install_dir", cleanInstallDir,
-      "+login", "anonymous",
-      "+app_info_update", "1",
-      "+app_update", appId,
-      "validate",
-      "+quit",
-    ]);
-    child.stdout.on("data", (data) => {
-      const line = data.toString().replace(/[\r\n]+/g, " ").trim();
-      if (!line) return;
-      if (/already up to date/i.test(line)) sawAlreadyUpToDate = true;
-      if (/ERROR!|Failed to install|No subscription|Disk write failure/i.test(line)) {
-        errorDetail = line;
-        logWriter(`[SteamCMD Error] ${line}`);
-      }
+  try {
+    const result = await runSteamAppUpdate({
+      steamcmdExe,
+      installDir,
+      appId,
+      onLog: logWriter,
+      tags: { error: "[SteamCMD Error]" },
     });
-    child.stderr.on("data", (data) => {
-      const line = data.toString().trim();
-      if (line) errorDetail = errorDetail || line;
-    });
-    child.on("error", (err) => {
-      resolve({ ran: true, updated: false, detail: `steamcmd failed to start: ${err.message}` });
-    });
-    child.on("close", (code) => {
-      if (code === 0) {
-        const updated = !sawAlreadyUpToDate;
-        logWriter(updated ? "Update installed." : "Already up to date.");
-        resolve({ ran: true, updated });
-      } else {
-        resolve({ ran: true, updated: false, detail: errorDetail || `steamcmd exited with code ${code}` });
-      }
-    });
-  });
+    const updated = !result.alreadyUpToDate;
+    logWriter(updated ? "Update installed." : "Already up to date.");
+    return { ran: true, updated };
+  } catch (err: any) {
+    return { ran: true, updated: false, detail: err?.message ?? String(err) };
+  }
 }
