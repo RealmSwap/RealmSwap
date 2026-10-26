@@ -52,9 +52,11 @@ export default {
     }
 
     const callApi = async (action: string) => {
-      const res = await fetch("http://localhost:3000/api/bot/action", {
+      // The packaged app serves on a dynamic port; dev defaults to 3000.
+      const PORT = process.env.PORT || "3000";
+      const res = await fetch(`http://127.0.0.1:${PORT}/api/bot/action`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.DISCORD_BOT_TOKEN}` },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.BOT_API_SECRET || process.env.DISCORD_BOT_TOKEN}` },
         body: JSON.stringify({ action, serverId: server.id })
       });
       if (!res.ok) throw new Error("API Error " + res.status);
