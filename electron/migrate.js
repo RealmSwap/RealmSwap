@@ -12,10 +12,17 @@ function checksum(sql) {
 
 // Split Prisma-generated DDL into individual statements. Assumes statements are
 // terminated by ';' with no embedded semicolons (true for generated migrations).
+// Whole-line `--` comments are dropped BEFORE splitting: a ';' inside a comment
+// would otherwise fracture the statement that follows it. Prisma's own engine
+// tolerates that; SQLite via $executeRawUnsafe does not.
 function splitStatements(sql) {
-  return sql
+  const withoutComments = sql
+    .split("\n")
+    .filter((line) => !/^\s*--/.test(line))
+    .join("\n");
+  return withoutComments
     .split(";")
-    .map((s) => s.replace(/^(?:\s*--[^\n]*\n)+/, "").trim())
+    .map((s) => s.trim())
     .filter((s) => s.length > 0 && !s.startsWith("--"));
 }
 

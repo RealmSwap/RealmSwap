@@ -81,6 +81,8 @@ jobs:
             exit 1
           fi
 
+      # pwsh: `exit` is not valid inside a `( … )` subexpression, so this can't
+      # collapse to the one-liner `… || (cat build.log && exit 1)`.
       - name: Build Windows installer
         working-directory: 'C:\rsbuild'
         env:
@@ -89,7 +91,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
-          npm run electron:build > build.log 2>&1 || (cat build.log && exit 1)
+          npm run electron:build > build.log 2>&1
+          if ($LASTEXITCODE -ne 0) { Get-Content build.log; exit 1 }
 
       - name: Upload build logs
         if: failure()
