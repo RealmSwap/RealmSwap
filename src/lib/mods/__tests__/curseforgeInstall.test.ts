@@ -147,4 +147,31 @@ describe("installMinecraftCurseforge", () => {
     // No staging temp jar left behind.
     expect(fs.readdirSync(path.join(installDir, "mods")).filter((f) => f.startsWith(".staging"))).toEqual([]);
   });
+
+  it("refuses a CurseForge modpack with a pointer to the Packs tab", async () => {
+    currentFixture = plainJar;
+    vi.stubGlobal(
+      "fetch",
+      (async (url: string | URL) => {
+        const u = url.toString();
+        // classId 4471 = the modpacks section — a pack must not ride the
+        // single-mod installer (its zip would land in mods/ as a dead jar).
+        if (u.match(/\/mods\/99$/)) {
+          return {
+            ok: true, status: 200,
+            json: async () => ({ data: { id: 99, name: "All The Mods 10", slug: "atm10", summary: "", downloadCount: 1, classId: 4471 } }),
+          } as any;
+        }
+        return { ok: false, status: 404, json: async () => ({}) } as any;
+      }) as any
+    );
+    const installDir = path.join(dir, "server-pack");
+    fs.mkdirSync(installDir, { recursive: true });
+
+    await expect(
+      installMinecraftCurseforge({ serverId: "s1", installDir, modId: "99", warnings: [] })
+    ).rejects.toThrow(/is a CurseForge modpack[\s\S]*Packs tab/);
+
+    expect(fs.existsSync(path.join(installDir, "mods", "99.jar"))).toBe(false);
+  });
 });

@@ -44,6 +44,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       to: string;
       applyUpdate: () => Promise<void>;
       rowPatch?: Record<string, string>;
+      warnings?: string[];
     }[] = [];
     for (const installation of installations) {
       if (!["modrinth", "thunderstore", "workshop", "curseforge"].includes(installation.provider)) {
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
             to: resolved.newVersionNumber,
             applyUpdate: resolved.applyUpdate,
             rowPatch: resolved.rowPatch,
+            warnings: resolved.warnings,
           });
         }
       } catch (err: any) {
@@ -107,7 +109,11 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         success: true,
         updated: planned.map(({ name, from, to }) => ({ name, from, to })),
         skipped,
-        message: `Updated ${planned.length} mod${planned.length === 1 ? "" : "s"} to the latest versions and passed sandbox testing.`,
+        message: `Updated ${planned.length} mod${planned.length === 1 ? "" : "s"} to the latest versions and passed sandbox testing.` +
+          (() => {
+            const notes = planned.flatMap((p) => p.warnings ?? []);
+            return notes.length ? ` Warnings: ${Array.from(new Set(notes)).join(" ")}` : "";
+          })(),
       });
     } catch (err: any) {
       await restoreSnapshot(snapshot.id);
