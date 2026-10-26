@@ -1,4 +1,5 @@
 import * as crypto from "crypto";
+import type { GameDefinitionSpec } from "./definitions/types";
 
 /**
  * Client for the playit REST API (https://api.playit.gg), mirroring what the
@@ -15,6 +16,9 @@ import * as crypto from "crypto";
 export const PLAYIT_API_BASE = "https://api.playit.gg";
 
 export type PlayitFetch = (url: string, init?: RequestInit) => Promise<Response>;
+
+/** playit's PortType: which protocol(s) the public port forwards. */
+export type TunnelPortType = "tcp" | "udp" | "both";
 
 /** The API reports failures inside a 200 envelope; carry the variant string. */
 export class PlayitApiFailure extends Error {
@@ -33,6 +37,7 @@ export interface AgentTunnel {
   name?: string;
   display_address?: string | null;
   disabled_reason?: string | null;
+  port_type?: TunnelPortType;
   agent_config?: { fields?: AgentTunnelField[] } | null;
 }
 
@@ -43,6 +48,9 @@ export interface AgentRunData {
 }
 
 export interface TunnelForPort {
+  id: string | null;
+  /** Null when the API omitted it — treat as "unknown", never as a mismatch. */
+  portType: TunnelPortType | null;
   displayAddress: string | null;
   disabled: boolean;
   disabledReason: string | null;
@@ -126,17 +134,18 @@ export class PlayitApi {
   }
 
   /**
-   * Create a TCP tunnel bound to 127.0.0.1:localPort on the agent (the local
+   * Create a tunnel bound to 127.0.0.1:localPort on the agent (the local
    * binding travels in origin agent_config fields — the config file cannot
    * pre-seed tunnels). `ports.details` is the port COUNT, mirroring the
-   * legacy /tunnels/create port_count.
+   * legacy /tunnels/create port_count. The protocol must match the game's:
+   * a TCP tunnel in front of a UDP game forwards nothing.
    */
-  async createTcpTunnel(agentKey: string, agentId: string, localPort: number): Promise<string | null> {
+  async createTunnel(agentKey: string, agentId: string, localPort: number, portType: TunnelPortType): Promise<string | null> {
     const data = (await this.call(
       "/v1/tunnels/create",
       {
         name: `RealmSwap ${localPort}`,
-        ports: { type: "custom-tcp", details: 1 },
+        ports: { type: `custom-${portType}`, details: 1 },
         origin: {
           type: "agent",
           data: {
@@ -155,6 +164,40 @@ export class PlayitApi {
     )) as any;
     return typeof data?.id === "string" ? data.id : null;
   }
+
+  /** Remove a tunnel (used to replace one created with the wrong protocol). */
+  async deleteTunnel(agentKey: string, tunnelId: string): Promise<void> {
+    await this.call("/tunnels/delete", { tunnel_id: tunnelId }, agentKey);
+  }
+}
+
+/**
+ * The protocol(s) the public tunnel port must forward for a game's join
+ * port, from the spec's declared ports. Only entries for THIS port count —
+ * Rust declares TCP for RCON on another port, which says nothing about the
+ * UDP game port. Templated port specs can't be resolved here and count for
+ * their protocol. A spec that declares nothing for the port gets "both":
+ * the one answer that can't be wrong for joining.
+ */
+export function tunnelPortTypeFor(spec: Pick<GameDefinitionSpec, "ports">, port: number): TunnelPortType {
+  const forPort = (spec.ports ?? []).filter((p) => {
+    const n = Number(p.port);
+    return !Number.isFinite(n) || n === port;
+  });
+  const tcp = forPort.some((p) => p.protocol === "TCP");
+  const udp = forPort.some((p) => p.protocol === "UDP");
+  if (tcp && udp) return "both";
+  if (udp) return "udp";
+  if (tcp) return "tcp";
+  return "both";
+}
+
+/** Whether an existing tunnel's protocol forwards everything the game
+ *  needs. A "both" tunnel covers any need; otherwise they must match. Used
+ *  to decide replacement without churning tunnels (and their public
+ *  addresses) that already work. */
+export function tunnelProtocolCovers(existing: TunnelPortType, needed: TunnelPortType): boolean {
+  return existing === "both" || existing === needed;
 }
 
 /**
@@ -165,7 +208,10 @@ export function findTunnelForPort(runData: AgentRunData | null | undefined, loca
   for (const tunnel of runData?.tunnels ?? []) {
     const portField = tunnel.agent_config?.fields?.find((f) => f.name === "local_port");
     if (portField === undefined || Number(portField.value) !== localPort) continue;
+    const portType = tunnel.port_type;
     return {
+      id: typeof tunnel.id === "string" ? tunnel.id : null,
+      portType: portType === "tcp" || portType === "udp" || portType === "both" ? portType : null,
       displayAddress: tunnel.display_address ?? null,
       disabled: !!tunnel.disabled_reason,
       disabledReason: tunnel.disabled_reason ?? null,

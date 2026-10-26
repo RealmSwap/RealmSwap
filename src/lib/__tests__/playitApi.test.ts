@@ -4,8 +4,11 @@ import {
   PlayitApiFailure,
   findTunnelForPort,
   isPlayitFailure,
+  tunnelPortTypeFor,
+  tunnelProtocolCovers,
   AgentRunData,
 } from "../playitApi";
+import { BUILTIN_DEFINITIONS } from "../definitions/builtins";
 
 function fetchJson(payload: unknown, status = 200) {
   return vi.fn(async (_url: string, _init: any) =>
@@ -16,16 +19,23 @@ function fetchJson(payload: unknown, status = 200) {
   );
 }
 
-function tunnel(id: string, localPort: string | null, opts: { address?: string; disabled?: string } = {}) {
+function tunnel(
+  id: string,
+  localPort: string | null,
+  opts: { address?: string; disabled?: string; portType?: "tcp" | "udp" | "both" } = {}
+) {
   return {
     id,
     display_address: opts.disabled ? null : opts.address ?? `${id}.auto.playit.gg:40000`,
     disabled_reason: opts.disabled ?? null,
+    ...(opts.portType ? { port_type: opts.portType } : {}),
     agent_config: {
       fields: localPort === null ? [] : [{ name: "local_port", value: localPort }],
     },
   };
 }
+
+const spec = (slug: string) => BUILTIN_DEFINITIONS.find((d) => d.slug === slug)!.spec;
 
 describe("PlayitApi envelope handling", () => {
   it("unwraps success payloads", async () => {
@@ -76,15 +86,16 @@ describe("PlayitApi request shapes", () => {
     expect(JSON.parse(init.body)).toEqual({});
   });
 
-  it("creates a TCP tunnel bound to 127.0.0.1:<port> via agent config fields", async () => {
+  it("creates a tunnel bound to 127.0.0.1:<port> via agent config fields, with the game's protocol", async () => {
     const fetchImpl = fetchJson({ status: "success", data: { id: "tunnel-1" } });
     const api = new PlayitApi(fetchImpl);
-    const id = await api.createTcpTunnel("agentsecret", "agent-1", 25565);
+    const id = await api.createTunnel("agentsecret", "agent-1", 15637, "udp");
 
     expect(id).toBe("tunnel-1");
-    const [, init] = fetchImpl.mock.calls[0];
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(url).toBe("https://api.playit.gg/v1/tunnels/create");
     const body = JSON.parse(init.body);
-    expect(body.ports).toEqual({ type: "custom-tcp", details: 1 });
+    expect(body.ports).toEqual({ type: "custom-udp", details: 1 });
     expect(body.origin).toEqual({
       type: "agent",
       data: {
@@ -92,12 +103,31 @@ describe("PlayitApi request shapes", () => {
         config: {
           fields: [
             { name: "local_ip", value: "127.0.0.1" },
-            { name: "local_port", value: "25565" },
+            { name: "local_port", value: "15637" },
           ],
         },
       },
     });
     expect(body.enabled).toBe(true);
+  });
+
+  it("maps each port type onto playit's custom-* tunnel types", async () => {
+    for (const portType of ["tcp", "udp", "both"] as const) {
+      const fetchImpl = fetchJson({ status: "success", data: { id: "t" } });
+      await new PlayitApi(fetchImpl).createTunnel("k", "a", 1, portType);
+      expect(JSON.parse(fetchImpl.mock.calls[0][1].body).ports).toEqual({ type: `custom-${portType}`, details: 1 });
+    }
+  });
+
+  it("deletes a tunnel by id with the agent key", async () => {
+    const fetchImpl = fetchJson({ status: "success", data: null });
+    const api = new PlayitApi(fetchImpl);
+    await api.deleteTunnel("agentsecret", "tunnel-1");
+
+    const [url, init] = fetchImpl.mock.calls[0];
+    expect(url).toBe("https://api.playit.gg/tunnels/delete");
+    expect(JSON.parse(init.body)).toEqual({ tunnel_id: "tunnel-1" });
+    expect(init.headers.Authorization).toBe("Agent-Key agentsecret");
   });
 
   it("extracts the agent secret from the exchange payload and rejects junk", async () => {
@@ -118,17 +148,70 @@ describe("claim code + url", () => {
   });
 });
 
+describe("tunnelPortTypeFor", () => {
+  it("UDP-only games get a UDP tunnel (a TCP one forwards nothing)", () => {
+    expect(tunnelPortTypeFor(spec("VALHEIM"), 2456)).toBe("udp");
+    expect(tunnelPortTypeFor(spec("PALWORLD"), 8211)).toBe("udp");
+    expect(tunnelPortTypeFor(spec("VRISING"), 9876)).toBe("udp");
+    // Enshrouded's spec still over-declares TCP until #161 lands (then this
+    // becomes "udp"); either way a UDP game must never get a TCP-only tunnel.
+    expect(tunnelPortTypeFor(spec("ENSHROUDED"), 15637)).not.toBe("tcp");
+  });
+
+  it("only entries for THIS port count — Rust's TCP is RCON on another port", () => {
+    expect(tunnelPortTypeFor(spec("RUST"), 28015)).toBe("udp");
+  });
+
+  it("games declaring both protocols on the join port get both", () => {
+    expect(tunnelPortTypeFor(spec("SATISFACTORY"), 7777)).toBe("both");
+    expect(tunnelPortTypeFor({ ports: [{ protocol: "TCP", port: "1" }, { protocol: "UDP", port: "1" }] }, 1)).toBe("both");
+  });
+
+  it("TCP-only joins (Minecraft Java, Terraria) stay TCP, so existing tunnels are not churned", () => {
+    expect(tunnelPortTypeFor(spec("MINECRAFT"), 25565)).toBe("tcp");
+    expect(tunnelPortTypeFor(spec("TERRARIA"), 7777)).toBe("tcp");
+  });
+
+  it("templated ports can't be resolved and count for their protocol", () => {
+    expect(tunnelPortTypeFor({ ports: [{ protocol: "UDP", port: "{{port}}" }] }, 4242)).toBe("udp");
+  });
+
+  it("nothing declared for the port → both, the only answer that can't be wrong", () => {
+    expect(tunnelPortTypeFor({ ports: [] }, 25565)).toBe("both");
+    expect(tunnelPortTypeFor({ ports: [{ protocol: "TCP", port: "28016" }] }, 28015)).toBe("both");
+  });
+});
+
+describe("tunnelProtocolCovers", () => {
+  it("a both-tunnel covers any need; otherwise protocols must match", () => {
+    expect(tunnelProtocolCovers("both", "udp")).toBe(true);
+    expect(tunnelProtocolCovers("both", "tcp")).toBe(true);
+    expect(tunnelProtocolCovers("both", "both")).toBe(true);
+    expect(tunnelProtocolCovers("tcp", "tcp")).toBe(true);
+    expect(tunnelProtocolCovers("udp", "udp")).toBe(true);
+  });
+
+  it("a single-protocol tunnel never covers the other protocol or a both need", () => {
+    expect(tunnelProtocolCovers("tcp", "udp")).toBe(false);
+    expect(tunnelProtocolCovers("udp", "tcp")).toBe(false);
+    expect(tunnelProtocolCovers("tcp", "both")).toBe(false);
+    expect(tunnelProtocolCovers("udp", "both")).toBe(false);
+  });
+});
+
 describe("findTunnelForPort", () => {
   const runData: AgentRunData = {
     agent_id: "a1",
     tunnels: [
       tunnel("other", "9999"),
-      tunnel("mine", "25565", { address: "mine.auto.playit.gg:1234" }),
+      tunnel("mine", "25565", { address: "mine.auto.playit.gg:1234", portType: "tcp" }),
     ],
   };
 
-  it("matches the tunnel whose local_port field equals the game port", () => {
+  it("matches the tunnel whose local_port field equals the game port, carrying id and protocol", () => {
     expect(findTunnelForPort(runData, 25565)).toEqual({
+      id: "mine",
+      portType: "tcp",
       displayAddress: "mine.auto.playit.gg:1234",
       disabled: false,
       disabledReason: null,
@@ -138,10 +221,17 @@ describe("findTunnelForPort", () => {
   it("reports disabled tunnels instead of their address", () => {
     const data: AgentRunData = { agent_id: "a1", tunnels: [tunnel("mine", "25565", { disabled: "disabled_over_limit" })] };
     expect(findTunnelForPort(data, 25565)).toEqual({
+      id: "mine",
+      portType: null,
       displayAddress: null,
       disabled: true,
       disabledReason: "disabled_over_limit",
     });
+  });
+
+  it("an unknown or missing port_type reads as null, never as a mismatch", () => {
+    const data: AgentRunData = { agent_id: "a1", tunnels: [{ ...tunnel("mine", "25565"), port_type: "weird" as any }] };
+    expect(findTunnelForPort(data, 25565)?.portType).toBeNull();
   });
 
   it("returns null when nothing is bound to the port yet", () => {

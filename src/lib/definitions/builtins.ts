@@ -56,7 +56,10 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           template: "server-port={port}\nquery.port=25565\nonline-mode={onlineMode}\nmax-players={maxPlayers}\nmotd={motd}\ndifficulty={difficulty}\ngamemode={gamemode}\npvp={pvp}\nview-distance={viewDistance}\n" },
       ],
       editableConfigPath: "server.properties",
-      ports: [{ protocol: "TCP", port: "25565" }, { protocol: "UDP", port: "25565" }],
+      // Java Edition joins over TCP only. UDP 25565 is the optional GameSpy
+      // query (enable-query=false by default) — not needed to play, and
+      // declaring it made the playit tunnel a TCP+UDP one.
+      ports: [{ protocol: "TCP", port: "25565" }],
       playerSync: {
         strategy: "minecraft_json",
         whitelistPath: "whitelist.json",
@@ -226,7 +229,8 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       params: [
         { key: "maxPlayers", label: "Max players", type: "number", default: 8, min: 1, max: 32, group: "Gameplay" },
       ], configFiles: [],
-      ports: [{ protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" }],
+      // Terraria's dedicated server speaks TCP only.
+      ports: [{ protocol: "TCP", port: "7777" }],
     },
   },
   {

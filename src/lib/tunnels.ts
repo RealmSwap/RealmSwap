@@ -9,8 +9,13 @@ import {
   PlayitApi,
   findTunnelForPort,
   isPlayitFailure,
+  tunnelPortTypeFor,
+  tunnelProtocolCovers,
   TunnelForPort,
+  type TunnelPortType,
 } from "./playitApi";
+import { parseSpec } from "./definitions/serialize";
+import { BUILTIN_DEFINITIONS } from "./definitions/builtins";
 import { enqueueCommand, resolveUsableNode, awaitCommandResult } from "./agents/commands";
 import { NODE_ONLINE_WINDOW_MS, type CommandPayload } from "./agents/protocol";
 
@@ -196,6 +201,32 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
+ * The protocol the public tunnel port must forward for this server's join
+ * port, from its game definition — the DB row first (custom definitions live
+ * only there), then the builtin table. Unknown games get "both", the one
+ * answer that can't be wrong for joining.
+ */
+async function resolveTunnelPortType(serverId: string, port: number): Promise<TunnelPortType> {
+  try {
+    const server = await prisma.server.findUnique({
+      where: { id: serverId },
+      select: { game: true, definitionId: true },
+    });
+    if (!server) return "both";
+    const slug = server.game.toUpperCase();
+    const def = server.definitionId
+      ? await prisma.gameDefinition.findUnique({ where: { id: server.definitionId } })
+      : await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug } });
+    if (def) return tunnelPortTypeFor(parseSpec(def.spec), port);
+    const builtin = BUILTIN_DEFINITIONS.find((d) => d.slug === slug);
+    return builtin ? tunnelPortTypeFor(builtin.spec, port) : "both";
+  } catch (err) {
+    console.error(`[Tunnel] Could not resolve the port protocol for ${serverId}; using both:`, (err as Error)?.message || err);
+    return "both";
+  }
+}
+
+/**
  * Spawn the playit agent for a server and drive its whole setup over the
  * playit REST API: an unclaimed agent gets a claim link (stored on the server
  * row and shown in Join Info); once the user approves it RealmSwap exchanges
@@ -333,23 +364,38 @@ async function reportTunnelCrash(serverId: string, reason: string): Promise<void
  * clears it again if playit stops forwarding. No deadline: a slow allocation
  * must still land. `stillAlive` is the daemon-liveness signal; a live→dead
  * transition ends the loop through `onDaemonGone`.
+ *
+ * The tunnel's protocol must match the game's (`portType`). A tunnel on the
+ * right port with the wrong protocol forwards nothing — every tunnel created
+ * before protocols were honored was TCP, including those in front of UDP
+ * games — so its address is never advertised and it is replaced once.
  */
-async function mirrorTunnelState(opts: {
+export async function mirrorTunnelState(opts: {
   serverId: string;
   port: number;
+  portType: TunnelPortType;
   secret: string;
-  api: PlayitApi;
+  api: Pick<PlayitApi, "getRunData" | "createTunnel" | "deleteTunnel">;
   cancelled: () => boolean;
   stillAlive: () => boolean;
   onDaemonGone: () => Promise<void> | void;
+  pollMs?: number;
 }): Promise<void> {
-  const { serverId, port, secret, api, cancelled, stillAlive, onDaemonGone } = opts;
+  const { serverId, port, portType, secret, api, cancelled, stillAlive, onDaemonGone } = opts;
+  const pollMs = opts.pollMs ?? RUNDATA_POLL_MS;
   let createAttempted = false;
+  let replaceAttempted = false;
   let lastAddress: string | null = null;
   let lastDisabledNotice: string | null = null;
 
+  const clearAddress = async () => {
+    if (!lastAddress) return;
+    lastAddress = null;
+    await prisma.server.update({ where: { id: serverId }, data: { tunnelUrl: null } }).catch(() => {});
+  };
+
   while (!cancelled() && stillAlive()) {
-    await sleep(RUNDATA_POLL_MS);
+    await sleep(pollMs);
     if (cancelled() || !stillAlive()) break;
 
     try {
@@ -362,16 +408,32 @@ async function mirrorTunnelState(opts: {
         if (!createAttempted && runData.agent_id) {
           createAttempted = true;
           try {
-            await api.createTcpTunnel(secret, runData.agent_id, port);
-            console.log(`[Tunnel] Created tunnel for ${serverId} bound to 127.0.0.1:${port}.`);
+            await api.createTunnel(secret, runData.agent_id, port, portType);
+            console.log(`[Tunnel] Created ${portType.toUpperCase()} tunnel for ${serverId} bound to 127.0.0.1:${port}.`);
           } catch (err) {
             console.error(`[Tunnel] Could not auto-create tunnel for ${serverId}:`, (err as Error)?.message || err);
-            await notify(serverId, "⚠️ Tunnel needs one manual step", `RealmSwap couldn't create the playit tunnel for '${serverId}' automatically (${err instanceof Error ? err.message : err}). Create a TCP tunnel for local port ${port} on playit.gg — the address will appear here once done.`);
+            await notify(serverId, "⚠️ Tunnel needs one manual step", `RealmSwap couldn't create the playit tunnel for '${serverId}' automatically (${err instanceof Error ? err.message : err}). Create a ${portType.toUpperCase()} tunnel for local port ${port} on playit.gg — the address will appear here once done.`);
           }
         }
-        if (lastAddress) {
-          lastAddress = null;
-          await prisma.server.update({ where: { id: serverId }, data: { tunnelUrl: null } }).catch(() => {});
+        await clearAddress();
+        continue;
+      }
+
+      if (tunnel.portType && !tunnelProtocolCovers(tunnel.portType, portType)) {
+        await clearAddress();
+        if (!replaceAttempted) {
+          replaceAttempted = true;
+          console.log(`[Tunnel] Tunnel for ${serverId} forwards ${tunnel.portType.toUpperCase()} but the game needs ${portType.toUpperCase()} — replacing it.`);
+          try {
+            if (!tunnel.id) throw new Error("the API returned no tunnel id");
+            await api.deleteTunnel(secret, tunnel.id);
+            // The create path rebuilds it with the right protocol once
+            // rundata stops listing the deleted tunnel.
+            createAttempted = false;
+          } catch (err) {
+            console.error(`[Tunnel] Could not replace the ${tunnel.portType} tunnel for ${serverId}:`, (err as Error)?.message || err);
+            await notify(serverId, "⚠️ Tunnel needs one manual step", `The playit tunnel for '${serverId}' forwards ${tunnel.portType.toUpperCase()}, but this game needs ${portType.toUpperCase()} — friends can't join through it. RealmSwap couldn't replace it (${err instanceof Error ? err.message : err}). Delete the "RealmSwap ${port}" tunnel on playit.gg, then toggle the tunnel off and on.`);
+          }
         }
         continue;
       }
@@ -446,8 +508,9 @@ async function runTunnelLifecycle(serverId: string, port: number, binPath: strin
     });
 
     // ---- Phase 3: mirror the tunnel state for as long as the daemon lives ----
+    const portType = await resolveTunnelPortType(serverId, port);
     await mirrorTunnelState({
-      serverId, port, secret, api,
+      serverId, port, portType, secret, api,
       cancelled,
       stillAlive: () => runningTunnels.has(serverId),
       onDaemonGone: () => {}, // the close handler owns crash reporting locally
@@ -503,8 +566,9 @@ async function runAgentTunnelLifecycle(serverId: string, port: number): Promise<
       isTunnelAlive(serverId) || Date.now() - startedAt < 90_000;
     let reportedAlive = false;
 
+    const portType = await resolveTunnelPortType(serverId, port);
     await mirrorTunnelState({
-      serverId, port, secret, api,
+      serverId, port, portType, secret, api,
       cancelled,
       stillAlive: () => {
         if (isTunnelAlive(serverId)) { reportedAlive = true; return true; }
