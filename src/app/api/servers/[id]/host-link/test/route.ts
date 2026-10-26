@@ -5,7 +5,8 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { decryptSecret } from "@/lib/hosting/secretStore";
 import { getProvider } from "@/lib/hosting/registry";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getAuthenticatedUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const access = await verifyServerAccess(params.id, user.id);

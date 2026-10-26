@@ -21,10 +21,8 @@ import path from "path";
 import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // GET /api/servers/[id]/mods/pack — the server's installed pack identity.
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -54,10 +52,8 @@ export async function GET(
 // Mods the new manifest drops are retired: their jar and ModInstallation row
 // are removed (scoped to the OLD pack's recorded packageIds — mods the user
 // installed separately are never touched).
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

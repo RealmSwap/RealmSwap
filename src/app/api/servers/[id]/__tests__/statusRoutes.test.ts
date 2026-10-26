@@ -90,7 +90,7 @@ import { GET as networkGET } from "@/app/api/servers/[id]/network-status/route";
 import { POST as sharePOST } from "@/app/api/servers/[id]/status-share/route";
 
 const req = (url: string, init: any = {}) => new NextRequest(`http://localhost${url}`, init);
-const params = { id: "s1" };
+const params = Promise.resolve({ id: "s1" });
 
 beforeEach(() => {
   bag.user = { id: "user1" };

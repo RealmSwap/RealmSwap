@@ -3,10 +3,8 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { deleteBackup } from "@/lib/backupService";
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {

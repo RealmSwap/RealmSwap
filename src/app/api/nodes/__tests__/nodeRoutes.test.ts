@@ -177,7 +177,7 @@ describe("DELETE /api/nodes/[id]", () => {
 
     const res = await nodeDELETE(
       new NextRequest("http://localhost/api/nodes/n1", { method: "DELETE" }),
-      { params: { id: "n1" } },
+      { params: Promise.resolve({ id: "n1" }) },
     );
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -192,14 +192,14 @@ describe("DELETE /api/nodes/[id]", () => {
     bag.user = { id: "u9", role: "MODERATOR" };
     const res = await nodeDELETE(
       new NextRequest("http://localhost/api/nodes/n1", { method: "DELETE" }),
-      { params: { id: "n1" } },
+      { params: Promise.resolve({ id: "n1" }) },
     );
     expect(res.status).toBe(403);
 
     bag.user = { id: "admin-1", role: "ADMIN" };
     const missing = await nodeDELETE(
       new NextRequest("http://localhost/api/nodes/none", { method: "DELETE" }),
-      { params: { id: "none" } },
+      { params: Promise.resolve({ id: "none" }) },
     );
     expect(missing.status).toBe(404);
   });

@@ -5,11 +5,12 @@ import { StatusCard } from "./StatusCard";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { code: string };
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ code: string }>;
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const status = await getPublicStatus(params.code).catch(() => null);
   if (!status) {
     return { title: "Server status | RealmSwap", robots: { index: false } };
@@ -30,11 +31,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function StatusPage({
-  params,
-}: {
-  params: { code: string };
-}) {
+export default async function StatusPage(
+  props: {
+    params: Promise<{ code: string }>;
+  }
+) {
+  const params = await props.params;
   const status = await getPublicStatus(params.code).catch(() => null);
 
   return (

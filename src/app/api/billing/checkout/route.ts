@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const { priceId } = await req.json().catch(() => ({}));
   if (!priceId) return NextResponse.json({ error: "priceId is required" }, { status: 400 });
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return NextResponse.json({ error: "No active session" }, { status: 401 });
 

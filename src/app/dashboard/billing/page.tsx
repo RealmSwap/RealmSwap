@@ -15,7 +15,7 @@ export default async function BillingPage() {
 
   // Plan catalogue is public-read from the cloud (kept in sync from Stripe by the
   // webhook). Free users simply have no matching price row.
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: prices } = await supabase
     .from("prices")
     .select("id, unit_amount, currency, interval, plan, active_slots")

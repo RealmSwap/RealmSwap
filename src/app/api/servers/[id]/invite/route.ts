@@ -5,7 +5,8 @@ import { generateInviteCodeParts } from "@/lib/realmsync";
 import { startRealmSyncServer, stopRealmSyncServer, getRealmSyncStatus } from "@/lib/realmSyncHost";
 import { requireLocalServer } from "@/lib/agents/perimeter";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getAuthenticatedUser();
     if (!session) return new NextResponse("Unauthorized", { status: 401 });
@@ -54,7 +55,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getAuthenticatedUser();
     if (!session) return new NextResponse("Unauthorized", { status: 401 });

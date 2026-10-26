@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
     const sort = searchParams.get("sort") || "newest"; // "likes" | "downloads" | "newest"
 
-    const supabase = createClient();
+    const supabase = await createClient();
     let query = supabase
       .from("realms")
       .select(

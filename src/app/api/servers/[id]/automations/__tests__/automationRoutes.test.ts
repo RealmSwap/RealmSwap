@@ -98,7 +98,7 @@ describe("POST /api/servers/[id]/automations", () => {
         triggerConfig: { cronExpression: "0 4 * * *" },
         actions,
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(201);
     expect(bag.creates).toHaveLength(1);
@@ -115,7 +115,7 @@ describe("POST /api/servers/[id]/automations", () => {
         triggerConfig: { dayOfWeek: 1, timeOfDay: "09:00" },
         actions,
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     // Previously a 400: the zod enum rejected what the editor offers.
     expect(res.status).toBe(201);
@@ -129,7 +129,7 @@ describe("POST /api/servers/[id]/automations", () => {
         triggerType: "SERVER_CRASH",
         actions,
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(201);
     expect(bag.creates[0].data.nextRunAt).toBeNull();
@@ -143,7 +143,7 @@ describe("POST /api/servers/[id]/automations", () => {
         triggerConfig: { cronExpression: "not cron" },
         actions,
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(400);
     expect((await res.json()).error).toMatch(/valid cron/);
@@ -156,7 +156,7 @@ describe("POST /api/servers/[id]/automations", () => {
         triggerType: "DAILY",
         actions,
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(400);
     expect((await res.json()).error).toMatch(/timeOfDay/);
@@ -170,7 +170,7 @@ describe("POST /api/servers/[id]/automations", () => {
         triggerConfig: { runAt: "2020-01-01T00:00" },
         actions,
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(400);
     expect((await res.json()).error).toMatch(/future/);
@@ -180,7 +180,7 @@ describe("POST /api/servers/[id]/automations", () => {
     bag.user = null;
     const unauth = await createAutomation(
       jsonReq("/api/servers/s1/automations", "POST", { name: "x", triggerType: "DAILY", triggerConfig: { timeOfDay: "04:00" }, actions }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(unauth.status).toBe(401);
 
@@ -188,7 +188,7 @@ describe("POST /api/servers/[id]/automations", () => {
     bag.isAdmin = false;
     const forbidden = await createAutomation(
       jsonReq("/api/servers/s1/automations", "POST", { name: "x", triggerType: "DAILY", triggerConfig: { timeOfDay: "04:00" }, actions }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(forbidden.status).toBe(403);
   });
@@ -197,12 +197,12 @@ describe("POST /api/servers/[id]/automations", () => {
 describe("GET automations", () => {
   it("lists automations for viewers and requires auth", async () => {
     bag.findMany = [{ id: "a1", name: "x" }];
-    const res = await listAutomations(jsonReq("/api/servers/s1/automations", "GET"), { params: { id: "s1" } });
+    const res = await listAutomations(jsonReq("/api/servers/s1/automations", "GET"), { params: Promise.resolve({ id: "s1" }) });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual([{ id: "a1", name: "x" }]);
 
     bag.user = null;
-    const unauth = await listAutomations(jsonReq("/api/servers/s1/automations", "GET"), { params: { id: "s1" } });
+    const unauth = await listAutomations(jsonReq("/api/servers/s1/automations", "GET"), { params: Promise.resolve({ id: "s1" }) });
     expect(unauth.status).toBe(401);
   });
 });
@@ -218,15 +218,15 @@ describe("PUT /api/servers/[id]/automations/[automationId]", () => {
   it("requires auth and ADMIN, and 404s unknown ids", async () => {
     bag.findUnique = existingRow;
     bag.user = null;
-    expect((await updateAutomation(jsonReq("/api/servers/s1/automations/a1", "PUT", { enabled: true }), { params: { id: "s1", automationId: "a1" } })).status).toBe(401);
+    expect((await updateAutomation(jsonReq("/api/servers/s1/automations/a1", "PUT", { enabled: true }), { params: Promise.resolve({ id: "s1", automationId: "a1" }) })).status).toBe(401);
 
     bag.user = { id: "user1" };
     bag.isAdmin = false;
-    expect((await updateAutomation(jsonReq("/api/servers/s1/automations/a1", "PUT", { enabled: true }), { params: { id: "s1", automationId: "a1" } })).status).toBe(403);
+    expect((await updateAutomation(jsonReq("/api/servers/s1/automations/a1", "PUT", { enabled: true }), { params: Promise.resolve({ id: "s1", automationId: "a1" }) })).status).toBe(403);
 
     bag.isAdmin = true;
     bag.findUnique = null;
-    expect((await updateAutomation(jsonReq("/api/servers/s1/automations/a1", "PUT", { enabled: true }), { params: { id: "s1", automationId: "a1" } })).status).toBe(404);
+    expect((await updateAutomation(jsonReq("/api/servers/s1/automations/a1", "PUT", { enabled: true }), { params: Promise.resolve({ id: "s1", automationId: "a1" }) })).status).toBe(404);
   });
 
   it("recomputes nextRunAt when the trigger changes", async () => {
@@ -236,7 +236,7 @@ describe("PUT /api/servers/[id]/automations/[automationId]", () => {
         triggerType: "CRON",
         triggerConfig: { cronExpression: "30 2 * * *" },
       }),
-      { params: { id: "s1", automationId: "a1" } }
+      { params: Promise.resolve({ id: "s1", automationId: "a1" }) }
     );
     expect(res.status).toBe(200);
     expect(bag.updates).toHaveLength(1);
@@ -247,7 +247,7 @@ describe("PUT /api/servers/[id]/automations/[automationId]", () => {
     bag.findUnique = existingRow; // pre-fix row: stored config, never a nextRunAt
     const res = await updateAutomation(
       jsonReq("/api/servers/s1/automations/a1", "PUT", { enabled: true }),
-      { params: { id: "s1", automationId: "a1" } }
+      { params: Promise.resolve({ id: "s1", automationId: "a1" }) }
     );
     expect(res.status).toBe(200);
     expect(bag.updates[0].data.nextRunAt).toBeInstanceOf(Date);
@@ -257,7 +257,7 @@ describe("PUT /api/servers/[id]/automations/[automationId]", () => {
     bag.findUnique = existingRow;
     await updateAutomation(
       jsonReq("/api/servers/s1/automations/a1", "PUT", { enabled: false }),
-      { params: { id: "s1", automationId: "a1" } }
+      { params: Promise.resolve({ id: "s1", automationId: "a1" }) }
     );
     expect(bag.updates[0].data).not.toHaveProperty("nextRunAt");
   });
@@ -269,7 +269,7 @@ describe("PUT /api/servers/[id]/automations/[automationId]", () => {
         triggerType: "CRON",
         triggerConfig: { cronExpression: "nope" },
       }),
-      { params: { id: "s1", automationId: "a1" } }
+      { params: Promise.resolve({ id: "s1", automationId: "a1" }) }
     );
     expect(res.status).toBe(400);
   });
@@ -278,11 +278,11 @@ describe("PUT /api/servers/[id]/automations/[automationId]", () => {
 describe("DELETE /api/servers/[id]/automations/[automationId]", () => {
   it("requires ADMIN", async () => {
     bag.isAdmin = false;
-    const res = await deleteAutomation(jsonReq("/api/servers/s1/automations/a1", "DELETE"), { params: { id: "s1", automationId: "a1" } });
+    const res = await deleteAutomation(jsonReq("/api/servers/s1/automations/a1", "DELETE"), { params: Promise.resolve({ id: "s1", automationId: "a1" }) });
     expect(res.status).toBe(403);
 
     bag.isAdmin = true;
-    const ok = await deleteAutomation(jsonReq("/api/servers/s1/automations/a1", "DELETE"), { params: { id: "s1", automationId: "a1" } });
+    const ok = await deleteAutomation(jsonReq("/api/servers/s1/automations/a1", "DELETE"), { params: Promise.resolve({ id: "s1", automationId: "a1" }) });
     expect(ok.status).toBe(200);
     expect(bag.deletes).toHaveLength(1);
   });
@@ -292,21 +292,21 @@ describe("POST /api/servers/[id]/automations/[automationId]/execute", () => {
   it("was callable by anyone — now requires auth and ADMIN", async () => {
     bag.findUnique = { id: "a1", serverId: "s1" };
     bag.user = null;
-    expect((await executeRoute(jsonReq("/api/servers/s1/automations/a1/execute", "POST"), { params: { id: "s1", automationId: "a1" } })).status).toBe(401);
+    expect((await executeRoute(jsonReq("/api/servers/s1/automations/a1/execute", "POST"), { params: Promise.resolve({ id: "s1", automationId: "a1" }) })).status).toBe(401);
 
     bag.user = { id: "user1" };
     bag.isAdmin = false;
-    expect((await executeRoute(jsonReq("/api/servers/s1/automations/a1/execute", "POST"), { params: { id: "s1", automationId: "a1" } })).status).toBe(403);
+    expect((await executeRoute(jsonReq("/api/servers/s1/automations/a1/execute", "POST"), { params: Promise.resolve({ id: "s1", automationId: "a1" }) })).status).toBe(403);
   });
 
   it("404s unknown automations and fires execution for admins", async () => {
     bag.user = { id: "user1" };
     bag.isAdmin = true;
     bag.findUnique = null;
-    expect((await executeRoute(jsonReq("/api/servers/s1/automations/a1/execute", "POST"), { params: { id: "s1", automationId: "a1" } })).status).toBe(404);
+    expect((await executeRoute(jsonReq("/api/servers/s1/automations/a1/execute", "POST"), { params: Promise.resolve({ id: "s1", automationId: "a1" }) })).status).toBe(404);
 
     bag.findUnique = { id: "a1", serverId: "s1" };
-    const res = await executeRoute(jsonReq("/api/servers/s1/automations/a1/execute", "POST"), { params: { id: "s1", automationId: "a1" } });
+    const res = await executeRoute(jsonReq("/api/servers/s1/automations/a1/execute", "POST"), { params: Promise.resolve({ id: "s1", automationId: "a1" }) });
     expect(res.status).toBe(200);
     expect(bag.executed).toEqual(["a1"]);
   });

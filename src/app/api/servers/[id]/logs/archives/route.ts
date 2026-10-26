@@ -7,10 +7,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Rotated log archives (server-log-*.zip) for the console history viewer.
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

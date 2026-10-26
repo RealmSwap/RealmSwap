@@ -9,10 +9,8 @@ import fs from "fs";
 import path from "path";
 import * as crypto from "crypto";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {

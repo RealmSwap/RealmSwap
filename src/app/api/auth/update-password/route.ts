@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "New password is required" }, { status: 400 });
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
     return NextResponse.json(

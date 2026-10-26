@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, ShieldAlert, Sparkles } from "lucide-react";
 
-export default function LoginPage({ searchParams }: { searchParams: { link?: string } }) {
+export default function LoginPage(props: { searchParams: Promise<{ link?: string }> }) {
+  const searchParams = use(props.searchParams);
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

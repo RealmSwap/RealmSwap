@@ -9,8 +9,8 @@ import { cookies } from "next/headers";
  * user's machine (Next server embedded in Electron), so it must never hold the
  * service-role key or a direct Postgres connection — RLS is the access boundary.
  */
-export function createClient() {
-  const cookieStore = cookies();
+export async function createClient() {
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

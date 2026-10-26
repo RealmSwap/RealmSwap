@@ -184,7 +184,7 @@ describe("Zomboid install route", () => {
         modName: "Common Sense",
         workshopId: "2875848298",
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -216,7 +216,7 @@ describe("Zomboid install route", () => {
         modId: "BB_CommonSense",
         workshopId: "2875848298",
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(500);
     expect(bag.restored).toEqual(["snap1"]);
@@ -231,7 +231,7 @@ describe("Zomboid install route", () => {
         modId: "BB_CommonSense",
         workshopId: "2875848298",
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(500);
     const data = await res.json();
@@ -251,7 +251,7 @@ describe("Zomboid uninstall route", () => {
 
     const res = await uninstallMod(
       jsonReq("/api/servers/s1/mods/2875848298", "DELETE"),
-      { params: { id: "s1", modId: "2875848298" } }
+      { params: Promise.resolve({ id: "s1", modId: "2875848298" }) }
     );
     expect(res.status).toBe(200);
 
@@ -287,7 +287,7 @@ describe("ARK install + uninstall route", () => {
         modName: "Structures Plus (S+)",
         workshopId: "731604991",
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(200);
     expect(fs.readFileSync(arkIniPath(), "utf-8")).toContain("ActiveMods=731604991");
@@ -310,7 +310,7 @@ describe("ARK install + uninstall route", () => {
 
     const res = await uninstallMod(
       jsonReq("/api/servers/s1/mods/731604991", "DELETE"),
-      { params: { id: "s1", modId: "731604991" } }
+      { params: Promise.resolve({ id: "s1", modId: "731604991" }) }
     );
     expect(res.status).toBe(200);
     expect(fs.readFileSync(arkIniPath(), "utf-8")).toContain("ActiveMods=1404697612");
@@ -358,7 +358,7 @@ describe("mod config route", () => {
     writeCfg("CommonSense.cfg", sampleCfg);
     const res = await getConfig(
       jsonReq("/api/servers/s1/mods/row1/config", "GET"),
-      { params: { id: "s1", modId: "row1" } }
+      { params: Promise.resolve({ id: "s1", modId: "row1" }) }
     );
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -377,7 +377,7 @@ describe("mod config route", () => {
     writeCfg("CommonExtra.cfg", sampleCfg);
     const res = await getConfig(
       jsonReq("/api/servers/s1/mods/row1/config", "GET"),
-      { params: { id: "s1", modId: "row1" } }
+      { params: Promise.resolve({ id: "s1", modId: "row1" }) }
     );
     expect(res.status).toBe(404);
     expect((await res.json()).error).toContain("Couldn't determine");
@@ -387,7 +387,7 @@ describe("mod config route", () => {
     bag.findUnique = { ...bag.findUnique, serverId: "other-server" };
     const res = await getConfig(
       jsonReq("/api/servers/s1/mods/row1/config", "GET"),
-      { params: { id: "s1", modId: "row1" } }
+      { params: Promise.resolve({ id: "s1", modId: "row1" }) }
     );
     expect(res.status).toBe(404);
   });
@@ -396,7 +396,7 @@ describe("mod config route", () => {
     bag.isAdmin = false;
     const res = await postConfig(
       jsonReq("/api/servers/s1/mods/row1/config", "POST", { sections: [] }),
-      { params: { id: "s1", modId: "row1" } }
+      { params: Promise.resolve({ id: "s1", modId: "row1" }) }
     );
     expect(res.status).toBe(403);
   });
@@ -408,7 +408,7 @@ describe("mod config route", () => {
     ];
     const res = await postConfig(
       jsonReq("/api/servers/s1/mods/row1/config", "POST", { sections }),
-      { params: { id: "s1", modId: "row1" } }
+      { params: Promise.resolve({ id: "s1", modId: "row1" }) }
     );
     expect(res.status).toBe(200);
     const saved = fs.readFileSync(cfgPath, "utf-8");
@@ -425,7 +425,7 @@ describe("mod config route", () => {
     ];
     const res = await postConfig(
       jsonReq("/api/servers/s1/mods/row1/config", "POST", { sections }),
-      { params: { id: "s1", modId: "row1" } }
+      { params: Promise.resolve({ id: "s1", modId: "row1" }) }
     );
     expect(res.status).toBe(400);
     expect(fs.readFileSync(cfgPath, "utf-8")).toBe(before);
@@ -498,7 +498,7 @@ describe("VRISING install + uninstall route", () => {
       jsonReq("/api/servers/s1/mods/install", "POST", {
         modType: "THUNDERSTORE", modId: "team-CoolMod", modName: "CoolMod",
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
 
     expect(res.status).toBe(200);
@@ -526,7 +526,7 @@ describe("VRISING install + uninstall route", () => {
       jsonReq("/api/servers/s1/mods/install", "POST", {
         modType: "THUNDERSTORE", modId: "BepInEx-BepInExPack_V_Rising",
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
 
     expect(res.status).toBe(200);
@@ -548,7 +548,7 @@ describe("VRISING install + uninstall route", () => {
 
     const res = await uninstallMod(
       jsonReq("/api/servers/s1/mods/team-CoolMod", "DELETE"),
-      { params: { id: "s1", modId: "team-CoolMod" } }
+      { params: Promise.resolve({ id: "s1", modId: "team-CoolMod" }) }
     );
 
     expect(res.status).toBe(200);
@@ -588,7 +588,7 @@ describe("RUST install + uninstall route", () => {
         modType: "UMOD", modId: "Kits", modName: "Rust Kits", version: "4.4.10",
         downloadUrl: "https://umod.org/plugins/Kits.cs",
       }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
 
     expect(res.status).toBe(200);
@@ -611,7 +611,7 @@ describe("RUST install + uninstall route", () => {
 
     const res = await installMod(
       jsonReq("/api/servers/s1/mods/install", "POST", { modType: "UMOD", modName: "Oxide/uMod Framework" }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
 
     expect(res.status).toBe(200);
@@ -629,7 +629,7 @@ describe("RUST install + uninstall route", () => {
 
     const res = await uninstallMod(
       jsonReq("/api/servers/s1/mods/Kits", "DELETE"),
-      { params: { id: "s1", modId: "Kits" } }
+      { params: Promise.resolve({ id: "s1", modId: "Kits" }) }
     );
 
     expect(res.status).toBe(200);
@@ -651,7 +651,7 @@ describe("ARK collection import", () => {
     const form = new FormData();
     form.append("collection", new Blob([JSON.stringify(collection)], { type: "application/json" }), "c.json");
     const req = new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form });
-    const res = await importCollection(req, { params: { id: "s1" } });
+    const res = await importCollection(req, { params: Promise.resolve({ id: "s1" }) });
 
     expect(res.status).toBe(200);
     const ini = fs.readFileSync(
@@ -673,7 +673,7 @@ describe("ARK collection import", () => {
     form.append("collection", new Blob([JSON.stringify(collection)]), "c.json");
     const res = await importCollection(
       new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(400);
   });
@@ -706,7 +706,7 @@ describe("Rust collection import", () => {
     form.append("collection", new Blob([JSON.stringify(collection)]), "c.json");
     const res = await importCollection(
       new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -728,7 +728,7 @@ describe("Rust collection import", () => {
     form.append("collection", new Blob([JSON.stringify(collection)]), "c.json");
     const res = await importCollection(
       new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(500);
     const data = await res.json();
@@ -753,7 +753,7 @@ describe("Minecraft TOML config route", () => {
 
     const getRes = await getConfig(
       new NextRequest("http://localhost/api/servers/s1/mods/row1/config"),
-      { params: { id: "s1", modId: "row1" } }
+      { params: Promise.resolve({ id: "s1", modId: "row1" }) }
     );
     expect(getRes.status).toBe(200);
     const data = await getRes.json();
@@ -765,7 +765,7 @@ describe("Minecraft TOML config route", () => {
       jsonReq("/api/servers/s1/mods/row1/config", "POST", {
         sections: [{ name: "general", properties: [{ key: "logToChat", value: "false", type: "Boolean", defaultValue: "", description: "" }] }],
       }),
-      { params: { id: "s1", modId: "row1" } }
+      { params: Promise.resolve({ id: "s1", modId: "row1" }) }
     );
     expect(postRes.status).toBe(200);
     const saved = fs.readFileSync(tomlPath, "utf-8");
@@ -787,7 +787,7 @@ describe("Rust JSON config route", () => {
 
     const getRes = await getConfig(
       new NextRequest("http://localhost/api/servers/s1/mods/row2/config"),
-      { params: { id: "s1", modId: "row2" } }
+      { params: Promise.resolve({ id: "s1", modId: "row2" }) }
     );
     const data = await getRes.json();
     expect(data.format).toBe("json");
@@ -800,7 +800,7 @@ describe("Rust JSON config route", () => {
           { key: "Enabled", value: "false", type: "Boolean", defaultValue: "", description: "" },
         ] }],
       }),
-      { params: { id: "s1", modId: "row2" } }
+      { params: Promise.resolve({ id: "s1", modId: "row2" }) }
     );
     expect(postRes.status).toBe(200);
     expect(JSON.parse(fs.readFileSync(jsonPath, "utf-8"))).toEqual({ Max: 10, Enabled: false });
@@ -863,7 +863,7 @@ describe("SATISFACTORY install route", () => {
 
     const res = await installMod(
       jsonReq("/api/servers/s1/mods/install", "POST", { modType: "FICSIT" }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(200);
     expect(fs.existsSync(path.join(serverDir, "FactoryGame", "Mods", "SML", "SML.uplugin"))).toBe(true);
@@ -876,7 +876,7 @@ describe("SATISFACTORY install route", () => {
     bag.access = { server: { id: "s1", name: "Factory", game: "SATISFACTORY", status: "STOPPED" } };
     const res = await installMod(
       jsonReq("/api/servers/s1/mods/install", "POST", { modType: "FICSIT", modId: "whatever" }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(500);
     const data = await res.json();
@@ -913,7 +913,7 @@ describe("SATISFACTORY collection import", () => {
     form.append("collection", new Blob([JSON.stringify(collection)]), "c.json");
     const res = await importCollection(
       new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form }),
-      { params: { id: "s1" } }
+      { params: Promise.resolve({ id: "s1" }) }
     );
     expect(res.status).toBe(200);
     expect(fs.existsSync(path.join(serverDir, "FactoryGame", "Mods", "NukeRebar", "NukeRebar.uplugin"))).toBe(true);

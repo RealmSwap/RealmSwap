@@ -31,10 +31,8 @@ const LOADER_LABELS: Record<string, string> = {
 // as single-mod installs, pinned to the exported versions — inside ONE
 // snapshot -> install -> sandbox boot test -> rollback-on-failure cycle.
 // No placeholder files, no "latest" guesses.
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

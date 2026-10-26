@@ -23,7 +23,8 @@ function parseIncludePaths(raw: string | null): string[] {
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getAuthenticatedUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const access = await verifyServerAccess(params.id, user.id);

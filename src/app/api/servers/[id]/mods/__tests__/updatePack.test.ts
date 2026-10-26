@@ -209,7 +209,7 @@ afterEach(() => {
 });
 
 function post(url = "/api/servers/s1/mods/update-pack") {
-  return updatePack(new NextRequest(`http://localhost${url}`, { method: "POST" }), { params: { id: "s1" } });
+  return updatePack(new NextRequest(`http://localhost${url}`, { method: "POST" }), { params: Promise.resolve({ id: "s1" }) });
 }
 
 describe("update-pack route", () => {
@@ -276,7 +276,7 @@ describe("update-pack route", () => {
   });
 
   it("GET serves the pack identity and whether it can update", async () => {
-    const res = await getPack(new NextRequest("http://localhost/api/servers/s1/mods/pack"), { params: { id: "s1" } });
+    const res = await getPack(new NextRequest("http://localhost/api/servers/s1/mods/pack"), { params: Promise.resolve({ id: "s1" }) });
     const data = await res.json();
     expect(data.pack.packName).toBe("Test Pack");
     expect(data.updatable).toBe(true);

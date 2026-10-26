@@ -5,10 +5,8 @@ import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
 import path from "path";
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {

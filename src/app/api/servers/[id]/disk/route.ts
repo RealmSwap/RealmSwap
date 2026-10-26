@@ -11,10 +11,8 @@ import path from "path";
 // GET: real numbers for the hero card's Disk tile — the server folder's size
 // on the host plus free space on the drive that holds it, and the recent
 // disk-size history the telemetry table has been stamping (real sparkline).
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

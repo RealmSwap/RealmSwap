@@ -5,7 +5,8 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 
 // Command input for a running local server. Log output is streamed separately
 // by the file-tailing SSE route at /api/servers/[id]/logs/stream.
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const serverId = params.id;
 

@@ -109,7 +109,7 @@ export async function ensureLocalUser(supabaseUser: SupabaseUser) {
  */
 export async function getAuthenticatedUser() {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();

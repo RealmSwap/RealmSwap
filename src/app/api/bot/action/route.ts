@@ -14,7 +14,7 @@ const botActionSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     // Rate limit (e.g. 10 requests per minute per IP/source)
-    const ip = req.headers.get("x-forwarded-for") || req.ip || "unknown_ip";
+    const ip = req.headers.get("x-forwarded-for") || "unknown_ip";
     if (!checkRateLimit(`bot_action_${ip}`, { limit: 10, windowMs: 60000 })) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }

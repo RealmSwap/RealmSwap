@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing templateId" }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Fetch the realm from the cloud marketplace (RLS: published/public only).
     const { data: realm, error: realmErr } = await supabase

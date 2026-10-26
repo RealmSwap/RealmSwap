@@ -15,7 +15,8 @@ import { reconcileInstalledMods } from "@/lib/mods/reconcile";
  * every row (the node's files are invisible here). Rows are returned
  * untouched so the Installed tab renders normally.
  */
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getAuthenticatedUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

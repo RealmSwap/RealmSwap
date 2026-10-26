@@ -21,10 +21,8 @@ import { requireLocalServer } from "@/lib/agents/perimeter";
 // both: pre-flight (invalid packs cost nothing) -> snapshot -> download +
 // hash verify every manifest file -> apply overrides -> sandbox boot test ->
 // automatic rollback on any failure.
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {

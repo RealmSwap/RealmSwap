@@ -4,10 +4,8 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { rconManager } from "@/lib/rconManager";
 import { prisma } from "@/lib/db";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

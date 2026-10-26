@@ -5,10 +5,8 @@ import { getPublicStatus } from "@/lib/statusShare";
 // response carries no credentials, addresses or player names (see
 // statusShare.ts); the 20s per-code cache inside getPublicStatus bounds how
 // often a shared link can hit the game server with query packets.
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { code: string } }
-) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ code: string }> }) {
+  const params = await props.params;
   try {
     const status = await getPublicStatus(params.code);
     if (!status) {

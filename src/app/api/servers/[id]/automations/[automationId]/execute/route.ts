@@ -6,8 +6,9 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string; automationId: string } }
+  props: { params: Promise<{ id: string; automationId: string }> }
 ) {
+  const params = await props.params;
   try {
     // Executing an automation runs arbitrary configured actions (restart,
     // console commands) — same bar as creating one.

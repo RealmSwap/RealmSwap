@@ -5,10 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 // Toggle the caller's favorite (heart) on a realm. A favorite is a realm_votes
 // row (value fixed at 1); un-favoriting deletes it. The counter trigger keeps
 // realms.like_count in sync, which the app surfaces as the favorite count.
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
@@ -17,7 +15,7 @@ export async function POST(
 
     const { favorited } = await request.json();
     const realmId = params.id;
-    const supabase = createClient();
+    const supabase = await createClient();
 
     if (favorited) {
       const { error } = await supabase

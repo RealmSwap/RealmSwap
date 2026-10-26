@@ -28,10 +28,8 @@ function queryCache(): Map<string, { at: number; current: number | null; maxPlay
   return globalForPlayers.__playersQueryCache;
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

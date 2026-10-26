@@ -15,10 +15,8 @@ export const dynamic = "force-dynamic";
  * itself is opaque and 15-min TTL — possession of the URL alone proves
  * nothing without the node's HMAC headers.
  */
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { token: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   const nodeId = req.headers.get("x-node-id");
   const node = nodeId
     ? await prisma.agentNode.findUnique({ where: { id: nodeId } })

@@ -19,7 +19,8 @@ function parseIncludePaths(raw: string | null): string[] {
   }
 }
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getAuthenticatedUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const access = await verifyServerAccess(params.id, user.id);

@@ -27,10 +27,8 @@ import { requireLocalServer } from "@/lib/agents/perimeter";
 // and downloaded server-side, then it rides the exact plan → apply pipeline
 // as manual imports. Resolution + download + pre-flight all happen BEFORE
 // the snapshot, so network/distribution failures cost nothing.
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
