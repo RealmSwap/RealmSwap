@@ -21,7 +21,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { promisify } from "util";
-import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, installStagedTree, readServerFile, writeServerFile, listServerDir, applyConfigEntries, deletePathsInDataDir, scanTreeFor, modSnapshotTarName, tunnelBinPath, tunnelSecretPath, tunnelSocketPath, tunnelPidPath, downloadToFile, reconcileTunnelOrphans } from "./lib";
+import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, installStagedTree, readServerFile, writeServerFile, listServerDir, applyConfigEntries, deletePathsInDataDir, scanTreeFor, modSnapshotTarName, tunnelBinPath, tunnelSecretPath, tunnelSocketPath, tunnelPidPath, downloadToFile, reconcileTunnelOrphans, walkDiskUsage } from "./lib";
 import type {
   SyncRequest, SyncResponse, SyncCommand, RegisterResponse,
   StartCommandPayload, StopCommandPayload, UpdateCommandPayload, SendCommandPayload,
@@ -29,7 +29,7 @@ import type {
   FileReadCommandPayload, FileWriteCommandPayload, FileListCommandPayload, ConfigApplyCommandPayload,
   FilesApplyCommandPayload, FilesRestoreCommandPayload, FileDeleteCommandPayload,
   DockerRunCommandPayload, DirScanCommandPayload, PathsSnapshotCommandPayload,
-  TunnelStartCommandPayload, TunnelStopCommandPayload,
+  TunnelStartCommandPayload, TunnelStopCommandPayload, DiskUsageCommandPayload,
   ServerReport,
 } from "../src/lib/agents/protocol";
 
@@ -562,6 +562,12 @@ async function execTunnelStop(serverId: string, _p: TunnelStopCommandPayload): P
   return { ok: true };
 }
 
+async function execDiskUsage(serverId: string, p: DiskUsageCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const result = walkDiskUsage(path.join(agentDataRoot(), p.dataDirName), p.buckets ?? []);
+  if (!result.ok) return { ok: false, error: result.error };
+  return { ok: true, output: JSON.stringify(result.usage) };
+}
+
 async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok: boolean; error?: string; output?: string }> {
   try {
     let result: { ok: boolean; error?: string; output?: string };
@@ -584,6 +590,7 @@ async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok
       case "PATHS_SNAPSHOT": result = await execPathsSnapshot(cmd.serverId, cmd.payload); break;
       case "TUNNEL_START": result = await execTunnelStart(cmd.serverId, cmd.payload); break;
       case "TUNNEL_STOP": result = await execTunnelStop(cmd.serverId, cmd.payload); break;
+      case "DISK_USAGE": result = await execDiskUsage(cmd.serverId, cmd.payload); break;
       default: result = { ok: false, error: `Unknown command kind` };
     }
     return { commandId: cmd.id, ...result };

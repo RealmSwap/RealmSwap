@@ -4,6 +4,7 @@ import { Server } from "@/generated/client";
 import { serverEventBus } from "./eventBus";
 import { maybePruneTelemetry } from "./telemetryRetention";
 import { getServerDiskBytes, bytesToMB } from "./diskUsage";
+import { cachedAgentStorageBreakdown } from "./agents/agentDisk";
 import {
   maybeSamplePlayers,
   takePendingPlayerSample,
@@ -98,7 +99,12 @@ export function startMonitoring(server: Server): void {
       // the folder walk re-runs at most every ~5 min in the background, so
       // this 10s tick never waits on the filesystem. Null until the first
       // walk completes (or when the server has no local install folder).
-      const diskBytes = await getServerDiskBytes(serverId).catch(() => null);
+      // AGENT servers never walk the dashboard disk (wrong machine): their
+      // numbers arrive via the node walk cache, refreshed whenever a disk
+      // tile / Storage page visit commands the node.
+      const diskBytes = server.runnerType === "AGENT"
+        ? cachedAgentStorageBreakdown(serverId)?.totalBytes ?? null
+        : await getServerDiskBytes(serverId).catch(() => null);
       // Player counts ride the same rows: a gamedig query runs in the
       // background at most every ~5 min; when one completed since the last
       // tick it attaches here (null on ticks without a fresh sample).

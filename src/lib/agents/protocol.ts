@@ -215,6 +215,17 @@ export interface TunnelStopCommandPayload {
   kind: "TUNNEL_STOP";
 }
 
+/** One classified walk of the server data dir for storage truth: the
+ *  dashboard owns the game knowledge (prefix lists), the agent walks once
+ *  and assigns every file to the longest matching prefix (none → uncapped
+ *  "other"). Result output JSON:
+ *  `{ totalBytes: number; buckets: Record<string, number> }`. */
+export interface DiskUsageCommandPayload {
+  kind: "DISK_USAGE";
+  dataDirName: string;
+  buckets: { name: string; prefixes: string[] }[];
+}
+
 export type CommandPayload =
   | StartCommandPayload
   | StopCommandPayload
@@ -233,7 +244,8 @@ export type CommandPayload =
   | DirScanCommandPayload
   | PathsSnapshotCommandPayload
   | TunnelStartCommandPayload
-  | TunnelStopCommandPayload;
+  | TunnelStopCommandPayload
+  | DiskUsageCommandPayload;
 
 /** What the agent reports per server it manages. */
 export interface ServerReport {
@@ -284,7 +296,8 @@ export interface SyncCommand {
     | "DIR_SCAN"
     | "PATHS_SNAPSHOT"
     | "TUNNEL_START"
-    | "TUNNEL_STOP";
+    | "TUNNEL_STOP"
+    | "DISK_USAGE";
   serverId: string;
   payload: CommandPayload;
 }
