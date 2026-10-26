@@ -13,6 +13,7 @@ const {
   isUpdateStaged,
 } = require("./updater");
 const { runMigrations } = require("./migrate");
+const { loadPackagedEnv } = require("./packagedEnv");
 
 const isDev = process.env.GAMEVAULT_DEV === "1";
 const internalToken = crypto.randomBytes(16).toString("hex");
@@ -277,6 +278,15 @@ app.whenReady().then(async () => {
     } else {
       const dataDir = ensureDataDir();
       logStartup(`startup: packaged launch, dataDir=${dataDir}`);
+      // Provider API keys (CurseForge / Steam Workshop) ship in the installer
+      // as resources/packaged-env.json; the Next server reads them from
+      // process.env at request time. Applied before startNextServer so the
+      // in-process standalone server sees them. Names only in the log — never
+      // values.
+      const appliedKeys = loadPackagedEnv(process.resourcesPath);
+      if (appliedKeys.length) {
+        logStartup(`provider keys from package: ${appliedKeys.join(", ")}`);
+      }
       const migResult = await runMigrations({
         dbPath: path.join(dataDir, "realmswap.db"),
         migrationsDir: path.join(process.resourcesPath, "migrations"),

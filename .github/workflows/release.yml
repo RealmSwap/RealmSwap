@@ -81,6 +81,19 @@ jobs:
             exit 1
           fi
 
+      # Provider keys are read at RUNTIME by the packaged Next server (CurseForge
+      # search, Steam Workshop search) — unlike the NEXT_PUBLIC_* vars they can't
+      # ride `next build`. This step writes them into packaged-env.json, which
+      # electron-builder bundles into install resources and electron/main.js
+      # applies on startup. Missing keys warn but don't fail: the app degrades
+      # to keyless provider behavior, it never breaks.
+      - name: Write packaged provider keys
+        working-directory: 'C:\rsbuild'
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+          STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+        run: node scripts/write-packaged-env.js
+
       # pwsh: `exit` is not valid inside a `( … )` subexpression, so this can't
       # collapse to the one-liner `… || (cat build.log && exit 1)`.
       - name: Build Windows installer

@@ -29,6 +29,13 @@ extraResources:
     to: migrations
   - from: build/tray.png
     to: tray.png
+  # Provider API keys for the packaged Next server (CurseForge / Steam
+  # Workshop search — read from process.env at request time). The release
+  # workflow overwrites the committed {} placeholder via
+  # scripts/write-packaged-env.js; committed so local builds don't fail on a
+  # missing extraResource.
+  - from: packaged-env.json
+    to: packaged-env.json
   # The startup migration runner (electron/migrate.js) require()s the generated
   # Prisma client from this path in the packaged app. The Next standalone trace
   # only copies the engine + schema here (the client JS is webpack-bundled into
