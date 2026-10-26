@@ -241,8 +241,10 @@ async function execSendCommand(serverId: string, p: SendCommandPayload): Promise
 
 async function execBackupCreate(serverId: string, p: BackupCreateCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
   const dataDir = path.join(agentDataRoot(), p.dataDirName);
+  const rootAbs = path.resolve(dataDir);
   const srcAbs = path.resolve(path.join(dataDir, p.srcRelDir));
-  if (!srcAbs.startsWith(path.resolve(dataDir) + path.sep)) {
+  // "." (world export) resolves to the root itself and is legal.
+  if (srcAbs !== rootAbs && !srcAbs.startsWith(rootAbs + path.sep)) {
     return { ok: false, error: `Backup source escapes the server data dir: ${p.srcRelDir}` };
   }
   fs.mkdirSync(stateDir, { recursive: true });
