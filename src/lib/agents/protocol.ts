@@ -24,8 +24,10 @@ export interface StartCommandPayload {
   kind: "START";
   /** Server files root on the agent (its own data dir for this server). */
   dataDirName: string;
-  /** Rendered config files, relative to the server data dir. */
-  configFiles: { relPath: string; content: string }[];
+  /** Rendered config files, relative to the server data dir. `merge: true`
+   *  merges the rendered content into an existing file (raw-editor edits
+   *  survive restarts) instead of overwriting it. */
+  configFiles: { relPath: string; content: string; merge?: boolean }[];
   containerName: string;
   image: string;
   ports: { port: number; protocol: string }[];
@@ -82,13 +84,57 @@ export interface BackupRestoreCommandPayload {
   mode: "swap" | "overlay";
 }
 
+/** Small-file read for the config editor. Result output JSON:
+ *  `{ exists: boolean; content: string | null }` (content null when missing). */
+export interface FileReadCommandPayload {
+  kind: "FILE_READ";
+  dataDirName: string;
+  /** File relative to the server data dir. */
+  relPath: string;
+}
+
+/** Small-file write for the config editor. `backup` keeps a last-known-good
+ *  copy at `<relPath>.rsbak` before overwriting (raw-editor parity). Result
+ *  output JSON: `{ written: number }` (bytes). */
+export interface FileWriteCommandPayload {
+  kind: "FILE_WRITE";
+  dataDirName: string;
+  relPath: string;
+  content: string;
+  backup?: boolean;
+}
+
+/** Directory listing for mod-config discovery (which .cfg/.toml exists).
+ *  Result output JSON: `{ entries: { name: string; isDir: boolean }[] }` —
+ *  empty when the directory doesn't exist yet. */
+export interface FileListCommandPayload {
+  kind: "FILE_LIST";
+  dataDirName: string;
+  /** Directory relative to the server data dir; "" = the data dir root. */
+  relPath: string;
+}
+
+/** Apply a set of rendered config files in ONE round trip (settings saves):
+ *  same merge semantics as START configFiles. Result output JSON:
+ *  `{ written: number }` (files). */
+export interface ConfigApplyCommandPayload {
+  kind: "CONFIG_APPLY";
+  dataDirName: string;
+  /** Rendered config files, paths relative to the server data dir. */
+  files: { relPath: string; content: string; merge?: boolean }[];
+}
+
 export type CommandPayload =
   | StartCommandPayload
   | StopCommandPayload
   | UpdateCommandPayload
   | SendCommandPayload
   | BackupCreateCommandPayload
-  | BackupRestoreCommandPayload;
+  | BackupRestoreCommandPayload
+  | FileReadCommandPayload
+  | FileWriteCommandPayload
+  | FileListCommandPayload
+  | ConfigApplyCommandPayload;
 
 /** What the agent reports per server it manages. */
 export interface ServerReport {
@@ -118,7 +164,17 @@ export interface SyncRequest {
 
 export interface SyncCommand {
   id: string;
-  type: "START" | "STOP" | "UPDATE" | "SEND_COMMAND" | "BACKUP_CREATE" | "BACKUP_RESTORE";
+  type:
+    | "START"
+    | "STOP"
+    | "UPDATE"
+    | "SEND_COMMAND"
+    | "BACKUP_CREATE"
+    | "BACKUP_RESTORE"
+    | "FILE_READ"
+    | "FILE_WRITE"
+    | "FILE_LIST"
+    | "CONFIG_APPLY";
   serverId: string;
   payload: CommandPayload;
 }

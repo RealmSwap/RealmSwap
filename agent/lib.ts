@@ -6,11 +6,25 @@
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import { mergeConfigContent } from "../src/lib/definitions/mergeConfig";
 import type { StartCommandPayload } from "../src/lib/agents/protocol";
+
+/** Resolve relPath inside the server data dir with the same traversal guard
+ *  writeConfigFiles uses, but allowing the data dir itself ("" lists the
+ *  root). Returns null when the path escapes. */
+export function resolveInDataDir(dataDir: string, relPath: string): string | null {
+  const root = path.resolve(dataDir);
+  const resolved = path.resolve(path.join(dataDir, relPath));
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) return null;
+  return resolved;
+}
 
 /** Write dashboard-rendered config files under the server data dir.
  *  Refuses anything that escapes the dir (defense in depth — the payload is
- *  HMAC-authenticated, but the agent never writes outside its own tree). */
+ *  HMAC-authenticated, but the agent never writes outside its own tree).
+ *  `merge: true` entries merge into an existing file instead of overwriting
+ *  it, mirroring applyConfigFiles on the local runners — otherwise every
+ *  start would clobber raw-editor edits made on the node. */
 export function writeConfigFiles(
   dataDir: string,
   configFiles: StartCommandPayload["configFiles"],
@@ -24,10 +38,77 @@ export function writeConfigFiles(
       return { ok: false, error: `Config path escapes the server data dir: ${cf.relPath}` };
     }
     fs.mkdirSync(path.dirname(resolved), { recursive: true });
-    fs.writeFileSync(resolved, cf.content, "utf-8");
+    fs.writeFileSync(resolved, mergeFileContent(resolved, cf.content, cf.merge), "utf-8");
     written++;
   }
   return { ok: true, written };
+}
+
+/** The single merge/overwrite decision every config write shares: overwrite
+ *  by default, merge when asked AND a previous file exists to merge into. */
+function mergeFileContent(absPath: string, content: string, merge?: boolean): string {
+  if (!merge || !fs.existsSync(absPath)) return content;
+  try {
+    return mergeConfigContent(fs.readFileSync(absPath, "utf-8"), content);
+  } catch {
+    return content; // unreadable existing file — regenerate, like applyConfigFiles
+  }
+}
+
+/** Config-editor file cap: these ride the command channel as JSON, so a
+ *  multi-GB file (a world, a jar) must refuse instead of smuggling through. */
+const MAX_FERRY_BYTES = 2 * 1024 * 1024;
+
+export function readServerFile(
+  dataDir: string,
+  relPath: string,
+): { ok: true; exists: boolean; content: string | null } | { ok: false; error: string } {
+  const abs = resolveInDataDir(dataDir, relPath);
+  if (!abs) return { ok: false, error: `File path escapes the server data dir: ${relPath}` };
+  if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) return { ok: true, exists: false, content: null };
+  if (fs.statSync(abs).size > MAX_FERRY_BYTES) {
+    return { ok: false, error: `File is too large to edit over the agent channel (${relPath})` };
+  }
+  return { ok: true, exists: true, content: fs.readFileSync(abs, "utf-8") };
+}
+
+export function writeServerFile(
+  dataDir: string,
+  relPath: string,
+  content: string,
+  backup?: boolean,
+): { ok: true; written: number } | { ok: false; error: string } {
+  const abs = resolveInDataDir(dataDir, relPath);
+  if (!abs) return { ok: false, error: `File path escapes the server data dir: ${relPath}` };
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  if (backup && fs.existsSync(abs)) {
+    try { fs.copyFileSync(abs, `${abs}.rsbak`); } catch { /* best-effort, like the local editor */ }
+  }
+  fs.writeFileSync(abs, content, "utf-8");
+  return { ok: true, written: Buffer.byteLength(content, "utf-8") };
+}
+
+export function listServerDir(
+  dataDir: string,
+  relPath: string,
+): { ok: true; entries: { name: string; isDir: boolean }[] } | { ok: false; error: string } {
+  const abs = resolveInDataDir(dataDir, relPath);
+  if (!abs) return { ok: false, error: `Directory path escapes the server data dir: ${relPath}` };
+  if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) return { ok: true, entries: [] };
+  const entries = fs
+    .readdirSync(abs, { withFileTypes: true })
+    .map((e) => ({ name: e.name, isDir: e.isDirectory() }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  return { ok: true, entries };
+}
+
+/** Apply a rendered config set (settings saves): same merge semantics as
+ *  writeConfigFiles, paths already relative to the server data dir. */
+export function applyConfigEntries(
+  dataDir: string,
+  files: { relPath: string; content: string; merge?: boolean }[],
+): { ok: true; written: number } | { ok: false; error: string } {
+  return writeConfigFiles(dataDir, files);
 }
 
 /** docker run argv for a START payload — mirrors buildRunArgs in dockerCli.ts. */

@@ -169,3 +169,131 @@ describe("agent installStagedTree", () => {
     }
   });
 });
+
+// The config-editor file primitives: traversal-guarded small-file read,
+// write (with .rsbak parity), listing, and merge-preserving config entries —
+// the semantics the dashboard's raw editor and settings saves rely on.
+
+import { readServerFile, writeServerFile, listServerDir, applyConfigEntries, resolveInDataDir } from "../lib";
+
+describe("agent resolveInDataDir", () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), "agent-lib-test-"));
+  });
+
+  it("resolves inside the dir and allows the root itself", () => {
+    expect(resolveInDataDir(tmp, "mc-server/server.properties")).toBe(path.resolve(tmp, "mc-server/server.properties"));
+    expect(resolveInDataDir(tmp, "")).toBe(path.resolve(tmp));
+    expect(resolveInDataDir(tmp, ".")).toBe(path.resolve(tmp));
+  });
+
+  it("rejects traversal out of the data dir", () => {
+    expect(resolveInDataDir(tmp, "../pwned.txt")).toBeNull();
+    expect(resolveInDataDir(tmp, "/../pwned.txt")).toBeNull();
+  });
+});
+
+describe("agent readServerFile", () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), "agent-lib-test-"));
+  });
+
+  it("reads existing files and reports missing ones without throwing", () => {
+    fs.writeFileSync(path.join(tmp, "server.properties"), "motd=hi\n");
+    expect(readServerFile(tmp, "server.properties")).toEqual({ ok: true, exists: true, content: "motd=hi\n" });
+    expect(readServerFile(tmp, "missing.txt")).toEqual({ ok: true, exists: false, content: null });
+  });
+
+  it("refuses files too large for the command channel", () => {
+    fs.writeFileSync(path.join(tmp, "big.bin"), Buffer.alloc(3 * 1024 * 1024));
+    const result = readServerFile(tmp, "big.bin");
+    expect(result.ok).toBe(false);
+  });
+
+  it("refuses traversal", () => {
+    const result = readServerFile(tmp, "../outside.txt");
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe("agent writeServerFile", () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), "agent-lib-test-"));
+  });
+
+  it("writes with parent creation and optional .rsbak backup", () => {
+    fs.mkdirSync(path.join(tmp, "nested/dir"), { recursive: true });
+    fs.writeFileSync(path.join(tmp, "nested/dir/a.ini"), "old=1\n");
+    const result = writeServerFile(tmp, "nested/dir/a.ini", "new=2\n", true);
+    expect(result).toEqual({ ok: true, written: 6 });
+    expect(fs.readFileSync(path.join(tmp, "nested/dir/a.ini"), "utf-8")).toBe("new=2\n");
+    expect(fs.readFileSync(path.join(tmp, "nested/dir/a.ini.rsbak"), "utf-8")).toBe("old=1\n");
+  });
+
+  it("refuses traversal", () => {
+    expect(writeServerFile(tmp, "../pwned.txt", "x").ok).toBe(false);
+  });
+});
+
+describe("agent listServerDir", () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), "agent-lib-test-"));
+  });
+
+  it("lists entries sorted, marking dirs; missing dir is an empty listing", () => {
+    fs.mkdirSync(path.join(tmp, "config"));
+    fs.writeFileSync(path.join(tmp, "config/b.toml"), "x=1");
+    fs.writeFileSync(path.join(tmp, "config/a.toml"), "x=1");
+    expect(listServerDir(tmp, "config")).toEqual({
+      ok: true,
+      entries: [{ name: "a.toml", isDir: false }, { name: "b.toml", isDir: false }],
+    });
+    expect(listServerDir(tmp, "nope")).toEqual({ ok: true, entries: [] });
+  });
+});
+
+describe("agent writeConfigFiles merge semantics", () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), "agent-lib-test-"));
+  });
+
+  it("merge:true preserves existing keys the render doesn't manage", () => {
+    fs.writeFileSync(path.join(tmp, "server.properties"), "motd=hand-edited\nmax-players=3\n");
+    const result = writeConfigFiles(tmp, [
+      { relPath: "server.properties", content: "motd=template\nview-distance=8\n", merge: true },
+    ]);
+    expect(result.ok).toBe(true);
+    const merged = fs.readFileSync(path.join(tmp, "server.properties"), "utf-8");
+    expect(merged).toContain("motd=template");       // rendered value wins
+    expect(merged).toContain("max-players=3");        // hand edit survives
+    expect(merged).toContain("view-distance=8");      // new key appended
+  });
+
+  it("merge:true on a missing file writes the render verbatim", () => {
+    const result = writeConfigFiles(tmp, [{ relPath: "new.ini", content: "a=1\n", merge: true }]);
+    expect(result.ok).toBe(true);
+    expect(fs.readFileSync(path.join(tmp, "new.ini"), "utf-8")).toBe("a=1\n");
+  });
+
+  it("merge:false (or omitted) overwrites, matching full-overwrite strategies", () => {
+    fs.writeFileSync(path.join(tmp, "enshrouded_server.json"), '{"name":"custom"}');
+    writeConfigFiles(tmp, [{ relPath: "enshrouded_server.json", content: '{"name":"rendered"}' }]);
+    expect(fs.readFileSync(path.join(tmp, "enshrouded_server.json"), "utf-8")).toBe('{"name":"rendered"}');
+  });
+
+  it("applyConfigEntries shares the same merge semantics", () => {
+    fs.writeFileSync(path.join(tmp, "servertest.ini"), "Password=old\nMods=BB_X\n");
+    const result = applyConfigEntries(tmp, [
+      { relPath: "servertest.ini", content: "Password=new\n", merge: true },
+    ]);
+    expect(result).toEqual({ ok: true, written: 1 });
+    const merged = fs.readFileSync(path.join(tmp, "servertest.ini"), "utf-8");
+    expect(merged).toContain("Password=new");
+    expect(merged).toContain("Mods=BB_X");
+  });
+});
