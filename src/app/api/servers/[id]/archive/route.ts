@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { getRunner } from "@/lib/runners";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
+import { requireLocalServer } from "@/lib/agents/perimeter";
 import fs from "fs";
 import path from "path";
 import * as crypto from "crypto";
@@ -26,6 +27,12 @@ export async function POST(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
+    // Vaulting used to behave degenerately for AGENT servers: the LOCAL file
+    // branches skipped, the transaction still deleted the server row with a
+    // fabricated size, and the world was orphaned on the node with nothing
+    // pointing at it. Vault = "move this server's files" — a this-machine
+    // feature by nature, so refuse until it becomes a real mover.
+    requireLocalServer(server, "Vaulting");
 
     // Stop server if running
     try {
