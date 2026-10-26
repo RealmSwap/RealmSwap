@@ -1,5 +1,6 @@
 import net from "net";
 import { getPublicIP } from "./upnp";
+import { listBoundSockets, type BoundSocket } from "./boundPorts";
 import type { GameDefinitionSpec } from "./definitions/types";
 
 export type CheckStatus = "ok" | "warn" | "fail" | "skip";
@@ -18,7 +19,9 @@ export interface ConnectivityReport {
 }
 
 export interface ConnectivityDeps {
-  connect?: (port: number) => Promise<boolean>; // can we open a local TCP connection?
+  /** What the OS reports bound locally (TCP listeners + UDP sockets); null = this host can't tell. */
+  boundSockets?: () => Promise<BoundSocket[] | null>;
+  connect?: (port: number) => Promise<boolean>; // fallback: can we open a local TCP connection?
   publicIP?: () => Promise<string | null>;
   platform?: NodeJS.Platform;
   tunnelAlive?: (serverId: string) => boolean; // live playit agent for this server
@@ -34,6 +37,18 @@ function defaultConnect(port: number): Promise<boolean> {
   });
 }
 
+/** The TCP connect only means something when the join port itself is TCP.
+ *  A spec may declare TCP for another port (Rust's RCON) or for nothing the
+ *  game serves (Enshrouded) — neither makes the game port probeable.
+ *  Templated port specs can't be resolved here and count as "might be". */
+function tcpProbeApplies(spec: GameDefinitionSpec, port: number): boolean {
+  return (spec.ports ?? []).some((p) => {
+    if (p.protocol !== "TCP") return false;
+    const n = Number(p.port);
+    return !Number.isFinite(n) || n === port;
+  });
+}
+
 /**
  * Diagnose "friends can't connect" for a server. Checks, in order: the server
  * is running, the game is actually listening locally, the router path (UPnP
@@ -44,10 +59,12 @@ export async function runConnectivityChecks(
   server: {
     id: string; name: string; status: string; port: number;
     enableUpnp: boolean; tunnelUrl: string | null;
+    runnerType?: string | null;
   },
   spec: GameDefinitionSpec,
   deps: ConnectivityDeps = {}
 ): Promise<ConnectivityReport> {
+  const boundSockets = deps.boundSockets ?? listBoundSockets;
   const connect = deps.connect ?? defaultConnect;
   const publicIP = deps.publicIP ?? getPublicIP;
   const platform = deps.platform ?? process.platform;
@@ -67,32 +84,54 @@ export async function runConnectivityChecks(
       : `Server is ${server.status}. Friends can only join while it's running.`,
   });
 
-  // 2. Game listening locally (TCP games only; UDP games can't be probed this way)
-  const hasTcp = (spec.ports ?? []).some((p) => p.protocol === "TCP");
-  if (!hasTcp) {
-    checks.push({
-      id: "listen",
-      label: "Game is listening",
-      status: "skip",
-      detail: "UDP-based game — no local listen probe available.",
-    });
-  } else if (!running) {
+  // 2. Game listening locally. Ask the OS what is bound to the port, TCP or
+  //    UDP — a TCP connect can't see UDP games (Enshrouded, Valheim, Rust…),
+  //    which used to read as "nothing is listening" with players inside.
+  if (!running) {
     checks.push({
       id: "listen",
       label: "Game is listening",
       status: "skip",
       detail: "Skipped while the server is stopped.",
     });
-  } else {
-    const listening = await connect(server.port);
+  } else if (server.runnerType === "AGENT") {
     checks.push({
       id: "listen",
       label: "Game is listening",
-      status: listening ? "ok" : "fail",
-      detail: listening
-        ? `Port ${server.port} answers locally.`
-        : `Nothing is listening on port ${server.port} yet — the game may still be starting up.`,
+      status: "skip",
+      detail: "The game runs on a node — this machine can't see its sockets; the node's heartbeat reports the server state.",
     });
+  } else {
+    const sockets = await boundSockets().catch(() => null);
+    if (sockets) {
+      const bound = sockets.filter((s) => s.port === server.port);
+      const protocols = Array.from(new Set(bound.map((s) => s.protocol))).sort();
+      checks.push({
+        id: "listen",
+        label: "Game is listening",
+        status: bound.length ? "ok" : "fail",
+        detail: bound.length
+          ? `Port ${server.port} is open locally (${protocols.join(" + ")}).`
+          : `Nothing on this machine is bound to port ${server.port} (TCP or UDP) — the game may still be starting, or it's configured for a different port than RealmSwap expects.`,
+      });
+    } else if (tcpProbeApplies(spec, server.port)) {
+      const listening = await connect(server.port);
+      checks.push({
+        id: "listen",
+        label: "Game is listening",
+        status: listening ? "ok" : "fail",
+        detail: listening
+          ? `Port ${server.port} answers locally.`
+          : `Nothing is listening on port ${server.port} yet — the game may still be starting up.`,
+      });
+    } else {
+      checks.push({
+        id: "listen",
+        label: "Game is listening",
+        status: "skip",
+        detail: "UDP-based game — this host offers no way to verify the local listener.",
+      });
+    }
   }
 
   // 3. Router path: tunnel wins (works regardless of router), else UPnP
