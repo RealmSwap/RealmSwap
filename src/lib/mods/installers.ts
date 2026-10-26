@@ -29,7 +29,11 @@ import {
   FICSIT_SML_REFERENCE, FICSIT_SMM_MARKER, type FicsitMod,
 } from "@/lib/mods/ficsit";
 import { WORKSHOP_APP_IDS } from "@/lib/mods/workshop";
-import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
+import { downloadWorkshopItem, deriveZomboidModIds, installSteamApp } from "@/lib/mods/workshopDownload";
+import {
+  tmlInstallDir, tmlEnabledJsonPath, readTmlMarker, writeTmlMarker,
+  addTmlEnabledMods, deriveTmodNames, isClientOnlyWorkshopItem,
+} from "@/lib/mods/tml";
 
 /**
  * Per-game mod installation steps shared by the single-mod install route and
@@ -628,6 +632,96 @@ export async function installArkWorkshopMod(args: {
     create: {
       serverId, provider: "workshop", packageId: workshopId,
       version: version || "Workshop", name: name || `Workshop ${workshopId}`,
+    },
+  });
+}
+
+/**
+ * Install the tModLoader dedicated server (Steam app 1281930) beside the
+ * vanilla Terraria server and mark it — the marker is what makes LocalRunner
+ * swap the launch. tML runs its own copy of everything (dotnet included via
+ * its depots); the vanilla install stays untouched, and the world stays in
+ * terraria-server/worlds (the launch redirects -world back there), so one
+ * world remains playable under either runtime and backups stay put.
+ * No ModInstallation row: like Minecraft loaders, the marker alone carries
+ * state (loader GET reads it; a restore removes it).
+ */
+export async function installTmlLoader(args: {
+  serverRoot: string;
+  onLog?: (msg: string) => void;
+  deps?: { installApp?: typeof installSteamApp };
+}): Promise<void> {
+  const installDir = tmlInstallDir(args.serverRoot);
+  fs.mkdirSync(installDir, { recursive: true });
+  await (args.deps?.installApp ?? installSteamApp)({
+    appId: WORKSHOP_APP_IDS.TERRARIA,
+    installDir,
+    validate: true,
+    onLog: args.onLog,
+  });
+
+  // Honest install check: the Windows start script and the managed entrypoint
+  // are the two artifacts the runner's launch swap depends on.
+  for (const required of ["start-tModLoaderServer.bat", "tModLoader.dll"]) {
+    if (!fs.existsSync(path.join(installDir, required))) {
+      throw new Error(
+        `tModLoader installed but ${required} is missing — the Steam depot layout changed; refusing to mark it active.`
+      );
+    }
+  }
+  if (readTmlMarker(installDir)) return;
+  writeTmlMarker(installDir, { type: "tmodloader", installedAt: new Date().toISOString() });
+}
+
+/**
+ * Register a tModLoader Workshop mod: SteamCMD-download the item into the tML
+ * install's own workshop dir (where -steamworkshopfolder points the server),
+ * derive the mod names from its .tmod files, and enable them in
+ * tModLoader-server/Mods/enabled.json — tML picks the right .tmod version
+ * folder itself at boot. Refuses client-only items (their own workshop.json
+ * tags say so) and items that carry no .tmod at all.
+ */
+export async function installTmlWorkshopMod(args: {
+  serverId: string;
+  serverRoot: string;
+  workshopId: string;
+  name?: string;
+  /** Pre-fetched item time_updated (ISO); stored as the row version. */
+  version?: string;
+  deps?: {
+    downloadWorkshop?: typeof downloadWorkshopItem;
+    derive?: typeof deriveTmodNames;
+  };
+}): Promise<void> {
+  const { serverId, serverRoot, workshopId, name, version } = args;
+  const installDir = tmlInstallDir(serverRoot);
+  if (!readTmlMarker(installDir)) {
+    throw new Error("tModLoader is not installed on this server — install it from the Mod Manager first.");
+  }
+
+  const contentDir = await (args.deps?.downloadWorkshop ?? downloadWorkshopItem)({
+    appId: WORKSHOP_APP_IDS.TERRARIA,
+    workshopId,
+    installDir,
+  });
+  if (isClientOnlyWorkshopItem(contentDir)) {
+    throw new Error("This Workshop item is tagged client-only — it changes the game UI, not the server, and would never load here.");
+  }
+  const derived = (args.deps?.derive ?? deriveTmodNames)(contentDir);
+  const modNames = derived.map((d) => d.name);
+
+  addTmlEnabledMods(tmlEnabledJsonPath(installDir), modNames);
+  await prisma.modInstallation.upsert({
+    where: { serverId_provider_packageId: { serverId, provider: "workshop", packageId: workshopId } },
+    update: {
+      name: name || `Workshop ${workshopId}`,
+      workshopModId: modNames.join(";"),
+      ...(version ? { version } : {}),
+    },
+    create: {
+      serverId, provider: "workshop", packageId: workshopId,
+      version: version || "Workshop", name: name || `Workshop ${workshopId}`,
+      workshopModId: modNames.join(";"),
     },
   });
 }

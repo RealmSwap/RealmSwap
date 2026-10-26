@@ -80,7 +80,7 @@ describe("reconcileInstalledMods", () => {
   });
 
   it("does nothing for games without disk-verifiable mods", async () => {
-    bag.server = { id: "s1", game: "ARK" };
+    bag.server = { id: "s1", game: "ENSHROUDED" };
     await reconcileInstalledMods("s1");
     expect(bag.deletes).toHaveLength(0);
     expect(bag.creates).toHaveLength(0);
@@ -250,6 +250,66 @@ describe("reconcileInstalledMods", () => {
 
       expect(result.removed).toBe(1);
       expect(result.added).toBe(0);
+    });
+  });
+
+  describe("Terraria (tModLoader)", () => {
+    const contentRoot = () => path.join(serverRoot(), "tmodloader", "steamapps", "workshop", "content", "1281930");
+
+    function writeTmlInstall(items: Record<string, string[]>, enabled: string[]) {
+      const install = path.join(serverRoot(), "tmodloader");
+      fs.mkdirSync(install, { recursive: true });
+      fs.writeFileSync(
+        path.join(install, ".realmswap-tml.json"),
+        JSON.stringify({ type: "tmodloader", installedAt: "2026-10-25T00:00:00Z" })
+      );
+      for (const [id, tmods] of Object.entries(items)) {
+        const ver = path.join(contentRoot(), id, "2026.8");
+        fs.mkdirSync(ver, { recursive: true });
+        for (const t of tmods) fs.writeFileSync(path.join(ver, `${t}.tmod`), "x");
+      }
+      fs.mkdirSync(path.join(install, "tModLoader-server", "Mods"), { recursive: true });
+      fs.writeFileSync(path.join(install, "tModLoader-server", "Mods", "enabled.json"), JSON.stringify(enabled));
+    }
+
+    it("keys rows on workshop content dirs: repairs renamed .tmods, deletes gone items (trimming enabled names), adds un-rowed ones", async () => {
+      writeTmlInstall(
+        { "111": ["A", "B"], "333": ["D"] },
+        ["A", "B", "C", "Stale"]
+      );
+      bag.server = { id: "s1", game: "TERRARIA" };
+      bag.rows = [
+        { id: "r1", packageId: "111", workshopModId: "A" }, // B is new in this item version
+        { id: "r2", packageId: "222", workshopModId: "C" }, // item dir gone
+      ];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result).toEqual({ removed: 1, added: 1, repaired: 1 });
+      expect(bag.deletes).toEqual(["r2"]);
+      expect(bag.updates).toEqual([
+        { where: { id: "r1" }, data: { workshopModId: "A;B" } },
+      ]);
+      expect(bag.creates).toEqual([
+        { serverId: "s1", provider: "workshop", packageId: "333", version: "unknown", name: "Workshop 333" },
+      ]);
+      // enabled.json ends with exactly the derivable names: A, B (+D — a
+      // newly-added item's names get enabled so tML loads them).
+      const enabled = JSON.parse(
+        fs.readFileSync(path.join(serverRoot(), "tmodloader", "tModLoader-server", "Mods", "enabled.json"), "utf-8")
+      );
+      expect([...enabled].sort()).toEqual(["A", "B", "D"]);
+    });
+
+    it("is a no-op on a vanilla server (no tModLoader marker)", async () => {
+      fs.mkdirSync(path.join(serverRoot(), "terraria-server"), { recursive: true });
+      bag.server = { id: "s1", game: "TERRARIA" };
+      bag.rows = [{ id: "r1", packageId: "111", workshopModId: "A" }];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result).toEqual({ removed: 0, added: 0, repaired: 0 });
+      expect(bag.deletes).toHaveLength(0);
     });
   });
 

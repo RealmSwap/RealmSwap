@@ -65,11 +65,11 @@ export async function checkModUpdates(opts: {
   const modrinthRows = rows.filter((r) => r.provider === "modrinth");
   const thunderstoreRows = rows.filter((r) => r.provider === "thunderstore");
   const curseforgeRows = rows.filter((r) => r.provider === "curseforge");
-  const workshopRows = rows.filter((r) => r.provider === "workshop" && game === "ZOMBOID");
+  const workshopRows = rows.filter((r) => r.provider === "workshop" && (game === "ZOMBOID" || game === "TERRARIA"));
   const otherRows = rows.filter(
     (r) =>
       r.provider !== "modrinth" && r.provider !== "thunderstore" && r.provider !== "curseforge" &&
-      !(r.provider === "workshop" && game === "ZOMBOID") &&
+      !(r.provider === "workshop" && (game === "ZOMBOID" || game === "TERRARIA")) &&
       // ARK workshop mods are downloaded AND updated by the dedicated server
       // itself on every start (-automanagemods) — there is nothing for the
       // update machinery to do, so they are deliberately unreported.

@@ -14,13 +14,14 @@ import {
 } from "@/lib/mods/mcLoaders";
 import {
   installMinecraftMod, installValheimThunderstore, installZomboidWorkshopMod, installVRisingThunderstore,
-  installArkWorkshopMod, installFicsitMod,
+  installArkWorkshopMod, installFicsitMod, installTmlWorkshopMod, installTmlLoader,
 } from "@/lib/mods/installers";
+import { readTmlMarker, tmlInstallDir } from "@/lib/mods/tml";
 import { installOxideCore, installRustUmodPlugin, OXIDE_CORE_PACKAGE_ID } from "@/lib/mods/umod";
 import { requireLocalServer } from "@/lib/agents/perimeter";
 
 const LOADER_LABELS: Record<string, string> = {
-  fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
+  fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge", tmodloader: "tModLoader",
 };
 
 // POST /api/servers/[id]/mods/import
@@ -69,7 +70,7 @@ export async function POST(
       name: z.string().optional(),
       game: z.string(),
       loader: z.object({
-        type: z.enum(["fabric", "quilt", "forge", "neoforge"]),
+        type: z.enum(["fabric", "quilt", "forge", "neoforge", "tmodloader"]),
         loaderVersion: z.string(),
         minecraftVersion: z.string().optional(),
       }).optional(),
@@ -128,8 +129,7 @@ export async function POST(
 
     try {
       // 2. Loader first (exactly like the explicit "Install Loader" flow).
-      if (game === "MINECRAFT" && manifest.loader) {
-        const marker = readLoaderMarker(serverRoot);
+      if (game === "MINECRAFT" && manifest.loader) {        const marker = readLoaderMarker(serverRoot);
         const onLog = (msg: string) => console.log(`[Import] ${msg}`);
         if (!marker || marker.type !== manifest.loader.type) {
           const mcVersion = detectMinecraftVersion(serverRoot);
@@ -150,6 +150,13 @@ export async function POST(
             `Collection pins ${LOADER_LABELS[manifest.loader.type]} loader ${manifest.loader.loaderVersion}; server has ${marker.loaderVersion}.`
           );
         }
+      }
+
+      // Terraria: a collection exported from a tModLoader server replays the
+      // loader first — .tmods never load under vanilla TerrariaServer.exe.
+      if (game === "TERRARIA" && manifest.loader?.type === "tmodloader" && !readTmlMarker(tmlInstallDir(serverRoot))) {
+        const onLog = (msg: string) => console.log(`[Import] ${msg}`);
+        await installTmlLoader({ serverRoot, onLog });
       }
 
       // 3. Replay each mod through the same install path as single installs.
@@ -211,6 +218,15 @@ export async function POST(
           // engine downloads and updates the mod itself at boot, so import
           // is a pure ini replay.
           await installArkWorkshopMod({
+            serverId, serverRoot, workshopId: mod.packageId, name: mod.name, version: mod.version,
+          });
+        } else if (game === "TERRARIA") {
+          if (mod.provider !== "workshop") {
+            throw new Error(`Collection entry '${mod.packageId}' uses provider '${mod.provider}', which Terraria doesn't support.`);
+          }
+          // Unlike Zomboid, no workshopModId needed: the installer derives
+          // the .tmod names from the downloaded item itself.
+          await installTmlWorkshopMod({
             serverId, serverRoot, workshopId: mod.packageId, name: mod.name, version: mod.version,
           });
         } else if (game === "RUST") {

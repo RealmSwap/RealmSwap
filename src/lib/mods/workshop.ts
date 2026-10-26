@@ -24,6 +24,9 @@ export const WORKSHOP_APP_IDS: Record<string, number> = {
   // ARK: Survival Evolved (the game client's workshop appid; the dedicated
   // server itself installs as 376030).
   ARK: 346110,
+  // Terraria mods are tModLoader Workshop items: the tML app (1281930) hosts
+  // the workshop, not vanilla Terraria — the dedicated server is 282440.
+  TERRARIA: 1281930,
 };
 
 export function isWorkshopSearchable(game: string): boolean {

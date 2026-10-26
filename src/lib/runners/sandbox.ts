@@ -2,6 +2,7 @@ import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 import { dataRoot } from "../appPaths";
+import { tmlMarkerPath } from "../mods/tml";
 
 /**
  * Boot-test failure carrying what the sandboxed server actually printed, so
@@ -40,6 +41,7 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
   return new Promise((resolve, reject) => {
     let exePath = "";
     let args: string[] = [];
+    let sandboxMs = 15000;
     const serverDir = path.join(dataRoot(), "local-servers", serverId);
 
     // Determine the executable path based on game
@@ -47,7 +49,31 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
       exePath = path.join(serverDir, "valheim-server", "valheim_server.exe");
       args = ["-nographics", "-batchmode", "-name", "SandboxTest", "-port", "2456", "-world", "SandboxTest"];
     } else if (game === "ZOMBOID") {
-      exePath = path.join(serverDir, "zomboid-server", "StartServer64.bat");
+      // Batch files must go through cmd.exe — a direct spawn of a .bat throws
+      // EINVAL on Node >= 18.20 / Electron (CVE-2024-27980 hardening).
+      exePath = "cmd.exe";
+      args = ["/c", path.join(serverDir, "zomboid-server", "StartServer64.bat")];
+    } else if (game === "TERRARIA") {
+      // Only the tModLoader runtime gets a real boot test; vanilla stays
+      // vacuous (its exe is a known-quantity Steam install). The directory
+      // pins mirror LocalRunner's launch injection so the sandbox boot never
+      // writes mod state into the Windows user profile.
+      const tmlDir = path.join(serverDir, "tmodloader");
+      if (!fs.existsSync(tmlMarkerPath(tmlDir))) {
+        return resolve(true);
+      }
+      const bat = path.join(tmlDir, "start-tModLoaderServer.bat");
+      if (!fs.existsSync(bat)) {
+        console.log(`[Sandbox] tModLoader start script not found at ${bat}. Skipping boot test.`);
+        return resolve(true);
+      }
+      exePath = "cmd.exe";
+      args = [
+        "/c", bat, "-nosteam",
+        "-tmlsavedirectory", path.join(tmlDir, "tModLoader-server"),
+        "-steamworkshopfolder", path.join(tmlDir, "steamapps", "workshop"),
+      ];
+      sandboxMs = 150000; // first boot may fetch the .NET runtime via LaunchUtils
     } else {
       // Game not supported for sandbox testing, just assume it works
       return resolve(true);
@@ -101,7 +127,7 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
       }
     });
 
-    // Let it run for 15 seconds, then forcefully terminate it and declare success
+    // Let it run for the boot window, then forcefully terminate it and declare success
     setTimeout(() => {
       try {
         proc.kill("SIGKILL");
@@ -109,6 +135,6 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
         // Process might already be dead
       }
       resolve(true);
-    }, 15000);
+    }, sandboxMs);
   });
 }

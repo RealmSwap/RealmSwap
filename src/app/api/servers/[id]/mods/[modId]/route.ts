@@ -10,6 +10,7 @@ import { removeArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 import { uninstallPalworldPackage } from "@/lib/mods/palworld";
 import { removeFicsitMod } from "@/lib/mods/installers";
 import { removeRustUmodPlugin } from "@/lib/mods/umod";
+import { removeTmlWorkshopMod } from "@/lib/mods/tml";
 import { requireLocalServer } from "@/lib/agents/perimeter";
 
 export async function DELETE(
@@ -100,6 +101,15 @@ export async function DELETE(
       removeArkActiveMod(
         arkGameUserSettingsIniPath(path.join(dataRoot(), "local-servers", serverId)),
         installation.packageId
+      );
+    } else if (game === "TERRARIA") {
+      // Drops the item's names from enabled.json and deletes its downloaded
+      // workshop content dir (the .tmod lives inside it — tML loads straight
+      // from there, there is no copy in Mods/).
+      removeTmlWorkshopMod(
+        path.join(dataRoot(), "local-servers", serverId),
+        installation.packageId,
+        installation.workshopModId ? installation.workshopModId.split(";").filter(Boolean) : []
       );
     } else if (game === "SATISFACTORY") {
       removeFicsitMod(path.join(dataRoot(), "local-servers", serverId, "satisfactory-server"), installation.packageId);

@@ -13,6 +13,7 @@ import { serverEventBus } from "../eventBus";
 import { markFirstOnline } from "../firstOnline";
 import { setProgress, clearProgress, parseSteamProgress } from "../downloadProgress";
 import { startMonitoring, stopMonitoring, clearStatsHistory } from "../processMonitor";
+import { assertNoTmlForContainerRunner } from "../mods/tml";
 import { isCrashExit, evaluateCrash, CRASH_MAX_RETRIES, type CrashCounter } from "../crashPolicy";
 import type { GameDefinitionSpec, InstallMethod } from "../definitions/types";
 import fs from "fs";
@@ -103,6 +104,9 @@ export class DockerRunner implements ServerRunner {
 
     // Write config files onto the server data dir (reuses existing writers).
     const baseDir = serverDataDir(serverId);
+    // A tModLoader Terraria server must not silently boot vanilla in a
+    // container — the marker only swaps the launch on the Windows runner.
+    assertNoTmlForContainerRunner(baseDir);
     const installDir = container.installSubDir ? path.join(baseDir, container.installSubDir) : baseDir;
     fs.mkdirSync(installDir, { recursive: true });
     applyConfigFiles(spec, ctx, { installDir, server: { name: record.name, password: record.password } });
