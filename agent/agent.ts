@@ -21,11 +21,12 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { promisify } from "util";
-import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, installStagedTree } from "./lib";
+import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, installStagedTree, readServerFile, writeServerFile, listServerDir, applyConfigEntries } from "./lib";
 import type {
   SyncRequest, SyncResponse, SyncCommand, RegisterResponse,
   StartCommandPayload, StopCommandPayload, UpdateCommandPayload, SendCommandPayload,
   BackupCreateCommandPayload, BackupRestoreCommandPayload,
+  FileReadCommandPayload, FileWriteCommandPayload, FileListCommandPayload, ConfigApplyCommandPayload,
   ServerReport,
 } from "../src/lib/agents/protocol";
 
@@ -348,6 +349,30 @@ async function streamToFile(body: ReadableStream, filePath: string): Promise<voi
   await pipeline(Readable.fromWeb(body as any), fs.createWriteStream(filePath));
 }
 
+async function execFileRead(serverId: string, p: FileReadCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const result = readServerFile(path.join(agentDataRoot(), p.dataDirName), p.relPath);
+  if (!result.ok) return { ok: false, error: result.error };
+  return { ok: true, output: JSON.stringify({ exists: result.exists, content: result.content }) };
+}
+
+async function execFileWrite(serverId: string, p: FileWriteCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const result = writeServerFile(path.join(agentDataRoot(), p.dataDirName), p.relPath, p.content, p.backup);
+  if (!result.ok) return { ok: false, error: result.error };
+  return { ok: true, output: JSON.stringify({ written: result.written }) };
+}
+
+async function execFileList(serverId: string, p: FileListCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const result = listServerDir(path.join(agentDataRoot(), p.dataDirName), p.relPath);
+  if (!result.ok) return { ok: false, error: result.error };
+  return { ok: true, output: JSON.stringify({ entries: result.entries }) };
+}
+
+async function execConfigApply(serverId: string, p: ConfigApplyCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const result = applyConfigEntries(path.join(agentDataRoot(), p.dataDirName), p.files);
+  if (!result.ok) return { ok: false, error: result.error };
+  return { ok: true, output: JSON.stringify({ written: result.written }) };
+}
+
 async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok: boolean; error?: string; output?: string }> {
   try {
     let result: { ok: boolean; error?: string; output?: string };
@@ -358,6 +383,10 @@ async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok
       case "SEND_COMMAND": result = await execSendCommand(cmd.serverId, cmd.payload); break;
       case "BACKUP_CREATE": result = await execBackupCreate(cmd.serverId, cmd.payload); break;
       case "BACKUP_RESTORE": result = await execBackupRestore(cmd.serverId, cmd.payload); break;
+      case "FILE_READ": result = await execFileRead(cmd.serverId, cmd.payload); break;
+      case "FILE_WRITE": result = await execFileWrite(cmd.serverId, cmd.payload); break;
+      case "FILE_LIST": result = await execFileList(cmd.serverId, cmd.payload); break;
+      case "CONFIG_APPLY": result = await execConfigApply(cmd.serverId, cmd.payload); break;
       default: result = { ok: false, error: `Unknown command kind` };
     }
     return { commandId: cmd.id, ...result };

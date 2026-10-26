@@ -63,6 +63,39 @@ export function renderConfigFiles(
   }
 }
 
+/** The install dir a container plan resolves to, relative to the server data
+ *  dir ("zomboid-server" etc.; "" when the game installs at the root). */
+export function configInstallSubDir(spec: GameDefinitionSpec, ctx: ReturnType<typeof buildContext>): string {
+  const container = planContainer(spec, ctx);
+  if (container) return container.installSubDir;
+  return "installSubDir" in spec.install ? spec.install.installSubDir ?? "" : "";
+}
+
+/**
+ * Config entries ready for the agent: renderConfigFiles output re-rooted from
+ * the install dir to the server data dir (the agent writes relative to the
+ * data dir — without the installSubDir prefix, games that install into a
+ * subdir would get their config written next to it, unread) and annotated
+ * with merge flags so an existing file is merged, not clobbered. Full-
+ * overwrite strategies (Enshrouded's writer regenerates the whole JSON, even
+ * locally) keep overwrite semantics for parity.
+ */
+export function buildAgentConfigEntries(
+  spec: GameDefinitionSpec,
+  ctx: ReturnType<typeof buildContext>,
+  server: { name: string; password: string | null }
+): { relPath: string; content: string; merge?: boolean }[] {
+  const subDir = configInstallSubDir(spec, ctx);
+  const overwritePaths = new Set(
+    spec.configFiles.filter((c) => c.strategy === "enshroudedJson").map((c) => c.path)
+  );
+  return renderConfigFiles(spec, ctx, server).map((f) => ({
+    relPath: subDir ? `${subDir}/${f.relPath}` : f.relPath,
+    content: f.content,
+    merge: !overwritePaths.has(f.relPath),
+  }));
+}
+
 export async function planDockerStart(record: {
   id: string;
   name: string;
@@ -97,7 +130,7 @@ export async function planDockerStart(record: {
     payload: {
       kind: "START",
       dataDirName: record.id,
-      configFiles: renderConfigFiles(spec, ctx, { name: record.name, password: record.password }),
+      configFiles: buildAgentConfigEntries(spec, ctx, { name: record.name, password: record.password }),
       containerName: `realmswap-server-${record.id}`,
       image: container.image,
       ports: ports.map((p) => ({ port: p.port, protocol: p.protocol })),

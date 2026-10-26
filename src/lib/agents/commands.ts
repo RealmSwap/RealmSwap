@@ -29,7 +29,17 @@ export async function resolveUsableNode(serverId: string) {
   return node;
 }
 
-export type AgentCommandType = "START" | "STOP" | "UPDATE" | "SEND_COMMAND" | "BACKUP_CREATE" | "BACKUP_RESTORE";
+export type AgentCommandType =
+  | "START"
+  | "STOP"
+  | "UPDATE"
+  | "SEND_COMMAND"
+  | "BACKUP_CREATE"
+  | "BACKUP_RESTORE"
+  | "FILE_READ"
+  | "FILE_WRITE"
+  | "FILE_LIST"
+  | "CONFIG_APPLY";
 
 export async function enqueueCommand(
   nodeId: string,

@@ -8,21 +8,20 @@ import { safeJoin } from "@/lib/safePath";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
-import { assertLocalServer } from "@/lib/agents/perimeter";
+import { agentReadServerFile, agentWriteServerFile } from "@/lib/agents/agentFiles";
 
 // Resolve config file info from the server's definition spec
 async function getConfigInfo(
   server: { definitionId: string | null; game: string },
   serverId: string
-): Promise<{ filePath: string; filename: string; format: string; editable: boolean } | null> {
-  const root = dataRoot();
+): Promise<{ relPath: string; filename: string; format: string; editable: boolean } | null> {
   const def = server.definitionId
     ? await prisma.gameDefinition.findUnique({ where: { id: server.definitionId } })
     : await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug: server.game.toUpperCase() } });
   if (!def) return null;
   const spec = parseSpec(def.spec);
   if (!spec.editableConfigPath) {
-    return { filePath: "", filename: "", format: "none", editable: false };
+    return { relPath: "", filename: "", format: "none", editable: false };
   }
   const rel = spec.editableConfigPath;
   const filename = rel.split("/").pop() || rel;
@@ -33,9 +32,10 @@ async function getConfigInfo(
     ext === "ini" ? "ini" :
     ext === "cfg" ? "cfg" :
     "text";
-  const serverRoot = path.join(root, "local-servers", serverId);
+  // editableConfigPath is relative to the server root — the same tree the
+  // agent's data dir mirrors, so the rel path works on both machines.
   return {
-    filePath: safeJoin(serverRoot, rel),
+    relPath: rel,
     filename,
     format,
     editable: true,
@@ -57,7 +57,6 @@ export async function GET(
     // server.properties), so reading them sits behind the same ADMIN gate as
     // the dedicated secrets route.
     const access = await verifyServerAccess(params.id, user.id, "ADMIN");
-    await assertLocalServer(params.id, "The config editor");
     if (!access) {
       return NextResponse.json({ error: "Server not found" }, { status: 404 });
     }
@@ -79,11 +78,21 @@ export async function GET(
       });
     }
 
+    // AGENT servers: the file lives on the node — ferry it over the command
+    // queue instead of reading the (wrong) dashboard disk.
     let content = "";
-    if (fs.existsSync(configInfo.filePath)) {
-      content = fs.readFileSync(configInfo.filePath, "utf-8");
+    if (server.runnerType === "AGENT") {
+      const remote = await agentReadServerFile(params.id, configInfo.relPath);
+      content = remote.exists && remote.content !== null
+        ? remote.content
+        : `# Config file not yet generated.\n# Start the server once to generate the default ${configInfo.filename} file.\n`;
     } else {
-      content = `# Config file not yet generated.\n# Start the server once to generate the default ${configInfo.filename} file.\n`;
+      const filePath = safeJoin(path.join(dataRoot(), "local-servers", params.id), configInfo.relPath);
+      if (fs.existsSync(filePath)) {
+        content = fs.readFileSync(filePath, "utf-8");
+      } else {
+        content = `# Config file not yet generated.\n# Start the server once to generate the default ${configInfo.filename} file.\n`;
+      }
     }
 
     return NextResponse.json({
@@ -140,23 +149,31 @@ export async function PUT(
 
     const newContent = parsed.data.content;
 
-    // Ensure parent directories exist
-    const dir = path.dirname(configInfo.filePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
+    // AGENT servers write through the node (the dashboard's local-servers
+    // tree is the wrong machine); the agent keeps the .rsbak parity copy.
+    if (server.runnerType === "AGENT") {
+      await agentWriteServerFile(params.id, configInfo.relPath, newContent, { backup: true });
+    } else {
+      const filePath = safeJoin(path.join(dataRoot(), "local-servers", params.id), configInfo.relPath);
 
-    // Back up the current file so a bad edit is one click to undo (the raw
-    // editor is an advanced tool; this keeps a last-known-good copy on disk).
-    if (fs.existsSync(configInfo.filePath)) {
-      try {
-        fs.copyFileSync(configInfo.filePath, `${configInfo.filePath}.rsbak`);
-      } catch (e) {
-        console.error("Config backup failed (continuing with save):", e);
+      // Ensure parent directories exist
+      const dir = path.dirname(filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
       }
-    }
 
-    fs.writeFileSync(configInfo.filePath, newContent, "utf-8");
+      // Back up the current file so a bad edit is one click to undo (the raw
+      // editor is an advanced tool; this keeps a last-known-good copy on disk).
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.copyFileSync(filePath, `${filePath}.rsbak`);
+        } catch (e) {
+          console.error("Config backup failed (continuing with save):", e);
+        }
+      }
+
+      fs.writeFileSync(filePath, newContent, "utf-8");
+    }
 
     await prisma.activityLog.create({
       data: {

@@ -12,6 +12,8 @@ import { validateParamValues } from "@/lib/definitions/validate";
 import { assembleSettingsFields } from "@/lib/definitions/settings";
 import { buildContext } from "@/lib/definitions/context";
 import { applyConfigFiles } from "@/lib/definitions/applyConfigFiles";
+import { buildAgentConfigEntries, configInstallSubDir } from "@/lib/runners/docker/planLaunch";
+import { agentApplyConfigFiles } from "@/lib/agents/agentFiles";
 import { dataRoot } from "@/lib/appPaths";
 
 async function resolveSpec(server: { definitionId: string | null; game: string }) {
@@ -114,21 +116,36 @@ export async function PUT(
 
     let appliedNow = false;
     if (!isRunning && spec.configFiles.length > 0) {
-      const serverRoot = path.join(dataRoot(), "local-servers", server.id);
-      if (fs.existsSync(serverRoot)) {
-        const ctx = buildContext({
-          name: server.name,
-          password: server.password,
-          port: server.port,
-          ram: server.ramAllocation,
-          paramValuesJson: stringifyParamValues(clean),
-          spec,
-        });
-        applyConfigFiles(spec, ctx, {
-          installDir: serverRoot,
-          server: { name: server.name, password: server.password },
-        });
+      const ctx = buildContext({
+        name: server.name,
+        password: server.password,
+        port: server.port,
+        ram: server.ramAllocation,
+        paramValuesJson: stringifyParamValues(clean),
+        spec,
+      });
+      if (server.runnerType === "AGENT") {
+        // The files live on the node — apply the rendered set there in one
+        // command (merge-preserving, same semantics as the START payload).
+        await agentApplyConfigFiles(
+          server.id,
+          buildAgentConfigEntries(spec, ctx, { name: server.name, password: server.password })
+        );
         appliedNow = true;
+      } else {
+        const serverRoot = path.join(dataRoot(), "local-servers", server.id);
+        if (fs.existsSync(serverRoot)) {
+          // Config file paths are install-dir-relative — target the install
+          // subdir like the runners do (games with a subdir used to get
+          // their settings written next to it, unread).
+          const subDir = configInstallSubDir(spec, ctx);
+          const installDir = subDir ? path.join(serverRoot, subDir) : serverRoot;
+          applyConfigFiles(spec, ctx, {
+            installDir,
+            server: { name: server.name, password: server.password },
+          });
+          appliedNow = true;
+        }
       }
     }
 

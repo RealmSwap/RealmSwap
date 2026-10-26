@@ -483,7 +483,7 @@ model AgentCommand {
   id          String    @id @default(cuid())
   nodeId      String
   serverId    String
-  type        String // "START" | "STOP" | "UPDATE" | "SEND_COMMAND"
+  type        String // "START" | "STOP" | "UPDATE" | "SEND_COMMAND" | "BACKUP_CREATE" | "BACKUP_RESTORE" | "FILE_READ" | "FILE_WRITE" | "FILE_LIST" | "CONFIG_APPLY"
   payload     String // JSON — fully-resolved launch plan (dashboard owns all game knowledge)
   status      String    @default("PENDING") // "PENDING" | "SENT" | "DONE" | "FAILED"
   result      String? // JSON — { ok, error?, exitCode? }
