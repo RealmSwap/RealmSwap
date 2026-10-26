@@ -12,6 +12,7 @@ import {
   installArkWorkshopMod, installVRisingThunderstore, installVRisingBepInexCore,
   ensureShimloaderCore, installPalworldThunderstore,
   ensureFicsitSml, installFicsitMod,
+  installTmlWorkshopMod,
 } from "@/lib/mods/installers";
 import { installOxideCore, installRustUmodPlugin } from "@/lib/mods/umod";
 import fs from "fs";
@@ -194,6 +195,16 @@ export async function POST(
         // The Workshop ID goes straight onto ActiveMods= — the server
         // downloads and updates the mod itself (-automanagemods).
         await installArkWorkshopMod({
+          serverId, serverRoot, workshopId, name: modName, version,
+        });
+
+      } else if (game === "TERRARIA") {
+        if (!workshopId) {
+          throw new Error("A Workshop ID is required for tModLoader mods.");
+        }
+        // SteamCMD-downloads the item into the tML install's workshop dir and
+        // enables its .tmod names; requires the tModLoader loader first.
+        await installTmlWorkshopMod({
           serverId, serverRoot, workshopId, name: modName, version,
         });
 

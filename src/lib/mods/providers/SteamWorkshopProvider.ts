@@ -76,6 +76,40 @@ const CURATED_MODS: Record<string, Omit<ModSearchResult, "provider">[]> = {
       categories: ["Admin"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=2297098490",
     },
   ],
+  // tModLoader items (workshop app 1281930) — ids + Both-tags verified via the
+  // live Workshop API 2026-10-25.
+  TERRARIA: [
+    {
+      packageId: "2824688072", name: "Calamity Mod", author: "Ozzatron",
+      description: "Huge content expansion: new biomes, 30+ bosses, hundreds of items and a post-Moon Lord progression.",
+      version: "Workshop", downloadUrl: "",
+      categories: ["Both", "new content"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=2824688072",
+    },
+    {
+      packageId: "2908170107", name: "Thorium Mod", author: "absoluteAquarian",
+      description: "Large content mod with two new classes, new biomes, bosses, and hundreds of items.",
+      version: "Workshop", downloadUrl: "",
+      categories: ["Both", "new content"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=2908170107",
+    },
+    {
+      packageId: "2563309347", name: "Magic Storage", author: "absoluteAquarian",
+      description: "Networked crafting storage — one remote-access inventory for all your items and crafting stations.",
+      version: "Workshop", downloadUrl: "",
+      categories: ["Both", "Utilities"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=2563309347",
+    },
+    {
+      packageId: "2669644269", name: "Boss Checklist", author: "javidpack",
+      description: "Tracks every boss and event with spawn conditions and progression order.",
+      version: "Workshop", downloadUrl: "",
+      categories: ["Both", "Utilities"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=2669644269",
+    },
+    {
+      packageId: "2619954303", name: "Recipe Browser", author: "javidpack",
+      description: "In-game search for every recipe, item and NPC — the reference tool for modded playthroughs.",
+      version: "Workshop", downloadUrl: "",
+      categories: ["Both", "Utilities"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=2619954303",
+    },
+  ],
 };
 
 export class SteamWorkshopProvider implements ModProvider {

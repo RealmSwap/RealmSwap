@@ -52,15 +52,55 @@ export async function downloadWorkshopItem(opts: {
     opts.installDir, "steamapps", "workshop", "content", String(opts.appId), opts.workshopId
   );
 
-  onLog(`Downloading Workshop item ${opts.workshopId} (SteamCMD, anonymous)...`);
+  await runSteamCmd(exe, [
+    "+force_install_dir", opts.installDir,
+    "+login", "anonymous",
+    "+workshop_download_item", String(opts.appId), opts.workshopId,
+    "+quit",
+  ], onLog, opts.deps, `downloading item ${opts.workshopId}`);
+
+  if (!fs.existsSync(contentDir)) {
+    throw new Error(
+      `SteamCMD finished but the item content was not found at ${contentDir} — the item may be region-locked or deleted.`
+    );
+  }
+  onLog(`Workshop item ${opts.workshopId} downloaded.`);
+  return contentDir;
+}
+
+/**
+ * Install/update a whole Steam app via anonymous SteamCMD (e.g. the tModLoader
+ * dedicated server, app 1281930). Mirrors downloadWorkshopItem's logging,
+ * timeout and win32 gating; `validate` adds a depot check pass.
+ */
+export async function installSteamApp(opts: {
+  appId: number;
+  installDir: string;
+  validate?: boolean;
+  onLog?: (msg: string) => void;
+  deps?: DownloadWorkshopDeps;
+}): Promise<void> {
+  const onLog = opts.onLog ?? (() => {});
+  const exe = opts.deps?.steamcmdExe ?? (await resolveSteamCmdExe(onLog));
+  await runSteamCmd(exe, [
+    "+force_install_dir", opts.installDir,
+    "+login", "anonymous",
+    "+app_update", String(opts.appId), ...(opts.validate ? ["validate"] : []),
+    "+quit",
+  ], onLog, opts.deps, `installing app ${opts.appId}`);
+}
+
+/** Shared SteamCMD child-process runner: line logging, hard timeout, non-zero exit = error. */
+async function runSteamCmd(
+  exe: string,
+  args: string[],
+  onLog: (msg: string) => void,
+  deps: DownloadWorkshopDeps | undefined,
+  what: string
+): Promise<void> {
   const output: string[] = [];
   await new Promise<void>((resolve, reject) => {
-    const child = (opts.deps?.spawnImpl ?? spawn)(exe, [
-      "+force_install_dir", opts.installDir,
-      "+login", "anonymous",
-      "+workshop_download_item", String(opts.appId), opts.workshopId,
-      "+quit",
-    ]);
+    const child = (deps?.spawnImpl ?? spawn)(exe, args);
     let timer: ReturnType<typeof setTimeout> | undefined;
     const fail = (message: string) => {
       clearTimeout(timer);
@@ -68,7 +108,7 @@ export async function downloadWorkshopItem(opts: {
     };
     timer = setTimeout(() => {
       try { child.kill(); } catch (_) {}
-      fail(`SteamCMD timed out after ${STEAMCMD_TIMEOUT_MS / 60000} minutes downloading item ${opts.workshopId}.`);
+      fail(`SteamCMD timed out after ${STEAMCMD_TIMEOUT_MS / 60000} minutes ${what}.`);
     }, STEAMCMD_TIMEOUT_MS);
 
     child.stdout?.on("data", (d: Buffer) => {
@@ -80,17 +120,9 @@ export async function downloadWorkshopItem(opts: {
     child.on("error", (err) => fail(`Could not run SteamCMD: ${err.message}`));
     child.on("close", (code) => {
       if (code === 0) resolve();
-      else fail(`SteamCMD exited with code ${code}.`);
+      else fail(`SteamCMD exited with code ${code} ${what}.`);
     });
   });
-
-  if (!fs.existsSync(contentDir)) {
-    throw new Error(
-      `SteamCMD finished but the item content was not found at ${contentDir} — the item may be region-locked or deleted.`
-    );
-  }
-  onLog(`Workshop item ${opts.workshopId} downloaded.`);
-  return contentDir;
 }
 
 export interface DerivedZomboidMod {

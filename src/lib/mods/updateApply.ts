@@ -19,6 +19,10 @@ import {
 } from "@/lib/mods/thunderstore";
 import { WORKSHOP_APP_IDS, getWorkshopDetails } from "@/lib/mods/workshop";
 import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
+import {
+  tmlInstallDir, tmlEnabledJsonPath, deriveTmodNames,
+  removeTmlEnabledMods, addTmlEnabledMods,
+} from "@/lib/mods/tml";
 import { fetchUmodPluginMeta, OXIDE_CORE_MARKER, oxidePluginsDir } from "@/lib/mods/umod";
 import { installPalworldThunderstore, installFicsitMod } from "@/lib/mods/installers";
 import { getFicsitModByReference, getFicsitModVersion, pickFicsitServerDownload } from "@/lib/mods/ficsit";
@@ -239,8 +243,8 @@ export async function resolveModUpdate(
         "ARK Workshop mods are downloaded and updated by the server itself on startup (-automanagemods) — restart the server to pick up updates."
       );
     }
-    if (game !== "ZOMBOID") {
-      throw new UpdateResolutionError("Steam Workshop mod updates are supported for Project Zomboid servers only.");
+    if (game !== "ZOMBOID" && game !== "TERRARIA") {
+      throw new UpdateResolutionError("Steam Workshop mod updates are supported for Project Zomboid and Terraria servers only.");
     }
     const details = await getWorkshopDetails([installation.packageId]);
     const latest = details.get(installation.packageId)?.timeUpdated;
@@ -254,6 +258,29 @@ export async function resolveModUpdate(
       throw new UpdateResolutionError(
         `${installation.name ?? "This mod"} has no recorded Workshop version — reinstall it once to enable update checks.`
       );
+    }
+    if (game === "TERRARIA") {
+      // tML loads .tmods straight from the workshop content dir, so the
+      // update is: re-download the item, swap the enabled.json names (a new
+      // item version can rename its .tmods).
+      const tmlDir = tmlInstallDir(serverRoot);
+      const oldNames = (installation.workshopModId ?? "").split(";").filter(Boolean);
+      const resolved: ResolvedModUpdate = {
+        newVersionNumber: latest,
+        applyUpdate: async () => {
+          const contentDir = await downloadWorkshopItem({
+            appId: WORKSHOP_APP_IDS.TERRARIA,
+            workshopId: installation.packageId,
+            installDir: tmlDir,
+          });
+          const derived = deriveTmodNames(contentDir);
+          const enabledJson = tmlEnabledJsonPath(tmlDir);
+          removeTmlEnabledMods(enabledJson, oldNames);
+          addTmlEnabledMods(enabledJson, derived.map((d) => d.name));
+          resolved.rowPatch = { workshopModId: derived.map((d) => d.name).join(";") };
+        },
+      };
+      return resolved;
     }
     const pzDir = path.join(serverRoot, "zomboid-server");
     const oldModIds = (installation.workshopModId ?? "").split(";").filter(Boolean);

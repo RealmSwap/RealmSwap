@@ -18,6 +18,7 @@ import { parseSpec } from "../definitions/serialize";
 import { buildContext } from "../definitions/context";
 import { planInstall, planLaunch, planPorts, resolveCommand, resolveExecutablePath } from "../definitions/plan";
 import { shimloaderMarkerPath, shimloaderLaunchArgs } from "../mods/palworld";
+import { tmlMarkerPath, tmlLaunchArgs, rewriteWorldArgForTml } from "../mods/tml";
 import { ensureJava, parseRequiredJavaMajor } from "../runtimes/javaRuntime";
 import { applyConfigFiles } from "../definitions/applyConfigFiles";
 import { readLoaderMarker, applyLoaderLaunch } from "../mods/mcLoaders";
@@ -636,6 +637,28 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     if (fs.existsSync(shimloaderMarkerPath(palworldDir))) {
       launch.args.push(...shimloaderLaunchArgs(palworldDir));
       logWriter(`[Mods] Shimloader active — mods/, paks/, cfgs/, overlay/ dirs passed on the launch line`);
+    }
+  }
+
+  // Terraria: with tModLoader installed, boot through its start script
+  // (busybox-sh → ScriptCaller → bundled dotnet tModLoader.dll). -nosteam
+  // skips the interactive lobby prompt, the directory pins keep mod state and
+  // workshop discovery inside the server dir, and the -world arg is pointed
+  // back at the vanilla worlds folder so one world serves both runtimes.
+  // NOTE: baseDir (the server root), not installDir (terraria-server/) — the
+  // tModLoader install lives beside the vanilla one.
+  if (server.game.toUpperCase() === "TERRARIA") {
+    const tmlDir = path.join(baseDir, "tmodloader");
+    if (fs.existsSync(tmlMarkerPath(tmlDir))) {
+      launch.executable = "cmd.exe";
+      launch.executableOnPath = true;
+      launch.cwdSubDir = "tmodloader";
+      launch.args = [
+        "/c", "start-tModLoaderServer.bat",
+        ...tmlLaunchArgs(tmlDir),
+        ...rewriteWorldArgForTml(launch.args),
+      ];
+      logWriter(`[Mods] tModLoader active — booting via start-tModLoaderServer.bat (mods from its Steam Workshop dir)`);
     }
   }
 

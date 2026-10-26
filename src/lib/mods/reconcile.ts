@@ -6,6 +6,11 @@ import { readZomboidModLists, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { curatedZomboidWorkshopName } from "@/lib/mods/providers/SteamWorkshopProvider";
 import { readArkActiveMods, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 import { OXIDE_CORE_MARKER, OXIDE_CORE_PACKAGE_ID, oxidePluginsDir } from "@/lib/mods/umod";
+import { WORKSHOP_APP_IDS } from "@/lib/mods/workshop";
+import {
+  tmlInstallDir, tmlWorkshopRoot, tmlEnabledJsonPath, readTmlMarker,
+  readTmlEnabledMods, addTmlEnabledMods, removeTmlEnabledMods, deriveTmodNames,
+} from "@/lib/mods/tml";
 
 /**
  * Mod rows ↔ disk reconciliation.
@@ -305,6 +310,92 @@ async function reconcileZomboid(serverId: string, serverRoot: string): Promise<R
 }
 
 /**
+ * Terraria/tModLoader: rows are keyed by the workshop content dirs under the
+ * tML install (each dir IS one item; tML loads its .tmods from there). A
+ * row's workshopModId is re-derived from the .tmods actually present, and
+ * enabled.json entries for vanished mods are dropped with the row.
+ */
+async function reconcileTml(serverId: string, serverRoot: string): Promise<ReconcileResult> {
+  const installDir = tmlInstallDir(serverRoot);
+  if (!readTmlMarker(installDir)) return { removed: 0, added: 0, repaired: 0 };
+
+  const contentRoot = path.join(tmlWorkshopRoot(installDir), "content", String(WORKSHOP_APP_IDS.TERRARIA));
+  const diskIds = new Set<string>();
+  if (fs.existsSync(contentRoot)) {
+    for (const entry of fs.readdirSync(contentRoot, { withFileTypes: true })) {
+      if (entry.isDirectory()) diskIds.add(entry.name);
+    }
+  }
+  const enabledJson = tmlEnabledJsonPath(installDir);
+
+  /** Names derivable for a workshop item, or [] when it carries no .tmod. */
+  const namesFor = (workshopId: string): string[] => {
+    try {
+      return deriveTmodNames(path.join(contentRoot, workshopId)).map((d) => d.name);
+    } catch {
+      return [];
+    }
+  };
+
+  const rows = await prisma.modInstallation.findMany({
+    where: { serverId, provider: "workshop" },
+  });
+
+  let removed = 0;
+  let repaired = 0;
+  const survivingIds = new Set<string>();
+  for (const row of rows) {
+    if (!diskIds.has(row.packageId)) {
+      await prisma.modInstallation.delete({ where: { id: row.id } });
+      removed++;
+      if (row.workshopModId) {
+        removeTmlEnabledMods(enabledJson, row.workshopModId.split(";").filter(Boolean));
+      }
+      continue;
+    }
+    survivingIds.add(row.packageId);
+    // Re-derive from disk: a new item version can rename or add .tmods.
+    const names = namesFor(row.packageId);
+    const joined = names.join(";");
+    if (joined !== (row.workshopModId ?? "")) {
+      await prisma.modInstallation.update({
+        where: { id: row.id },
+        data: { workshopModId: joined },
+      });
+      repaired++;
+    }
+    // The item is on disk, so its current .tmods should all be enabled.
+    addTmlEnabledMods(enabledJson, names);
+  }
+
+  let added = 0;
+  for (const workshopId of Array.from(diskIds)) {
+    if (!survivingIds.has(workshopId)) {
+      await prisma.modInstallation.create({
+        data: {
+          serverId,
+          provider: "workshop",
+          packageId: workshopId,
+          version: "unknown",
+          name: `Workshop ${workshopId}`,
+        },
+      });
+      added++;
+      addTmlEnabledMods(enabledJson, namesFor(workshopId));
+    }
+  }
+
+  // enabled.json is part of the disk truth too: anything listed but absent
+  // from every item on disk would make tML warn at boot — trim it.
+  const diskNames = new Set<string>();
+  for (const id of Array.from(diskIds)) namesFor(id).forEach((n) => diskNames.add(n));
+  const stale = readTmlEnabledMods(enabledJson).filter((name) => !diskNames.has(name));
+  if (stale.length > 0) removeTmlEnabledMods(enabledJson, stale);
+
+  return { removed, added, repaired };
+}
+
+/**
  * Rebuild a server's ModInstallation rows from what is actually on disk.
  * No-op for games without disk-verifiable mod installs.
  */
@@ -326,6 +417,8 @@ export async function reconcileInstalledMods(serverId: string): Promise<Reconcil
       return reconcileZomboid(serverId, serverRoot);
     case "ARK":
       return reconcileArk(serverId, serverRoot);
+    case "TERRARIA":
+      return reconcileTml(serverId, serverRoot);
     default:
       return { removed: 0, added: 0, repaired: 0 };
   }

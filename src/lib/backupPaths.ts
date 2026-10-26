@@ -77,6 +77,15 @@ export function getSavePath(
       );
       return { srcDir: dir, zipPattern: `${dir}/*`, destExtractDir: dir };
     }
+    case "TERRARIA": {
+      // One worlds folder for both runtimes: vanilla launches with
+      // -world worlds/<name>.wld and the tModLoader launch points -world back
+      // at the same files (../terraria-server/worlds/...), so this path
+      // covers vanilla and modded servers alike. .wld + .wld.bak (Terraria's
+      // own rolling backup) — mods and configs live outside the worlds dir.
+      const dir = path.join(root, "local-servers", serverId, "terraria-server", "worlds");
+      return { srcDir: dir, zipPattern: `${dir}/*.wld*`, destExtractDir: dir };
+    }
     default:
       throw new Error(`Unsupported game type: ${game}`);
   }

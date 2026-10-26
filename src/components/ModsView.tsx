@@ -119,7 +119,7 @@ const GAME_THEMES: Record<
     border: "border-lime-500/30",
     text: "text-lime-400",
     icon: "🌳",
-    providerName: "—",
+    providerName: "Steam Workshop",
   },
   RUST: {
     gradient: "from-stone-500 to-red-800",
@@ -258,6 +258,44 @@ const RECOMMENDED_MODS: Record<string, any[]> = {
       modId: "Brita",
     },
   ],
+  TERRARIA: [
+    {
+      name: "tModLoader",
+      type: "Mod Core",
+      desc: "The modding runtime Terraria mods run on — required before any mod will load. One-click install, the vanilla world stays put.",
+      modType: "TML_LOADER",
+    },
+    {
+      name: "Calamity Mod",
+      type: "Content",
+      desc: "Huge content expansion: new biomes, 30+ bosses, hundreds of items and a post-Moon Lord progression.",
+      workshopId: "2824688072",
+    },
+    {
+      name: "Thorium Mod",
+      type: "Content",
+      desc: "Large content mod with two new classes, new biomes, bosses, and hundreds of items.",
+      workshopId: "2908170107",
+    },
+    {
+      name: "Magic Storage",
+      type: "QoL",
+      desc: "Networked crafting storage — one remote-access inventory for all your items and crafting stations.",
+      workshopId: "2563309347",
+    },
+    {
+      name: "Boss Checklist",
+      type: "Utilities",
+      desc: "Tracks every boss and event with spawn conditions and progression order.",
+      workshopId: "2669644269",
+    },
+    {
+      name: "Recipe Browser",
+      type: "Utilities",
+      desc: "In-game search for every recipe, item and NPC — the reference tool for modded playthroughs.",
+      workshopId: "2619954303",
+    },
+  ],
   VRISING: [
     {
       name: "BepInEx Pack for V Rising",
@@ -323,6 +361,7 @@ const LOADER_LABELS: Record<string, string> = {
   quilt: "Quilt",
   forge: "Forge",
   neoforge: "NeoForge",
+  tmodloader: "tModLoader",
 };
 
 function timeAgo(dateStr: string): string {
@@ -427,6 +466,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     game === "VALHEIM" ||
     game === "MINECRAFT" ||
     game === "ZOMBOID" ||
+    game === "TERRARIA" ||
     game === "VRISING" ||
     game === "RUST";
 
@@ -622,7 +662,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     return handleInstallMod(mod);
   };
 
-  const handleInstallLoader = async (loader: "fabric" | "quilt" | "forge" | "neoforge") => {
+  const handleInstallLoader = async (loader: "fabric" | "quilt" | "forge" | "neoforge" | "tmodloader") => {
     if (!selectedServer) return;
     const label = LOADER_LABELS[loader];
     setLoaderBusy(true);
@@ -811,6 +851,31 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     setLoading(true);
     showError(null);
     setSuccess(null);
+
+    // The tModLoader runtime is a loader install, not a mod install — it
+    // swaps the server's launch (snapshot/boot-test/rollback included) via
+    // the loader route.
+    if (mod.modType === "TML_LOADER") {
+      try {
+        const res = await fetch(`/api/servers/${selectedServer.id}/mods/loader`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ loader: "tmodloader" }),
+        });
+        const data = await res.json();
+        if (!res.ok) { const e = new Error(data.error || "Failed to install tModLoader"); (e as any).bootOutput = data.bootOutput; throw e; }
+        setSuccess(data.message || "tModLoader installed.");
+        setLoaderInfo({ supported: true, loader: data.loader });
+        const modsRes = await fetch(`/api/servers/${selectedServer.id}/mods`);
+        const modsData = await modsRes.json();
+        if (modsData.mods) setInstalledMods(modsData.mods);
+      } catch (err: any) {
+        showError(err.message, (err as any).bootOutput);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     try {
       const res = await fetch(
@@ -1601,17 +1666,17 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                         )}
                       </div>
 
-                      {/* Zomboid Workshop Form */}
-                      {game === "ZOMBOID" && (
+                      {/* Zomboid / Terraria Workshop Form */}
+                      {(game === "ZOMBOID" || game === "TERRARIA") && (
                         <div className="glass-panel rounded-xl border border-white/5 p-5 space-y-3">
                           <h4 className="font-extrabold text-sm text-white flex items-center gap-2">
                             <Plus className="w-4 h-4 text-emerald-400" />
                             Custom Workshop Mod
                           </h4>
                           <p className="text-[11px] text-mutedText">
-                            Don&apos;t see your mod above? Enter a Workshop ID.
-                            The Mod ID is detected from the downloaded files
-                            when left blank.
+                            {game === "TERRARIA"
+                              ? "Don't see your mod above? Paste its Workshop ID — the mod name is detected from the downloaded .tmod (tModLoader must be installed first)."
+                              : "Don't see your mod above? Enter a Workshop ID. The Mod ID is detected from the downloaded files when left blank."}
                           </p>
                           <form
                             onSubmit={handleZomboidSubmit}
@@ -1627,25 +1692,27 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                                 onChange={(e) =>
                                   setCustomWorkshopId(e.target.value)
                                 }
-                                placeholder="e.g. 2875848298"
+                                placeholder={game === "TERRARIA" ? "e.g. 2563309347" : "e.g. 2875848298"}
                                 className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors"
                                 required
                               />
                             </div>
-                            <div>
-                              <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1">
-                                Mod ID (optional)
-                              </label>
-                              <input
-                                type="text"
-                                value={customModId}
-                                onChange={(e) =>
-                                  setCustomModId(e.target.value)
-                                }
-                                placeholder="Auto-detected if left blank"
-                                className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors"
-                              />
-                            </div>
+                            {game === "ZOMBOID" && (
+                              <div>
+                                <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1">
+                                  Mod ID (optional)
+                                </label>
+                                <input
+                                  type="text"
+                                  value={customModId}
+                                  onChange={(e) =>
+                                    setCustomModId(e.target.value)
+                                  }
+                                  placeholder="Auto-detected if left blank"
+                                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors"
+                                />
+                              </div>
+                            )}
                             <button
                               type="submit"
                               disabled={
@@ -1783,7 +1850,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                         {loaderInfo.loader.loaderVersion} active (Minecraft {loaderInfo.loader.minecraftVersion}) — jars in mods/ load on boot.
                       </span>
                       <button
-                        onClick={() => handleInstallLoader(loaderInfo.loader!.type as "fabric" | "quilt" | "forge" | "neoforge")}
+                        onClick={() => handleInstallLoader(loaderInfo.loader!.type as "fabric" | "quilt" | "forge" | "neoforge" | "tmodloader")}
                         disabled={loaderBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
                         className="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/30 text-emerald-200 font-bold transition-colors disabled:opacity-50"
                         title="Snapshot-backed reinstall of the newest loader version. To switch loaders, restore a pre-loader snapshot (Backups) first."
@@ -1808,6 +1875,29 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                           </button>
                         ))}
                       </div>
+                    </div>
+                  )
+                )}
+                {game === "TERRARIA" && loaderInfo?.supported && (
+                  loaderInfo.loader ? (
+                    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300">
+                      <span className="font-bold flex items-center gap-2">
+                        <Check className="w-4 h-4" />
+                        tModLoader active — the server boots through it and loads Workshop mods on startup.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300">
+                      <span className="font-bold">
+                        This is a vanilla server — Terraria mods need the tModLoader runtime to load.
+                      </span>
+                      <button
+                        onClick={() => handleInstallLoader("tmodloader")}
+                        disabled={loaderBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                        className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-amber-200 font-bold transition-colors disabled:opacity-50"
+                      >
+                        {loaderBusy ? "Installing…" : "Install tModLoader"}
+                      </button>
                     </div>
                   )
                 )}
@@ -1976,7 +2066,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {mod.provider === "modrinth" || mod.provider === "thunderstore" || mod.provider === "curseforge" || mod.provider === "umod" ? (
+                            {mod.provider === "modrinth" || mod.provider === "thunderstore" || mod.provider === "curseforge" || mod.provider === "umod" || (mod.provider === "workshop" && game === "TERRARIA") ? (
                               <button
                                 onClick={() => handleUpdateMod(mod)}
                                 disabled={loading || updatingModId === mod.id || selectedServer.status === "RUNNING"}

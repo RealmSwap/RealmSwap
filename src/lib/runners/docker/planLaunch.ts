@@ -2,6 +2,8 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { prisma } from "@/lib/db";
+import { dataRoot } from "@/lib/appPaths";
+import { assertNoTmlForContainerRunner } from "@/lib/mods/tml";
 import { parseSpec } from "@/lib/definitions/serialize";
 import { buildContext } from "@/lib/definitions/context";
 import { planContainer, planPorts, planInstall } from "@/lib/definitions/plan";
@@ -75,6 +77,9 @@ export async function planDockerStart(record: {
   if (installMethod !== "STEAMCMD" && installMethod !== "DOWNLOAD") {
     throw new Error("Remote nodes currently support SteamCMD and download games only.");
   }
+  // A tModLoader Terraria server must not silently boot vanilla in a
+  // container — the marker only swaps the launch on the Windows runner.
+  assertNoTmlForContainerRunner(path.join(dataRoot(), "local-servers", record.id));
   const ctx = buildContext({
     name: record.name, password: record.password, port: record.port,
     ram: record.ramAllocation, paramValuesJson: record.paramValues, spec,

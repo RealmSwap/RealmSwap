@@ -4,6 +4,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import { readLoaderMarker } from "@/lib/mods/mcLoaders";
+import { readTmlMarker, tmlInstallDir } from "@/lib/mods/tml";
 import path from "path";
 
 export async function GET(
@@ -27,13 +28,19 @@ export async function GET(
       return NextResponse.json({ error: "No mods installed to export." }, { status: 400 });
     }
 
-    // Loader state so a Minecraft collection can recreate the server it came
-    // from — jars in mods/ are a silent no-op without it.
+    // Loader state so a collection can recreate the server it came from —
+    // jars in mods/ (Minecraft) and .tmods (Terraria) are silent no-ops
+    // without their loader.
     let loader: { type: string; loaderVersion: string; minecraftVersion: string } | null = null;
     if (access.server.game.toUpperCase() === "MINECRAFT") {
       const marker = readLoaderMarker(path.join(dataRoot(), "local-servers", serverId));
       if (marker) {
         loader = { type: marker.type, loaderVersion: marker.loaderVersion, minecraftVersion: marker.minecraftVersion };
+      }
+    } else if (access.server.game.toUpperCase() === "TERRARIA") {
+      const marker = readTmlMarker(tmlInstallDir(path.join(dataRoot(), "local-servers", serverId)));
+      if (marker) {
+        loader = { type: "tmodloader", loaderVersion: marker.installedAt, minecraftVersion: "" };
       }
     }
 

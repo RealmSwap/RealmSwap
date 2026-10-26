@@ -147,6 +147,19 @@ describe("workshop rows (Steam Workshop, Zomboid)", () => {
     expect(result.errors[0]).toContain("no longer available");
   });
 
+  it("includes Terraria workshop rows (tML items report like Zomboid's)", async () => {
+    const result = await checkModUpdates({
+      game: "TERRARIA",
+      serverRoot: "/tmp/none",
+      rows: [{ provider: "workshop", packageId: "w-stale", version: "2025-01-01T00:00:00.000Z", name: "Stale" }],
+      deps: wsDeps,
+    });
+    expect(result.updates).toEqual([
+      { packageId: "w-stale", name: "Stale", provider: "workshop", current: "2025-01-01T00:00:00.000Z", latest: "2025-12-01T00:00:00.000Z" },
+    ]);
+    expect(result.errors).toEqual([]);
+  });
+
   it("still errors for workshop rows on other games (no install strategy there)", async () => {
     const result = await checkModUpdates({
       game: "MINECRAFT",
