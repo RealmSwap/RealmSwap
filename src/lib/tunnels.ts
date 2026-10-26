@@ -86,6 +86,12 @@ function httpsGet(url: string, timeoutMs: number): Promise<import("http").Incomi
   });
 }
 
+const DOWNLOAD_MAX_REDIRECTS = 5;
+
+function isRedirectStatus(status: number | undefined): boolean {
+  return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
+}
+
 export async function downloadPlayitBinary(): Promise<string> {
   if (!fs.existsSync(BIN_DIR)) fs.mkdirSync(BIN_DIR, { recursive: true });
 
@@ -107,14 +113,24 @@ export async function downloadPlayitBinary(): Promise<string> {
   // corrupt binary that existsSync() then trusts forever.
   const partPath = `${binPath}.part`;
   try {
-    let response = await httpsGet(release.url, DOWNLOAD_TIMEOUT_MS);
-    if (response.statusCode === 301 || response.statusCode === 302) {
+    // GitHub's release chain is two redirects deep (latest/download → the
+    // versioned URL → the signed CDN asset), so follow the whole chain — a
+    // single hop used to leave us reporting the second 302 as a failure.
+    let currentUrl = release.url;
+    let response = await httpsGet(currentUrl, DOWNLOAD_TIMEOUT_MS);
+    for (let hops = 0; isRedirectStatus(response.statusCode); hops++) {
+      if (hops >= DOWNLOAD_MAX_REDIRECTS) {
+        response.destroy();
+        throw new Error(`Download exceeded ${DOWNLOAD_MAX_REDIRECTS} redirects for ${release.url}.`);
+      }
       const location = response.headers.location;
-      if (!location) throw new Error("Download redirect had no target location.");
-      response = await httpsGet(location, DOWNLOAD_TIMEOUT_MS);
+      response.resume(); // drain the redirect body so the socket is freed
+      if (!location) throw new Error(`Download redirect had no target location at ${currentUrl}.`);
+      currentUrl = new URL(location, currentUrl).toString();
+      response = await httpsGet(currentUrl, DOWNLOAD_TIMEOUT_MS);
     }
     if (response.statusCode !== 200) {
-      throw new Error(`Download failed with HTTP ${response.statusCode} for ${release.url}.`);
+      throw new Error(`Download failed with HTTP ${response.statusCode} for ${currentUrl}.`);
     }
 
     await new Promise<void>((resolve, reject) => {

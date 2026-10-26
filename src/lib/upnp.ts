@@ -92,12 +92,17 @@ export function getPublicIP(): Promise<string | null> {
   });
 }
 
-// First non-internal IPv4 address — the honest address when the router
-// refuses port mappings and only same-network play works.
+// First non-internal, non-link-local IPv4 address — the honest address when
+// the router refuses port mappings and only same-network play works.
+// Link-local 169.254/16 means the adapter never got a DHCP lease (VPN/TAP
+// virtual adapters often sit there) — nobody can join through it, and it
+// used to win the interface order on machines where a real NIC came later.
 export function getLanIP(): string | null {
   for (const ifaces of Object.values(os.networkInterfaces())) {
     for (const iface of ifaces ?? []) {
-      if (iface.family === "IPv4" && !iface.internal) return iface.address;
+      if (iface.family === "IPv4" && !iface.internal && !iface.address.startsWith("169.254.")) {
+        return iface.address;
+      }
     }
   }
   return null;
