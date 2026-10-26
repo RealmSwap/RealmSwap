@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { getServerStorageBreakdown, getFolderSizeBytesCached } from "@/lib/storageUsage";
+import { agentStorageBreakdown } from "@/lib/agents/agentDisk";
 import { bytesToGB } from "@/lib/diskUsage";
 import { getFreeDiskSpaceGB } from "@/lib/preflight";
 import { dataRoot } from "@/lib/appPaths";
@@ -28,7 +29,11 @@ export async function GET() {
 
     const perServer = await Promise.all(
       servers.map(async (s) => {
-        const breakdown = await getServerStorageBreakdown(s.id, s.game, { awaitFresh: true });
+        // AGENT servers: the walk happens on the node (the dashboard's
+        // local-servers tree would describe the wrong machine).
+        const breakdown = s.runnerType === "AGENT"
+          ? await agentStorageBreakdown(s.id, s.game, { awaitFresh: true })
+          : await getServerStorageBreakdown(s.id, s.game, { awaitFresh: true });
 
         const [backupsAgg, snapshots, firstRow, lastRow] = await Promise.all([
           prisma.backup.aggregate({ where: { serverId: s.id }, _sum: { fileSizeMB: true } }),

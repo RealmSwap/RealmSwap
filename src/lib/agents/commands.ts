@@ -47,7 +47,8 @@ export type AgentCommandType =
   | "DIR_SCAN"
   | "PATHS_SNAPSHOT"
   | "TUNNEL_START"
-  | "TUNNEL_STOP";
+  | "TUNNEL_STOP"
+  | "DISK_USAGE";
 
 export async function enqueueCommand(
   nodeId: string,

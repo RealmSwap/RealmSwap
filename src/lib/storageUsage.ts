@@ -68,6 +68,19 @@ export function classifyServerDir(game: string, relPath: string): StorageBucket 
   return best?.bucket ?? null;
 }
 
+/**
+ * The bucket spec for a game as the node walk consumes it (DISK_USAGE
+ * carries the prefix lists so the agent stays game-agnostic). Same tables,
+ * same "logs" fallback as classifyServerDir.
+ */
+export function bucketPrefixesForGame(game: string): { name: StorageBucket; prefixes: string[] }[] {
+  return [
+    { name: "worlds", prefixes: WORLD_PREFIXES[game.toUpperCase()] ?? [] },
+    { name: "mods", prefixes: MOD_PREFIXES[game.toUpperCase()] ?? [] },
+    { name: "logs", prefixes: LOG_PREFIXES[game.toUpperCase()] ?? ["logs"] },
+  ];
+}
+
 export async function getServerStorageBreakdown(
   serverId: string,
   game: string,

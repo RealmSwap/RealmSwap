@@ -338,3 +338,50 @@ describe("reconcileTunnelOrphans", () => {
     }
   });
 });
+
+// DISK_USAGE walk: dashboard-supplied prefixes, longest-match classification,
+// symlink safety — the storage truth for node servers.
+
+import { walkDiskUsage } from "../lib";
+
+describe("agent walkDiskUsage", () => {
+  it("classifies files by longest matching prefix; unmatched files stay out of buckets", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "agent-disk-test-"));
+    fs.mkdirSync(path.join(root, "world"), { recursive: true });
+    fs.mkdirSync(path.join(root, "mods", "deep"), { recursive: true });
+    fs.mkdirSync(path.join(root, "logs"), { recursive: true });
+    fs.writeFileSync(path.join(root, "world", "level.dat"), "12345");
+    fs.writeFileSync(path.join(root, "mods", "a.jar"), "1234");
+    fs.writeFileSync(path.join(root, "mods", "deep", "b.jar"), "123");
+    fs.writeFileSync(path.join(root, "logs", "latest.log"), "12");
+    fs.writeFileSync(path.join(root, "server.jar"), "1");
+
+    const result = walkDiskUsage(root, [
+      { name: "worlds", prefixes: ["world"] },
+      { name: "mods", prefixes: ["mods"] },
+      { name: "logs", prefixes: ["logs"] },
+    ]);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.usage.totalBytes).toBe(15);
+    expect(result.usage.buckets).toEqual({ worlds: 5, mods: 7, logs: 2 });
+  });
+
+  it("longest prefix wins when buckets overlap", () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "agent-disk-test-"));
+    fs.mkdirSync(path.join(root, "valheim-server", "BepInEx", "plugins"), { recursive: true });
+    fs.writeFileSync(path.join(root, "valheim-server", "BepInEx", "plugins", "x.dll"), "12345");
+    const result = walkDiskUsage(root, [
+      { name: "worlds", prefixes: ["valheim-server/bepinex/plugins/worlds"] },
+      { name: "mods", prefixes: ["valheim-server/bepinex"] },
+    ]);
+    if (!result.ok) throw new Error("walk failed");
+    expect(result.usage.buckets.mods).toBe(5);
+    expect(result.usage.buckets.worlds).toBe(0);
+  });
+
+  it("refuses a missing data dir", () => {
+    const result = walkDiskUsage(path.join(os.tmpdir(), "agent-disk-missing-xyz"), []);
+    expect(result.ok).toBe(false);
+  });
+});

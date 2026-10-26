@@ -258,6 +258,77 @@ export function reconcileTunnelOrphans(
   }
 }
 
+export interface DiskUsageBucket {
+  name: string;
+  prefixes: string[];
+}
+
+export interface DiskUsageResult {
+  totalBytes: number;
+  buckets: Record<string, number>;
+}
+
+/** One walk of the server data dir, classifying every file into the
+ *  dashboard-supplied buckets by longest matching prefix (lowercase, POSIX,
+ *  relative to the data dir — same rule as storageUsage.classifyServerDir,
+ *  but the prefix lists travel with the command so the agent stays
+ *  game-agnostic). Unmatched files simply don't appear in any bucket; the
+ *  dashboard's "other" is total − Σbuckets. */
+export function walkDiskUsage(
+  dataDir: string,
+  buckets: DiskUsageBucket[],
+): { ok: true; usage: DiskUsageResult } | { ok: false; error: string } {
+  const root = path.resolve(dataDir);
+  if (!fs.existsSync(root)) return { ok: false, error: "Server data dir does not exist." };
+  const compiled = buckets.map((b) => ({
+    name: b.name,
+    prefixes: (b.prefixes ?? []).map((p) => p.replace(/\\/g, "/").toLowerCase()),
+  }));
+  const usage: DiskUsageResult = { totalBytes: 0, buckets: {} };
+  for (const b of compiled) usage.buckets[b.name] = 0;
+
+  const classify = (rel: string): string | null => {
+    const norm = rel.replace(/\\/g, "/").toLowerCase();
+    let best: { name: string; len: number } | null = null;
+    for (const b of compiled) {
+      for (const prefix of b.prefixes) {
+        const matches = norm === prefix || norm.startsWith(prefix + "/");
+        if (matches && (!best || prefix.length > best.len)) best = { name: b.name, len: prefix.length };
+      }
+    }
+    return best?.name ?? null;
+  };
+
+  const stack: { abs: string; rel: string }[] = [{ abs: root, rel: "" }];
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(current.abs, { withFileTypes: true });
+    } catch {
+      continue; // unreadable dir — count what we can reach
+    }
+    for (const entry of entries) {
+      if (entry.isSymbolicLink()) continue;
+      const abs = path.join(current.abs, entry.name);
+      const rel = current.rel ? `${current.rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        stack.push({ abs, rel });
+      } else if (entry.isFile()) {
+        try {
+          const size = fs.statSync(abs).size;
+          usage.totalBytes += size;
+          const bucket = classify(rel);
+          if (bucket) usage.buckets[bucket] += size;
+        } catch {
+          // raced away (deleted mid-walk) — skip
+        }
+      }
+    }
+  }
+  return { ok: true, usage };
+}
+
 /** docker run argv for a START payload — mirrors buildRunArgs in dockerCli.ts. */
 export function buildDockerRunArgs(p: StartCommandPayload, dataDir: string): string[] {
   const args = ["run", "-d", "--name", p.containerName, "-v", `${dataDir}:/data`];
