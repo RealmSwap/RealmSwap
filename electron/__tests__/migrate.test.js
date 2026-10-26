@@ -123,6 +123,18 @@ describe("runMigrations", () => {
     expect(tables).toContain("_prisma_migrations");
   });
 
+  it("every real migration in prisma/migrations applies through the packaged runner", async () => {
+    // This is what make-template-db.js runs at release time and what an installed
+    // app runs at boot. Local dev uses Prisma's engine (db push), which tolerates
+    // SQL this splitter can't, so nothing else exercises the real files.
+    const migrationsDir = path.resolve(process.cwd(), "prisma", "migrations");
+    const o = opts({ migrationsDir });
+    const res = await runMigrations(o);
+    const all = listMigrations(migrationsDir);
+    expect(all.length).toBeGreaterThan(0);
+    expect(res.applied).toEqual(all);
+  });
+
   it("baselines an existing (v0.1.0-shaped) DB and applies only the delta, preserving data", async () => {
     const o = opts();
     // Pre-create a v0.1.0-shaped DB with one user row (no _prisma_migrations).
