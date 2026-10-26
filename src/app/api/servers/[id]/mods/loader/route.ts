@@ -12,6 +12,8 @@ import {
 } from "@/lib/mods/mcLoaders";
 import { installTmlLoader } from "@/lib/mods/installers";
 import { tmlInstallDir, readTmlMarker } from "@/lib/mods/tml";
+import { detectRemoteMinecraftVersion, installMcLoaderRemote } from "@/lib/mods/remoteInstallers";
+import { readRemoteLoaderMarker } from "@/lib/mods/remoteInstallers";
 import fs from "fs";
 import path from "path";
 import { requireLocalServer } from "@/lib/agents/perimeter";
@@ -33,6 +35,12 @@ export async function GET(
     if (!access) return NextResponse.json({ error: "Server not found" }, { status: 404 });
 
     const game = access.server.game.toUpperCase();
+    if (access.server.runnerType === "AGENT") {
+      if (game === "MINECRAFT") {
+        return NextResponse.json({ supported: true, loader: await readRemoteLoaderMarker(params.id) });
+      }
+      return NextResponse.json({ supported: false, loader: null });
+    }
     const installDir = path.join(dataRoot(), "local-servers", params.id);
     if (game === "MINECRAFT") {
       return NextResponse.json({ supported: true, loader: readLoaderMarker(installDir) });
@@ -62,7 +70,6 @@ export async function POST(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
-    requireLocalServer(server, "Mod loader installs");
     const serverId = server.id;
     const game = server.game.toUpperCase();
 
@@ -78,6 +85,11 @@ export async function POST(
     });
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+
+    if (server.runnerType === "AGENT") {
+      return installLoaderOnAgentNode(server, game, user.id, parsed.data.loader);
+    }
+    requireLocalServer(server, "Mod loader installs");
 
     if (game === "TERRARIA") {
       if (parsed.data.loader !== "tmodloader") {
@@ -148,6 +160,70 @@ export async function POST(
   } catch (error: any) {
     console.error("POST /api/servers/[id]/mods/loader error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+  }
+}
+
+/**
+ * AGENT-server loader install: the installer runs ON the node in a throwaway
+ * JDK container against /data (a loader installer needs Java + the server's
+ * files — both live there). The node tar-asides the loader-touched paths
+ * before the installer runs, which is the rollback; no sandbox boot test
+ * exists remotely, so the response says so.
+ */
+async function installLoaderOnAgentNode(
+  server: { id: string; name: string; game: string; status: string },
+  game: string,
+  userId: string,
+  loader: "fabric" | "quilt" | "forge" | "neoforge" | "tmodloader"
+) {
+  if (game !== "MINECRAFT" || loader === "tmodloader") {
+    return NextResponse.json(
+      { error: "Only the Java loaders (fabric/quilt/forge/neoforge) are supported on Minecraft node servers. tModLoader isn't supported on remote nodes yet." },
+      { status: 400 }
+    );
+  }
+
+  const existing = await readRemoteLoaderMarker(server.id);
+  if (existing && existing.type !== loader) {
+    return NextResponse.json(
+      { error: `This server already runs the ${LOADER_LABELS[existing.type]} loader. To switch loaders, delete the server and redeploy, or clear ${existing.type}'s files on the node first.` },
+      { status: 400 }
+    );
+  }
+
+  const minecraftVersion = await detectRemoteMinecraftVersion(server.id);
+  if (!minecraftVersion) {
+    return NextResponse.json(
+      { error: "Couldn't read the server's Minecraft version — start the server once first so its files exist on the node." },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const marker = await installMcLoaderRemote({
+      serverId: server.id,
+      loader,
+      minecraftVersion,
+      onLog: (msg: string) => console.log(`[Loader ${server.id}] ${msg}`),
+    });
+
+    await prisma.activityLog.create({
+      data: {
+        userId,
+        action: "INSTALL_MOD",
+        details: `Installed ${LOADER_LABELS[loader]} ${marker.loaderVersion} loader (Minecraft ${minecraftVersion}) on node server '${server.name}'.`,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      loader: marker,
+      message: `${LOADER_LABELS[loader]} ${marker.loaderVersion} installed on the node. The server now loads jars from mods/ at its next start. (Remote nodes skip the sandbox boot test.)`,
+    });
+  } catch (err: any) {
+    return NextResponse.json({
+      error: `Loader installation failed on the node${err?.message ? `. Cause: ${err.message}` : ""}${err instanceof Error && err.message.includes("rolled back") ? "" : "."}`,
+    }, { status: 500 });
   }
 }
 

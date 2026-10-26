@@ -53,28 +53,47 @@ export function readArkActiveMods(iniPath: string): string[] {
   return readActiveMods(found.sections[found.index]);
 }
 
-/** Register a workshop mod on ActiveMods= (append = last to load). Idempotent. */
-export function addArkActiveMod(iniPath: string, workshopId: string): void {
-  let content = "";
-  if (fs.existsSync(iniPath)) content = fs.readFileSync(iniPath, "utf-8");
+/** Content-based add (shared by the fs writer and the node flow, which
+ *  reads/writes the ini over the agent file commands). */
+export function addArkActiveModContent(content: string, workshopId: string): string {
   const found = findServerSettings(content);
   if (!found) {
     // A missing [ServerSettings] section is normal on a fresh install — create it.
     const header = content && !content.endsWith("\n") ? `${content}\n` : content;
-    content = `${header}[ServerSettings]\nActiveMods=${workshopId}\n`;
-  } else {
-    const section = found.sections[found.index];
-    const mods = readActiveMods(section);
-    if (!mods.includes(workshopId)) {
-      const line = `ActiveMods=${[...mods, workshopId].join(",")}`;
-      const lineIndex = section.lines.findIndex((l) => /^ActiveMods=/i.test(l));
-      if (lineIndex >= 0) section.lines[lineIndex] = line;
-      else section.lines.push(line);
-      content = found.sections
-        .map((s) => [s.header, ...s.lines].filter((l) => l !== undefined).join("\n"))
-        .join("\n");
-    }
+    return `${header}[ServerSettings]\nActiveMods=${workshopId}\n`;
   }
+  const section = found.sections[found.index];
+  const mods = readActiveMods(section);
+  if (!mods.includes(workshopId)) {
+    const line = `ActiveMods=${[...mods, workshopId].join(",")}`;
+    const lineIndex = section.lines.findIndex((l) => /^ActiveMods=/i.test(l));
+    if (lineIndex >= 0) section.lines[lineIndex] = line;
+    else section.lines.push(line);
+    content = found.sections
+      .map((s) => [s.header, ...s.lines].filter((l) => l !== undefined).join("\n"))
+      .join("\n");
+  }
+  return content;
+}
+
+/** Content-based remove. */
+export function removeArkActiveModContent(content: string, workshopId: string): string | null {
+  const found = findServerSettings(content);
+  if (!found) return null;
+  const section = found.sections[found.index];
+  const mods = readActiveMods(section);
+  if (!mods.includes(workshopId)) return null;
+  const line = `ActiveMods=${mods.filter((m) => m !== workshopId).join(",")}`;
+  const lineIndex = section.lines.findIndex((l) => /^ActiveMods=/i.test(l));
+  section.lines[lineIndex] = line;
+  return found.sections.map((s) => [s.header, ...s.lines].filter((l) => l !== undefined).join("\n")).join("\n");
+}
+
+/** Register a workshop mod on ActiveMods= (append = last to load). Idempotent. */
+export function addArkActiveMod(iniPath: string, workshopId: string): void {
+  let content = "";
+  if (fs.existsSync(iniPath)) content = fs.readFileSync(iniPath, "utf-8");
+  content = addArkActiveModContent(content, workshopId);
   fs.mkdirSync(path.dirname(iniPath), { recursive: true });
   fs.writeFileSync(iniPath, content);
 }
@@ -86,16 +105,6 @@ export function addArkActiveMod(iniPath: string, workshopId: string): void {
  */
 export function removeArkActiveMod(iniPath: string, workshopId: string): void {
   if (!fs.existsSync(iniPath)) return;
-  const found = findServerSettings(fs.readFileSync(iniPath, "utf-8"));
-  if (!found) return;
-  const section = found.sections[found.index];
-  const mods = readActiveMods(section);
-  if (!mods.includes(workshopId)) return;
-  const line = `ActiveMods=${mods.filter((m) => m !== workshopId).join(",")}`;
-  const lineIndex = section.lines.findIndex((l) => /^ActiveMods=/i.test(l));
-  section.lines[lineIndex] = line;
-  fs.writeFileSync(
-    iniPath,
-    found.sections.map((s) => [s.header, ...s.lines].filter((l) => l !== undefined).join("\n")).join("\n")
-  );
+  const next = removeArkActiveModContent(fs.readFileSync(iniPath, "utf-8"), workshopId);
+  if (next !== null) fs.writeFileSync(iniPath, next);
 }

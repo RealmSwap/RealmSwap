@@ -5,12 +5,15 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { resolveModUpdate, UpdateResolutionError } from "@/lib/mods/updateApply";
+import { resolveRemoteModUpdate } from "@/lib/mods/remoteInstallers";
+import { rollbackRemoteInstall, RemoteShipError } from "@/lib/mods/remoteInstallers";
 import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // POST: check for and install a newer version of an installed mod.
 // Snapshot -> replace files -> sandbox test -> rollback on failure, same
 // contract as installs. Supports Minecraft/Modrinth jars and
-// Valheim/Thunderstore packages.
+// Valheim/Thunderstore packages. AGENT servers resolve remotely (no sandbox
+// boot test — the node's pre-apply tar is the rollback).
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string; modId: string } }
@@ -24,9 +27,10 @@ export async function POST(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
-    requireLocalServer(server, "Mod updates");
     const serverId = server.id;
     const game = server.game.toUpperCase();
+    const isAgent = server.runnerType === "AGENT";
+    if (!isAgent) requireLocalServer(server, "Mod updates");
 
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json({ error: "Stop the server before updating mods." }, { status: 400 });
@@ -39,13 +43,15 @@ export async function POST(
       return NextResponse.json({ error: "Installed mod not found." }, { status: 404 });
     }
 
-    // Resolve the newest available version before taking a snapshot, so an
+    // Resolve the newest available version before touching anything, so an
     // up-to-date mod never touches the server.
     let newVersionNumber: string;
     let applyUpdate: () => Promise<void>;
     let rowPatch: Record<string, string> = {};
     try {
-      const resolved = await resolveModUpdate(installation, game, serverId);
+      const resolved = isAgent
+        ? await resolveRemoteModUpdate(installation, game, serverId)
+        : await resolveModUpdate(installation, game, serverId);
       newVersionNumber = resolved.newVersionNumber;
       applyUpdate = resolved.applyUpdate;
       rowPatch = resolved.rowPatch ?? {};
@@ -62,6 +68,38 @@ export async function POST(
         updated: false,
         message: `${installation.name} is up to date (${installation.version}).`,
       });
+    }
+
+    if (isAgent) {
+      try {
+        await applyUpdate();
+        await prisma.modInstallation.update({
+          where: { id: installation.id },
+          data: { version: newVersionNumber, updatedAt: new Date(), ...rowPatch },
+        });
+        await prisma.activityLog.create({
+          data: {
+            userId: user.id,
+            action: "UPDATE_MOD",
+            details: `Updated mod '${installation.name}' ${installation.version} → ${newVersionNumber} on node server '${server.name}'.`,
+          },
+        });
+        return NextResponse.json({
+          success: true,
+          updated: true,
+          from: installation.version,
+          to: newVersionNumber,
+          message: `${installation.name} updated to ${newVersionNumber} on the node. (Remote nodes skip the sandbox boot test — watch the next start in the console.)`,
+        });
+      } catch (err: any) {
+        if (err instanceof RemoteShipError) {
+          await rollbackRemoteInstall(serverId, err).catch(() => {});
+          return NextResponse.json({
+            error: `Update failed on the node. Rollback completed. Cause: ${err.message}`,
+          }, { status: 500 });
+        }
+        return NextResponse.json({ error: `Update failed. Cause: ${err.message}` }, { status: 500 });
+      }
     }
 
     const snapshot = await createSnapshot(serverId, user.id, `Pre-update: ${installation.name}`);

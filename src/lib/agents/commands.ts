@@ -39,7 +39,13 @@ export type AgentCommandType =
   | "FILE_READ"
   | "FILE_WRITE"
   | "FILE_LIST"
-  | "CONFIG_APPLY";
+  | "CONFIG_APPLY"
+  | "FILES_APPLY"
+  | "FILES_RESTORE"
+  | "FILE_DELETE"
+  | "DOCKER_RUN"
+  | "DIR_SCAN"
+  | "PATHS_SNAPSHOT";
 
 export async function enqueueCommand(
   nodeId: string,

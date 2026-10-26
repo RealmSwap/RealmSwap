@@ -111,6 +111,87 @@ export function applyConfigEntries(
   return writeConfigFiles(dataDir, files);
 }
 
+/** Delete data-dir-relative paths (files or dirs). Unknown paths are
+ *  skipped — uninstalls target files a newer version may have renamed. */
+export function deletePathsInDataDir(
+  dataDir: string,
+  relPaths: string[],
+): { ok: true; deleted: string[] } | { ok: false; error: string } {
+  const deleted: string[] = [];
+  for (const rel of relPaths) {
+    const abs = resolveInDataDir(dataDir, rel);
+    if (!abs) return { ok: false, error: `Delete path escapes the server data dir: ${rel}` };
+    try {
+      if (!fs.existsSync(abs)) continue;
+      const stat = fs.statSync(abs);
+      if (stat.isDirectory()) fs.rmSync(abs, { recursive: true, force: true });
+      else fs.unlinkSync(abs);
+      deleted.push(rel);
+    } catch (err: any) {
+      return { ok: false, error: `Failed to delete ${rel}: ${err?.message ?? err}` };
+    }
+  }
+  return { ok: true, deleted };
+}
+
+export interface ScannedFile {
+  relPath: string;
+  fields: Record<string, string>;
+}
+
+/** Recursively find files by basename under a data-dir subdirectory and
+ *  extract the first regex capture from each file per pattern (multiline) —
+ *  the generic read-back for downloads that ran on the node (e.g. `id=`
+ *  lines from mod.info files inside Steam Workshop content). */
+export function scanTreeFor(
+  dataDir: string,
+  relDir: string,
+  fileName: string,
+  patterns: { key: string; regex: string }[],
+): { ok: true; files: ScannedFile[] } | { ok: false; error: string } {
+  const rootAbs = resolveInDataDir(dataDir, relDir);
+  if (!rootAbs) return { ok: false, error: `Scan dir escapes the server data dir: ${relDir}` };
+  let compiled: { key: string; re: RegExp }[];
+  try {
+    compiled = patterns.map((p) => ({ key: p.key, re: new RegExp(p.regex, "m") }));
+  } catch {
+    return { ok: false, error: "Invalid scan pattern." };
+  }
+  const files: ScannedFile[] = [];
+  const walk = (absDir: string, relBase: string) => {
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(absDir, { withFileTypes: true });
+    } catch {
+      return; // unreadable subdir — skip, not fail
+    }
+    for (const entry of entries) {
+      const abs = path.join(absDir, entry.name);
+      const rel = relBase ? `${relBase}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(abs, rel);
+      else if (entry.name === fileName) {
+        const fields: Record<string, string> = {};
+        try {
+          const content = fs.readFileSync(abs, "utf-8");
+          for (const { key, re } of compiled) {
+            const match = content.match(re);
+            if (match?.[1] !== undefined) fields[key] = match[1].trim();
+          }
+        } catch { /* unreadable — report the file without fields */ }
+        files.push({ relPath: rel, fields });
+      }
+    }
+  };
+  if (fs.existsSync(rootAbs)) walk(rootAbs, "");
+  return { ok: true, files };
+}
+
+/** Rollback tars kept for FILES_APPLY: id + safe file name on the agent. */
+export function modSnapshotTarName(serverId: string, snapshotId: string): string | null {
+  if (!/^[A-Za-z0-9_-]+$/.test(snapshotId)) return null;
+  return `modsnap-${serverId}-${snapshotId}.tar`;
+}
+
 /** docker run argv for a START payload — mirrors buildRunArgs in dockerCli.ts. */
 export function buildDockerRunArgs(p: StartCommandPayload, dataDir: string): string[] {
   const args = ["run", "-d", "--name", p.containerName, "-v", `${dataDir}:/data`];

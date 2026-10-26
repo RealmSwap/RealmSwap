@@ -21,12 +21,14 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { promisify } from "util";
-import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, installStagedTree, readServerFile, writeServerFile, listServerDir, applyConfigEntries } from "./lib";
+import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, installStagedTree, readServerFile, writeServerFile, listServerDir, applyConfigEntries, deletePathsInDataDir, scanTreeFor, modSnapshotTarName } from "./lib";
 import type {
   SyncRequest, SyncResponse, SyncCommand, RegisterResponse,
   StartCommandPayload, StopCommandPayload, UpdateCommandPayload, SendCommandPayload,
   BackupCreateCommandPayload, BackupRestoreCommandPayload,
   FileReadCommandPayload, FileWriteCommandPayload, FileListCommandPayload, ConfigApplyCommandPayload,
+  FilesApplyCommandPayload, FilesRestoreCommandPayload, FileDeleteCommandPayload,
+  DockerRunCommandPayload, DirScanCommandPayload, PathsSnapshotCommandPayload,
   ServerReport,
 } from "../src/lib/agents/protocol";
 
@@ -297,26 +299,8 @@ async function execBackupRestore(serverId: string, p: BackupRestoreCommandPayloa
   const tarPath = path.join(stateDir, `restore-${serverId}-${Date.now()}.tar`);
   const stagingDir = `${destAbs}.restore-staging`;
   try {
-    const timestamp = Date.now().toString();
-    const signature = crypto.createHmac("sha256", requireState().nodeSecret)
-      .update(`${requireState().nodeId}\n${timestamp}\nGET\n${p.downloadPath}`)
-      .digest("hex");
-    const res = await fetch(`${requireState().serverUrl.replace(/\/$/, "")}${p.downloadPath}`, {
-      headers: {
-        "x-node-id": requireState().nodeId,
-        "x-node-timestamp": timestamp,
-        "x-node-signature": signature,
-      },
-      signal: AbortSignal.timeout(30 * 60 * 1000),
-    });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      return { ok: false, error: `Download failed: ${data.error ?? res.status}` };
-    }
-    await streamToFile(res.body!, tarPath);
-    if (!fs.existsSync(tarPath) || fs.statSync(tarPath).size === 0) {
-      return { ok: false, error: "Downloaded archive was empty." };
-    }
+    const dl = await downloadDashboardTar(p.downloadPath, tarPath);
+    if (!dl.ok) return { ok: false, error: dl.error };
 
     // Stage first: a corrupt archive or full disk fails with the live world
     // intact (dashboard restore semantics, mirrored).
@@ -373,6 +357,152 @@ async function execConfigApply(serverId: string, p: ConfigApplyCommandPayload): 
   return { ok: true, output: JSON.stringify({ written: result.written }) };
 }
 
+/** Download a dashboard-issued one-shot tar with HMAC path auth (shared by
+ *  BACKUP_RESTORE and FILES_APPLY). Signs the full path including its query
+ *  string — parity with verifyPathAuth on the dashboard. */
+async function downloadDashboardTar(downloadPath: string, tarPath: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const timestamp = Date.now().toString();
+  const signature = crypto.createHmac("sha256", requireState().nodeSecret)
+    .update(`${requireState().nodeId}\n${timestamp}\nGET\n${downloadPath}`)
+    .digest("hex");
+  const res = await fetch(`${requireState().serverUrl.replace(/\/$/, "")}${downloadPath}`, {
+    headers: {
+      "x-node-id": requireState().nodeId,
+      "x-node-timestamp": timestamp,
+      "x-node-signature": signature,
+    },
+    signal: AbortSignal.timeout(30 * 60 * 1000),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    return { ok: false, error: `Download failed: ${(data as any).error ?? res.status}` };
+  }
+  await streamToFile(res.body!, tarPath);
+  if (!fs.existsSync(tarPath) || fs.statSync(tarPath).size === 0) {
+    return { ok: false, error: "Downloaded archive was empty." };
+  }
+  return { ok: true };
+}
+
+async function execFilesApply(serverId: string, p: FilesApplyCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const dataDir = path.join(agentDataRoot(), p.dataDirName);
+  fs.mkdirSync(dataDir, { recursive: true });
+  fs.mkdirSync(stateDir, { recursive: true });
+  const tarPath = path.join(stateDir, `ship-${serverId}-${Date.now()}.tar`);
+  const stagingDir = path.join(stateDir, `ship-${serverId}-${Date.now()}.staging`);
+  let snapshotId: string | undefined;
+
+  // After the snapshot exists, every failure output carries its id so the
+  // dashboard can roll the partial apply back.
+  const fail = (error: string): { ok: false; error: string; output?: string } =>
+    snapshotId ? { ok: false, error, output: JSON.stringify({ snapshotId }) } : { ok: false, error };
+
+  try {
+    // 1. Tar-aside the affected paths for rollback (before anything changes).
+    const backups = (p.backupPaths ?? []).filter((rel) => fs.existsSync(path.join(dataDir, rel)));
+    if (backups.length > 0) {
+      snapshotId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+      const snapName = modSnapshotTarName(serverId, snapshotId);
+      if (!snapName) return { ok: false, error: "Invalid snapshot id." };
+      await runTar(buildTarArgs(dataDir, backups, path.join(stateDir, snapName)));
+    }
+
+    // 2. Pre-delete stale paths (updates/uninstalls ship their replacements).
+    if (p.deletes && p.deletes.length > 0) {
+      const del = deletePathsInDataDir(dataDir, p.deletes);
+      if (!del.ok) return fail(del.error);
+    }
+
+    // 3. Pull the tar and overlay it onto the data dir.
+    const dl = await downloadDashboardTar(p.downloadPath, tarPath);
+    if (!dl.ok) return fail(dl.error);
+    fs.mkdirSync(stagingDir, { recursive: true });
+    await runTar(["-xf", tarPath, "-C", stagingDir]);
+    const stagedEntries = fs.readdirSync(stagingDir);
+    if (stagedEntries.length === 0) {
+      return fail("Shipped archive staged empty — refusing to touch the server files.");
+    }
+    const result = installStagedTree(stagingDir, dataDir, "overlay");
+    if (!result.ok) return fail(result.error);
+
+    return { ok: true, output: JSON.stringify({ applied: stagedEntries.length, snapshotId }) };
+  } finally {
+    fs.rmSync(stagingDir, { recursive: true, force: true });
+    try { if (fs.existsSync(tarPath)) fs.unlinkSync(tarPath); } catch { /* best-effort */ }
+  }
+}
+
+async function execPathsSnapshot(serverId: string, p: PathsSnapshotCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const dataDir = path.join(agentDataRoot(), p.dataDirName);
+  fs.mkdirSync(stateDir, { recursive: true });
+  const backups = p.backupPaths.filter((rel) => {
+    const abs = path.resolve(path.join(dataDir, rel));
+    return abs.startsWith(path.resolve(dataDir) + path.sep) && fs.existsSync(abs);
+  });
+  if (backups.length === 0) return { ok: true, output: JSON.stringify({ snapshotId: undefined }) };
+  const snapshotId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  const snapName = modSnapshotTarName(serverId, snapshotId);
+  if (!snapName) return { ok: false, error: "Invalid snapshot id." };
+  try {
+    await runTar(buildTarArgs(dataDir, backups, path.join(stateDir, snapName)));
+  } catch (err: any) {
+    return { ok: false, error: `Snapshot failed: ${err?.message ?? err}` };
+  }
+  return { ok: true, output: JSON.stringify({ snapshotId }) };
+}
+
+async function execFilesRestore(serverId: string, p: FilesRestoreCommandPayload): Promise<{ ok: boolean; error?: string }> {
+  const dataDir = path.join(agentDataRoot(), p.dataDirName);
+  const snapName = modSnapshotTarName(serverId, p.snapshotId);
+  if (!snapName) return { ok: false, error: "Invalid snapshot id." };
+  const snapPath = path.join(stateDir, snapName);
+  if (!fs.existsSync(snapPath)) {
+    return { ok: false, error: "Rollback snapshot no longer exists on this node (kept ~48h)." };
+  }
+  const stagingDir = path.join(stateDir, `rollback-${serverId}-${Date.now()}.staging`);
+  try {
+    fs.mkdirSync(stagingDir, { recursive: true });
+    await runTar(["-xf", snapPath, "-C", stagingDir]);
+    // Files the failed install added are cleared first when the dashboard
+    // knows them; the snapshot then overlays the pre-install versions back.
+    if (p.clearPaths && p.clearPaths.length > 0) {
+      const del = deletePathsInDataDir(dataDir, p.clearPaths);
+      if (!del.ok) return { ok: false, error: del.error };
+    }
+    const result = installStagedTree(stagingDir, dataDir, "overlay");
+    if (!result.ok) return { ok: false, error: result.error };
+    try { fs.unlinkSync(snapPath); } catch { /* best-effort */ }
+    return { ok: true };
+  } finally {
+    fs.rmSync(stagingDir, { recursive: true, force: true });
+  }
+}
+
+async function execFileDelete(serverId: string, p: FileDeleteCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const result = deletePathsInDataDir(path.join(agentDataRoot(), p.dataDirName), p.paths);
+  if (!result.ok) return { ok: false, error: result.error };
+  return { ok: true, output: JSON.stringify({ deleted: result.deleted }) };
+}
+
+async function execDockerRun(serverId: string, p: DockerRunCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const dataDir = path.join(agentDataRoot(), p.dataDirName);
+  fs.mkdirSync(dataDir, { recursive: true });
+  const res = await docker(
+    ["run", "--rm", "-v", `${dataDir}:/data`, p.image, "bash", "-lc", p.cmd],
+    p.timeoutMs ?? 15 * 60 * 1000,
+  );
+  if (res.code !== 0) {
+    return { ok: false, error: (res.stderr || res.stdout || "docker run failed").slice(-2000) };
+  }
+  return { ok: true, output: JSON.stringify({ output: (res.stdout + (res.stderr ? `\n${res.stderr}` : "")).slice(-4000) }) };
+}
+
+async function execDirScan(serverId: string, p: DirScanCommandPayload): Promise<{ ok: boolean; error?: string; output?: string }> {
+  const result = scanTreeFor(path.join(agentDataRoot(), p.dataDirName), p.relDir, p.fileName, p.patterns);
+  if (!result.ok) return { ok: false, error: result.error };
+  return { ok: true, output: JSON.stringify({ files: result.files }) };
+}
+
 async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok: boolean; error?: string; output?: string }> {
   try {
     let result: { ok: boolean; error?: string; output?: string };
@@ -387,6 +517,12 @@ async function executeCommand(cmd: SyncCommand): Promise<{ commandId: string; ok
       case "FILE_WRITE": result = await execFileWrite(cmd.serverId, cmd.payload); break;
       case "FILE_LIST": result = await execFileList(cmd.serverId, cmd.payload); break;
       case "CONFIG_APPLY": result = await execConfigApply(cmd.serverId, cmd.payload); break;
+      case "FILES_APPLY": result = await execFilesApply(cmd.serverId, cmd.payload); break;
+      case "FILES_RESTORE": result = await execFilesRestore(cmd.serverId, cmd.payload); break;
+      case "FILE_DELETE": result = await execFileDelete(cmd.serverId, cmd.payload); break;
+      case "DOCKER_RUN": result = await execDockerRun(cmd.serverId, cmd.payload); break;
+      case "DIR_SCAN": result = await execDirScan(cmd.serverId, cmd.payload); break;
+      case "PATHS_SNAPSHOT": result = await execPathsSnapshot(cmd.serverId, cmd.payload); break;
       default: result = { ok: false, error: `Unknown command kind` };
     }
     return { commandId: cmd.id, ...result };
@@ -569,6 +705,7 @@ async function runLoop(state: AgentState, agentVersion: string): Promise<void> {
   console.log(`Agent ${agentVersion} running for node ${state.nodeId} → ${state.serverUrl}`);
   const dockerVer = await dockerVersion();
   console.log(dockerVer ? `Docker ${dockerVer} detected.` : "WARNING: Docker daemon not reachable — commands will fail.");
+  cleanupStaleModSnapshots();
   for (;;) {
     try {
       await syncOnce(state, agentVersion);
@@ -577,6 +714,21 @@ async function runLoop(state: AgentState, agentVersion: string): Promise<void> {
     }
     await new Promise((r) => setTimeout(r, 5000));
   }
+}
+
+/** Rollback tars from FILES_APPLY are for immediate-failure rollbacks —
+ *  anything older than two days is debris from a dead dashboard process. */
+function cleanupStaleModSnapshots(): void {
+  try {
+    const cutoff = Date.now() - 48 * 60 * 60 * 1000;
+    for (const name of fs.readdirSync(stateDir)) {
+      if (!/^modsnap-.*\.tar$/.test(name)) continue;
+      const full = path.join(stateDir, name);
+      try {
+        if (fs.statSync(full).mtimeMs < cutoff) fs.unlinkSync(full);
+      } catch { /* best-effort */ }
+    }
+  } catch { /* best-effort */ }
 }
 
 // ---------------------------------------------------------------------------

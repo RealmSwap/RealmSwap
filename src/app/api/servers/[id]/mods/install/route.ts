@@ -15,6 +15,13 @@ import {
   installTmlWorkshopMod,
 } from "@/lib/mods/installers";
 import { installOxideCore, installRustUmodPlugin } from "@/lib/mods/umod";
+import {
+  installMinecraftModRemote, installMinecraftCurseforgeRemote,
+  installValheimThunderstoreRemote, installVRisingThunderstoreRemote,
+  installZomboidWorkshopModRemote, installArkWorkshopModRemote,
+  installOxideCoreRemote, installRustUmodPluginRemote,
+  rollbackRemoteInstall, RemoteShipError,
+} from "@/lib/mods/remoteInstallers";
 import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
@@ -60,13 +67,16 @@ export async function POST(
       return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
     }
     const { server } = access;
+    const game = server.game.toUpperCase();
+    if (server.runnerType === "AGENT") {
+      return installOnAgentNode(server, game, user.id, { modType, modId, modName, version, downloadUrl, workshopId });
+    }
     requireLocalServer(server, "Mod installs");
 
     if (server.status === "RUNNING" || server.status === "STARTING") {
       return NextResponse.json({ error: "Please stop the server before installing mods." }, { status: 400 });
     }
 
-    const game = server.game.toUpperCase();
     const serverRoot = path.join(dataRoot(), "local-servers", serverId);
 
     // 1. Create a Snapshot before touching anything
@@ -278,5 +288,95 @@ export async function POST(
   } catch (error: any) {
     console.error("POST /api/servers/[id]/mods/install error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+  }
+}
+
+/**
+ * The AGENT-server install path. Same providers and resolution as the local
+ * flow, but files land on the node via the mod-ship tar (the node tar-asides
+ * the affected paths first, which is the rollback), and there is NO sandbox
+ * boot test — the game files live on a machine this process can't spawn. The
+ * response says so instead of claiming sandbox testing happened.
+ */
+async function installOnAgentNode(
+  server: { id: string; name: string; game: string; status: string },
+  game: string,
+  userId: string,
+  input: { modType: string; modId?: string; modName?: string; version?: string; downloadUrl?: string; workshopId?: string }
+) {
+  const { modType, modId, modName, version, downloadUrl, workshopId } = input;
+  const serverId = server.id;
+
+  if (server.status === "RUNNING" || server.status === "STARTING") {
+    return NextResponse.json({ error: "Please stop the server before installing mods." }, { status: 400 });
+  }
+
+  const warnings: string[] = [];
+  let dependencyCount = 0;
+
+  try {
+    if (game === "MINECRAFT") {
+      if (!modId) throw new Error("A Modrinth project id or CurseForge mod id is required for Minecraft mods.");
+      const result = modType === "CURSEFORGE"
+        ? await installMinecraftCurseforgeRemote({ serverId, modId, version, warnings })
+        : await installMinecraftModRemote({ serverId, projectId: modId, versionNumber: version, warnings });
+      dependencyCount = result.dependencyCount;
+    } else if (game === "VALHEIM" || game === "VRISING") {
+      if (modType === "BEPINEX") {
+        // Core-only install = install the game's core pack as the package.
+        const coreId = game === "VALHEIM" ? "denikson-BepInExPack_Valheim" : "BepInEx-BepInExPack_V_Rising";
+        const installer = game === "VALHEIM" ? installValheimThunderstoreRemote : installVRisingThunderstoreRemote;
+        await installer({ serverId, packageId: coreId, name: "BepInEx", warnings });
+      } else {
+        if (!modId) throw new Error(`A Thunderstore package id is required for ${game === "VALHEIM" ? "Valheim" : "V Rising"} mods.`);
+        const installer = game === "VALHEIM" ? installValheimThunderstoreRemote : installVRisingThunderstoreRemote;
+        const result = await installer({ serverId, packageId: modId, name: modName, versionNumber: version, downloadUrl, warnings });
+        dependencyCount = result.dependencyCount;
+      }
+    } else if (game === "RUST") {
+      if (!modId) {
+        await installOxideCoreRemote({ serverId });
+      } else {
+        await installRustUmodPluginRemote({ serverId, packageId: modId, name: modName, version, downloadUrl, warnings });
+      }
+    } else if (game === "ZOMBOID") {
+      if (!workshopId) throw new Error("A Workshop ID is required for Project Zomboid mods.");
+      await installZomboidWorkshopModRemote({ serverId, workshopId, modId, name: modName, version });
+    } else if (game === "ARK") {
+      if (!workshopId) throw new Error("A Workshop ID is required for ARK mods.");
+      await installArkWorkshopModRemote({ serverId, workshopId, name: modName, version });
+    } else {
+      throw new Error(`'${server.game}' mods aren't supported on remote-node servers yet.`);
+    }
+
+    await prisma.activityLog.create({
+      data: {
+        userId,
+        action: "INSTALL_MOD",
+        details: `Installed mod '${modName || modId || workshopId}' on node server '${server.name}' (${server.game}).${warnings.length ? ` Warnings: ${warnings.join(" ")}` : ""}`,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message:
+        dependencyCount > 0
+          ? `Mod + ${dependencyCount} ${dependencyCount === 1 ? "dependency" : "dependencies"} installed on the node. (Remote nodes skip the sandbox boot test — watch the first start in the console.)`
+          : `Mod installed on the node. (Remote nodes skip the sandbox boot test — watch the first start in the console.)`,
+      warnings,
+      dependencyCount,
+    });
+  } catch (installError: any) {
+    // The node holds a tar of the touched paths when its apply got far
+    // enough — overlay the pre-install versions back.
+    if (installError instanceof RemoteShipError) {
+      await rollbackRemoteInstall(serverId, installError).catch(() => {});
+      return NextResponse.json({
+        error: `Installation failed on the node. Rollback completed. Cause: ${installError.message}`,
+      }, { status: 500 });
+    }
+    return NextResponse.json({
+      error: `Installation failed. Cause: ${installError.message}`,
+    }, { status: 500 });
   }
 }
