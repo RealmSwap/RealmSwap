@@ -5,7 +5,8 @@ import DashboardView from "@/components/DashboardView";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage({ searchParams }: { searchParams: { link?: string } }) {
+export default async function DashboardPage(props: { searchParams: Promise<{ link?: string }> }) {
+  const searchParams = await props.searchParams;
   const user = await getAuthenticatedUser();
 
   if (!user) {

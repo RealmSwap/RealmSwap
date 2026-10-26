@@ -5,17 +5,15 @@ import { createClient } from "@/lib/supabase/server";
 // GET /api/marketplace/[id]/versions — version history for a realm (newest first).
 // RLS lets anyone read versions of a realm they can see; payloads are fetched by
 // the deploy route, not returned here.
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("realm_versions")
       .select("id, version, changelog, created_at")

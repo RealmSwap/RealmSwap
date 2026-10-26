@@ -1,7 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import tar from "tar";
+import { c as tarCreate } from "tar";
 import type { CommandPayload } from "./protocol";
 import { resolveUsableNode, enqueueCommand, awaitCommandResult } from "./commands";
 import { issueDownloadToken, revokeDownloadToken } from "./agentUploads";
@@ -65,7 +65,7 @@ export async function shipModTree(serverId: string, stagingRoot: string, opts: S
   const node = await resolveUsableNode(serverId);
   const tarPath = path.join(os.tmpdir(), `rs-ship-${serverId}-${Date.now()}.tar`);
   try {
-    await tar.c({ file: tarPath, cwd: stagingRoot, portable: true }, ["."]);
+    await tarCreate({ file: tarPath, cwd: stagingRoot, portable: true }, ["."]);
     const token = issueDownloadToken(tarPath, node.id, serverId);
     try {
       const out = await runCommand(serverId, {

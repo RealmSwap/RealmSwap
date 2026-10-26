@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Publish a NEW VERSION of an existing realm (ownership enforced in the RPC,
     // which also syncs the realm's current payload/version).

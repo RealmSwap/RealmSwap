@@ -118,7 +118,7 @@ describe("POST /mods/update-all", () => {
     bag.planned.set("mod-a", { newVersionNumber: "1.1.0" });
     bag.planned.set("mod-b", { newVersionNumber: "1.0.0" });
 
-    const res = await updateAll(req(), { params: { id: "s1" } });
+    const res = await updateAll(req(), { params: Promise.resolve({ id: "s1" }) });
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -144,7 +144,7 @@ describe("POST /mods/update-all", () => {
     // mod-gone has no plan -> resolveModUpdate throws (resolution-phase failure)
     // mod-ws: workshop rows go through resolution too; no plan -> skipped
 
-    const res = await updateAll(req(), { params: { id: "s1" } });
+    const res = await updateAll(req(), { params: Promise.resolve({ id: "s1" }) });
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -162,7 +162,7 @@ describe("POST /mods/update-all", () => {
     bag.planned.set("mod-a", { newVersionNumber: "1.1.0" });
     bag.planned.set("mod-b", { newVersionNumber: "1.2.0", fail: new Error("download failed") });
 
-    const res = await updateAll(req(), { params: { id: "s1" } });
+    const res = await updateAll(req(), { params: Promise.resolve({ id: "s1" }) });
     const data = await res.json();
 
     expect(res.status).toBe(500);
@@ -180,7 +180,7 @@ describe("POST /mods/update-all", () => {
     bag.planned.set("mod-a", { newVersionNumber: "1.1.0" });
     bag.bootError = new (await import("@/lib/runners/sandbox")).SandboxBootError("boot failed", "line1\nline2");
 
-    const res = await updateAll(req(), { params: { id: "s1" } });
+    const res = await updateAll(req(), { params: Promise.resolve({ id: "s1" }) });
     const data = await res.json();
 
     expect(res.status).toBe(500);
@@ -191,12 +191,12 @@ describe("POST /mods/update-all", () => {
 
   it("refuses while the server is running and reports non-admins", async () => {
     bag.access = { server: { ...SERVER, status: "RUNNING" } };
-    const running = await updateAll(req(), { params: { id: "s1" } });
+    const running = await updateAll(req(), { params: Promise.resolve({ id: "s1" }) });
     expect(running.status).toBe(400);
 
     bag.access = { server: SERVER };
     bag.isAdmin = false;
-    const forbidden = await updateAll(req(), { params: { id: "s1" } });
+    const forbidden = await updateAll(req(), { params: Promise.resolve({ id: "s1" }) });
     expect(forbidden.status).toBe(403);
   });
 });

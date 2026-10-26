@@ -30,7 +30,7 @@ const FREE_ENTITLEMENT: Entitlement = {
  */
 export async function getEntitlement(client?: SupabaseClient): Promise<Entitlement> {
   try {
-    const supabase = client ?? createClient();
+    const supabase = client ?? await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();

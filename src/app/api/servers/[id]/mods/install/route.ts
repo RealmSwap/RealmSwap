@@ -34,10 +34,8 @@ import { requireLocalServer } from "@/lib/agents/perimeter";
 // resolution and loader checks on Minecraft) -> sandbox boot test -> automatic
 // rollback on any failure. The per-game install steps live in
 // src/lib/mods/installers.ts (shared with mod-collection import).
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {

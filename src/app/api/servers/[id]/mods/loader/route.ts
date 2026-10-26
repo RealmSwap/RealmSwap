@@ -24,10 +24,8 @@ const LOADER_LABELS: Record<string, string> = {
 };
 
 // GET: current loader state for the Mod Manager UI.
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -57,10 +55,8 @@ export async function GET(
 
 // POST: install a mod loader — a Java loader (Fabric/Quilt/Forge/NeoForge) on
 // a Minecraft server, or tModLoader on a Terraria server.
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

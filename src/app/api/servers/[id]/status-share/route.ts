@@ -18,10 +18,8 @@ async function generateCode(): Promise<string> {
 // POST: create / rotate / disable the public no-login status link. ADMIN-only —
 // the page exposes server name, game, up/down, player counts and the next
 // planned session to anyone holding the link, so that's a host decision.
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

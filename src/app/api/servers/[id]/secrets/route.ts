@@ -5,10 +5,8 @@ import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // GET: per-server secrets for the SFTP panel (ADMIN only). Kept out of the
 // shared servers-list payload so team members never receive them.
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

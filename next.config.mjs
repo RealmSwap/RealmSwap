@@ -2,11 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
-  // src/instrumentation.ts (server-side Sentry bootstrap) requires this flag
-  // on Next 14.
-  experimental: {
-    instrumentationHook: true,
-  },
+  // ssh2's native .node addons must load from disk at runtime, not be bundled.
+  // Replaces the old webpack-externals block (Turbopack, the Next 16 default
+  // bundler, ignores webpack config).
+  serverExternalPackages: ["ssh2", "ssh2-sftp-client"],
   async redirects() {
     return [
       {
@@ -15,22 +14,6 @@ const nextConfig = {
         permanent: false,
       },
     ];
-  },
-  webpack(config, { isServer }) {
-    if (isServer) {
-      // Externalize native Node addons used by ssh2 (SFTP hosting feature).
-      // Webpack cannot bundle .node binary files; they must be required at runtime.
-      config.externals = [
-        ...(Array.isArray(config.externals) ? config.externals : [config.externals].filter(Boolean)),
-        ({ request }, callback) => {
-          if (/\.node$/.test(request)) return callback(null, `commonjs ${request}`);
-          callback();
-        },
-        "ssh2",
-        "ssh2-sftp-client",
-      ];
-    }
-    return config;
   },
 };
 

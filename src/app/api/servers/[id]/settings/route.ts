@@ -25,10 +25,8 @@ async function resolveSpec(server: { definitionId: string | null; game: string }
 
 // GET: game settings schema for this server — declared params (with metadata)
 // merged with the stored values, so the dashboard can render a typed form.
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -59,10 +57,8 @@ export async function GET(
 // installed, managed config files are re-rendered immediately so changes take
 // effect without waiting for the next start; while running, values persist and
 // apply at next start (launch args are rendered from these values at start).
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -170,10 +166,8 @@ export async function PUT(
   }
 }
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

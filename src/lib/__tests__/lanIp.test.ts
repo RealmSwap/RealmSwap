@@ -13,7 +13,6 @@ const hoisted = vi.hoisted(() => ({
   interfaces: {} as Record<string, NetworkInterfaceInfo[]>,
 }));
 
-vi.mock("nat-api", () => ({ default: class NatAPI {} }));
 vi.mock("os", async (importOriginal) => {
   const actual = await importOriginal<typeof import("os")>();
   const networkInterfaces = () => hoisted.interfaces;

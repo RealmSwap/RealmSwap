@@ -5,7 +5,8 @@ import { parseSpec } from "@/lib/definitions/serialize";
 import { queryGameServer } from "@/lib/serverQuery";
 import { resolveGameHost } from "@/lib/gameHost";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {

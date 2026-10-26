@@ -11,10 +11,8 @@ export const dynamic = "force-dynamic";
  * rejected (its secret stops working), and any servers still assigned to it
  * are marked CRASHED so they aren't left claiming to run on a dead machine.
  */
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

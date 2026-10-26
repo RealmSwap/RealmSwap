@@ -13,10 +13,8 @@ import { requireLocalServer } from "@/lib/agents/perimeter";
 // roll the whole window back if anything fails. Rows only move to the new
 // versions after the boot test passes, so a rollback never leaves the DB
 // claiming versions that are no longer on disk.
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

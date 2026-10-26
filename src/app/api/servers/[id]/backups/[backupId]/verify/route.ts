@@ -7,8 +7,9 @@ import { verifyBackupFile } from "@/lib/backupVerify";
 // POST: re-verify a backup archive now (on demand) and record the result.
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string; backupId: string } }
+  props: { params: Promise<{ id: string; backupId: string }> }
 ) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -17,8 +17,9 @@ import { requireLocalServer } from "@/lib/agents/perimeter";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string; modId: string } }
+  props: { params: Promise<{ id: string; modId: string }> }
 ) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {

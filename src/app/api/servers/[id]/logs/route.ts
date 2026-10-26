@@ -4,10 +4,8 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { getRunner } from "@/lib/runners";
 import { verifyServerAccess } from "@/lib/serverAuth";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {

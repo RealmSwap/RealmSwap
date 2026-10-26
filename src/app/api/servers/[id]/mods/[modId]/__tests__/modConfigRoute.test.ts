@@ -87,7 +87,7 @@ describe("mod config route — AGENT servers", () => {
       { name: "other.cfg", isDir: false },
       { name: "plugins", isDir: true },
     ];
-    const res = await GET(req("GET"), { params: { id: "srv1", modId: "mod1" } });
+    const res = await GET(req("GET"), { params: Promise.resolve({ id: "srv1", modId: "mod1" }) });
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.file).toBe("PlantEverything.cfg");
@@ -102,7 +102,7 @@ describe("mod config route — AGENT servers", () => {
 
   it("GET refuses honestly when no unique cfg matches", async () => {
     bag.listed = [{ name: "unrelated.cfg", isDir: false }];
-    const res = await GET(req("GET"), { params: { id: "srv1", modId: "mod1" } });
+    const res = await GET(req("GET"), { params: Promise.resolve({ id: "srv1", modId: "mod1" }) });
     expect(res.status).toBe(404);
     expect(await res.json()).toMatchObject({ error: expect.stringContaining("Couldn't determine") });
   });
@@ -115,7 +115,7 @@ describe("mod config route — AGENT servers", () => {
     bag.mod = { id: "mod1", serverId: "srv1", provider: "modrinth", packageId: "snowysprouts", name: "Snowy Sprouts" };
     bag.listed = [{ name: "snowysprouts.toml", isDir: false }];
     bag.readResult = { exists: true, content: '[flower]\ncount = 3\n' };
-    const res = await GET(req("GET"), { params: { id: "srv1", modId: "mod1" } });
+    const res = await GET(req("GET"), { params: Promise.resolve({ id: "srv1", modId: "mod1" }) });
     const data = await res.json();
     expect(data.format).toBe("toml");
     expect(data.file).toBe("snowysprouts.toml");
@@ -129,7 +129,7 @@ describe("mod config route — AGENT servers", () => {
         { key: "PlantEverything.Enabled", value: "false", type: "Boolean", defaultValue: "true", description: "" },
       ] },
     ];
-    const res = await POST(req("POST", { sections }), { params: { id: "srv1", modId: "mod1" } });
+    const res = await POST(req("POST", { sections }), { params: Promise.resolve({ id: "srv1", modId: "mod1" }) });
     expect(res.status).toBe(200);
     expect(bag.writes).toEqual([
       {
@@ -145,7 +145,7 @@ describe("mod config route — AGENT servers", () => {
       requireAdmin: true,
       server: { id: "srv1", game: "VALHEIM", runnerType: "AGENT", status: "RUNNING", name: "V" },
     };
-    const res = await POST(req("POST", { sections: [] }), { params: { id: "srv1", modId: "mod1" } });
+    const res = await POST(req("POST", { sections: [] }), { params: Promise.resolve({ id: "srv1", modId: "mod1" }) });
     expect(res.status).toBe(400);
     expect(bag.writes).toEqual([]);
   });

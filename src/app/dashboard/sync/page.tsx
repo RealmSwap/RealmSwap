@@ -17,7 +17,8 @@ function InvalidLinkScreen({ title, message }: { title: string; message: string 
   );
 }
 
-export default async function SyncPage({ searchParams }: { searchParams: { link?: string } }) {
+export default async function SyncPage(props: { searchParams: Promise<{ link?: string }> }) {
+  const searchParams = await props.searchParams;
   const user = await getAuthenticatedUser();
 
   if (!user) {

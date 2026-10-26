@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
  * marketing landing page, and we send the user to the right place:
  * dashboard (valid Supabase session) or login.
  */
-export default async function StartPage({ searchParams }: { searchParams: { link?: string } }) {
+export default async function StartPage(props: { searchParams: Promise<{ link?: string }> }) {
+  const searchParams = await props.searchParams;
   const user = await getAuthenticatedUser();
   let dest: string = pickEntryPath({ isAuthenticated: !!user });
 

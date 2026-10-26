@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     }
 
     const game = new URL(request.url).searchParams.get("game");
-    const supabase = createClient();
+    const supabase = await createClient();
     let query = supabase
       .from("realms")
       .select("id, name, version, game_slug")

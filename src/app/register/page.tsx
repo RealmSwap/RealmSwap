@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, Mail, Lock, ShieldAlert } from "lucide-react";
@@ -150,7 +150,8 @@ function RegisterForm({ searchParams }: { searchParams?: { link?: string } }) {
   );
 }
 
-export default function RegisterPage({ searchParams }: { searchParams?: { link?: string } }) {
+export default function RegisterPage(props: { searchParams?: Promise<{ link?: string }> }) {
+  const searchParams = use(props.searchParams ?? Promise.resolve<{ link?: string }>({}));
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden bg-background">
       {/* Background Glows */}

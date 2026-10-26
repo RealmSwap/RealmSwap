@@ -8,7 +8,8 @@ import { verifyServerAccess } from "@/lib/serverAuth";
  * entries (written with structured metadata by both runners) plus a rolling
  * 7-day count for the summary line.
  */
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getAuthenticatedUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

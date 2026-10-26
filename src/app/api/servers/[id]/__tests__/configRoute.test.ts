@@ -90,7 +90,7 @@ describe("config editor route — AGENT servers", () => {
   });
 
   it("GET reads the node's file through the command queue", async () => {
-    const res = await GET(req("GET"), { params: { id: "srv1" } });
+    const res = await GET(req("GET"), { params: Promise.resolve({ id: "srv1" }) });
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data).toMatchObject({ content: "motd=node copy\n", filename: "server.properties", editable: true });
@@ -101,13 +101,13 @@ describe("config editor route — AGENT servers", () => {
 
   it("GET shows the not-yet-generated placeholder when the node has no file", async () => {
     bag.readResult = { exists: false, content: null };
-    const res = await GET(req("GET"), { params: { id: "srv1" } });
+    const res = await GET(req("GET"), { params: Promise.resolve({ id: "srv1" }) });
     const data = await res.json();
     expect(data.content).toContain("not yet generated");
   });
 
   it("PUT writes through the node with the .rsbak backup flag", async () => {
-    const res = await PUT(req("PUT", { content: "motd=edited\n" }), { params: { id: "srv1" } });
+    const res = await PUT(req("PUT", { content: "motd=edited\n" }), { params: Promise.resolve({ id: "srv1" }) });
     expect(res.status).toBe(200);
     expect(bag.writes).toEqual([
       { serverId: "srv1", relPath: "server.properties", content: "motd=edited\n", opts: { backup: true } },
@@ -118,7 +118,7 @@ describe("config editor route — AGENT servers", () => {
     bag.access = {
       server: { id: "srv1", game: "MINECRAFT", definitionId: null, runnerType: "AGENT", status: "RUNNING", name: "MC" },
     };
-    const res = await PUT(req("PUT", { content: "x" }), { params: { id: "srv1" } });
+    const res = await PUT(req("PUT", { content: "x" }), { params: Promise.resolve({ id: "srv1" }) });
     expect(res.status).toBe(400);
     expect(bag.writes).toEqual([]);
   });
@@ -143,11 +143,11 @@ describe("config editor route — local servers (no regression)", () => {
   });
 
   it("GET/PUT stay on the dashboard disk with the .rsbak parity copy", async () => {
-    const get = await GET(req("GET"), { params: { id: "srv1" } });
+    const get = await GET(req("GET"), { params: Promise.resolve({ id: "srv1" }) });
     expect(await get.json()).toMatchObject({ content: "motd=local\n" });
     expect(bag.reads).toEqual([]);
 
-    const put = await PUT(req("PUT", { content: "motd=new\n" }), { params: { id: "srv1" } });
+    const put = await PUT(req("PUT", { content: "motd=new\n" }), { params: Promise.resolve({ id: "srv1" }) });
     expect(put.status).toBe(200);
     const file = path.join(tmp, "local-servers", "srv1", "server.properties");
     expect(fs.readFileSync(file, "utf-8")).toBe("motd=new\n");

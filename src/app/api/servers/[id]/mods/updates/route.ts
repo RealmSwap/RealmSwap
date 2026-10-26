@@ -18,7 +18,8 @@ import { readRemoteLoaderMarker } from "@/lib/mods/remoteInstallers";
  * markerless (vanilla) node server can't be compat-matched — its jar rows
  * report as "unknown" rather than claiming updates that may not apply.
  */
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const user = await getAuthenticatedUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

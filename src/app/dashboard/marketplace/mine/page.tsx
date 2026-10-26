@@ -11,7 +11,7 @@ export default async function MyRealmsPage() {
 
   // One round-trip: the caller's realms + download analytics, scoped to
   // seller_id = auth.uid() inside the SECURITY DEFINER RPC.
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data } = await supabase.rpc("get_my_realm_analytics", { p_days: 30 });
 
   return <MyRealmsView realms={Array.isArray(data) ? data : []} />;

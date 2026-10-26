@@ -9,10 +9,8 @@ export const dynamic = "force-dynamic";
 // Content of one rotated log archive for the console history viewer. The
 // archive name is validated against the rotation naming scheme inside
 // readLogArchive, so it can never traverse outside the server's log dir.
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string; name: string } }
-) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string; name: string }> }) {
+  const params = await props.params;
   const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -40,10 +40,8 @@ async function loadOwned(id: string, userId: string) {
 
 // GET /api/definitions/[id]
 // Returns the definition (spec parsed) if it is built-in OR owned by the caller; else 404.
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
@@ -66,10 +64,8 @@ export async function GET(
 // Updates a caller-owned, non-built-in definition.
 // 401 if unauthenticated; 404 if not owned; 403 if built-in; 400 on validation errors;
 // 403 if installMethod is CUSTOM_SCRIPT and caller is not ADMIN.
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
@@ -149,10 +145,8 @@ export async function PUT(
 // DELETE /api/definitions/[id]
 // Deletes a caller-owned, non-built-in definition if no Server references it.
 // 401 if unauthenticated; 404 if not owned; 403 if built-in; 409 if in use.
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
