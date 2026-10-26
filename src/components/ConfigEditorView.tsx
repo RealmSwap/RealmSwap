@@ -744,8 +744,23 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                   </>
                 )}
 
-                {/* Direct file access — lives with the files tab */}
-                {activeTab === "files" && selectedServer && (
+                {/* Direct file access — lives with the files tab. The SFTP
+                    server serves THIS machine's files; for node servers it
+                    would show the node's IP against a server that isn't
+                    there, so the panel says so instead. */}
+                {activeTab === "files" && selectedServer && selectedServer.runnerType === "AGENT" && (
+                <div className="p-6 border-t border-white/5">
+                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                    <h3 className="text-sm font-bold text-amber-300 mb-1">This server lives on a remote node</h3>
+                    <p className="text-sm text-slate-300">
+                      SFTP serves files on the machine running RealmSwap, so it can't reach this server's files.
+                      Use the Configuration Files tab above instead — its reads and writes run on the node —
+                      and manage mods from the server page.
+                    </p>
+                  </div>
+                </div>
+                )}
+                {activeTab === "files" && selectedServer && selectedServer.runnerType !== "AGENT" && (
                 <div className="p-6 border-t border-white/5">
                   <div>
                     <h3 className="text-lg font-bold text-white mb-4">SFTP Connection Details</h3>
