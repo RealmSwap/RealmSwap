@@ -4,7 +4,8 @@ import os from "os";
 import path from "path";
 import AdmZip from "adm-zip";
 import { createHash } from "crypto";
-import { planModpackFromZip, applyModpackPlan, type ModpackPlan } from "../packInstall";
+import { planModpackFromZip, applyModpackPlan, PackPreflightError, type ModpackPlan } from "../packInstall";
+import { dupEntryZip, dupEntryJarBytes } from "./zipFixtures";
 
 const sha1Of = (buf: Buffer) => createHash("sha1").update(buf).digest("hex");
 
@@ -126,6 +127,33 @@ describe("planModpackFromZip — Minecraft version switch", () => {
         loaderType: "neoforge",
       })
     ).rejects.toThrow(/requires the Fabric loader/);
+  });
+});
+
+describe("planModpackFromZip — malformed archives", () => {
+  it("refuses a pack zip with duplicated entry names as a readable preflight error", async () => {
+    const malformed = dupEntryZip([
+      {
+        name: "manifest.json",
+        data: JSON.stringify({
+          manifestType: "minecraftModpack",
+          manifestVersion: 1,
+          name: "Broken Pack",
+          version: "1.0.0",
+          minecraft: { version: "1.21.1", modLoaders: [] },
+          files: [],
+        }),
+      },
+      { name: "META-INF/LICENSE.TXT", data: "first copy" },
+      { name: "META-INF/LICENSE.TXT", data: "second copy" },
+    ]);
+    const error = await planModpackFromZip({
+      zipBuffer: malformed,
+      serverMcVersion: "1.21.1",
+      loaderType: null,
+    }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(PackPreflightError);
+    expect((error as Error).message).toMatch(/couldn't be opened/);
   });
 });
 
@@ -266,6 +294,37 @@ describe("applyModpackPlan — client-mod exclusion", () => {
     expect(warnings.join(" ")).toMatch(/Excluded '501\.jar' — requires sodium/);
     const deletes = prismaCalls.filter((c) => c.where?.packageId);
     expect(deletes.map((c) => c.where.packageId).sort()).toEqual(["500", "501"]);
+  });
+
+  it("installs a pack whose jar carries duplicated entry names (no install failure)", async () => {
+    // adm-zip 0.6.1 rejects duplicate entry names lazily on first entries
+    // access; a scan failure must never fail the whole install (regression:
+    // "Modpack install failed ... Cause: ADM-ZIP: Duplicate entry name").
+    const dupBytes = dupEntryJarBytes();
+    downloadFixtures.set("https://x/dup.jar", dupBytes);
+
+    const warnings: string[] = [];
+    const result = await applyModpackPlan({
+      plan: manualPlan({
+        packLoader: null,
+        cfManifest: { manifestType: "minecraftModpack", manifestVersion: 1, name: "t", minecraft: { version: "1.21.1", modLoaders: [] }, files: [] },
+        cfPlan: {
+          files: [
+            { id: 3, modId: 502, displayName: "Shaded Lib Mod", fileName: "dup.jar", downloadUrl: "https://x/dup.jar", hashes: [{ value: sha1Of(dupBytes), algo: 1 }], gameVersions: [], dependencies: [], isAvailable: true, fileLength: dupBytes.length },
+          ] as any,
+          modNames: new Map(),
+          skippedOptional: 0,
+        },
+      }),
+      serverId: "s1",
+      serverRoot: root,
+      serverMcVersion: "1.21.1",
+      warnings,
+    });
+
+    expect(result.installedCount).toBe(1);
+    expect(fs.existsSync(path.join(root, "mods", "502.jar"))).toBe(true);
+    expect(warnings.join(" ")).not.toMatch(/Excluded/);
   });
 });
 

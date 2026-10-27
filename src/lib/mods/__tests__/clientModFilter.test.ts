@@ -4,6 +4,7 @@ import os from "os";
 import path from "path";
 import AdmZip from "adm-zip";
 import { planClientExclusions, scanJarClientSignals, type ExclusionCandidate } from "../clientModFilter";
+import { dupEntryZip } from "./zipFixtures";
 
 function makeJar(name: string, opts: { modId?: string; requiredDeps?: string[]; optionalDeps?: string[]; earlyWindowService?: boolean }): string {
   const zip = new AdmZip();
@@ -51,6 +52,23 @@ describe("scanJarClientSignals", () => {
     expect(sig.selfModId).toBeNull();
     expect(sig.hasEarlyWindowService).toBe(false);
     expect(sig.requiredDeps.size).toBe(0);
+  });
+
+  it("returns inert signals for a jar with duplicated entry names instead of throwing", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+    const p = path.join(dir, "duplicated.jar");
+    fs.writeFileSync(
+      p,
+      dupEntryZip([
+        { name: "META-INF/MANIFEST.MF", data: "Manifest-Version: 1.0\n" },
+        { name: "META-INF/LICENSE.TXT", data: "first copy" },
+        { name: "META-INF/LICENSE.TXT", data: "second copy" },
+        { name: "META-INF/neoforge.mods.toml", data: '[[mods]]\nmodId="shaded"\n' },
+      ])
+    );
+    const sig = scanJarClientSignals(p);
+    expect(sig).toEqual({ selfModId: null, hasEarlyWindowService: false, requiredDeps: new Set() });
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });
 
