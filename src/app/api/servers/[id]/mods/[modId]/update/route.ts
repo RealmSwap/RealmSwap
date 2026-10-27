@@ -3,7 +3,10 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
-import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
+import { SandboxBootError } from "@/lib/runners/sandbox";
+import { testServerBootWithQuarantine } from "@/lib/mods/bootRetry";
+import { dataRoot } from "@/lib/appPaths";
+import path from "path";
 import { resolveModUpdate, UpdateResolutionError } from "@/lib/mods/updateApply";
 import { packOwnedPackageIds } from "@/lib/mods/packInstall";
 import { resolveRemoteModUpdate } from "@/lib/mods/remoteInstallers";
@@ -115,8 +118,17 @@ export async function POST(
     const snapshot = await createSnapshot(serverId, user.id, `Pre-update: ${installation.name}`);
     try {
       await applyUpdate();
-      await testServerBoot(serverId, game);
-
+      const serverRoot = path.join(dataRoot(), "local-servers", serverId);
+      const quarantined = await testServerBootWithQuarantine({
+        serverId, serverRoot, game, warnings,
+      });
+      // Quarantined jars' rows are keyed by jar basename; the updated row
+      // below must survive, so only delete the quarantined ones.
+      for (const name of quarantined) {
+        if (name !== installation.packageId) {
+          await prisma.modInstallation.deleteMany({ where: { serverId, packageId: name.replace(/\.jar$/, "") } });
+        }
+      }
       await prisma.modInstallation.update({
         where: { id: installation.id },
         data: { version: newVersionNumber, updatedAt: new Date(), ...rowPatch },

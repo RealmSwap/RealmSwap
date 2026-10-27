@@ -5,7 +5,8 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
-import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
+import { SandboxBootError } from "@/lib/runners/sandbox";
+import { testServerBootWithQuarantine } from "@/lib/mods/bootRetry";
 import { beginProgress, emitProgress, endProgress } from "@/lib/mods/progress";
 import { downloadFile } from "@/lib/download";
 import {
@@ -260,7 +261,15 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       // 3. Sandbox Test
       console.log(`[Sandbox] Running boot test for ${serverId}`);
       if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the install", current: 0, total: 1 });
-      await testServerBoot(serverId, game);
+      const quarantined = await testServerBootWithQuarantine({
+        serverId, serverRoot, game, warnings,
+        onProgress: (lbl) => { console.log(`[Sandbox] ${lbl}`); if (installId) emitProgress(installId, { label: lbl }); },
+      });
+      // Quarantined jars' install rows are keyed by jar basename — drop them
+      // so the Installed list doesn't resurrect what the boot test removed.
+      for (const name of quarantined) {
+        await prisma.modInstallation.deleteMany({ where: { serverId, packageId: name.replace(/\.jar$/, "") } });
+      }
       if (installId) emitProgress(installId, { current: 1 });
       console.log(`[Sandbox] Boot test passed for ${serverId}`);
 
