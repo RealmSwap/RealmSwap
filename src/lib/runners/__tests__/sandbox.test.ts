@@ -135,11 +135,13 @@ describe("testServerBoot — Minecraft verdicts (fake java on PATH)", () => {
   const SAVED_PATH = process.env.PATH;
   const SAVED_DATA = process.env.GAMEVAULT_DATA_DIR;
   let binDir = "";
+  let emptyBin = "";
   let dataDir = "";
   const serverId = "mc-sandbox";
 
   beforeAll(() => {
     binDir = fs.mkdtempSync(path.join(os.tmpdir(), "fake-java-"));
+    emptyBin = fs.mkdtempSync(path.join(os.tmpdir(), "no-java-"));
     dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "sandbox-data-"));
     fs.mkdirSync(path.join(dataDir, "local-servers", serverId), { recursive: true });
     process.env.GAMEVAULT_DATA_DIR = dataDir;
@@ -179,5 +181,28 @@ describe("testServerBoot — Minecraft verdicts (fake java on PATH)", () => {
   posixOnly("tolerates stack traces on stderr when the boot still reaches Done", async () => {
     fakeJava('echo "java.lang.Exception: harmless warning" 1>&2; echo "Done (2.0s)!"; sleep 30');
     await expect(testServerBoot(serverId, "MINECRAFT")).resolves.toBe(true);
+  });
+
+  it("skips a missing java on a VANILLA server but fails loud on a MODDED one", async () => {
+    // No java anywhere on PATH for this scenario.
+    process.env.PATH = emptyBin;
+    try {
+      // Vanilla (no loader marker): nothing to catch — mods aren't loaded.
+      await expect(testServerBoot("mc-vanilla-noexe", "MINECRAFT")).resolves.toBe(true);
+
+      // Modded (loader marker present): the boot test is the only guard
+      // against client-only mods shipping — a missing runtime must fail
+      // the install loudly, not silently skip it (the v0.5.8 bug class).
+      fs.mkdirSync(path.join(dataDir, "local-servers", "mc-modded-noexe"), { recursive: true });
+      fs.writeFileSync(
+        path.join(dataDir, "local-servers", "mc-modded-noexe", "realmswap-loader.json"),
+        JSON.stringify({ type: "neoforge", loaderVersion: "21.1.95", minecraftVersion: "1.21.1", installedAt: "", launch: { kind: "jar", file: "x.jar" } })
+      );
+      const err = await testServerBoot("mc-modded-noexe", "MINECRAFT").catch((e) => e);
+      expect(err).toBeInstanceOf(SandboxBootError);
+      expect(err.message).toMatch(/No Java runtime was available/);
+    } finally {
+      process.env.PATH = `${binDir}${path.delimiter}${SAVED_PATH}`;
+    }
   });
 });

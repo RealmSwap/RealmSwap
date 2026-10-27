@@ -128,7 +128,10 @@ describe("testServerBootWithQuarantine", () => {
     fs.chmodSync(path.join(serverRoot, "mods"), 0o555);
     try {
       await expect(
-        testServerBootWithQuarantine({ serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings })
+        testServerBootWithQuarantine({
+          serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+          deps: { deleteDelaysMs: [5, 5, 5] },
+        })
       ).rejects.toThrow(/exit code -1/);
     } finally {
       fs.chmodSync(path.join(serverRoot, "mods"), 0o755);
@@ -136,5 +139,36 @@ describe("testServerBootWithQuarantine", () => {
     expect(calls).toBe(1); // no retry boot — it would crash identically
     expect(fs.existsSync(path.join(serverRoot, "mods", "locked-1.0.jar"))).toBe(true);
     expect(warnings.join(" ")).toMatch(/Could not remove 'locked-1\.0\.jar'/);
+    expect(warnings.join(" ")).toMatch(/Boot test: running on/); // the ran-vs-skipped fact
+  });
+
+  it("keeps retrying a locked jar until the lock clears, then boots again", async () => {
+    makeJar(path.join(serverRoot, "mods"), "sticky-1.0.jar", { modId: "sticky" });
+    writeCrashReport("mods/sticky-1.0.jar");
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) throw new SandboxBootError("crashed", "");
+    };
+    const realRm = fs.rmSync.bind(fs);
+    let failures = 0;
+    const rmSpy = vi.spyOn(fs, "rmSync").mockImplementation(((p: fs.PathLike, opts?: fs.RmOptions) => {
+      if (String(p).endsWith("sticky-1.0.jar") && failures < 2) {
+        failures++;
+        throw Object.assign(new Error("EBUSY: resource busy"), { code: "EBUSY" });
+      }
+      return realRm(p, opts);
+    }) as typeof fs.rmSync);
+    try {
+      const removed = await testServerBootWithQuarantine({
+        serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+        deps: { deleteDelaysMs: [5, 5, 5] },
+      });
+      expect(removed).toEqual(["sticky-1.0.jar"]);
+      expect(failures).toBe(2); // the lock cleared on the third attempt
+      expect(calls).toBe(2); // and the retry boot ran
+    } finally {
+      rmSpy.mockRestore();
+    }
   });
 });

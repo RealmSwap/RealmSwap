@@ -84,6 +84,7 @@ vi.mock("@/lib/snapshots", () => ({
   },
 }));
 vi.mock("@/lib/runners/sandbox", () => ({
+  resolveSandboxJava: () => "java",
   testServerBoot: async () => {
     if (bag.bootError) throw bag.bootError;
     return true;

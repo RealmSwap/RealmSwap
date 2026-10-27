@@ -11,10 +11,19 @@
 import fs from "fs";
 import path from "path";
 import { dataRoot } from "@/lib/appPaths";
-import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
+import { testServerBoot, SandboxBootError, resolveSandboxJava } from "@/lib/runners/sandbox";
 import { planClientExclusions, scanJarClientSignals, type ExclusionCandidate } from "@/lib/mods/clientModFilter";
 
 const MAX_QUARANTINE_ROUNDS = 3;
+
+/**
+ * Waits between delete attempts for a jar Windows is holding. Windows AV
+ * scanners can keep a freshly-downloaded, recently-loaded jar locked for
+ * many seconds (seen live on v0.5.9: three attempts over 750ms all failed,
+ * so the client-only mod shipped and the install rolled back without being
+ * able to clear mods/). Injectable in tests; the real schedule spreads ~18s.
+ */
+const DELETE_DELAYS_MS = [250, 500, 1000, 2000, 4000, 2000, 2000, 2000, 2000, 2000, 2000, 2000];
 
 /** Newest crash report in the server dir, or null. Boot tests write these. */
 function newestCrashReport(serverRoot: string): string | null {
@@ -45,19 +54,19 @@ function listModsJarNames(serverRoot: string): string[] {
 }
 
 /**
- * Delete a jar, tolerating the brief locks Windows AV scanners take on
+ * Delete a jar, tolerating the locks Windows AV scanners take on
  * recently-touched files. Returns false when the file survives every attempt
  * — a boot without it is impossible, so the caller must surface the failure
  * instead of retrying into the identical crash.
  */
-async function forceRemoveJar(file: string): Promise<boolean> {
+async function forceRemoveJar(file: string, delays: number[] = DELETE_DELAYS_MS): Promise<boolean> {
   for (let attempt = 0; ; attempt++) {
     try { fs.rmSync(file, { force: true }); } catch {}
     let gone = false;
     try { gone = !fs.existsSync(file); } catch {}
     if (gone) return true;
-    if (attempt >= 2) return false;
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    if (attempt >= delays.length) return false;
+    await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
   }
 }
 
@@ -74,9 +83,20 @@ export async function testServerBootWithQuarantine(args: {
   game: string;
   warnings: string[];
   onProgress?: (label: string) => void;
+  /** Overrides for tests: delete-retry waits and the java-label probe. */
+  deps?: { deleteDelaysMs?: number[]; javaExe?: string };
 }): Promise<string[]> {
   const { serverId, serverRoot, game, warnings, onProgress } = args;
   const removed: string[] = [];
+
+  // Always say which java the verification will run on. The packaged app's
+  // console is invisible, and the v0.5.8 incident (a PATH-only lookup that
+  // silently skipped every boot test) was only diagnosed from screenshots —
+  // this line makes "ran" vs "skipped" a fact in the response itself.
+  const javaExe = args.deps?.javaExe ?? resolveSandboxJava(serverRoot);
+  warnings.push(
+    `Boot test: ${javaExe === "java" ? "running on the system PATH java" : `running on the bundled runtime (${javaExe})`}`
+  );
 
   for (let round = 0; ; round++) {
     try {
@@ -103,10 +123,10 @@ export async function testServerBootWithQuarantine(args: {
       if (excluded.length === 0) throw err;
 
       for (const c of excluded) {
-        if (!(await forceRemoveJar(c.file))) {
+        if (!(await forceRemoveJar(c.file, args.deps?.deleteDelaysMs))) {
           warnings.push(
-            `Could not remove '${path.basename(c.file)}' — the file is locked (often by antivirus). ` +
-              "The boot test will keep failing until that file can be deleted."
+            `Could not remove '${path.basename(c.file)}' — Windows held the file through every retry. ` +
+              "The install cannot be verified while that jar is locked; wait a minute and reinstall the modpack."
           );
           throw err;
         }
