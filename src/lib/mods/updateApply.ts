@@ -12,7 +12,7 @@ import {
 } from "@/lib/mods/modrinth";
 import {
   getCurseForgeModFiles, pickCompatibleCfFile, curseForgeDownloadUrl,
-  collectRequiredCfFiles, getCurseForgeFiles, getCurseForgeMods,
+  collectRequiredCfMods, resolveCompatibleProjectFile, getCurseForgeMods,
 } from "@/lib/mods/curseforge";
 import {
   communityForGame,
@@ -137,11 +137,10 @@ export async function resolveModUpdate(
       throw new UpdateResolutionError(`'${installation.packageId}' is not a CurseForge mod id.`, 404);
     }
     const marker = readLoaderMarker(serverRoot);
+    const mcVersion = detectMinecraftVersion(serverRoot);
+    const loader = marker?.type ?? null;
     const files = await getCurseForgeModFiles(modId);
-    const candidate = pickCompatibleCfFile(files, {
-      mcVersion: detectMinecraftVersion(serverRoot),
-      loader: marker?.type ?? null,
-    });
+    const candidate = pickCompatibleCfFile(files, { mcVersion, loader });
     if (!candidate) {
       throw new UpdateResolutionError(`No compatible CurseForge file found for '${installation.name ?? installation.packageId}'.`, 404);
     }
@@ -153,13 +152,13 @@ export async function resolveModUpdate(
       (await prisma.modInstallation.findMany({ where: { serverId }, select: { packageId: true } }))
         .map((m) => m.packageId)
     );
-    const { order: depFiles, missingFileIds } = await collectRequiredCfFiles(
+    const { order: depFiles, missingProjectIds } = await collectRequiredCfMods(
       candidate,
-      async (fileId) => (await getCurseForgeFiles([fileId]))[0] ?? null,
-      (depModId) => installedModIds.has(depModId.toString())
+      (projectId) => resolveCompatibleProjectFile(projectId, { mcVersion, loader }),
+      (projectId) => installedModIds.has(projectId.toString())
     );
-    const warnings: string[] = missingFileIds.map(
-      (fileId) => `Dependency file ${fileId} could not be resolved on CurseForge — the mod may not work without it.`
+    const warnings: string[] = missingProjectIds.map(
+      (projectId) => `Dependency ${projectId} could not be resolved on CurseForge — the mod may not work without it.`
     );
     const depModIds = Array.from(new Set(depFiles.map((f) => f.modId)));
     const depNames = depModIds.length > 0

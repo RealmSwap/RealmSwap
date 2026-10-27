@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll, beforeEach } from "vitest";
 import {
   curseForgeApiKey, pickCompatibleCfFile, curseForgeDownloadUrl, curseForgeSha1,
-  collectRequiredCfFiles, resolveCfInstall, searchCurseForgeMods,
+  collectRequiredCfMods, resolveCfInstall, searchCurseForgeMods,
   readCurseForgeManifest, cfLoaderRequirement, cfOverridesPrefix, resolveCfPackFiles,
   type CurseForgeFile, type CurseForgeMod,
 } from "../curseforge";
@@ -152,39 +152,40 @@ describe("curseForgeSha1", () => {
   });
 });
 
-describe("collectRequiredCfFiles", () => {
+describe("collectRequiredCfMods", () => {
+  // Dependency edges mirror the LIVE API shape: they reference PROJECT ids.
   const root = cfFile({
     id: 1,
     modId: 1,
     dependencies: [
-      { fileId: 2, relationType: 3 }, // required
-      { fileId: 3, relationType: 2 }, // optional — rides along, never installed
-      { fileId: 9, relationType: 3 }, // required but unresolvable
+      { modId: 2, relationType: 3 }, // required
+      { modId: 3, relationType: 2 }, // optional — rides along, never installed
+      { modId: 9, relationType: 3 }, // required but unresolvable
     ],
   });
-  const depB = cfFile({ id: 2, modId: 2, dependencies: [{ fileId: 4, relationType: 3 }] });
-  const depC = cfFile({ id: 4, modId: 4, dependencies: [{ fileId: 2, relationType: 3 }] }); // cycle back to mod 2
+  const depB = cfFile({ id: 2, modId: 2, dependencies: [{ modId: 4, relationType: 3 }] });
+  const depC = cfFile({ id: 4, modId: 4, dependencies: [{ modId: 2, relationType: 3 }] }); // cycle back to mod 2
   const optionalFile = cfFile({ id: 3, modId: 3 });
 
   it("walks required deps dependency-first, ignoring optional and cycles", async () => {
-    // fileId 9 is required by the root but unresolvable → collected as missing.
-    const { order, missingFileIds } = await collectRequiredCfFiles(
+    // project 9 is required by the root but unresolvable → collected as missing.
+    const { order, missingProjectIds } = await collectRequiredCfMods(
       root,
-      async (fileId) => ({ 2: depB, 4: depC, 3: optionalFile })[fileId] ?? null,
+      async (projectId) => ({ 2: depB, 4: depC, 3: optionalFile })[projectId] ?? null,
       () => false
     );
     expect(order.map((f) => f.modId)).toEqual([2, 4]);
-    expect(missingFileIds).toEqual([9]);
+    expect(missingProjectIds).toEqual([9]);
   });
 
   it("reports unresolvable deps and skips installed mods", async () => {
-    const { order, missingFileIds } = await collectRequiredCfFiles(
+    const { order, missingProjectIds } = await collectRequiredCfMods(
       root,
-      async (fileId) => (fileId === 2 ? depB : null),
-      (modId) => modId === 2
+      async (projectId) => (projectId === 2 ? depB : null),
+      (projectId) => projectId === 2
     );
     expect(order).toEqual([]);
-    expect(missingFileIds).toEqual([9]);
+    expect(missingProjectIds).toEqual([9]);
   });
 });
 

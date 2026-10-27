@@ -6,6 +6,7 @@ import { dataRoot } from "@/lib/appPaths";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { downloadFile } from "@/lib/download";
+import { prisma } from "@/lib/db";
 import { readLoaderMarker } from "@/lib/mods/mcLoaders";
 import {
   getCurseForgeModFiles, getCurseForgeFiles, curseForgeDownloadUrl,
@@ -16,6 +17,7 @@ import {
   detectPackServerMcVersion, PackPreflightError,
 } from "@/lib/mods/packInstall";
 import { beginProgress, emitProgress, endProgress } from "@/lib/mods/progress";
+import { testServerBootWithQuarantine } from "@/lib/mods/bootRetry";
 import fs from "fs";
 import path from "path";
 import { requireLocalServer } from "@/lib/agents/perimeter";
@@ -145,7 +147,17 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
       console.log(`[Sandbox] Running boot test for ${serverId}`);
       if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the install", current: 0, total: 1 });
-      await testServerBoot(serverId, "MINECRAFT");
+      const quarantined = await testServerBootWithQuarantine({
+        serverId, serverRoot, game: "MINECRAFT", warnings,
+        onProgress: (lbl) => { console.log(`[Sandbox] ${lbl}`); if (installId) emitProgress(installId, { label: lbl }); },
+      });
+      if (quarantined.length > 0) {
+        // Quarantined jars' install rows are keyed by jar basename.
+        for (const name of quarantined) {
+          const packageId = name.replace(/\.jar$/, "");
+          await prisma.modInstallation.deleteMany({ where: { serverId, packageId } });
+        }
+      }
       if (installId) emitProgress(installId, { current: 1 });
       console.log(`[Sandbox] Boot test passed for ${serverId}`);
 
@@ -175,6 +187,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       return NextResponse.json({
         error: `Modpack install failed. Safe Rollback completed. Cause: ${installError.message}`,
         ...(installError instanceof SandboxBootError ? { bootOutput: installError.output } : {}),
+        ...(warnings.length ? { warnings } : {}),
       }, { status: 500 });
     }
 

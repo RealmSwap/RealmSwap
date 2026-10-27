@@ -43,9 +43,11 @@ export interface CurseForgeHash {
   algo: number;
 }
 
-/** relationType 3 = required dependency; the reference is a fileId */
+/** relationType 3 = required dependency. The live API references the
+ * dependency's PROJECT id (modId) here — despite older docs saying fileId —
+ * verified against real responses 2026-10-27 (ATM10 probe). */
 export interface CurseForgeFileDependency {
-  fileId: number;
+  modId: number;
   relationType: number;
 }
 
@@ -305,17 +307,19 @@ export async function resolveCfInstall(
 
 /**
  * Walk the REQUIRED dependency graph from a root file and return the dep
- * files that still need installing, dependency-first. `lookup` resolves a
- * fileId to its file (network — injected for tests), `alreadyInstalled`
- * filters by the dep mod's id. Cycle-safe, depth-capped.
+ * files that still need installing, dependency-first. Dependency edges
+ * reference PROJECT ids (see CurseForgeFileDependency), so `lookupProject`
+ * resolves a project to the file that should be installed — the caller
+ * picks the newest file compatible with the server (network, injected for
+ * tests). `alreadyInstalled` filters by project id. Cycle-safe, depth-capped.
  */
-export async function collectRequiredCfFiles(
+export async function collectRequiredCfMods(
   root: CurseForgeFile,
-  lookup: (fileId: number) => CurseForgeFile | null | Promise<CurseForgeFile | null>,
-  alreadyInstalled: (modId: number) => boolean
-): Promise<{ order: CurseForgeFile[]; missingFileIds: number[] }> {
+  lookupProject: (projectId: number) => CurseForgeFile | null | Promise<CurseForgeFile | null>,
+  alreadyInstalled: (projectId: number) => boolean
+): Promise<{ order: CurseForgeFile[]; missingProjectIds: number[] }> {
   const order: CurseForgeFile[] = [];
-  const missingFileIds: number[] = [];
+  const missingProjectIds: number[] = [];
   const seenMods = new Set<number>([root.modId]);
   let queue: CurseForgeFile[] = [root];
   let depth = 0;
@@ -326,14 +330,14 @@ export async function collectRequiredCfFiles(
     for (const file of queue) {
       for (const dep of file.dependencies ?? []) {
         if (dep.relationType !== REQUIRED_DEPENDENCY) continue;
-        const depFile = await lookup(dep.fileId);
+        if (seenMods.has(dep.modId)) continue;
+        seenMods.add(dep.modId);
+        if (alreadyInstalled(dep.modId)) continue;
+        const depFile = await lookupProject(dep.modId);
         if (!depFile) {
-          if (!missingFileIds.includes(dep.fileId)) missingFileIds.push(dep.fileId);
+          if (!missingProjectIds.includes(dep.modId)) missingProjectIds.push(dep.modId);
           continue;
         }
-        if (seenMods.has(depFile.modId)) continue;
-        seenMods.add(depFile.modId);
-        if (alreadyInstalled(depFile.modId)) continue;
         order.push(depFile);
         next.push(depFile);
       }
@@ -341,7 +345,7 @@ export async function collectRequiredCfFiles(
     queue = next;
     depth++;
   }
-  return { order, missingFileIds };
+  return { order, missingProjectIds };
 }
 
 export interface CfManifest {
@@ -437,4 +441,19 @@ export async function resolveCfPackFiles(
   const mods = modIds.length > 0 ? await getCurseForgeMods(modIds, deps) : [];
   const modNames = new Map(mods.map((m) => [m.id, m.name]));
   return { files, modNames, skippedOptional };
+}
+
+/**
+ * Resolve a CurseForge PROJECT to the file worth installing against the
+ * server's Minecraft version and loader. The dependency edges carry project
+ * ids, so dependency resolution goes through this. Null when the project has
+ * no downloadable file matching the constraints.
+ */
+export async function resolveCompatibleProjectFile(
+  projectId: number,
+  opts: { mcVersion?: string | null; loader?: LoaderType | null },
+  deps?: CurseForgeDeps
+): Promise<CurseForgeFile | null> {
+  const files = await getCurseForgeModFiles(projectId, deps);
+  return pickCompatibleCfFile(files, opts);
 }

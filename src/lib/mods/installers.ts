@@ -12,7 +12,7 @@ import {
   collectRequiredDependencies,
 } from "@/lib/mods/modrinth";
 import {
-  resolveCfInstall, collectRequiredCfFiles, curseForgeDownloadUrl, getCurseForgeFiles, getCurseForgeMods,
+  resolveCfInstall, collectRequiredCfMods, resolveCompatibleProjectFile, curseForgeDownloadUrl, getCurseForgeMods,
 } from "@/lib/mods/curseforge";
 import {
   communityForGame, fetchCommunityIndex, findVersionEntry, newestVersion,
@@ -197,22 +197,20 @@ export async function installMinecraftCurseforge(args: {
 
   const candidate = await resolveCfInstall(modId, { mcVersion: gameVersion, loader, displayName: version });
 
-  // Required dependencies first: BFS over CurseForge's fileId graph, skipping
-  // anything already installed. Unresolvable deps warn, not fail.
+  // Required dependencies first: BFS over CurseForge's PROJECT graph (the
+  // API's dependency edges carry modIds), skipping anything already
+  // installed. Unresolvable deps warn, not fail.
   const installedModIds = new Set(
     (await prisma.modInstallation.findMany({ where: { serverId }, select: { packageId: true } }))
       .map((m) => m.packageId)
   );
-  const { order: depFiles, missingFileIds } = await collectRequiredCfFiles(
+  const { order: depFiles, missingProjectIds } = await collectRequiredCfMods(
     candidate.file,
-    async (fileId) => {
-      const files = await getCurseForgeFiles([fileId]);
-      return files[0] ?? null;
-    },
-    (depModId) => installedModIds.has(depModId.toString())
+    (projectId) => resolveCompatibleProjectFile(projectId, { mcVersion: gameVersion, loader }),
+    (projectId) => installedModIds.has(projectId.toString())
   );
-  for (const fileId of missingFileIds) {
-    warnings.push(`Dependency file ${fileId} could not be resolved on CurseForge — the mod may not work without it.`);
+  for (const projectId of missingProjectIds) {
+    warnings.push(`Dependency ${projectId} could not be resolved on CurseForge — the mod may not work without it.`);
   }
   const depModIds = Array.from(new Set(depFiles.map((f) => f.modId)));
   const depNames = depModIds.length > 0 ? new Map((await getCurseForgeMods(depModIds)).map((m) => [m.id, m.name])) : new Map<number, string>();
