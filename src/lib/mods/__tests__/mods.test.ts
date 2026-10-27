@@ -5,7 +5,7 @@ import path from "path";
 import AdmZip from "adm-zip";
 import {
   detectModLoader, detectMinecraftVersion, readLoaderMarker, writeLoaderMarker,
-  javaMajorForMinecraft, pickForgeVersion, forgeArtifact, forgeInstallerUrl,
+  javaMajorForMinecraft, minecraftStartJavaMajor, pickForgeVersion, forgeArtifact, forgeInstallerUrl,
   neoforgeStreamFor, pickNeoforgeVersion, neoforgeInstallerUrl,
   applyLoaderLaunch, findLoaderLaunch, installForgeServer, installNeoForgeServer,
   installQuiltServer,
@@ -83,6 +83,19 @@ describe("javaMajorForMinecraft", () => {
   it("fails open to a modern Java on unparseable versions", () => {
     expect(javaMajorForMinecraft("latest")).toBe(21);
     expect(javaMajorForMinecraft("")).toBe(21);
+  });
+});
+
+describe("minecraftStartJavaMajor", () => {
+  it("follows the loader marker's Minecraft version so Start matches the boot test", () => {
+    expect(minecraftStartJavaMajor({ markerMinecraftVersion: "1.21.1", specMajor: 25 })).toBe(21);
+    expect(minecraftStartJavaMajor({ markerMinecraftVersion: "1.20.1", specMajor: 25 })).toBe(17);
+  });
+
+  it("falls back to the definition's spec (then 25) without a marker", () => {
+    expect(minecraftStartJavaMajor({ markerMinecraftVersion: null, specMajor: 25 })).toBe(25);
+    expect(minecraftStartJavaMajor({ specMajor: 21 })).toBe(21);
+    expect(minecraftStartJavaMajor({})).toBe(25);
   });
 });
 

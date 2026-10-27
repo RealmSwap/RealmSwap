@@ -164,6 +164,22 @@ export function javaMajorForMinecraft(mcVersion: string): number {
   return 21; // 1.20.5+
 }
 
+/**
+ * The Java major a MINECRAFT server start should run on. A loader install
+ * replaces the definition's pinned vanilla jar with the loader's Minecraft
+ * release, so the definition's pinned Java (chosen for that vanilla build)
+ * no longer applies — the loader marker's version wins. This keeps Start on
+ * the same runtime the boot test verified (resolveSandboxJava makes the same
+ * decision from the same marker).
+ */
+export function minecraftStartJavaMajor(args: {
+  markerMinecraftVersion?: string | null;
+  specMajor?: number | null;
+}): number {
+  if (args.markerMinecraftVersion) return javaMajorForMinecraft(args.markerMinecraftVersion);
+  return args.specMajor ?? 25;
+}
+
 /** Preferred Forge build for a Minecraft version from the promotions map (recommended > latest). */
 export function pickForgeVersion(
   promos: Record<string, string>,
