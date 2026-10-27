@@ -4,14 +4,19 @@ import os from "os";
 import path from "path";
 import AdmZip from "adm-zip";
 import { createHash } from "crypto";
-import { planModpackFromZip, applyModpackPlan, PackPreflightError, type ModpackPlan } from "../packInstall";
+import { planModpackFromZip, applyModpackPlan, retireReplacedPackMods, PackPreflightError, type ModpackPlan } from "../packInstall";
 import { dupEntryZip, dupEntryJarBytes } from "./zipFixtures";
 
 const sha1Of = (buf: Buffer) => createHash("sha1").update(buf).digest("hex");
 
 const prismaCalls: any[] = [];
+// The previous InstalledModpack row a retirement test stages for findUnique.
+let previousPackRow: { packageIds: string } | null = null;
 vi.mock("@/lib/db", () => ({
   prisma: {
+    installedModpack: {
+      findUnique: async () => previousPackRow,
+    },
     modInstallation: {
       findMany: async () => [],
       upsert: async (args: any) => {
@@ -369,5 +374,61 @@ describe("applyModpackPlan — progress events", () => {
         progress: () => { throw new Error("ui gone"); },
       })
     ).resolves.toMatchObject({ installedCount: 0 });
+  });
+});
+
+describe("retireReplacedPackMods", () => {
+  let root = "";
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), "pack-retire-"));
+    fs.mkdirSync(path.join(root, "mods"), { recursive: true });
+    prismaCalls.length = 0;
+    previousPackRow = null;
+  });
+  afterEach(() => {
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it("removes old-pack jars and rows the new plan dropped", async () => {
+    previousPackRow = { packageIds: JSON.stringify(["123", "456"]) };
+    fs.writeFileSync(path.join(root, "mods", "456.jar"), Buffer.from("old pack jar, dropped in the new version"));
+    const warnings: string[] = [];
+    const retired = await retireReplacedPackMods({
+      serverId: "s1", serverRoot: root,
+      plan: manualPlan({}),
+      result: { installedCount: 1, clientOnlyCount: 0, overridesCount: 0, installedPackageIds: ["123"] },
+      warnings,
+    });
+    expect(retired).toBe(1);
+    expect(fs.existsSync(path.join(root, "mods", "456.jar"))).toBe(false);
+    expect(prismaCalls.filter((c) => c.where?.packageId === "456")).toHaveLength(1);
+    expect(prismaCalls.filter((c) => c.where?.packageId === "123")).toHaveLength(0);
+    expect(warnings.join(" ")).toContain("not in this pack version");
+  });
+
+  it("never touches jars outside the previous pack's recorded set", async () => {
+    previousPackRow = null; // no previous pack row: single installs stay safe
+    fs.writeFileSync(path.join(root, "mods", "999.jar"), Buffer.from("user-installed"));
+    const retired = await retireReplacedPackMods({
+      serverId: "s1", serverRoot: root,
+      plan: manualPlan({}),
+      result: { installedCount: 1, clientOnlyCount: 0, overridesCount: 0, installedPackageIds: [] },
+      warnings: [],
+    });
+    expect(retired).toBe(0);
+    expect(fs.existsSync(path.join(root, "mods", "999.jar"))).toBe(true);
+  });
+
+  it("still clears orphan rows for old-pack ids already gone from disk", async () => {
+    previousPackRow = { packageIds: JSON.stringify(["789"]) };
+    const retired = await retireReplacedPackMods({
+      serverId: "s1", serverRoot: root,
+      plan: manualPlan({}),
+      result: { installedCount: 0, clientOnlyCount: 0, overridesCount: 0, installedPackageIds: [] },
+      warnings: [],
+    });
+    expect(retired).toBe(1);
+    expect(prismaCalls.filter((c) => c.where?.packageId === "789")).toHaveLength(1);
   });
 });

@@ -70,6 +70,121 @@ async function forceRemoveJar(file: string, delays: number[] = DELETE_DELAYS_MS)
   }
 }
 
+/** Evidence, in the crash report itself, that the blamed mod is client-only. */
+const CLIENT_DIST_EVIDENCE = /invalid dist/i;
+
+/**
+ * Start-failure self-heal for Minecraft. The boot-retry quarantine above only
+ * runs inside install flows; a jar that reaches mods/ by any other route —
+ * leftover from an older failed attempt, dropped in by hand, a dependent of
+ * something that was removed — crashes every Start instead. On a crash whose
+ * report names a mod file AND shows client-only evidence ("invalid dist" in
+ * the report, or an earlywindow service in the jar itself), move the blamed
+ * jar plus everything that requires it out of mods/.
+ *
+ * All-or-nothing: jars are MOVED out of mods/ into a quarantine folder (not
+ * deleted — the user can restore or delete the folder). If any jar in the
+ * closure survives Windows' locks mid-move, everything already moved is
+ * moved back, so a half-closure — which would crash differently next boot —
+ * can never be left behind.
+ */
+export async function quarantineFromStartCrash(args: {
+  serverRoot: string;
+  deps?: { renameDelaysMs?: number[] };
+}): Promise<{ removed: string[]; warnings: string[]; quarantineDir?: string }> {
+  const warnings: string[] = [];
+  const reportPath = newestCrashReport(args.serverRoot);
+  if (!reportPath) return { removed: [], warnings };
+  // Only a report written by THIS crash counts. mods/ holds the newest
+  // report's file otherwise — quarantining off a stale report would delete
+  // mods over a crash they had nothing to do with.
+  let reportAgeMs = Infinity;
+  try {
+    reportAgeMs = Date.now() - fs.statSync(reportPath).mtimeMs;
+  } catch {}
+  if (reportAgeMs > 5 * 60 * 1000) return { removed: [], warnings };
+  const report = (() => {
+    try {
+      return fs.readFileSync(reportPath, "utf8");
+    } catch {
+      return "";
+    }
+  })();
+  const blamed = blamedModFile(report);
+  if (!blamed) return { removed: [], warnings };
+
+  const candidates: ExclusionCandidate[] = listModsJarNames(args.serverRoot).map((name) => ({
+    file: path.join(args.serverRoot, "mods", name),
+    signals: scanJarClientSignals(path.join(args.serverRoot, "mods", name)),
+  }));
+  const seed = candidates.find((c) => path.basename(c.file) === blamed);
+  if (!seed) return { removed: [], warnings };
+  if (!CLIENT_DIST_EVIDENCE.test(report) && !seed.signals.hasEarlyWindowService) {
+    return { removed: [], warnings };
+  }
+
+  const { excluded, reasons } = planClientExclusions(candidates, new Set([seed.file]));
+  if (excluded.length === 0) return { removed: [], warnings };
+
+  // Blamed jar first so a failure aborts before any dependent moves.
+  const ordered = [
+    ...excluded.filter((c) => path.basename(c.file) === blamed),
+    ...excluded.filter((c) => path.basename(c.file) !== blamed),
+  ];
+
+  const renameWithRetry = async (from: string, to: string): Promise<boolean> => {
+    const delays = args.deps?.renameDelaysMs ?? [250, 500, 1000, 2000, 4000, 2000, 2000];
+    for (let attempt = 0; ; attempt++) {
+      try {
+        fs.mkdirSync(path.dirname(to), { recursive: true });
+        fs.renameSync(from, to);
+        return true;
+      } catch {}
+      let movedAnyway = false;
+      try {
+        movedAnyway = !fs.existsSync(from) && fs.existsSync(to);
+      } catch {}
+      if (movedAnyway) return true;
+      if (attempt >= delays.length) return false;
+      await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
+    }
+  };
+
+  const quarantineDir = path.join(args.serverRoot, `mods-quarantine-${new Date().toISOString().replace(/[:.]/g, "-")}`);
+  const moved: Array<{ from: string; to: string }> = [];
+  const restoreMoved = () => {
+    for (const m of moved) {
+      try {
+        fs.renameSync(m.to, m.from);
+      } catch {
+        warnings.push(`Could not restore '${path.basename(m.to)}' from the quarantine folder — move it back into mods/ by hand.`);
+      }
+    }
+  };
+
+  for (const c of ordered) {
+    const to = path.join(quarantineDir, path.basename(c.file));
+    if (!(await renameWithRetry(c.file, to))) {
+      warnings.push(
+        `Could not move '${path.basename(c.file)}' out of mods/ — Windows held the file through every retry. ` +
+          "The crash will repeat until that jar is removed."
+      );
+      restoreMoved();
+      return { removed: [], warnings };
+    }
+    moved.push({ from: c.file, to });
+  }
+
+  const removed = ordered.map((c) => path.basename(c.file));
+  for (const c of ordered) {
+    warnings.push(
+      `Moved '${path.basename(c.file)}' out of mods/ — ${reasons.get(c.file) ?? "client-only mod blamed by the crash report"}.`
+    );
+  }
+  warnings.push(`The jars are kept in '${quarantineDir}' — delete that folder once the server is happy.`);
+  return { removed, warnings, quarantineDir };
+}
+
 /**
  * Run the boot test; when FML names a mod in a crash report, quarantine it
  * (+ its required dependents within mods/) and retry. Throws the original

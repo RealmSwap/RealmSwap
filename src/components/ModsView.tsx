@@ -1864,7 +1864,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                       {!staleOnly && updatesInfo.updates.length > 0 && (
                         <button
                           onClick={handleUpdateAll}
-                          disabled={updateAllBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                          disabled={updateAllBusy}
                           className="px-3 py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 text-sky-200 font-bold transition-colors disabled:opacity-50"
                           title="Updates every stale mod in one snapshot window: sequential updates, one sandbox boot test, full rollback on any failure."
                         >
@@ -1890,7 +1890,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                       </span>
                       <button
                         onClick={() => handleInstallLoader(loaderInfo.loader!.type as "fabric" | "quilt" | "forge" | "neoforge" | "tmodloader")}
-                        disabled={loaderBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                        disabled={loaderBusy}
                         className="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 hover:bg-emerald-500/30 text-emerald-200 font-bold transition-colors disabled:opacity-50"
                         title="Snapshot-backed reinstall of the newest loader version. To switch loaders, restore a pre-loader snapshot (Backups) first."
                       >
@@ -1907,7 +1907,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                           <button
                             key={l}
                             onClick={() => handleInstallLoader(l)}
-                            disabled={loaderBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                            disabled={loaderBusy}
                             className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-amber-200 font-bold transition-colors disabled:opacity-50"
                           >
                             Install {LOADER_LABELS[l]}
@@ -1932,7 +1932,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                       </span>
                       <button
                         onClick={() => handleInstallLoader("tmodloader")}
-                        disabled={loaderBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                        disabled={loaderBusy}
                         className="px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 hover:bg-amber-500/30 text-amber-200 font-bold transition-colors disabled:opacity-50"
                       >
                         {loaderBusy ? "Installing…" : "Install tModLoader"}
@@ -2015,7 +2015,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                     {packUpdatable && (
                       <button
                         onClick={handleUpdatePack}
-                        disabled={updatePackBusy || selectedServer.status === "RUNNING" || selectedServer.status === "STARTING"}
+                        disabled={updatePackBusy}
                         className="px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/40 hover:bg-violet-500/30 text-violet-200 font-bold transition-colors disabled:opacity-50"
                         title="Resolves the pack's newest CurseForge file, re-applies it in one snapshot window, and removes mods that left the new manifest."
                       >
@@ -2108,7 +2108,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                             {mod.provider === "modrinth" || mod.provider === "thunderstore" || mod.provider === "curseforge" || mod.provider === "umod" || (mod.provider === "workshop" && game === "TERRARIA") ? (
                               <button
                                 onClick={() => handleUpdateMod(mod)}
-                                disabled={loading || updatingModId === mod.id || selectedServer.status === "RUNNING"}
+                                disabled={loading || updatingModId === mod.id}
                                 className="px-3 py-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-xs font-bold text-sky-400 transition-colors flex items-center gap-1.5 disabled:opacity-50"
                                 title="Check for and install a newer version"
                               >
@@ -2129,7 +2129,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
                             )}
                             <button
                               onClick={() => handleDeleteMod(mod)}
-                              disabled={loading || selectedServer.status === "RUNNING"}
+                              disabled={loading}
                               className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-xs font-bold text-red-500 transition-colors flex items-center gap-1.5 disabled:opacity-50"
                             >
                               <Trash className="w-3 h-3" />
@@ -2599,7 +2599,12 @@ function ModCard({
                 kind: mod.kind,
               });
             }}
-            disabled={loading || serverStatus === "RUNNING"}
+            disabled={loading}
+            title={
+              serverStatus === "RUNNING" || serverStatus === "STARTING"
+                ? "The server is running — installing will ask you to stop it first."
+                : undefined
+            }
             className="px-3 py-1.5 rounded-lg bg-accentPurple hover:bg-accentPurpleHover disabled:bg-accentPurple/50 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors flex items-center gap-1.5"
           >
             <Download className="w-3.5 h-3.5" />

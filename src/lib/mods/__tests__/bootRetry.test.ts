@@ -3,7 +3,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import AdmZip from "adm-zip";
-import { testServerBootWithQuarantine } from "../bootRetry";
+import { testServerBootWithQuarantine, quarantineFromStartCrash } from "../bootRetry";
 import { SandboxBootError } from "@/lib/runners/sandbox";
 
 // testServerBoot is THE boundary here — the sandbox spawns real processes.
@@ -169,6 +169,98 @@ describe("testServerBootWithQuarantine", () => {
       expect(calls).toBe(2); // and the retry boot ran
     } finally {
       rmSpy.mockRestore();
+    }
+  });
+});
+
+describe("quarantineFromStartCrash", () => {
+  let dataDir = "";
+  let serverRoot = "";
+
+  beforeAll(() => {
+    dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "startcrash-"));
+    process.env.GAMEVAULT_DATA_DIR = dataDir;
+  });
+  afterAll(() => {
+    delete process.env.GAMEVAULT_DATA_DIR;
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  beforeEach(() => {
+    serverRoot = path.join(dataDir, "local-servers", "srv" + Math.random().toString(36).slice(2, 8));
+    fs.mkdirSync(path.join(serverRoot, "mods"), { recursive: true });
+    fs.mkdirSync(path.join(serverRoot, "crash-reports"), { recursive: true });
+  });
+
+  function writeReport(body: string, ageMs = 0) {
+    const p = path.join(serverRoot, "crash-reports", "crash-2026-10-27_00.00.00-fml.txt");
+    fs.writeFileSync(p, body);
+    if (ageMs > 0) {
+      const past = new Date(Date.now() - ageMs);
+      fs.utimesSync(p, past, past);
+    }
+  }
+
+  it("moves the blamed client-only jar plus required dependents out of mods/ on dist evidence", async () => {
+    makeJar(path.join(serverRoot, "mods"), "dme-1.0.jar", { modId: "darkmodeeverywhere" });
+    makeJar(path.join(serverRoot, "mods"), "needs-dme-1.0.jar", { modId: "needsdme", requiredDeps: ["darkmodeeverywhere"] });
+    makeJar(path.join(serverRoot, "mods"), "unrelated-1.0.jar", { modId: "unrelated" });
+    writeReport("-- Mod loading issue for: dme --\n\tMod file: mods/dme-1.0.jar\n\tinvalid dist DEDICATED_SERVER\n");
+
+    const { removed, warnings, quarantineDir } = await quarantineFromStartCrash({ serverRoot, deps: { renameDelaysMs: [5, 5] } });
+    expect(removed.sort()).toEqual(["dme-1.0.jar", "needs-dme-1.0.jar"]);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "unrelated-1.0.jar"))).toBe(true);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "dme-1.0.jar"))).toBe(false);
+    expect(fs.existsSync(path.join(quarantineDir!, "dme-1.0.jar"))).toBe(true);
+    expect(warnings.join(" ")).toContain("Moved");
+  });
+
+  it("leaves mods alone when the crash names a jar without client-only evidence", async () => {
+    makeJar(path.join(serverRoot, "mods"), "servermod-1.0.jar", { modId: "servermod" });
+    writeReport("-- Mod loading issue for: servermod --\n\tMod file: mods/servermod-1.0.jar\n\tFailure: NullPointer\n");
+
+    const { removed } = await quarantineFromStartCrash({ serverRoot });
+    expect(removed).toEqual([]);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "servermod-1.0.jar"))).toBe(true);
+  });
+
+  it("ignores a stale crash report left by an earlier crash", async () => {
+    makeJar(path.join(serverRoot, "mods"), "dme-1.0.jar", { modId: "darkmodeeverywhere" });
+    writeReport("-- Mod loading issue --\n\tMod file: mods/dme-1.0.jar\n\tinvalid dist DEDICATED_SERVER\n", 10 * 60 * 1000);
+
+    const { removed } = await quarantineFromStartCrash({ serverRoot });
+    expect(removed).toEqual([]);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "dme-1.0.jar"))).toBe(true);
+  });
+
+  it("acts on an earlywindow jar even when the report text has no dist error", async () => {
+    const zip = new AdmZip();
+    zip.addFile("META-INF/services/net.neoforged.neoforgespi.earlywindow.ImmediateWindowProvider", Buffer.from("x"));
+    zip.writeZip(path.join(serverRoot, "mods", "earlywindow-1.0.jar"));
+    writeReport("-- Mod loading issue --\n\tMod file: mods/earlywindow-1.0.jar\n\tClassNotFoundException: org.lwjgl.Version\n");
+
+    const { removed } = await quarantineFromStartCrash({ serverRoot });
+    expect(removed).toEqual(["earlywindow-1.0.jar"]);
+  });
+
+  it("restores everything when one jar in the closure is locked (all-or-nothing)", async () => {
+    makeJar(path.join(serverRoot, "mods"), "dme-1.0.jar", { modId: "darkmodeeverywhere" });
+    makeJar(path.join(serverRoot, "mods"), "needs-dme-1.0.jar", { modId: "needsdme", requiredDeps: ["darkmodeeverywhere"] });
+    writeReport("-- Mod loading issue --\n\tMod file: mods/dme-1.0.jar\n\tinvalid dist DEDICATED_SERVER\n");
+
+    const realRename = fs.renameSync.bind(fs);
+    const renameSpy = vi.spyOn(fs, "renameSync").mockImplementation(((from: fs.PathLike, to: fs.PathLike) => {
+      if (String(to).includes("needs-dme-1.0.jar")) throw Object.assign(new Error("EBUSY"), { code: "EBUSY" });
+      return realRename(from, to);
+    }) as typeof fs.renameSync);
+    try {
+      const { removed, warnings } = await quarantineFromStartCrash({ serverRoot, deps: { renameDelaysMs: [5, 5] } });
+      expect(removed).toEqual([]);
+      expect(fs.existsSync(path.join(serverRoot, "mods", "dme-1.0.jar"))).toBe(true);
+      expect(fs.existsSync(path.join(serverRoot, "mods", "needs-dme-1.0.jar"))).toBe(true);
+      expect(warnings.join(" ")).toContain("Could not move");
+    } finally {
+      renameSpy.mockRestore();
     }
   });
 });

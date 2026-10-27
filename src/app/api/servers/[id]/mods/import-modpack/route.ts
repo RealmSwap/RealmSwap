@@ -8,7 +8,7 @@ import { prisma } from "@/lib/db";
 import { readLoaderMarker } from "@/lib/mods/mcLoaders";
 import {
   planModpackFromZip, applyModpackPlan, packResultMessage, auditPackInstall, recordInstalledModpack,
-  detectPackServerMcVersion, PackPreflightError,
+  detectPackServerMcVersion, retireReplacedPackMods, PackPreflightError,
 } from "@/lib/mods/packInstall";
 import { beginProgress, emitProgress, endProgress } from "@/lib/mods/progress";
 import { testServerBootWithQuarantine } from "@/lib/mods/bootRetry";
@@ -91,6 +91,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
       // Sandbox Test
       console.log(`[Sandbox] Running boot test for ${serverId}`);
+      await retireReplacedPackMods({ serverId, serverRoot, plan, result, warnings });
       if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the install", current: 0, total: 1 });
       const quarantined = await testServerBootWithQuarantine({
         serverId, serverRoot, game: "MINECRAFT", warnings,
