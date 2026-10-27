@@ -39,6 +39,12 @@ export async function DELETE(
       return await uninstallOnAgentNode(access.server, game, modId, user.id);
     }
     requireLocalServer(access.server, "Mod uninstalls");
+    // Matches the other mod-mutation routes: files are held open while the
+    // server runs (a Windows delete silently no-ops or half-applies), so the
+    // UI's click-through surfaces this message instead of a dead button.
+    if (access.server.status === "RUNNING" || access.server.status === "STARTING") {
+      return NextResponse.json({ error: "Stop the server before removing mods." }, { status: 400 });
+    }
 
     // Find the installation record
     const installation = await prisma.modInstallation.findFirst({

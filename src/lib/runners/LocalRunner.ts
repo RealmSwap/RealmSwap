@@ -22,6 +22,7 @@ import { tmlMarkerPath, tmlLaunchArgs, rewriteWorldArgForTml } from "../mods/tml
 import { ensureJava, parseRequiredJavaMajor } from "../runtimes/javaRuntime";
 import { applyConfigFiles } from "../definitions/applyConfigFiles";
 import { readLoaderMarker, applyLoaderLaunch } from "../mods/mcLoaders";
+import { quarantineFromStartCrash } from "../mods/bootRetry";
 import { parseWindroseInviteCode } from "../definitions/windrose";
 import type { GameDefinitionSpec } from "../definitions/types";
 import { setProgress, clearProgress, computePercent } from "../downloadProgress";
@@ -373,12 +374,24 @@ function waitForReadiness(
     }, 5000);
   }
 
-  // 3. Fallback timeout
-  const fallbackMs = (!readyPattern && tcpPorts.length === 0) ? 10000 : 5 * 60 * 1000;
-  timeoutId = setTimeout(() => {
-    if (isReady) return;
-    markReady(`${fallbackMs / 1000}-second fallback timeout reached`);
-  }, fallbackMs);
+  // 3. Fallback timeout — ONLY for games with no readiness evidence at all
+  // (no log pattern, no TCP port): after 10s assume the server is up. Games
+  // with evidence never flip on a timer: a heavy modpack can outlast any
+  // fixed window before it binds its port, and the old blind 5-minute flip
+  // reported "online" while nothing was listening yet (the client saw
+  // "Connection refused: getsockopt"). Honest states instead: STARTING until
+  // the port really accepts connections, CRASHED when the process exits.
+  const hasReadinessEvidence = !!readyPattern || tcpPorts.length > 0;
+  if (hasReadinessEvidence) {
+    logWriter(
+      `[Readiness Check] Waiting for ${readyPattern ? `log pattern /${launch.readyPattern}/` : `TCP port ${tcpPorts[0]} to accept connections`} (no blind timeout)…`
+    );
+  } else {
+    timeoutId = setTimeout(() => {
+      if (isReady) return;
+      markReady("10-second fallback timeout reached");
+    }, 10000);
+  }
 }
 
 // Main: Start a local game server
@@ -402,8 +415,9 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     throw new Error("Server record not found in database.");
   }
 
-  // UPnP & Public WAN IP Setup
-  let currentIp = "127.0.0.1";
+  // UPnP & Public WAN IP Setup. Null until something honest is resolved —
+  // loopback is the last-resort fallback, never a starting assumption.
+  let currentIp: string | null = null;
 
   // 1. Try to query public WAN IP address so they always get a shareable address
   try {
@@ -445,7 +459,9 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
   // The public IP is only honest when the router actually forwards to this
   // machine. Without a mapping (CGNAT, strict router) friends can't reach it,
   // so advertise the LAN address instead of a WAN address that dead-ends.
-  if (!upnpMapped && currentIp !== "127.0.0.1") {
+  // This runs regardless of whether the public lookup succeeded: skipping it
+  // on lookup failure left hosts advertising 127.0.0.1 to their own LAN.
+  if (!upnpMapped) {
     const lanIp = getLanIP();
     if (lanIp) {
       logWriter(`[IP Resolver] No router port mapping — advertising the LAN address ${lanIp}; the public IP would be unreachable from the internet.`);
@@ -453,6 +469,10 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     } else {
       currentIp = "127.0.0.1";
     }
+  } else if (!currentIp) {
+    // Router mapped the port, but the WAN lookup failed — loopback is the
+    // only address we actually know is right.
+    currentIp = "127.0.0.1";
   }
 
   // 3. Install if needed
@@ -686,7 +706,7 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     data: {
       status: "STARTING",
       pid: child.pid,
-      ipAddress: currentIp,
+      ipAddress: currentIp ?? "127.0.0.1",
       cpuUsage: 0,
       memoryUsage: 0,
     },
@@ -774,6 +794,46 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
         clearStatsHistory(serverId);
         startLocalServer(serverId, serverRec.game, serverRec.ramAllocation).catch((e: any) =>
           appendLog(serverId, `[Java] Retry after version detection failed: ${e.message}`)
+        );
+        return;
+      }
+    }
+
+    // Client-only mod self-heal (mirrors the Java self-heal above): a jar
+    // that reached mods/ outside an install flow — leftover from an older
+    // failed attempt, dropped in by hand, a dependent of something removed —
+    // crashes every Start. When the crash report blames a mod file with
+    // client-only evidence, remove it (+ everything that requires it) and
+    // relaunch instead of burning the auto-restart budget on the same crash.
+    if (!wasIntentional && isCrash && serverRec.game.toUpperCase() === "MINECRAFT") {
+      const healed = await quarantineFromStartCrash({ serverRoot: baseDir }).catch(() => null);
+      if (healed && healed.removed.length > 0) {
+        for (const w of healed.warnings) appendLog(serverId, w);
+        appendLog(serverId, `[Mod Quarantine] Moved ${healed.removed.join(", ")} out of mods/ — relaunching without them.`);
+        await prisma.activityLog.create({
+          data: {
+            userId: serverRec.userId,
+            serverId,
+            action: "QUARANTINE_MOD",
+            details: `Server '${serverRec.name}' crashed on client-only mod(s) ${healed.removed.join(", ")}. They were moved out of mods/ (kept in the server's quarantine folder) and the server is restarting.`,
+          },
+        }).catch(() => {});
+        import("../notifications").then(({ sendNotification }) => {
+          sendNotification(
+            serverRec.userId,
+            "🧹 Client-only mods moved out",
+            `Your server '${serverRec.name}' crashed on client-only mod(s): ${healed.removed.join(", ")}. They were moved out of mods/ and the server is restarting.`,
+            { serverId }
+          );
+        }).catch(err => console.error("Failed to load notifications module:", err));
+        await prisma.server.update({
+          where: { id: serverId },
+          data: { status: "STARTING", pid: null, cpuUsage: 0, memoryUsage: 0 },
+        }).catch((e: any) => appendLog(serverId, `[Mod Quarantine] DB status update failed: ${e.message}`));
+        serverEventBus.emit("status_update", { serverId, status: "STARTING" });
+        clearStatsHistory(serverId);
+        startLocalServer(serverId, serverRec.game, serverRec.ramAllocation).catch((e: any) =>
+          appendLog(serverId, `[Mod Quarantine] Relaunch failed: ${e.message}`)
         );
         return;
       }

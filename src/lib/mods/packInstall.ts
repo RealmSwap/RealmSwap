@@ -393,6 +393,56 @@ export async function applyModpackPlan(args: {
   };
 }
 
+/**
+ * Retire mods the server's PREVIOUS pack install owned that this plan no
+ * longer includes. An install that replaces the pack (one-click reinstall,
+ * manual import over an existing pack) otherwise leaves the old version's
+ * jars in mods/ — zombie jars that crash the boot test and every later
+ * Start. Scoped to the packageIds recorded on the old InstalledModpack row,
+ * so mods the user installed individually are never touched. update-pack
+ * carries its own copy of this logic inline (its old row is already loaded).
+ * Runs inside the snapshot window: a rollback brings removed jars back, and
+ * the retirement lands before the boot test verifies the new pack.
+ */
+export async function retireReplacedPackMods(args: {
+  serverId: string;
+  serverRoot: string;
+  plan: ModpackPlan;
+  result: PackApplyResult;
+  warnings: string[];
+}): Promise<number> {
+  const { serverId, serverRoot, plan, result, warnings } = args;
+  const previous = await prisma.installedModpack.findUnique({ where: { serverId } });
+  if (!previous?.packageIds) return 0;
+  const oldIds: string[] = (() => {
+    try {
+      const parsed = JSON.parse(previous.packageIds);
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      return [];
+    }
+  })();
+
+  const newIds = new Set(result.installedPackageIds);
+  const provider = plan.kind === "curseforge" ? "curseforge" : "modrinth";
+  let retired = 0;
+  for (const packageId of oldIds) {
+    if (newIds.has(packageId)) continue;
+    const jarPath = safeJoin(path.join(serverRoot, "mods"), `${packageId}.jar`);
+    try {
+      fs.rmSync(jarPath, { force: true });
+    } catch {}
+    await prisma.modInstallation.deleteMany({ where: { serverId, provider, packageId } });
+    retired++;
+  }
+  if (retired > 0) {
+    warnings.push(
+      `${retired} mod(s) from the previous pack install are not in this pack version and were removed.`
+    );
+  }
+  return retired;
+}
+
 /** Shared response copy for both pack routes. */
 export function packResultMessage(args: {
   plan: ModpackPlan;
