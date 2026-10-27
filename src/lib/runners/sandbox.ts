@@ -191,10 +191,21 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
     });
 
     proc.on("error", (err) => {
-      // Java not installed / not on PATH: skip the test like a missing exe —
-      // boot testing must never block an install that may still work.
+      // Executable missing: on a VANILLA Minecraft server skip the test —
+      // nothing to catch, mods aren't loaded. On a MODDED server the boot
+      // test is the only thing standing between a client-only mod and the
+      // player's first start, so fail loudly instead of silently shipping
+      // the install (the v0.5.8 failure class). Non-Minecraft games keep
+      // the skip.
       if ((err as any)?.code === "ENOENT") {
-        console.log("[Sandbox] java not found on PATH. Skipping Minecraft boot test.");
+        if (isMinecraft && readLoaderMarker(serverDir)) {
+          fail(
+            "No Java runtime was available for the boot test (neither the bundled runtime nor PATH java). " +
+              "Reinstall the loader from the Mods tab — that provisions the bundled runtime — then reinstall this pack."
+          );
+          return;
+        }
+        console.log("[Sandbox] Server executable not found. Skipping boot test.");
         settled = true;
         resolve(true);
         return;
