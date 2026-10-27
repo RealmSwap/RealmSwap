@@ -5,6 +5,7 @@ import path from "path";
 import AdmZip from "adm-zip";
 import { testServerBootWithQuarantine, quarantineFromStartCrash } from "../bootRetry";
 import { SandboxBootError } from "@/lib/runners/sandbox";
+import { fetchLoaderBuild } from "@/lib/mods/curseforge";
 
 // testServerBoot is THE boundary here — the sandbox spawns real processes.
 let bootBehavior: () => void = () => {};
@@ -13,6 +14,25 @@ vi.mock("@/lib/runners/sandbox", async (importOriginal) => ({
   testServerBoot: async () => {
     bootBehavior();
   },
+}));
+
+// Version-range bumps resolve against CurseForge; the fixture store decides
+// which projects ship a replacement build.
+const cfBag = vi.hoisted(() => ({ builds: new Map<number, { id: number; displayName?: string; fileName?: string } | null>() }));
+vi.mock("@/lib/mods/curseforge", () => ({
+  fetchLoaderBuild: vi.fn(async (modId: number) => cfBag.builds.get(modId) ?? null),
+  curseForgeDownloadUrl: (f: { id: number }) => `cf://files/${f.id}`,
+}));
+vi.mock("@/lib/download", () => ({
+  downloadFile: vi.fn(async (_url: string, dest: string) => {
+    const AdmZip = (await import("adm-zip")).default;
+    const zip = new AdmZip();
+    zip.addFile(
+      "META-INF/neoforge.mods.toml",
+      Buffer.from('[[mods]]\nmodId="modern_industrialization"\nversion="2.5.11"\n')
+    );
+    zip.writeZip(dest);
+  }),
 }));
 
 vi.mock("@/lib/appPaths", () => ({
@@ -50,6 +70,8 @@ describe("testServerBootWithQuarantine", () => {
     fs.mkdirSync(path.join(serverRoot, "mods"), { recursive: true });
     fs.mkdirSync(path.join(serverRoot, "crash-reports"), { recursive: true });
     bootBehavior = () => {};
+    vi.mocked(fetchLoaderBuild).mockClear();
+    cfBag.builds.clear();
   });
 
   const warnings: string[] = [];
@@ -110,6 +132,86 @@ describe("testServerBootWithQuarantine", () => {
       "322506.jar", "385587.jar", "431203.jar", "627557.jar", "darkmode-1.0.jar",
     ]);
     expect(calls).toBe(2); // one quarantine round cleared all five
+  });
+
+  it("quarantines a mod FML blames for a missing language provider", async () => {
+    makeJar(path.join(serverRoot, "mods"), "282837.jar", { modId: "scalamod" });
+    makeJar(path.join(serverRoot, "mods"), "plain-1.0.jar", { modId: "plain" });
+    fs.writeFileSync(
+      path.join(serverRoot, "crash-reports", "crash-2026-10-27_00.00.00-fml.txt"),
+      "-- MOD loading --\n\tMod File C:\\data\\mods\\282837.jar needs language provider kotori_scala:3.3.1 or above, 1 or above to load\n"
+    );
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) throw new SandboxBootError("crashed", "");
+    };
+
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    expect(removed).toEqual(["282837.jar"]);
+    expect(calls).toBe(2);
+  });
+
+  it("bumps an out-of-range dependency from the same project and boots", async () => {
+    makeJar(path.join(serverRoot, "mods"), "1067672.jar", { modId: "tesseract_api", requiredDeps: ["modern_industrialization"] });
+    makeJar(path.join(serverRoot, "mods"), "405388.jar", { modId: "modern_industrialization" });
+    fs.writeFileSync(
+      path.join(serverRoot, "realmswap-loader.json"),
+      JSON.stringify({ type: "neoforge", loaderVersion: "21.1.259", minecraftVersion: "1.21.1" })
+    );
+    fs.writeFileSync(
+      path.join(serverRoot, "crash-reports", "crash-2026-10-27_00.00.00-fml.txt"),
+      "Error during pre-loading phase: Mod tesseract_api only supports modern_industrialization 2.5.11- or above, and below 2.6-\n"
+    );
+    cfBag.builds.set(405388, { id: 9273385, displayName: "Modern Industrialization v2.5.11" });
+
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) throw new SandboxBootError("crashed", "");
+    };
+
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    expect(removed).toEqual([]);
+    expect(calls).toBe(2);
+    expect(vi.mocked(fetchLoaderBuild)).toHaveBeenCalledWith(405388, "1.21.1", "neoforge");
+    expect(fs.existsSync(path.join(serverRoot, "mods", "405388.jar"))).toBe(true); // replaced, not removed
+    expect(warnings.join(" ")).toMatch(/Upgraded 'modern_industrialization'/);
+    expect(warnings.join(" ")).not.toMatch(/Excluded '405388/);
+  });
+
+  it("quarantines the demanding mod when a bumped dependency still fails the range", async () => {
+    makeJar(path.join(serverRoot, "mods"), "1067672.jar", { modId: "tesseract_api", requiredDeps: ["modern_industrialization"] });
+    makeJar(path.join(serverRoot, "mods"), "405388.jar", { modId: "modern_industrialization" });
+    fs.writeFileSync(
+      path.join(serverRoot, "realmswap-loader.json"),
+      JSON.stringify({ type: "neoforge", loaderVersion: "21.1.259", minecraftVersion: "1.21.1" })
+    );
+    fs.writeFileSync(
+      path.join(serverRoot, "crash-reports", "crash-2026-10-27_00.00.00-fml.txt"),
+      "Error during pre-loading phase: Mod tesseract_api only supports modern_industrialization 2.5.11- or above, and below 2.6-\n"
+    );
+    cfBag.builds.set(405388, { id: 9273385, displayName: "Modern Industrialization v2.5.11" });
+
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls <= 2) throw new SandboxBootError("crashed", "");
+    };
+
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    // One bump attempt, then the mod imposing the range is dropped.
+    expect(vi.mocked(fetchLoaderBuild)).toHaveBeenCalledTimes(1);
+    expect(removed).toEqual(["1067672.jar"]);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "1067672.jar"))).toBe(false);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "405388.jar"))).toBe(true);
+    expect(calls).toBe(3);
   });
 
   it("rethrows when the crash names no jar", async () => {    makeJar(path.join(serverRoot, "mods"), "sodium-1.0.jar", { modId: "sodium" });
@@ -283,6 +385,20 @@ describe("quarantineFromStartCrash", () => {
     const { removed, quarantineDir } = await quarantineFromStartCrash({ serverRoot, deps: { renameDelaysMs: [5, 5] } });
     expect(removed.sort()).toEqual(["322506.jar", "broken-1.0.jar"]);
     expect(fs.existsSync(path.join(quarantineDir!, "322506.jar"))).toBe(true);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "servermod-1.0.jar"))).toBe(true);
+  });
+
+  it("moves cross-loader jars ('is a Fabric mod and cannot be loaded') out of mods/", async () => {
+    const zip = new AdmZip();
+    zip.addFile("fabric.mod.json", Buffer.from('{"id":"fabricmod","version":"1.0"}'));
+    zip.writeZip(path.join(serverRoot, "mods", "500525.jar"));
+    makeJar(path.join(serverRoot, "mods"), "servermod-1.0.jar", { modId: "servermod" });
+    fs.writeFileSync(path.join(serverRoot, "realmswap-loader.json"), JSON.stringify({ type: "neoforge", loaderVersion: "21.1.259", minecraftVersion: "1.21.1" }));
+    writeReport("-- Mod loading issue --\n\tMod file: <No mod information provided>\n\tFailure message: File C:\\data\\mods\\500525.jar is a Fabric mod and cannot be loaded\n");
+
+    const { removed, quarantineDir } = await quarantineFromStartCrash({ serverRoot, deps: { renameDelaysMs: [5, 5] } });
+    expect(removed).toEqual(["500525.jar"]);
+    expect(fs.existsSync(path.join(quarantineDir!, "500525.jar"))).toBe(true);
     expect(fs.existsSync(path.join(serverRoot, "mods", "servermod-1.0.jar"))).toBe(true);
   });
 

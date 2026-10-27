@@ -5,6 +5,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import { checkModUpdates } from "@/lib/mods/updates";
+import { packOwnedPackageIds } from "@/lib/mods/packInstall";
 import { readRemoteLoaderMarker } from "@/lib/mods/remoteInstallers";
 
 /**
@@ -32,11 +33,12 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     const game = access.server.game.toUpperCase();
 
     if (access.server.runnerType === "AGENT") {
-      const rows = await prisma.modInstallation.findMany({
+      const packOwned = await packOwnedPackageIds(params.id);
+      const rows = (await prisma.modInstallation.findMany({
         where: { serverId: params.id },
         select: { provider: true, packageId: true, version: true, name: true },
         orderBy: { installedAt: "desc" },
-      });
+      })).filter((r) => !packOwned.has(r.packageId));
       if (rows.length === 0) {
         return NextResponse.json({ updates: [], unknown: [], errors: [] });
       }
@@ -68,10 +70,14 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     }
 
     const serverRoot = path.join(dataRoot(), "local-servers", params.id);
+    // Pack-owned mods are a version-locked set — the banner must never offer
+    // per-mod updates that would break the pack's pins (they move as a unit
+    // via update-pack).
+    const packOwned = await packOwnedPackageIds(params.id);
     const result = await checkModUpdates({
       game,
       serverRoot,
-      rows,
+      rows: rows.filter((r) => !packOwned.has(r.packageId)),
     });
     return NextResponse.json(result);
   } catch (err: any) {

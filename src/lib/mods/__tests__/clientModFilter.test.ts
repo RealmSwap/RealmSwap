@@ -6,7 +6,7 @@ import AdmZip from "adm-zip";
 import { planClientExclusions, scanJarClientSignals, type ExclusionCandidate } from "../clientModFilter";
 import { dupEntryZip } from "./zipFixtures";
 
-function makeJar(name: string, opts: { modId?: string; requiredDeps?: string[]; optionalDeps?: string[]; earlyWindowService?: boolean }): string {
+function makeJar(name: string, opts: { modId?: string; requiredDeps?: string[]; optionalDeps?: string[]; earlyWindowService?: boolean; fabricManifest?: boolean; fmlLibrary?: boolean; jarJarWrapper?: boolean }): string {
   const zip = new AdmZip();
   if (opts.modId) {
     let toml = `modLoader="javafml"\nloaderVersion="[1,)"\nlicense="MIT"\n[[mods]]\nmodId="${opts.modId}"\nversion="1.0"\n`;
@@ -18,11 +18,20 @@ function makeJar(name: string, opts: { modId?: string; requiredDeps?: string[]; 
     }
     zip.addFile("META-INF/neoforge.mods.toml", Buffer.from(toml));
   }
+  if (opts.fabricManifest) {
+    zip.addFile("fabric.mod.json", Buffer.from('{"id":"fab","version":"1.0"}'));
+  }
   if (opts.earlyWindowService) {
     zip.addFile(
       "META-INF/services/net.neoforged.neoforgespi.earlywindow.GraphicsBootstrapper",
       Buffer.from("com.example.SodiumWorkarounds\n")
     );
+  }
+  if (opts.fmlLibrary) {
+    zip.addFile("META-INF/MANIFEST.MF", Buffer.from("Manifest-Version: 1.0\nFMLModType: LIBRARY\n"));
+  }
+  if (opts.jarJarWrapper) {
+    zip.addFile("META-INF/jarjar/metadata.json", Buffer.from('{"jars":[]}'));
   }
   zip.addFile("dummy.txt", Buffer.from("hello"));
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
@@ -44,6 +53,8 @@ describe("scanJarClientSignals", () => {
     expect(sig.hasEarlyWindowService).toBe(true);
     expect(sig.requiredDeps.has("fmlcore")).toBe(true);
     expect(sig.requiredDeps.has("iris")).toBe(false);
+    expect(sig.loaders.has("neoforge")).toBe(true);
+    expect(sig.fmlLibrary).toBe(false);
   });
 
   it("treats a jar without toml or services as inert", () => {
@@ -53,6 +64,9 @@ describe("scanJarClientSignals", () => {
     expect(sig.hasEarlyWindowService).toBe(false);
     expect(sig.requiredDeps.size).toBe(0);
     expect(sig.hasModManifest).toBe(false);
+    expect(sig.loaders.size).toBe(0);
+    expect(sig.fmlLibrary).toBe(false);
+    expect(sig.jarJarWrapper).toBe(false);
   });
 
   it("sees a fabric.mod.json as a mod manifest", () => {
@@ -64,8 +78,22 @@ describe("scanJarClientSignals", () => {
     zip.writeZip(p);
     const sig = scanJarClientSignals(p);
     expect(sig.hasModManifest).toBe(true);
+    expect(sig.loaders.has("fabric")).toBe(true);
     expect(sig.selfModId).toBeNull();
     fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("recognizes FML LIBRARY jars and jarjar wrappers as manifest-less but healthy", () => {
+    const lib = makeJar("scala.jar", { fmlLibrary: true });
+    const wrapper = makeJar("kff.jar", { jarJarWrapper: true });
+    const libSig = scanJarClientSignals(lib);
+    const wrapperSig = scanJarClientSignals(wrapper);
+    expect(libSig.fmlLibrary).toBe(true);
+    expect(libSig.hasModManifest).toBe(false);
+    expect(wrapperSig.jarJarWrapper).toBe(true);
+    expect(wrapperSig.hasModManifest).toBe(false);
+    fs.rmSync(path.dirname(lib), { recursive: true, force: true });
+    fs.rmSync(path.dirname(wrapper), { recursive: true, force: true });
   });
 
   it("returns inert signals for a jar with duplicated entry names instead of throwing", () => {
@@ -83,9 +111,13 @@ describe("scanJarClientSignals", () => {
     const sig = scanJarClientSignals(p);
     expect(sig).toEqual({
       selfModId: null,
+      allModIds: [],
       hasEarlyWindowService: false,
       hasModManifest: false,
       unreadableZip: true,
+      loaders: new Set(),
+      fmlLibrary: false,
+      jarJarWrapper: false,
       requiredDeps: new Set(),
     });
     fs.rmSync(dir, { recursive: true, force: true });
@@ -157,6 +189,55 @@ describe("planClientExclusions", () => {
     } finally {
       fs.rmSync(path.dirname(shader), { recursive: true, force: true });
       fs.rmSync(path.dirname(unreadable), { recursive: true, force: true });
+    }
+  });
+
+  it("spares FML LIBRARY jars and jarjar wrappers from the no-manifest sweep", () => {
+    const lib = makeJar("scala-provider.jar", { fmlLibrary: true });
+    const wrapper = makeJar("kff.jar", { jarJarWrapper: true });
+    try {
+      const { excluded } = planClientExclusions([lib, wrapper, create].map(candidate));
+      expect(excluded).toEqual([]);
+    } finally {
+      fs.rmSync(path.dirname(lib), { recursive: true, force: true });
+      fs.rmSync(path.dirname(wrapper), { recursive: true, force: true });
+    }
+  });
+
+  it("excludes cross-loader jars when the server's loader is known, keeps matching ones", () => {
+    const fabricOnly = makeJar("500525.jar", { fabricManifest: true });
+    const neoforge = makeJar("waystones.jar", { modId: "waystones" });
+    try {
+      const { excluded, reasons } = planClientExclusions([fabricOnly, neoforge].map(candidate), undefined, {
+        targetLoader: "neoforge",
+      });
+      expect(excluded.map((c) => c.file)).toEqual([fabricOnly]);
+      expect(reasons.get(fabricOnly)).toMatch(/can't load on a neoforge server/);
+    } finally {
+      fs.rmSync(path.dirname(fabricOnly), { recursive: true, force: true });
+      fs.rmSync(path.dirname(neoforge), { recursive: true, force: true });
+    }
+  });
+
+  it("without a known target loader, cross-loader jars are left for the boot test", () => {
+    const fabricOnly = makeJar("500525.jar", { fabricManifest: true });
+    try {
+      const { excluded } = planClientExclusions([fabricOnly].map(candidate));
+      expect(excluded).toEqual([]);
+    } finally {
+      fs.rmSync(path.dirname(fabricOnly), { recursive: true, force: true });
+    }
+  });
+
+  it("labels a forced cross-loader seed by its loader, not 'client-only'", () => {
+    const fabricOnly = makeJar("272515.jar", { fabricManifest: true });
+    try {
+      const { reasons } = planClientExclusions([fabricOnly, create].map(candidate), new Set([fabricOnly]), {
+        targetLoader: "neoforge",
+      });
+      expect(reasons.get(fabricOnly)).toMatch(/built for fabric/);
+    } finally {
+      fs.rmSync(path.dirname(fabricOnly), { recursive: true, force: true });
     }
   });
 
