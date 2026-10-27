@@ -1,11 +1,12 @@
 /**
  * Boot-test retry for Minecraft modpack installs. Client-only mods that slip
  * past the static filter (clientModFilter.ts) die during mod construction
- * with a named crash report ("Mod loading issue for: X / Mod file: X.jar").
- * This helper wraps testServerBoot: on failure it reads the newest crash
- * report, quarantines the named jar (plus anything in the pack that
- * REQUIRES it), and retries — up to a small cap. Each exclusion surfaces as
- * a warning so the user sees exactly what was left out and why.
+ * with a named crash report; manifest-less artifacts (shader/resource packs
+ * bundled for clients) die with "File X is not a valid mod file" lines. This
+ * helper wraps testServerBoot: on failure it reads the newest crash report,
+ * quarantines every named jar (plus anything in the pack that REQUIRES
+ * them), and retries — up to a small cap. Each exclusion surfaces as a
+ * warning so the user sees exactly what was left out and why.
  */
 
 import fs from "fs";
@@ -39,10 +40,22 @@ function newestCrashReport(serverRoot: string): string | null {
   }
 }
 
-/** The jar FML blames in a crash report ("Mod file: mods/foo-1.0.jar"). */
-function blamedModFile(report: string): string | null {
-  const m = /Mod file: ([^\r\n]+?\.jar)/.exec(report);
-  return m ? path.basename(m[1]) : null;
+/**
+ * Every jar a crash report blames. Named-mod failures carry a
+ * "Mod file: mods/foo.jar" line; non-mod artifacts (shader/resource packs)
+ * instead appear as "Failure message: File …\mods\foo.jar is not a valid
+ * mod file" with no "Mod file" line at all — a report containing only
+ * those used to read as unblameable and gave up the retry.
+ */
+function blamedModFiles(report: string): string[] {
+  const names = new Set<string>();
+  for (const m of report.matchAll(/Mod file: ([^\r\n]+?\.jar)/g)) {
+    names.add(m[1].split(/[\\/]/).pop()!);
+  }
+  for (const m of report.matchAll(/File ([^\r\n]+?\.jar) is not a valid mod file/gi)) {
+    names.add(m[1].split(/[\\/]/).pop()!);
+  }
+  return Array.from(names);
 }
 
 function listModsJarNames(serverRoot: string): string[] {
@@ -72,15 +85,19 @@ async function forceRemoveJar(file: string, delays: number[] = DELETE_DELAYS_MS)
 
 /** Evidence, in the crash report itself, that the blamed mod is client-only. */
 const CLIENT_DIST_EVIDENCE = /invalid dist/i;
+/** FML's verdict on a jar in mods/ that isn't a mod at all. */
+const INVALID_MOD_FILE = /is not a valid mod file/i;
 
 /**
  * Start-failure self-heal for Minecraft. The boot-retry quarantine above only
  * runs inside install flows; a jar that reaches mods/ by any other route —
  * leftover from an older failed attempt, dropped in by hand, a dependent of
  * something that was removed — crashes every Start instead. On a crash whose
- * report names a mod file AND shows client-only evidence ("invalid dist" in
- * the report, or an earlywindow service in the jar itself), move the blamed
- * jar plus everything that requires it out of mods/.
+ * report names mod file(s), move the blamed jar(s) plus everything that
+ * requires them out of mods/ when the report carries evidence the blame is
+ * sound: client-only signals ("invalid dist" in the report, an earlywindow
+ * service in the jar itself), or FML's own "not a valid mod file" verdict on
+ * a manifest-less artifact (shader/resource packs).
  *
  * All-or-nothing: jars are MOVED out of mods/ into a quarantine folder (not
  * deleted — the user can restore or delete the folder). If any jar in the
@@ -110,26 +127,30 @@ export async function quarantineFromStartCrash(args: {
       return "";
     }
   })();
-  const blamed = blamedModFile(report);
-  if (!blamed) return { removed: [], warnings };
+  const blamed = blamedModFiles(report);
+  if (blamed.length === 0) return { removed: [], warnings };
 
   const candidates: ExclusionCandidate[] = listModsJarNames(args.serverRoot).map((name) => ({
     file: path.join(args.serverRoot, "mods", name),
     signals: scanJarClientSignals(path.join(args.serverRoot, "mods", name)),
   }));
-  const seed = candidates.find((c) => path.basename(c.file) === blamed);
-  if (!seed) return { removed: [], warnings };
-  if (!CLIENT_DIST_EVIDENCE.test(report) && !seed.signals.hasEarlyWindowService) {
+  const seeds = candidates.filter((c) => blamed.includes(path.basename(c.file)));
+  if (seeds.length === 0) return { removed: [], warnings };
+  if (
+    !INVALID_MOD_FILE.test(report) &&
+    !CLIENT_DIST_EVIDENCE.test(report) &&
+    !seeds.some((s) => s.signals.hasEarlyWindowService)
+  ) {
     return { removed: [], warnings };
   }
 
-  const { excluded, reasons } = planClientExclusions(candidates, new Set([seed.file]));
+  const { excluded, reasons } = planClientExclusions(candidates, new Set(seeds.map((s) => s.file)));
   if (excluded.length === 0) return { removed: [], warnings };
 
-  // Blamed jar first so a failure aborts before any dependent moves.
+  // Blamed jars first so a failure aborts before any dependent moves.
   const ordered = [
-    ...excluded.filter((c) => path.basename(c.file) === blamed),
-    ...excluded.filter((c) => path.basename(c.file) !== blamed),
+    ...excluded.filter((c) => blamed.includes(path.basename(c.file))),
+    ...excluded.filter((c) => !blamed.includes(path.basename(c.file))),
   ];
 
   const renameWithRetry = async (from: string, to: string): Promise<boolean> => {
@@ -222,19 +243,19 @@ export async function testServerBootWithQuarantine(args: {
       // Prefer the crash report (full text); fall back to the captured tail.
       const reportPath = newestCrashReport(serverRoot);
       const report = reportPath ? fs.readFileSync(reportPath, "utf8") : err.output;
-      const blamed = blamedModFile(report);
-      if (!blamed) throw err;
+      const blamed = blamedModFiles(report);
+      if (blamed.length === 0) throw err;
 
       // Signals for every jar currently in mods/ — the closure needs the
-      // whole graph to pull in required dependents of the blamed jar.
+      // whole graph to pull in required dependents of the blamed jars.
       const candidates: ExclusionCandidate[] = listModsJarNames(serverRoot).map((name) => ({
         file: path.join(serverRoot, "mods", name),
         signals: scanJarClientSignals(path.join(serverRoot, "mods", name)),
       }));
-      const seed = candidates.find((c) => path.basename(c.file) === blamed);
-      if (!seed) throw err;
+      const seeds = candidates.filter((c) => blamed.includes(path.basename(c.file)));
+      if (seeds.length === 0) throw err;
 
-      const { excluded, reasons } = planClientExclusions(candidates, new Set([seed.file]));
+      const { excluded, reasons } = planClientExclusions(candidates, new Set(seeds.map((s) => s.file)));
       if (excluded.length === 0) throw err;
 
       for (const c of excluded) {
@@ -250,7 +271,7 @@ export async function testServerBootWithQuarantine(args: {
           `Excluded '${path.basename(c.file)}' — ${reasons.get(c.file) ?? "client-only mod that crashed the boot test"}.`
         );
       }
-      onProgress?.(`Excluding ${blamed} — retrying boot without it`);
+      onProgress?.(`Excluding ${blamed.join(", ")} — retrying boot without ${blamed.length === 1 ? "it" : "them"}`);
     }
   }
 }
