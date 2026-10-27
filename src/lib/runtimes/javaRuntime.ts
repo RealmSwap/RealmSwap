@@ -60,6 +60,20 @@ export interface EnsureJavaDeps {
   provision?: (major: number, cacheDir: string, opts: EnsureJavaOpts) => Promise<void>;
 }
 
+/** Absolute path to the cached bundled JRE's java.exe for a major version, or
+ *  null when that runtime has not been provisioned yet. Existence check ONLY —
+ *  never downloads. Shared by ensureJava (which may provision) and read-only
+ *  callers (the install-time boot test) so both resolve the same layout and a
+ *  boot test can't silently miss the runtime the real start will use. */
+export function cachedJavaExe(
+  major: number,
+  dataRoot: string,
+  exists: (p: string) => boolean = fs.existsSync
+): string | null {
+  const javaExe = path.join(dataRoot, "runtimes", `jdk-${major}`, "bin", "java.exe");
+  return exists(javaExe) ? javaExe : null;
+}
+
 /** Ensure a Temurin JRE of the given major version is available and return the absolute path to
  *  its java.exe. Downloads + extracts into a shared cache (dataRoot/runtimes/jdk-<major>) on first
  *  use; subsequent calls short-circuit. `deps` is injected in tests; defaults hit the real network. */
@@ -71,20 +85,21 @@ export async function ensureJava(
   const exists = deps.exists ?? fs.existsSync;
   const provision = deps.provision ?? defaultProvision;
   const cacheDir = path.join(opts.dataRoot, "runtimes", `jdk-${major}`);
-  const javaExe = path.join(cacheDir, "bin", "java.exe");
+  const cached = cachedJavaExe(major, opts.dataRoot, exists);
 
-  if (exists(javaExe)) {
+  if (cached) {
     opts.onLog?.(`Using cached Java ${major} runtime.`);
-    return javaExe;
+    return cached;
   }
 
   opts.onLog?.(`Java ${major} runtime not found. Downloading…`);
   await provision(major, cacheDir, opts);
 
-  if (!exists(javaExe)) {
+  const provisioned = cachedJavaExe(major, opts.dataRoot, exists);
+  if (!provisioned) {
     throw new Error(`Java ${major} runtime did not contain bin/java.exe after extraction.`);
   }
-  return javaExe;
+  return provisioned;
 }
 
 // --- Real (impure) provisioning: download -> extract -> flatten into cacheDir ---
