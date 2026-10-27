@@ -64,6 +64,8 @@ export interface CurseForgeFile {
   isAvailable: boolean;
   /** alternates are dev/library artifacts, never install targets */
   isAlternate?: boolean;
+  /** File size in bytes as reported by the API, when present. */
+  fileLength?: number;
   fileDate?: string;
 }
 

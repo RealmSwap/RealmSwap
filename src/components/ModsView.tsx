@@ -1,6 +1,7 @@
 "use client";
 
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
+import { InstallProgressPanel, newInstallId, useModInstallProgress } from "@/components/mods/InstallProgress";
 import { toast } from "sonner";
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
@@ -399,6 +400,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   const [installedMods, setInstalledMods] = useState<any[]>([]);
   const [loaderInfo, setLoaderInfo] = useState<{ supported: boolean; loader: { type: string; loaderVersion: string; minecraftVersion: string } | null } | null>(null);
   const [loaderBusy, setLoaderBusy] = useState(false);
+  const { event: installEvent, start: startInstallProgress, dismiss: dismissInstallProgress } = useModInstallProgress(selectedServer?.id);
   const [updatingModId, setUpdatingModId] = useState<string | null>(null);
   const [updateAllBusy, setUpdateAllBusy] = useState(false);
   const [updatePackBusy, setUpdatePackBusy] = useState(false);
@@ -630,6 +632,8 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     setLoading(true);
     showError(null);
     setSuccess(null);
+    const installId = newInstallId();
+    startInstallProgress(installId);
 
     try {
       const res = await fetch(
@@ -637,7 +641,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ projectId: mod.modId || mod.packageId }),
+          body: JSON.stringify({ projectId: mod.modId || mod.packageId, installId }),
         }
       );
       const data = await res.json();
@@ -649,6 +653,9 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       const modsRes = await fetch(`/api/servers/${selectedServer.id}/mods`);
       const modsData = await modsRes.json();
       if (modsData.mods) setInstalledMods(modsData.mods);
+      fetchPack();
+      // Packs provision their own loader — re-read state or the banner lies.
+      await refreshLoaderState();
     } catch (err: any) {
       showError(err.message, (err as any).bootOutput);
     } finally {
@@ -662,21 +669,30 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     return handleInstallMod(mod);
   };
 
+  /** Re-fetch loader state — every flow that can install/switch a loader
+   * must call this, or the vanilla-server banner goes stale. */
+  const refreshLoaderState = async () => {
+    if (!selectedServer) return;
+    const lres = await fetch(`/api/servers/${selectedServer.id}/mods/loader`);
+    if (lres.ok) setLoaderInfo(await lres.json());
+  };
+
   const handleInstallLoader = async (loader: "fabric" | "quilt" | "forge" | "neoforge" | "tmodloader") => {
     if (!selectedServer) return;
     const label = LOADER_LABELS[loader];
     setLoaderBusy(true);
+    const installId = newInstallId();
+    startInstallProgress(installId);
     try {
       const res = await fetch(`/api/servers/${selectedServer.id}/mods/loader`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ loader }),
+        body: JSON.stringify({ loader, installId }),
       });
       const data = await res.json();
       if (!res.ok) { const e = new Error(data.error || `Failed to install ${label}`); (e as any).bootOutput = data.bootOutput; throw e; }
       toast.success(data.message || `${label} installed.`);
-      const lres = await fetch(`/api/servers/${selectedServer.id}/mods/loader`);
-      if (lres.ok) setLoaderInfo(await lres.json());
+      await refreshLoaderState();
     } catch (err: any) {
       if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
       else toast.error(err.message);
@@ -752,8 +768,14 @@ export default function ModsView({ servers, user }: ModsViewProps) {
   const handleUpdatePack = async () => {
     if (!selectedServer || updatePackBusy) return;
     setUpdatePackBusy(true);
+    const installId = newInstallId();
+    startInstallProgress(installId);
     try {
-      const res = await fetch(`/api/servers/${selectedServer.id}/mods/update-pack`, { method: "POST" });
+      const res = await fetch(`/api/servers/${selectedServer.id}/mods/update-pack`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ installId }),
+      });
       const data = await res.json();
       if (!res.ok) { const e = new Error(data.error || "Pack update failed"); (e as any).bootOutput = data.bootOutput; throw e; }
       toast[data.updated ? "success" : "info"](data.message);
@@ -762,6 +784,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         setInstalledMods(fresh.mods || fresh || []);
         refreshUpdates();
         fetchPack();
+        await refreshLoaderState();
       }
     } catch (err: any) {
       if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
@@ -856,11 +879,13 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     // swaps the server's launch (snapshot/boot-test/rollback included) via
     // the loader route.
     if (mod.modType === "TML_LOADER") {
+      const installId = newInstallId();
+      startInstallProgress(installId);
       try {
         const res = await fetch(`/api/servers/${selectedServer.id}/mods/loader`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ loader: "tmodloader" }),
+          body: JSON.stringify({ loader: "tmodloader", installId }),
         });
         const data = await res.json();
         if (!res.ok) { const e = new Error(data.error || "Failed to install tModLoader"); (e as any).bootOutput = data.bootOutput; throw e; }
@@ -877,6 +902,8 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       return;
     }
 
+    const installId = newInstallId();
+    startInstallProgress(installId);
     try {
       const res = await fetch(
         `/api/servers/${selectedServer.id}/mods/install`,
@@ -884,6 +911,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            installId,
             modType: installModType(mod),
             // Workshop results: packageId is the Workshop file id, not a mod
             // id — sending it as modId would write the wrong id space into
@@ -1014,6 +1042,9 @@ export default function ModsView({ servers, user }: ModsViewProps) {
 
     const formData = new FormData();
     formData.append("modpack", file);
+    const installId = newInstallId();
+    startInstallProgress(installId);
+    formData.append("installId", installId);
 
     try {
       const res = await fetch(
@@ -1030,6 +1061,8 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       );
       const modsData = await modsRes.json();
       if (modsData.mods) setInstalledMods(modsData.mods);
+      fetchPack();
+      await refreshLoaderState();
     } catch (err: any) {
       showError(err.message, (err as any).bootOutput);
     } finally {
@@ -1206,6 +1239,11 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         </div>
 
         {/* Notifications */}
+        {installEvent && (
+          <div className="mb-6">
+            <InstallProgressPanel event={installEvent} onDismiss={dismissInstallProgress} />
+          </div>
+        )}
         {error && (
           <div className="p-4 mb-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-slide-down">
             <div className="flex items-center gap-3">

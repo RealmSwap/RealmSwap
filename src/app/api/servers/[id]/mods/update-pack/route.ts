@@ -16,6 +16,7 @@ import {
   planModpackFromZip, applyModpackPlan, recordInstalledModpack, detectPackServerMcVersion,
   PackPreflightError,
 } from "@/lib/mods/packInstall";
+import { beginProgress, emitProgress, endProgress } from "@/lib/mods/progress";
 import fs from "fs";
 import path from "path";
 import { requireLocalServer } from "@/lib/agents/perimeter";
@@ -84,6 +85,16 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       );
     }
 
+    // Optional progress session, same contract as the install routes.
+    let installId: string | undefined;
+    try {
+      const body = await req.json();
+      if (body && typeof body.installId === "string" && /^[\w-]{6,64}$/.test(body.installId)) {
+        installId = body.installId;
+      }
+    } catch {}
+    if (installId) beginProgress(installId);
+
     const serverRoot = path.join(dataRoot(), "local-servers", serverId);
     const warnings: string[] = [];
 
@@ -139,10 +150,14 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       }
     })();
 
+    if (installId) emitProgress(installId, { stage: "snapshot", label: "Taking a safety snapshot" });
     const snapshot = await createSnapshot(serverId, user.id, `Pre-pack-update: ${plan.packName}`);
 
     try {
-      const result = await applyModpackPlan({ plan, serverId, serverRoot, serverMcVersion, warnings });
+      const result = await applyModpackPlan({
+        plan, serverId, serverRoot, serverMcVersion, warnings,
+        progress: (event) => { if (installId) emitProgress(installId, event); },
+      });
 
       // Retire mods the new manifest dropped — ONLY within the set the old
       // pack version owned (recorded at its install).
@@ -165,7 +180,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       }
 
       console.log(`[Sandbox] Running boot test for ${serverId}`);
+      if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the update", current: 0, total: 1 });
       await testServerBoot(serverId, "MINECRAFT");
+      if (installId) emitProgress(installId, { current: 1 });
       console.log(`[Sandbox] Boot test passed for ${serverId}`);
 
       await recordInstalledModpack({
@@ -182,6 +199,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         },
       });
 
+      if (installId) endProgress(installId, "done");
       return NextResponse.json({
         success: true,
         updated: true,
@@ -194,8 +212,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       });
     } catch (installError: any) {
       console.error(`[Sandbox] Error detected. Rolling back ${serverId} to snapshot ${snapshot.id}`);
+      if (installId) emitProgress(installId, { label: "Update failed — rolling back safely" });
       await restoreSnapshot(snapshot.id);
       await discardSnapshot(snapshot.id);
+      if (installId) endProgress(installId, "error", installError.message);
 
       return NextResponse.json({
         error: `Modpack update failed. Safe Rollback completed. Cause: ${installError.message}`,

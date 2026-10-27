@@ -152,7 +152,7 @@ describe("applyModpackPlan — loader handling around the version switch", () =>
     writeMarker("neoforge", "21.1.90", "1.21.9");
     const warnings: string[] = [];
     const result = await applyModpackPlan({
-      plan: manualPlan({ mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x", sha1: null } } }),
+      plan: manualPlan({ mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x", sha1: null, size: null } } }),
       serverId: "s1",
       serverRoot: root,
       serverMcVersion: "1.21.9",
@@ -184,7 +184,7 @@ describe("applyModpackPlan — loader handling around the version switch", () =>
     await applyModpackPlan({
       plan: manualPlan({
         packLoader: null,
-        mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x", sha1: null } },
+        mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x", sha1: null, size: null } },
       }),
       serverId: "s1",
       serverRoot: root,
@@ -193,5 +193,49 @@ describe("applyModpackPlan — loader handling around the version switch", () =>
     });
     expect(loaderCalls).toEqual([]);
     expect(warnings.join(" ")).toMatch(/Fabric loader targets Minecraft 1\.21\.9[\s\S]*reinstall/);
+  });
+});
+
+describe("applyModpackPlan — progress events", () => {
+  let root = "";
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), "pack-progress-"));
+    (globalThis as any).__mcSwaps = 0;
+  });
+
+  afterEach(() => {
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it("walks mcswap → loader → overrides in order and reports the switch as a step", async () => {
+    const events: any[] = [];
+    await applyModpackPlan({
+      plan: manualPlan({ mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x", sha1: null, size: null } } }),
+      serverId: "s1",
+      serverRoot: root,
+      serverMcVersion: "1.21.9",
+      warnings: [],
+      progress: (e) => events.push(e),
+    });
+    const stages = events.map((e) => e.stage).filter(Boolean);
+    // De-duplicate consecutive repeats: each stage must be announced in order.
+    const order = stages.filter((s, i) => i === 0 || s !== stages[i - 1]);
+    expect(order).toEqual(["mcswap", "loader", "overrides"]);
+    expect(events.find((e) => e.stage === "mcswap")).toMatchObject({ current: 0, total: 1, label: expect.stringContaining("1.21.1") });
+    expect(events.find((e) => e.stage === "loader")?.label).toMatch(/NeoForge/);
+  });
+
+  it("a throwing progress callback never breaks the install", async () => {
+    await expect(
+      applyModpackPlan({
+        plan: manualPlan({}),
+        serverId: "s1",
+        serverRoot: root,
+        serverMcVersion: "1.21.1",
+        warnings: [],
+        progress: () => { throw new Error("ui gone"); },
+      })
+    ).resolves.toMatchObject({ installedCount: 0 });
   });
 });
