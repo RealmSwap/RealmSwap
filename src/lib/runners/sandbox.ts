@@ -3,7 +3,8 @@ import path from "path";
 import fs from "fs";
 import { dataRoot } from "../appPaths";
 import { tmlMarkerPath } from "../mods/tml";
-import { readLoaderMarker, applyLoaderLaunch } from "../mods/mcLoaders";
+import { readLoaderMarker, applyLoaderLaunch, detectMinecraftVersion, javaMajorForMinecraft } from "../mods/mcLoaders";
+import { cachedJavaExe } from "../runtimes/javaRuntime";
 
 /**
  * Boot-test failure carrying what the sandboxed server actually printed, so
@@ -36,6 +37,33 @@ function capturedOutput(stdout: string, stderr: string): string {
  */
 export function minecraftBootSucceeded(stdout: string): boolean {
   return /Done \(\d/.test(stdout);
+}
+
+/**
+ * The java a Minecraft boot test runs on: the cached bundled JRE the real
+ * start will use, falling back to PATH java for dev machines. The start path
+ * never trusts PATH java (LocalRunner provisions via ensureJava), so a
+ * PATH-only lookup here made every boot test silently skip inside the
+ * packaged Windows app — exactly the crashes this test exists to catch then
+ * shipped to the first real start. The major comes from the server's own MC
+ * version (loader marker, else server.jar's version.json) so a wrong-era
+ * PATH java can't fail the test for the wrong reason.
+ */
+export function resolveSandboxJava(
+  serverDir: string,
+  deps: {
+    exists?: (p: string) => boolean;
+    dataRoot?: () => string;
+    readMarker?: (dir: string) => ReturnType<typeof readLoaderMarker>;
+    detectVersion?: (dir: string) => string | null;
+  } = {}
+): string {
+  const exists = deps.exists ?? fs.existsSync;
+  const mcVersion =
+    (deps.readMarker ?? readLoaderMarker)(serverDir)?.minecraftVersion ??
+    (deps.detectVersion ?? detectMinecraftVersion)(serverDir);
+  const major = mcVersion ? javaMajorForMinecraft(mcVersion) : 21;
+  return cachedJavaExe(major, (deps.dataRoot ?? dataRoot)(), exists) ?? "java";
 }
 
 /**
@@ -102,7 +130,7 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
       // targeting a different world version) only shows up at boot. Boot
       // with the loader's launch descriptor applied; a modded first boot
       // can take minutes, so its window is generous.
-      exePath = "java";
+      exePath = resolveSandboxJava(serverDir);
       args = minecraftBootArgs(serverDir);
       sandboxMs = readLoaderMarker(serverDir) ? 300000 : 90000;
     } else {

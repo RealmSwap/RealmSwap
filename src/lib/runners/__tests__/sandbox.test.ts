@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { minecraftBootSucceeded, minecraftBootArgs, testServerBoot, SandboxBootError } from "../sandbox";
+import { minecraftBootSucceeded, minecraftBootArgs, resolveSandboxJava, testServerBoot, SandboxBootError } from "../sandbox";
 
 describe("minecraftBootSucceeded", () => {
   it("recognizes the vanilla and loader Done line", () => {
@@ -59,6 +59,69 @@ describe("minecraftBootArgs", () => {
       JSON.stringify({ type: "fabric", loaderVersion: "0.16.9", minecraftVersion: "1.21.1", installedAt: "", launch: { kind: "jar", file: "fabric-server-launch.jar" } })
     );
     expect(minecraftBootArgs(root)).toEqual(["-jar", "server.jar", "nogui"]);
+  });
+});
+
+/**
+ * The boot test must resolve java the same way the real start does — the
+ * bundled ensureJava JRE first, PATH java only as a dev fallback. A PATH-only
+ * lookup here silently skipped every boot test in the packaged Windows app
+ * (no java on the app's PATH), so client-only mods reached the first real
+ * start (seen live: ATM10's Dark Mode Everywhere crashed it 2026-10-27).
+ */
+describe("resolveSandboxJava", () => {
+  const bundled = (root: string, major: number) =>
+    path.join(root, "runtimes", `jdk-${major}`, "bin", "java.exe");
+
+  it("prefers the bundled JRE matching the loader marker's MC version", () => {
+    const picked = resolveSandboxJava("/srv", {
+      exists: (p) => p === bundled("/data", 21),
+      dataRoot: () => "/data",
+      readMarker: () => ({ type: "neoforge", loaderVersion: "21.1.95", minecraftVersion: "1.21.1", installedAt: "" }),
+      detectVersion: () => "1.20.1",
+    });
+    expect(picked).toBe(bundled("/data", 21));
+  });
+
+  it("derives the major from server.jar's version.json when no marker exists", () => {
+    const picked = resolveSandboxJava("/srv", {
+      exists: (p) => p === bundled("/data", 17),
+      dataRoot: () => "/data",
+      readMarker: () => null,
+      detectVersion: () => "1.19.2",
+    });
+    expect(picked).toBe(bundled("/data", 17));
+  });
+
+  it("defaults to major 21 when no version info is available", () => {
+    const picked = resolveSandboxJava("/srv", {
+      exists: (p) => p === bundled("/data", 21),
+      dataRoot: () => "/data",
+      readMarker: () => null,
+      detectVersion: () => null,
+    });
+    expect(picked).toBe(bundled("/data", 21));
+  });
+
+  it("falls back to PATH java when no bundled runtime is cached (dev machines)", () => {
+    expect(
+      resolveSandboxJava("/srv", {
+        exists: () => false,
+        dataRoot: () => "/data",
+        readMarker: () => null,
+        detectVersion: () => "1.21.1",
+      })
+    ).toBe("java");
+  });
+
+  it("does not pick a bundled JRE of the wrong era", () => {
+    const picked = resolveSandboxJava("/srv", {
+      exists: (p) => p === bundled("/data", 8),
+      dataRoot: () => "/data",
+      readMarker: () => null,
+      detectVersion: () => "1.21.1",
+    });
+    expect(picked).toBe("java");
   });
 });
 

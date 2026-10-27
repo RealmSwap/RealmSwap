@@ -112,4 +112,29 @@ describe("testServerBootWithQuarantine", () => {
     ).rejects.toThrow(/crashed/);
     expect(round).toBe(4); // initial + 3 quarantine rounds
   });
+
+  const posixOnly = process.platform === "win32" ? it.skip : it;
+
+  posixOnly("surfaces an undeletable jar instead of looping into identical crashes", async () => {
+    makeJar(path.join(serverRoot, "mods"), "locked-1.0.jar", { modId: "locked" });
+    writeCrashReport("mods/locked-1.0.jar");
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      throw new SandboxBootError("Server crashed immediately with exit code -1.", "");
+    };
+    // A read-only mods dir makes every unlink EACCES — the stand-in for
+    // Windows AV/process locks, which the delete retry can't clear either.
+    fs.chmodSync(path.join(serverRoot, "mods"), 0o555);
+    try {
+      await expect(
+        testServerBootWithQuarantine({ serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings })
+      ).rejects.toThrow(/exit code -1/);
+    } finally {
+      fs.chmodSync(path.join(serverRoot, "mods"), 0o755);
+    }
+    expect(calls).toBe(1); // no retry boot — it would crash identically
+    expect(fs.existsSync(path.join(serverRoot, "mods", "locked-1.0.jar"))).toBe(true);
+    expect(warnings.join(" ")).toMatch(/Could not remove 'locked-1\.0\.jar'/);
+  });
 });

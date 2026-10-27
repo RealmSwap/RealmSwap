@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import path from "path";
-import { adoptiumUrl, parseRequiredJavaMajor, findArchiveJavaRoot, ensureJava } from "../javaRuntime";
+import { adoptiumUrl, parseRequiredJavaMajor, findArchiveJavaRoot, ensureJava, cachedJavaExe } from "../javaRuntime";
 
 describe("adoptiumUrl", () => {
   it("builds the Windows x64 GA JRE endpoint for a major version", () => {
@@ -41,6 +41,13 @@ describe("findArchiveJavaRoot", () => {
 describe("ensureJava", () => {
   const javaPath = (root: string, major: number) =>
     path.join(root, "runtimes", `jdk-${major}`, "bin", "java.exe");
+
+  it("cachedJavaExe returns the bundled path only when provisioned, without downloading", () => {
+    expect(cachedJavaExe(21, "/data", (p) => p === javaPath("/data", 21))).toBe(javaPath("/data", 21));
+    expect(cachedJavaExe(21, "/data", () => false)).toBeNull();
+    expect(cachedJavaExe(17, "/data", (p) => p === javaPath("/data", 21))).toBeNull();
+  });
+
 
   it("returns the cached java.exe without provisioning when already present", async () => {
     let provisioned = false;

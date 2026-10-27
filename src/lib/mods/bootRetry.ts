@@ -45,6 +45,23 @@ function listModsJarNames(serverRoot: string): string[] {
 }
 
 /**
+ * Delete a jar, tolerating the brief locks Windows AV scanners take on
+ * recently-touched files. Returns false when the file survives every attempt
+ * — a boot without it is impossible, so the caller must surface the failure
+ * instead of retrying into the identical crash.
+ */
+async function forceRemoveJar(file: string): Promise<boolean> {
+  for (let attempt = 0; ; attempt++) {
+    try { fs.rmSync(file, { force: true }); } catch {}
+    let gone = false;
+    try { gone = !fs.existsSync(file); } catch {}
+    if (gone) return true;
+    if (attempt >= 2) return false;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+}
+
+/**
  * Run the boot test; when FML names a mod in a crash report, quarantine it
  * (+ its required dependents within mods/) and retry. Throws the original
  * error when the crash names no jar or the cap is exhausted. Returns the
@@ -86,7 +103,13 @@ export async function testServerBootWithQuarantine(args: {
       if (excluded.length === 0) throw err;
 
       for (const c of excluded) {
-        try { fs.rmSync(c.file, { force: true }); } catch {}
+        if (!(await forceRemoveJar(c.file))) {
+          warnings.push(
+            `Could not remove '${path.basename(c.file)}' — the file is locked (often by antivirus). ` +
+              "The boot test will keep failing until that file can be deleted."
+          );
+          throw err;
+        }
         removed.push(path.basename(c.file));
         warnings.push(
           `Excluded '${path.basename(c.file)}' — ${reasons.get(c.file) ?? "client-only mod that crashed the boot test"}.`
