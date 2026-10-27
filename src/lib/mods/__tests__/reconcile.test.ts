@@ -26,7 +26,10 @@ vi.mock("@/lib/db", () => ({
     },
     get modInstallation() {
       return {
-        findMany: async () => bag.rows,
+        findMany: async (args: any) =>
+          args?.where?.provider
+            ? bag.rows.filter((r) => !r.provider || r.provider === args.where.provider)
+            : bag.rows,
         delete: async (args: any) => {
           bag.deletes.push(args.where.id);
           return {};
@@ -93,7 +96,10 @@ describe("reconcileInstalledMods", () => {
       fs.writeFileSync(path.join(serverRoot(), "mods", "modB.jar"), "b");
       fs.writeFileSync(path.join(serverRoot(), "mods", ".staging-999.jar"), "tmp");
       bag.server = { id: "s1", game: "MINECRAFT" };
-      bag.rows = [{ id: "r1", packageId: "modA" }, { id: "r2", packageId: "modGone" }];
+      bag.rows = [
+        { id: "r1", packageId: "modA", provider: "modrinth" },
+        { id: "r2", packageId: "modGone", provider: "modrinth" },
+      ];
 
       const result = await reconcileInstalledMods("s1");
 
@@ -106,12 +112,33 @@ describe("reconcileInstalledMods", () => {
 
     it("treats a missing mods dir as nothing installed", async () => {
       bag.server = { id: "s1", game: "MINECRAFT" };
-      bag.rows = [{ id: "r1", packageId: "modA" }];
+      bag.rows = [{ id: "r1", packageId: "modA", provider: "modrinth" }];
 
       const result = await reconcileInstalledMods("s1");
 
       expect(result.removed).toBe(1);
       expect(bag.deletes).toEqual(["r1"]);
+    });
+
+    it("removes phantom CurseForge rows after a pack rollback", async () => {
+      fs.mkdirSync(path.join(serverRoot(), "mods"), { recursive: true });
+      // A rolled-back pack: its jars are gone, but a manual CF jar remains.
+      fs.writeFileSync(path.join(serverRoot(), "mods", "67890.jar"), "c");
+      bag.server = { id: "s1", game: "MINECRAFT" };
+      bag.rows = [
+        { id: "r1", packageId: "574123", provider: "curseforge" }, // rolled away
+        { id: "r2", packageId: "67890", provider: "curseforge" }, // still on disk
+      ];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result.removed).toBe(1);
+      expect(bag.deletes).toEqual(["r1"]);
+      // The on-disk jar still gets its minimal modrinth-keyed row (unknown
+      // jars can't be attributed to a provider from disk alone — unchanged).
+      expect(bag.creates).toEqual([
+        { serverId: "s1", provider: "modrinth", packageId: "67890", version: "unknown", name: "67890" },
+      ]);
     });
   });
 
