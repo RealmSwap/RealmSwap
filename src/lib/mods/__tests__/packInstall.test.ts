@@ -3,7 +3,10 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import AdmZip from "adm-zip";
+import { createHash } from "crypto";
 import { planModpackFromZip, applyModpackPlan, type ModpackPlan } from "../packInstall";
+
+const sha1Of = (buf: Buffer) => createHash("sha1").update(buf).digest("hex");
 
 const prismaCalls: any[] = [];
 vi.mock("@/lib/db", () => ({
@@ -14,8 +17,22 @@ vi.mock("@/lib/db", () => ({
         prismaCalls.push(args);
         return {};
       },
-      deleteMany: async () => ({}),
+      deleteMany: async (args: any) => {
+        prismaCalls.push(args);
+        return {};
+      },
     },
+  },
+}));
+
+// Tests stage real jar bytes per URL for the CF download path.
+const downloadFixtures = new Map<string, Buffer>();
+vi.mock("@/lib/download", () => ({
+  downloadFile: async (url: string, dest: string) => {
+    const fixture = downloadFixtures.get(url);
+    if (!fixture) throw new Error(`no download fixture staged for ${url}`);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, fixture);
   },
 }));
 
@@ -193,6 +210,62 @@ describe("applyModpackPlan — loader handling around the version switch", () =>
     });
     expect(loaderCalls).toEqual([]);
     expect(warnings.join(" ")).toMatch(/Fabric loader targets Minecraft 1\.21\.9[\s\S]*reinstall/);
+  });
+});
+
+describe("applyModpackPlan — client-mod exclusion", () => {
+  let root = "";
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), "pack-excl-"));
+    (globalThis as any).__mcSwaps = 0;
+    downloadFixtures.clear();
+  });
+
+  afterEach(() => {
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it("excludes an early-window-service jar and its required dependent, cleaning rows", async () => {
+    const sodium = new AdmZip();
+    sodium.addFile("META-INF/services/net.neoforged.neoforgespi.earlywindow.GraphicsBootstrapper", Buffer.from("x\n"));
+    sodium.addFile("META-INF/neoforge.mods.toml", Buffer.from('[[mods]]\nmodId="sodium"\n'));
+    const extra = new AdmZip();
+    extra.addFile("META-INF/neoforge.mods.toml", Buffer.from('[[mods]]\nmodId="sodiumextra"\n\n[[dependencies.sodiumextra]]\nmodId="sodium"\ntype="required"\n'));
+    const sodiumBytes = sodium.toBuffer();
+    const extraBytes = extra.toBuffer();
+    downloadFixtures.set("https://x/sodium.jar", sodiumBytes);
+    downloadFixtures.set("https://x/sodium-extra.jar", extraBytes);
+
+    const warnings: string[] = [];
+    const result = await applyModpackPlan({
+      plan: manualPlan({
+        cfManifest: { manifestType: "minecraftModpack", manifestVersion: 1, name: "t", minecraft: { version: "1.21.1", modLoaders: [] }, files: [] },
+        cfPlan: {
+          files: [
+            { id: 1, modId: 500, displayName: "Sodium", fileName: "sodium.jar", downloadUrl: "https://x/sodium.jar", hashes: [{ value: sha1Of(sodiumBytes), algo: 1 }], gameVersions: [], dependencies: [], isAvailable: true, fileLength: sodiumBytes.length },
+            { id: 2, modId: 501, displayName: "Sodium Extra", fileName: "sodium-extra.jar", downloadUrl: "https://x/sodium-extra.jar", hashes: [{ value: sha1Of(extraBytes), algo: 1 }], gameVersions: [], dependencies: [], isAvailable: true, fileLength: extraBytes.length },
+          ] as any,
+          modNames: new Map(),
+          skippedOptional: 0,
+        },
+        packLoader: null,
+      }),
+      serverId: "s1",
+      serverRoot: root,
+      serverMcVersion: "1.21.1",
+      warnings,
+    });
+
+    expect(result.installedCount).toBe(0);
+    expect(result.clientOnlyCount).toBe(2);
+    expect(result.installedPackageIds).toEqual([]);
+    expect(fs.existsSync(path.join(root, "mods", "500.jar"))).toBe(false);
+    expect(fs.existsSync(path.join(root, "mods", "501.jar"))).toBe(false);
+    expect(warnings.join(" ")).toMatch(/Excluded '500\.jar' — client-only rendering mod — it declares a client display service/);
+    expect(warnings.join(" ")).toMatch(/Excluded '501\.jar' — requires sodium/);
+    const deletes = prismaCalls.filter((c) => c.where?.packageId);
+    expect(deletes.map((c) => c.where.packageId).sort()).toEqual(["500", "501"]);
   });
 });
 

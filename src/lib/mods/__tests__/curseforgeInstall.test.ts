@@ -81,6 +81,7 @@ describe("installMinecraftCurseforge", () => {
           });
         }
         if (u.match(/\/mods\/42\/files/)) return json({ data: [main, dep] });
+        if (u.match(/\/mods\/43\/files/)) return json({ data: [dep] });
         if (u.match(/\/mods\/42$/)) return json({ data: { id: 42, name: "Cool Mod", slug: "cool-mod", summary: "", downloadCount: 5 } });
         return { ok: false, status: 404, json: async () => ({}) } as any;
       }) as any
@@ -93,7 +94,7 @@ describe("installMinecraftCurseforge", () => {
       {
         id: 1100, modId: 42, displayName: "Cool Mod 2.0.0", fileName: "cool-mod-2.0.0.jar",
         downloadUrl: "https://edge.forgecdn.net/files/1/100/cool-mod-2.0.0.jar", hashes: [],
-        gameVersions: [], dependencies: [{ fileId: 200, relationType: 3 }], isAvailable: true,
+        gameVersions: [], dependencies: [{ modId: 43, relationType: 3 }], isAvailable: true,
       },
       {
         id: 200, modId: 43, displayName: "Dep Mod 1.0", fileName: "dep-mod-1.0.jar",

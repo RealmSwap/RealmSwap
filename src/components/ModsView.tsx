@@ -412,8 +412,9 @@ export default function ModsView({ servers, user }: ModsViewProps) {
 
   /** Surface a mod-flow failure; bootOutput carries the sandbox server's own
    *  output when a snapshot->install->boot-test cycle rolled back. */
-  const showError = (message: string | null, bootOutput?: string) => {
-    setError(message);
+  const showError = (message: string | null, bootOutput?: string, warnings?: string[]) => {
+    const suffix = warnings?.length ? `\n\n${warnings.join("\n")}` : "";
+    setError(message ? message + suffix : message);
     setErrorBootOutput(bootOutput ?? null);
   };
 
@@ -645,7 +646,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         }
       );
       const data = await res.json();
-      if (!res.ok) { const e = new Error(data.error || "Failed to install modpack"); (e as any).bootOutput = data.bootOutput; throw e; }
+      if (!res.ok) { const e = new Error(data.error || "Failed to install modpack"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
 
       setSuccess(data.message || `Successfully installed ${mod.name}`);
       if (data.message) toast.success(data.message); else toast.success(`Installed ${mod.name}`);
@@ -657,7 +658,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       // Packs provision their own loader — re-read state or the banner lies.
       await refreshLoaderState();
     } catch (err: any) {
-      showError(err.message, (err as any).bootOutput);
+      showError(err.message, (err as any).bootOutput, (err as any).warnings);
     } finally {
       setLoading(false);
     }
@@ -690,11 +691,11 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         body: JSON.stringify({ loader, installId }),
       });
       const data = await res.json();
-      if (!res.ok) { const e = new Error(data.error || `Failed to install ${label}`); (e as any).bootOutput = data.bootOutput; throw e; }
+      if (!res.ok) { const e = new Error(data.error || `Failed to install ${label}`); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
       toast.success(data.message || `${label} installed.`);
       await refreshLoaderState();
     } catch (err: any) {
-      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
+      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput, (err as any).warnings);
       else toast.error(err.message);
     } finally {
       setLoaderBusy(false);
@@ -707,7 +708,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     try {
       const res = await fetch(`/api/servers/${selectedServer.id}/mods/${mod.packageId}/update`, { method: "POST" });
       const data = await res.json();
-      if (!res.ok) { const e = new Error(data.error || "Update failed"); (e as any).bootOutput = data.bootOutput; throw e; }
+      if (!res.ok) { const e = new Error(data.error || "Update failed"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
       toast[data.updated ? "success" : "info"](data.message);
       if (data.updated) {
         const fresh = await fetch(`/api/servers/${selectedServer.id}/mods`).then((r) => r.json());
@@ -715,7 +716,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         refreshUpdates();
       }
     } catch (err: any) {
-      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
+      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput, (err as any).warnings);
       else toast.error(err.message);
     } finally {
       setUpdatingModId(null);
@@ -730,13 +731,13 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     try {
       const res = await fetch(`/api/servers/${selectedServer.id}/mods/update-all`, { method: "POST" });
       const data = await res.json();
-      if (!res.ok) { const e = new Error(data.error || "Update all failed"); (e as any).bootOutput = data.bootOutput; throw e; }
+      if (!res.ok) { const e = new Error(data.error || "Update all failed"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
       toast.success(data.message);
       const fresh = await fetch(`/api/servers/${selectedServer.id}/mods`).then((r) => r.json());
       setInstalledMods(fresh.mods || fresh || []);
       refreshUpdates();
     } catch (err: any) {
-      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
+      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput, (err as any).warnings);
       else toast.error(err.message);
     } finally {
       setUpdateAllBusy(false);
@@ -777,7 +778,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         body: JSON.stringify({ installId }),
       });
       const data = await res.json();
-      if (!res.ok) { const e = new Error(data.error || "Pack update failed"); (e as any).bootOutput = data.bootOutput; throw e; }
+      if (!res.ok) { const e = new Error(data.error || "Pack update failed"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
       toast[data.updated ? "success" : "info"](data.message);
       if (data.updated) {
         const fresh = await fetch(`/api/servers/${selectedServer.id}/mods`).then((r) => r.json());
@@ -787,7 +788,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         await refreshLoaderState();
       }
     } catch (err: any) {
-      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput);
+      if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput, (err as any).warnings);
       else toast.error(err.message);
     } finally {
       setUpdatePackBusy(false);
@@ -812,7 +813,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     try {
       const res = await fetch(`/api/servers/${selectedServer.id}/mods/reconcile`, { method: "POST" });
       const data = await res.json();
-      if (!res.ok) { const e = new Error(data.error || "Sync failed"); (e as any).bootOutput = data.bootOutput; throw e; }
+      if (!res.ok) { const e = new Error(data.error || "Sync failed"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
       if (data.mods) setInstalledMods(data.mods);
       const { removed, added, repaired } = data.result || {};
       const drifted = removed || added || repaired;
@@ -845,7 +846,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         method: "DELETE",
       });
       const data = await res.json();
-      if (!res.ok) { const e = new Error(data.error || "Failed to uninstall mod"); (e as any).bootOutput = data.bootOutput; throw e; }
+      if (!res.ok) { const e = new Error(data.error || "Failed to uninstall mod"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
 
       setSuccess(`Successfully uninstalled ${mod.name}`);
       
@@ -854,7 +855,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       const modsData = await modsRes.json();
       if (modsData.mods) setInstalledMods(modsData.mods);
     } catch (err: any) {
-      showError(err.message, (err as any).bootOutput);
+      showError(err.message, (err as any).bootOutput, (err as any).warnings);
     } finally {
       setLoading(false);
     }
@@ -888,14 +889,14 @@ export default function ModsView({ servers, user }: ModsViewProps) {
           body: JSON.stringify({ loader: "tmodloader", installId }),
         });
         const data = await res.json();
-        if (!res.ok) { const e = new Error(data.error || "Failed to install tModLoader"); (e as any).bootOutput = data.bootOutput; throw e; }
+        if (!res.ok) { const e = new Error(data.error || "Failed to install tModLoader"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
         setSuccess(data.message || "tModLoader installed.");
         setLoaderInfo({ supported: true, loader: data.loader });
         const modsRes = await fetch(`/api/servers/${selectedServer.id}/mods`);
         const modsData = await modsRes.json();
         if (modsData.mods) setInstalledMods(modsData.mods);
       } catch (err: any) {
-        showError(err.message, (err as any).bootOutput);
+        showError(err.message, (err as any).bootOutput, (err as any).warnings);
       } finally {
         setLoading(false);
       }
@@ -926,7 +927,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         }
       );
       const data = await res.json();
-      if (!res.ok) { const e = new Error(data.error || "Failed to install mod"); (e as any).bootOutput = data.bootOutput; throw e; }
+      if (!res.ok) { const e = new Error(data.error || "Failed to install mod"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
 
       setSuccess(
         data.message ||
@@ -939,7 +940,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       const modsData = await modsRes.json();
       if (modsData.mods) setInstalledMods(modsData.mods);
     } catch (err: any) {
-      showError(err.message, (err as any).bootOutput);
+      showError(err.message, (err as any).bootOutput, (err as any).warnings);
     } finally {
       setLoading(false);
     }
@@ -1008,7 +1009,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       );
       const data = await res.json();
       if (!res.ok)
-        { const e = new Error(data.error || "Failed to import collection"); (e as any).bootOutput = data.bootOutput; throw e; }
+        { const e = new Error(data.error || "Failed to import collection"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
 
       setSuccess(data.message || "Collection imported successfully!");
       const modsRes = await fetch(
@@ -1017,7 +1018,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       const modsData = await modsRes.json();
       if (modsData.mods) setInstalledMods(modsData.mods);
     } catch (err: any) {
-      showError(err.message, (err as any).bootOutput);
+      showError(err.message, (err as any).bootOutput, (err as any).warnings);
     } finally {
       setLoading(false);
     }
@@ -1053,7 +1054,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       );
       const data = await res.json();
       if (!res.ok)
-        { const e = new Error(data.error || "Failed to import modpack"); (e as any).bootOutput = data.bootOutput; throw e; }
+        { const e = new Error(data.error || "Failed to import modpack"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
 
       setSuccess(data.message || "Modpack imported successfully!");
       const modsRes = await fetch(
@@ -1064,7 +1065,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       fetchPack();
       await refreshLoaderState();
     } catch (err: any) {
-      showError(err.message, (err as any).bootOutput);
+      showError(err.message, (err as any).bootOutput, (err as any).warnings);
     } finally {
       setLoading(false);
     }

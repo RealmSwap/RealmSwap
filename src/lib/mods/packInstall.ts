@@ -28,6 +28,7 @@ import {
 } from "@/lib/mods/curseforge";
 import { resolveVanillaServerJar, applyVanillaServerSwap, type VanillaServerJar } from "@/lib/mods/mcServerJar";
 import type { ModProgressEvent } from "@/lib/mods/progress";
+import { planClientExclusions, scanJarClientSignals, type ExclusionCandidate } from "@/lib/mods/clientModFilter";
 
 const LOADER_LABELS: Record<string, string> = {
   fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
@@ -231,7 +232,9 @@ export async function applyModpackPlan(args: {
 
   let installedCount = 0;
   let clientOnlyCount = 0;
-  const installedPackageIds: string[] = [];
+  let installedPackageIds: string[] = [];
+  // Downloaded jars from this install, scanned for client-only signals.
+  const jarCandidates: ExclusionCandidate[] = [];
 
   if (plan.cfPlan && plan.cfManifest) {
     const modsDir = path.join(serverRoot, "mods");
@@ -268,6 +271,11 @@ export async function applyModpackPlan(args: {
       });
       installedPackageIds.push(String(cfFile.modId));
       installedCount++;
+      jarCandidates.push({
+        file: dest,
+        packageId: String(cfFile.modId),
+        signals: scanJarClientSignals(dest),
+      });
       p({ stage: "mods", current: index + 1, total: fileTotal });
     }
 
@@ -332,6 +340,7 @@ export async function applyModpackPlan(args: {
           },
         });
         installedPackageIds.push(packageId);
+        jarCandidates.push({ file: dest, packageId, signals: scanJarClientSignals(dest) });
       }
       installedCount++;
       p({ stage: "mods", current: index + 1, total: install.length });
@@ -340,6 +349,25 @@ export async function applyModpackPlan(args: {
     if (optional.length > 0) {
       warnings.push(`${optional.length} file(s) are optional on the server side — installed anyway.`);
     }
+  }
+
+  // Client-mod exclusion BEFORE the boot test: early-window service jars
+  // (Sodium-class) crash dedicated servers pre-launch with an unhelpful
+  // ClassNotFoundError; drop them + their required dependents up front.
+  const { excluded, reasons } = planClientExclusions(jarCandidates);
+  for (const c of excluded) {
+    try { fs.rmSync(c.file, { force: true }); } catch {}
+    if (c.packageId) {
+      await prisma.modInstallation.deleteMany({
+        where: { serverId, packageId: c.packageId },
+      });
+      installedPackageIds = installedPackageIds.filter((id) => id !== c.packageId);
+    }
+    warnings.push(
+      `Excluded '${path.basename(c.file)}' — ${reasons.get(c.file) ?? "client-only mod"}; it would crash the dedicated server.`
+    );
+    clientOnlyCount++;
+    installedCount--;
   }
 
   // Overrides go on last so pack-provided files win over manifest downloads.

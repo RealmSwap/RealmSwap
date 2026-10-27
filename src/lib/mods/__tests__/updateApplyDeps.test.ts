@@ -143,7 +143,14 @@ describe("resolveModUpdate — new required dependencies ride the update", () =>
           return jsonRes({ data: [{
             id: 1100, modId: 42, displayName: "Cool Mod 2.0.0", fileName: "cool-mod-2.0.0.jar",
             downloadUrl: "https://edge.forgecdn.net/files/1/100/cool-mod-2.0.0.jar", hashes: [],
-            gameVersions: [], dependencies: [{ fileId: 200, relationType: 3 }], isAvailable: true,
+            gameVersions: [], dependencies: [{ modId: 43, relationType: 3 }], isAvailable: true,
+          }] });
+        }
+        if (u.includes("/mods/43/files")) {
+          return jsonRes({ data: [{
+            id: 200, modId: 43, displayName: "Dep Mod 1.0", fileName: "dep-mod-1.0.jar",
+            downloadUrl: "https://edge.forgecdn.net/files/0/200/dep-mod-1.0.jar", hashes: [],
+            gameVersions: [], dependencies: [], isAvailable: true,
           }] });
         }
         if (u.endsWith("/mods/files") && init?.method === "POST") {
