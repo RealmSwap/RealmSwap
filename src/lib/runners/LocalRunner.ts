@@ -21,7 +21,7 @@ import { shimloaderMarkerPath, shimloaderLaunchArgs } from "../mods/palworld";
 import { tmlMarkerPath, tmlLaunchArgs, rewriteWorldArgForTml } from "../mods/tml";
 import { ensureJava, parseRequiredJavaMajor } from "../runtimes/javaRuntime";
 import { applyConfigFiles } from "../definitions/applyConfigFiles";
-import { readLoaderMarker, applyLoaderLaunch } from "../mods/mcLoaders";
+import { readLoaderMarker, applyLoaderLaunch, minecraftStartJavaMajor } from "../mods/mcLoaders";
 import { quarantineFromStartCrash } from "../mods/bootRetry";
 import { parseWindroseInviteCode } from "../definitions/windrose";
 import type { GameDefinitionSpec } from "../definitions/types";
@@ -478,7 +478,10 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
   // 3. Install if needed
   let javaExe: string | undefined;
   if (requiresJava) {
-    const major = javaMajorOverrides.get(serverId) ?? spec.javaMajor ?? 25;
+    const marker = server.game.toUpperCase() === "MINECRAFT" ? readLoaderMarker(baseDir) : null;
+    const major =
+      javaMajorOverrides.get(serverId) ??
+      minecraftStartJavaMajor({ markerMinecraftVersion: marker?.minecraftVersion, specMajor: spec.javaMajor });
     try {
       await prisma.server.update({ where: { id: serverId }, data: { status: "STARTING" } });
       serverEventBus.emit("status_update", { serverId, status: "STARTING" });
