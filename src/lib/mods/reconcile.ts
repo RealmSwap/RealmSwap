@@ -101,16 +101,39 @@ async function reconcileMinecraft(serverId: string, serverRoot: string): Promise
       .filter((f) => f.endsWith(".jar") && !f.startsWith(".staging-"))
       .map((f) => path.basename(f, ".jar"))
   );
-  const rows = await prisma.modInstallation.findMany({
+  // Both jar providers key rows by jar basename (CurseForge rows by project
+  // id — packInstall names every manifest file mods/<projectId>.jar, and the
+  // boot-retry row cleanup relies on the same convention). Reconciling only
+  // modrinth left CurseForge rows as phantoms after a snapshot rollback: the
+  // rows survived the restore and the Installed tab listed mods that had been
+  // rolled away (seen live after a failed ATM10 install rolled back).
+  // Removals run for both providers; adds stay in the modrinth pass because
+  // an un-rowed jar can't be attributed to a provider from disk alone.
+  const result: ReconcileResult = { removed: 0, added: 0, repaired: 0 };
+  const modrinthRows = await prisma.modInstallation.findMany({
     where: { serverId, provider: "modrinth" },
   });
-  return applyRowDelta(serverId, "modrinth", rows, jarIds, (packageId) => ({
+  const modrinthDelta = await applyRowDelta(serverId, "modrinth", modrinthRows, jarIds, (packageId) => ({
     serverId,
     provider: "modrinth",
     packageId,
     version: "unknown",
     name: packageId,
   }));
+  result.removed += modrinthDelta.removed;
+  result.added += modrinthDelta.added;
+  result.repaired += modrinthDelta.repaired;
+
+  const curseforgeRows = await prisma.modInstallation.findMany({
+    where: { serverId, provider: "curseforge" },
+  });
+  for (const row of curseforgeRows) {
+    if (!jarIds.has(row.packageId)) {
+      await prisma.modInstallation.delete({ where: { id: row.id } });
+      result.removed++;
+    }
+  }
+  return result;
 }
 
 /**
