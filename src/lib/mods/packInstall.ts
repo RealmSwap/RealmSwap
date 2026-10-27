@@ -65,7 +65,19 @@ export async function planModpackFromZip(args: {
   loaderType?: string | null;
 }): Promise<ModpackPlan> {
   const { zipBuffer, serverMcVersion, loaderType } = args;
-  const zip = new AdmZip(zipBuffer);
+  let zip: AdmZip;
+  try {
+    zip = new AdmZip(zipBuffer);
+    // adm-zip parses lazily, so malformed archives (duplicated entry names,
+    // rejected per GHSA-p634-w6r4-rjp2) only surface on the first entries
+    // access. Force the parse here so the refusal is a preflight 400 instead
+    // of a raw ADM-ZIP error after the user clicked Install.
+    zip.getEntries();
+  } catch (openError: any) {
+    throw new PackPreflightError(
+      `This pack file couldn't be opened: ${openError.message}. Try re-downloading it — the zip may be truncated or malformed.`
+    );
+  }
   const isCurseForgePack = !!zip.getEntry("manifest.json");
 
   let cfManifest: CfManifest | null = null;

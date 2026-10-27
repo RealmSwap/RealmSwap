@@ -39,6 +39,13 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
   let zip: AdmZip;
   try {
     zip = new AdmZip(jarPath);
+    // adm-zip parses lazily: the duplicate-entry-name rejection from
+    // GHSA-p634-w6r4-rjp2 fires on the first entries access, not in the
+    // constructor. Force the parse inside this guard so a jar with
+    // duplicated entries (legal in shade-built jars) degrades to "no
+    // signals" — the boot test still covers it — instead of failing the
+    // whole pack install.
+    zip.getEntries();
   } catch {
     return signals;
   }
