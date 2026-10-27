@@ -5,6 +5,7 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { resolveModUpdate, UpdateResolutionError } from "@/lib/mods/updateApply";
+import { packOwnedPackageIds } from "@/lib/mods/packInstall";
 import { resolveRemoteModUpdate } from "@/lib/mods/remoteInstallers";
 import { rollbackRemoteInstall, RemoteShipError } from "@/lib/mods/remoteInstallers";
 import { requireLocalServer } from "@/lib/agents/perimeter";
@@ -42,6 +43,12 @@ export async function POST(
     });
     if (!installation) {
       return NextResponse.json({ error: "Installed mod not found." }, { status: 404 });
+    }
+    if ((await packOwnedPackageIds(serverId)).has(installation.packageId)) {
+      return NextResponse.json(
+        { error: `'${installation.name}' is part of the server's modpack — packs are version-locked sets and are updated as a unit via update-pack.` },
+        { status: 400 }
+      );
     }
 
     // Resolve the newest available version before touching anything, so an

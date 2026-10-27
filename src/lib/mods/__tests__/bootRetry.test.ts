@@ -5,6 +5,7 @@ import path from "path";
 import AdmZip from "adm-zip";
 import { testServerBootWithQuarantine, quarantineFromStartCrash } from "../bootRetry";
 import { SandboxBootError } from "@/lib/runners/sandbox";
+import { fetchLoaderBuild } from "@/lib/mods/curseforge";
 
 // testServerBoot is THE boundary here — the sandbox spawns real processes.
 let bootBehavior: () => void = () => {};
@@ -13,6 +14,25 @@ vi.mock("@/lib/runners/sandbox", async (importOriginal) => ({
   testServerBoot: async () => {
     bootBehavior();
   },
+}));
+
+// Version-range bumps resolve against CurseForge; the fixture store decides
+// which projects ship a replacement build.
+const cfBag = vi.hoisted(() => ({ builds: new Map<number, { id: number; displayName?: string; fileName?: string } | null>() }));
+vi.mock("@/lib/mods/curseforge", () => ({
+  fetchLoaderBuild: vi.fn(async (modId: number) => cfBag.builds.get(modId) ?? null),
+  curseForgeDownloadUrl: (f: { id: number }) => `cf://files/${f.id}`,
+}));
+vi.mock("@/lib/download", () => ({
+  downloadFile: vi.fn(async (_url: string, dest: string) => {
+    const AdmZip = (await import("adm-zip")).default;
+    const zip = new AdmZip();
+    zip.addFile(
+      "META-INF/neoforge.mods.toml",
+      Buffer.from('[[mods]]\nmodId="modern_industrialization"\nversion="2.5.11"\n')
+    );
+    zip.writeZip(dest);
+  }),
 }));
 
 vi.mock("@/lib/appPaths", () => ({
@@ -50,6 +70,8 @@ describe("testServerBootWithQuarantine", () => {
     fs.mkdirSync(path.join(serverRoot, "mods"), { recursive: true });
     fs.mkdirSync(path.join(serverRoot, "crash-reports"), { recursive: true });
     bootBehavior = () => {};
+    vi.mocked(fetchLoaderBuild).mockClear();
+    cfBag.builds.clear();
   });
 
   const warnings: string[] = [];
@@ -130,6 +152,66 @@ describe("testServerBootWithQuarantine", () => {
     });
     expect(removed).toEqual(["282837.jar"]);
     expect(calls).toBe(2);
+  });
+
+  it("bumps an out-of-range dependency from the same project and boots", async () => {
+    makeJar(path.join(serverRoot, "mods"), "1067672.jar", { modId: "tesseract_api", requiredDeps: ["modern_industrialization"] });
+    makeJar(path.join(serverRoot, "mods"), "405388.jar", { modId: "modern_industrialization" });
+    fs.writeFileSync(
+      path.join(serverRoot, "realmswap-loader.json"),
+      JSON.stringify({ type: "neoforge", loaderVersion: "21.1.259", minecraftVersion: "1.21.1" })
+    );
+    fs.writeFileSync(
+      path.join(serverRoot, "crash-reports", "crash-2026-10-27_00.00.00-fml.txt"),
+      "Error during pre-loading phase: Mod tesseract_api only supports modern_industrialization 2.5.11- or above, and below 2.6-\n"
+    );
+    cfBag.builds.set(405388, { id: 9273385, displayName: "Modern Industrialization v2.5.11" });
+
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) throw new SandboxBootError("crashed", "");
+    };
+
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    expect(removed).toEqual([]);
+    expect(calls).toBe(2);
+    expect(vi.mocked(fetchLoaderBuild)).toHaveBeenCalledWith(405388, "1.21.1", "neoforge");
+    expect(fs.existsSync(path.join(serverRoot, "mods", "405388.jar"))).toBe(true); // replaced, not removed
+    expect(warnings.join(" ")).toMatch(/Upgraded 'modern_industrialization'/);
+    expect(warnings.join(" ")).not.toMatch(/Excluded '405388/);
+  });
+
+  it("quarantines the demanding mod when a bumped dependency still fails the range", async () => {
+    makeJar(path.join(serverRoot, "mods"), "1067672.jar", { modId: "tesseract_api", requiredDeps: ["modern_industrialization"] });
+    makeJar(path.join(serverRoot, "mods"), "405388.jar", { modId: "modern_industrialization" });
+    fs.writeFileSync(
+      path.join(serverRoot, "realmswap-loader.json"),
+      JSON.stringify({ type: "neoforge", loaderVersion: "21.1.259", minecraftVersion: "1.21.1" })
+    );
+    fs.writeFileSync(
+      path.join(serverRoot, "crash-reports", "crash-2026-10-27_00.00.00-fml.txt"),
+      "Error during pre-loading phase: Mod tesseract_api only supports modern_industrialization 2.5.11- or above, and below 2.6-\n"
+    );
+    cfBag.builds.set(405388, { id: 9273385, displayName: "Modern Industrialization v2.5.11" });
+
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls <= 2) throw new SandboxBootError("crashed", "");
+    };
+
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    // One bump attempt, then the mod imposing the range is dropped.
+    expect(vi.mocked(fetchLoaderBuild)).toHaveBeenCalledTimes(1);
+    expect(removed).toEqual(["1067672.jar"]);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "1067672.jar"))).toBe(false);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "405388.jar"))).toBe(true);
+    expect(calls).toBe(3);
   });
 
   it("rethrows when the crash names no jar", async () => {    makeJar(path.join(serverRoot, "mods"), "sodium-1.0.jar", { modId: "sodium" });

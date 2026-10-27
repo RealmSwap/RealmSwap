@@ -40,6 +40,8 @@ import AdmZip from "adm-zip";
 
 export interface JarClientSignals {
   selfModId: string | null;
+  /** Every [[mods]] modId across the jar's tomls — multi-mod jars list several. */
+  allModIds: string[];
   /** Declares a neoforgespi.earlywindow (or legacy fml earlywindow) service. */
   hasEarlyWindowService: boolean;
   /** Carries any Fabric/NeoForge/Quilt mod manifest — without one FML refuses the jar. */
@@ -86,6 +88,7 @@ const MOD_MANIFEST_RE =
 export function scanJarClientSignals(jarPath: string): JarClientSignals {
   const signals: JarClientSignals = {
     selfModId: null,
+    allModIds: [],
     hasEarlyWindowService: false,
     hasModManifest: false,
     unreadableZip: false,
@@ -138,6 +141,17 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
       if (signals.selfModId === null) {
         const m = /(?:^|\n)\s*modId\s*=\s*["']([\w-]+)["']/.exec(data);
         if (m) signals.selfModId = m[1].toLowerCase();
+      }
+      // Every [[mods]] block — multi-mod jars (a toml with two [[mods]])
+      // provide more than one modId, and dep-resolution needs them all.
+      const modsSplit = data.split(/(?=\[\[mods\]\])/);
+      for (const modsBlock of modsSplit) {
+        if (!modsBlock.startsWith("[[mods]]")) continue;
+        const mm = /^\[\[mods\]\][\s\S]*?modId\s*=\s*["']([\w-]+)["']/.exec(modsBlock);
+        if (mm) {
+          const id = mm[1].toLowerCase();
+          if (!signals.allModIds.includes(id)) signals.allModIds.push(id);
+        }
       }
       // [[dependencies.<target>]] blocks: the body's modId is the dependency.
       const split = data.split(/(?=\[\[dependencies\.[\w-]+\]\])/);

@@ -2,18 +2,22 @@
  * Boot-test retry for Minecraft modpack installs. Client-only mods that slip
  * past the static filter (clientModFilter.ts) die during mod construction
  * with a named crash report; manifest-less artifacts (shader/resource packs
- * bundled for clients) die with "File X is not a valid mod file" lines. This
- * helper wraps testServerBoot: on failure it reads the newest crash report,
- * quarantines every named jar (plus anything in the pack that REQUIRES
- * them), and retries — up to a small cap. Each exclusion surfaces as a
- * warning so the user sees exactly what was left out and why.
+ * bundled for clients) die with "File X is not a valid mod file" lines;
+ * version-range failures ("Mod X only supports Y <range>") name modIds only.
+ * This helper wraps testServerBoot: on failure it reads the newest crash
+ * report, heals what it can — bumping out-of-range dependencies within the
+ * same project, quarantining every named jar (plus anything in the pack
+ * that REQUIRES them) — and retries, up to a small cap. Each action
+ * surfaces as a warning so the user sees exactly what changed and why.
  */
 
 import fs from "fs";
 import path from "path";
 import { dataRoot } from "@/lib/appPaths";
 import { testServerBoot, SandboxBootError, resolveSandboxJava } from "@/lib/runners/sandbox";
-import { planClientExclusions, scanJarClientSignals, type ExclusionCandidate } from "@/lib/mods/clientModFilter";
+import { planClientExclusions, scanJarClientSignals, type ExclusionCandidate, type TargetLoader } from "@/lib/mods/clientModFilter";
+import { fetchLoaderBuild, curseForgeDownloadUrl } from "@/lib/mods/curseforge";
+import { downloadFile } from "@/lib/download";
 
 const MAX_QUARANTINE_ROUNDS = 3;
 
@@ -74,6 +78,18 @@ export function serverLoaderType(serverRoot: string): "neoforge" | "forge" | "fa
     const raw = JSON.parse(fs.readFileSync(path.join(serverRoot, "realmswap-loader.json"), "utf8"));
     const t = String(raw?.type ?? "");
     return t === "neoforge" || t === "forge" || t === "fabric" || t === "quilt" ? t : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The Minecraft version the installed loader targets, for same-project
+ *  rebuild lookups (version-range bumps). Null when unknown. */
+export function serverMinecraftVersion(serverRoot: string): string | null {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(serverRoot, "realmswap-loader.json"), "utf8"));
+    const v = String(raw?.minecraftVersion ?? "");
+    return v || null;
   } catch {
     return null;
   }
@@ -233,11 +249,88 @@ export async function quarantineFromStartCrash(args: {
 }
 
 /**
+ * FML pre-loading failures of the shape
+ * "Mod tesseract_api only supports modern_industrialization 2.5.11- or above,
+ * and below 2.6-" — the pack pinned an older build of a dependency than
+ * another pack mod demands. Returns the (requiring, required) pairs.
+ */
+const RANGE_ERROR_RE = /Mod ([\w-]+) only supports ([\w-]+) ([^\r\n]+?) or above/g;
+
+export function parseRangeErrors(report: string): { requiring: string; required: string }[] {
+  const out: { requiring: string; required: string }[] = [];
+  const seen = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = RANGE_ERROR_RE.exec(report))) {
+    const required = m[2].toLowerCase();
+    const key = `${m[1].toLowerCase()}->${required}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ requiring: m[1].toLowerCase(), required });
+  }
+  return out;
+}
+
+/**
+ * Version-range self-heal: replace the named dependency with the same
+ * project's newest build for the server's loader + Minecraft version (live
+ * fix: modern_industrialization 2.5.10 → 2.5.11 satisfied tesseract_api).
+ * Jars are keyed by numeric project id; anything else (manual installs) is
+ * skipped. Returns true when at least one jar was replaced.
+ */
+async function bumpDependenciesForRangeErrors(args: {
+  serverRoot: string;
+  pairs: { requiring: string; required: string }[];
+  bumpedDeps: Set<string>;
+  warnings: string[];
+  loader: TargetLoader | null;
+  mcVersion: string | null;
+  onProgress?: (label: string) => void;
+}): Promise<boolean> {
+  const { serverRoot, pairs, bumpedDeps, warnings, loader, mcVersion } = args;
+  if (!loader || !mcVersion) return false;
+  const modsDir = path.join(serverRoot, "mods");
+  // modId → jar file (multi-mod jars register every modId they provide).
+  const byModId = new Map<string, string>();
+  for (const name of listModsJarNames(serverRoot)) {
+    const signals = scanJarClientSignals(path.join(modsDir, name));
+    for (const id of signals.allModIds) {
+      if (!byModId.has(id)) byModId.set(id, name);
+    }
+  }
+  let replaced = false;
+  for (const { requiring, required } of pairs) {
+    if (bumpedDeps.has(required)) continue;
+    bumpedDeps.add(required);
+    const jarName = byModId.get(required);
+    if (!jarName) continue;
+    const projectId = path.basename(jarName, ".jar");
+    if (!/^\d+$/.test(projectId)) continue;
+    try {
+      const build = await fetchLoaderBuild(Number(projectId), mcVersion, loader);
+      if (!build) continue;
+      await downloadFile(curseForgeDownloadUrl(build), path.join(modsDir, jarName), { onProgress: () => {} });
+      warnings.push(
+        `Upgraded '${required}' (${jarName}) to '${build.displayName || build.fileName}' to satisfy '${requiring}' — the pack pinned an older build.`
+      );
+      args.onProgress?.(`Upgrading ${required} for ${requiring} — retrying boot`);
+      replaced = true;
+    } catch {
+      // no CF project / no build / download failed — the caller falls back
+      // to quarantining the mod that imposes the range
+    }
+  }
+  return replaced;
+}
+
+/**
  * Run the boot test; when FML names a mod in a crash report, quarantine it
- * (+ its required dependents within mods/) and retry. Throws the original
- * error when the crash names no jar or the cap is exhausted. Returns the
- * basenames of every jar removed, so callers can clean up install rows
- * (CF and mrpack rows are both keyed by jar basename).
+ * (+ its required dependents within mods/) and retry. Version-range
+ * failures are healed by bumping the named dependency first (one attempt
+ * per dependency — if the crash repeats, the mod that imposes the range is
+ * quarantined instead). Throws the original error when the crash names no
+ * jar and no range pair, or the cap is exhausted. Returns the basenames of
+ * every jar removed, so callers can clean up install rows (CF and mrpack
+ * rows are both keyed by jar basename).
  */
 export async function testServerBootWithQuarantine(args: {
   serverId: string;
@@ -250,6 +343,7 @@ export async function testServerBootWithQuarantine(args: {
 }): Promise<string[]> {
   const { serverId, serverRoot, game, warnings, onProgress } = args;
   const removed: string[] = [];
+  const bumpedDeps = new Set<string>();
 
   // Always say which java the verification will run on. The packaged app's
   // console is invisible, and the v0.5.8 incident (a PATH-only lookup that
@@ -269,6 +363,54 @@ export async function testServerBootWithQuarantine(args: {
       // Prefer the crash report (full text); fall back to the captured tail.
       const reportPath = newestCrashReport(serverRoot);
       const report = reportPath ? fs.readFileSync(reportPath, "utf8") : err.output;
+      const loader = serverLoaderType(serverRoot);
+      const mcVersion = serverMinecraftVersion(serverRoot);
+
+      // Version-range failures first: bump the dependency the pack pinned
+      // too old. One attempt per dependency; a repeat crash quarantines the
+      // mod that imposes the range instead (below).
+      const rangePairs = parseRangeErrors(report);
+      if (rangePairs.length > 0) {
+        const fresh = rangePairs.filter((p) => !bumpedDeps.has(p.required));
+        if (
+          fresh.length > 0 &&
+          (await bumpDependenciesForRangeErrors({
+            serverRoot, pairs: fresh, bumpedDeps, warnings, loader, mcVersion, onProgress,
+          }))
+        ) {
+          continue;
+        }
+        // Bump unavailable or already tried — drop the mod that demands the
+        // range so the rest of the pack can boot.
+        const candidates: ExclusionCandidate[] = listModsJarNames(serverRoot).map((name) => ({
+          file: path.join(serverRoot, "mods", name),
+          signals: scanJarClientSignals(path.join(serverRoot, "mods", name)),
+        }));
+        const seeds = candidates.filter((c) =>
+          rangePairs.some((p) => c.signals.allModIds.includes(p.requiring))
+        );
+        if (seeds.length === 0) throw err;
+        const { excluded, reasons } = planClientExclusions(candidates, new Set(seeds.map((s) => s.file)), {
+          targetLoader: loader,
+        });
+        if (excluded.length === 0) throw err;
+        for (const c of excluded) {
+          if (!(await forceRemoveJar(c.file, args.deps?.deleteDelaysMs))) {
+            warnings.push(
+              `Could not remove '${path.basename(c.file)}' — Windows held the file through every retry. ` +
+                "The install cannot be verified while that jar is locked; wait a minute and reinstall the modpack."
+            );
+            throw err;
+          }
+          removed.push(path.basename(c.file));
+          warnings.push(
+            `Excluded '${path.basename(c.file)}' — ${reasons.get(c.file) ?? "it demands a dependency version the pack doesn't ship"}.`
+          );
+        }
+        onProgress?.("Excluding out-of-range mod(s) — retrying boot");
+        continue;
+      }
+
       const blamed = blamedModFiles(report);
       if (blamed.length === 0) throw err;
 
@@ -282,7 +424,7 @@ export async function testServerBootWithQuarantine(args: {
       if (seeds.length === 0) throw err;
 
       const { excluded, reasons } = planClientExclusions(candidates, new Set(seeds.map((s) => s.file)), {
-        targetLoader: serverLoaderType(serverRoot),
+        targetLoader: loader,
       });
       if (excluded.length === 0) throw err;
 

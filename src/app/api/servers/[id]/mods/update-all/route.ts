@@ -5,6 +5,7 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
 import { resolveModUpdate } from "@/lib/mods/updateApply";
+import { packOwnedPackageIds } from "@/lib/mods/packInstall";
 import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // POST: update every stale mod in ONE snapshot window — resolve all versions
@@ -35,6 +36,13 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     const installations = await prisma.modInstallation.findMany({ where: { serverId } });
     const skipped: { packageId: string; name: string; reason: string }[] = [];
 
+    // Pack-owned mods move as a unit via update-pack; bumping one to
+    // provider-latest breaks the pins the rest of the pack was resolved
+    // against (live: kubejs .374 → .377 broke kubejstweaks' mixins).
+    const packOwned = await packOwnedPackageIds(serverId);
+    const updatable = installations.filter((i) => !packOwned.has(i.packageId));
+    const packOwnedCount = installations.length - updatable.length;
+
     // Resolution phase — network lookups happen before any snapshot so a
     // dead provider or up-to-date server never creates a rollback point.
     const planned: {
@@ -46,7 +54,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       rowPatch?: Record<string, string>;
       warnings?: string[];
     }[] = [];
-    for (const installation of installations) {
+    for (const installation of updatable) {
       if (!["modrinth", "thunderstore", "workshop", "curseforge"].includes(installation.provider)) {
         continue; // rows without an update path; the updates check already reports them
       }
@@ -110,6 +118,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         updated: planned.map(({ name, from, to }) => ({ name, from, to })),
         skipped,
         message: `Updated ${planned.length} mod${planned.length === 1 ? "" : "s"} to the latest versions and passed sandbox testing.` +
+          (packOwnedCount > 0 ? ` ${packOwnedCount} modpack-owned mod${packOwnedCount === 1 ? " was" : "s were"} left out — packs are updated as a unit via update-pack.` : "") +
           (() => {
             const notes = planned.flatMap((p) => p.warnings ?? []);
             return notes.length ? ` Warnings: ${Array.from(new Set(notes)).join(" ")}` : "";

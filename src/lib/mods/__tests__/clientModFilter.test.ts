@@ -111,6 +111,7 @@ describe("scanJarClientSignals", () => {
     const sig = scanJarClientSignals(p);
     expect(sig).toEqual({
       selfModId: null,
+      allModIds: [],
       hasEarlyWindowService: false,
       hasModManifest: false,
       unreadableZip: true,

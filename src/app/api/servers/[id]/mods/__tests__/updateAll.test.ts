@@ -14,6 +14,7 @@ const bag = vi.hoisted(() => ({
   isAdmin: true,
   access: null as any,
   installations: [] as any[],
+  modpackRow: null as any,
   updates: { rows: [], updates: [] as any[] },
   planned: new Map<string, { newVersionNumber: string; fail?: Error }>(),
   createdSnapshots: [] as string[],
@@ -40,6 +41,7 @@ vi.mock("@/lib/db", () => {
         return {};
       },
     },
+    installedModpack: { findUnique: async () => bag.modpackRow },
     serverSnapshot: { delete: async () => ({}) },
     activityLog: {
       create: async (args: any) => {
@@ -101,6 +103,7 @@ beforeEach(() => {
   bag.isAdmin = true;
   bag.access = { server: SERVER };
   bag.installations = [];
+  bag.modpackRow = null;
   bag.planned = new Map();
   bag.createdSnapshots = [];
   bag.restored = [];
@@ -133,6 +136,24 @@ describe("POST /mods/update-all", () => {
     expect(bag.restored).toHaveLength(0);
     expect(bag.discarded).toHaveLength(0);
     expect(bag.audit[0].action).toBe("UPDATE_MOD");
+  });
+
+  it("leaves pack-owned mods for update-pack and says so", async () => {
+    bag.installations = [
+      { id: "i1", packageId: "238086", provider: "curseforge", version: "2101.7.2-build.374", name: "KubeJS" },
+      { id: "i2", packageId: "user-mod", provider: "curseforge", version: "1.0.0", name: "User Mod" },
+    ];
+    bag.modpackRow = { packageIds: JSON.stringify(["238086", "1306367"]) };
+    bag.planned.set("user-mod", { newVersionNumber: "1.1.0" });
+
+    const res = await updateAll(req(), { params: Promise.resolve({ id: "s1" }) });
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.updated).toEqual([{ name: "User Mod", from: "1.0.0", to: "1.1.0" }]);
+    // The pack-owned row is neither planned nor version-written.
+    expect(bag.versionWrites.map((w: any) => w.where.id)).toEqual(["i2"]);
+    expect(data.message).toMatch(/modpack-owned/);
   });
 
   it("skips up-to-date and unresolvable mods without snapshotting", async () => {

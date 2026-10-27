@@ -577,3 +577,21 @@ export async function recordInstalledModpack(args: {
     create: { serverId, ...data },
   });
 }
+
+/**
+ * The packageIds the server's CURRENT pack install owns. Per-mod update
+ * flows must leave these alone — pack mods are a version-locked set, and
+ * bumping one to provider-latest breaks the pins the rest of the pack was
+ * resolved against (live: kubejs 2101.7.2-build.374 → .377 shattered
+ * kubejstweaks' mixins). Packs move as a unit via update-pack.
+ */
+export async function packOwnedPackageIds(serverId: string): Promise<Set<string>> {
+  const row = await prisma.installedModpack.findUnique({ where: { serverId } });
+  if (!row?.packageIds) return new Set();
+  try {
+    const ids = JSON.parse(row.packageIds);
+    return new Set(Array.isArray(ids) ? ids.map(String) : []);
+  } catch {
+    return new Set();
+  }
+}
