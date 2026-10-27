@@ -27,6 +27,7 @@ import {
   curseForgeDownloadUrl, curseForgeSha1, type CfManifest,
 } from "@/lib/mods/curseforge";
 import { resolveVanillaServerJar, applyVanillaServerSwap, type VanillaServerJar } from "@/lib/mods/mcServerJar";
+import type { ModProgressEvent } from "@/lib/mods/progress";
 
 const LOADER_LABELS: Record<string, string> = {
   fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
@@ -144,7 +145,9 @@ export interface PackApplyResult {
  * Apply a planned pack: Minecraft version swap (when the pack targets a
  * different release), loader install (pack-pinned), every manifest file
  * (downloaded and hash-verified), then overrides. Assumes the caller took a
- * snapshot and will boot-test + roll back.
+ * snapshot and will boot-test + roll back. `progress` receives stage and
+ * byte-level events for the Mod Manager's progress panel; it must never
+ * throw into the install.
  */
 export async function applyModpackPlan(args: {
   plan: ModpackPlan;
@@ -152,13 +155,45 @@ export async function applyModpackPlan(args: {
   serverRoot: string;
   serverMcVersion: string;
   warnings: string[];
+  progress?: (event: Partial<ModProgressEvent>) => void;
 }): Promise<PackApplyResult> {
-  const { plan, serverId, serverRoot, serverMcVersion, warnings } = args;
+  const { plan, serverId, serverRoot, serverMcVersion, warnings, progress } = args;
+  const p = (event: Partial<ModProgressEvent>) => {
+    try {
+      progress?.(event);
+    } catch {
+      /* progress must never break an install */
+    }
+  };
+
+  // Byte totals from every size the providers reported up front; individual
+  // downloads may still be length-less, so the bar can move by counts too.
+  let bytesDone = 0;
+  let bytesTotal: number | undefined;
+  if (plan.mcSwitch?.jar.size) bytesTotal = (bytesTotal ?? 0) + plan.mcSwitch.jar.size;
+  if (plan.cfPlan) {
+    const cfBytes = plan.cfPlan.files.reduce((sum, f) => sum + (f.fileLength ?? 0), 0);
+    if (cfBytes > 0) bytesTotal = (bytesTotal ?? 0) + cfBytes;
+  }
+  const trackBytes = (received: number, seen: { n: number }) => {
+    if (received > seen.n) {
+      bytesDone += received - seen.n;
+      seen.n = received;
+      p({ bytesDone, ...(bytesTotal !== undefined ? { bytesTotal } : {}) });
+    }
+  };
 
   // The Minecraft release comes first: loaders and mods are built for it.
   if (plan.mcSwitch) {
+    p({ stage: "mcswap", label: `Switching server.jar to Minecraft ${plan.mcSwitch.to}`, current: 0, total: 1 });
     console.log(`[Modpack] Switching server.jar: Minecraft ${plan.mcSwitch.from} → ${plan.mcSwitch.to}`);
-    await applyVanillaServerSwap({ serverRoot, jar: plan.mcSwitch.jar });
+    const jarSeen = { n: 0 };
+    await applyVanillaServerSwap({
+      serverRoot,
+      jar: plan.mcSwitch.jar,
+      onProgress: (received) => trackBytes(received, jarSeen),
+    });
+    p({ current: 1 });
   }
   const effectiveMcVersion = plan.mcSwitch ? plan.mcSwitch.to : serverMcVersion;
 
@@ -169,6 +204,7 @@ export async function applyModpackPlan(args: {
   if (plan.packLoader) {
     const marker = readLoaderMarker(serverRoot);
     if (!marker || marker.type !== plan.packLoader.type || plan.mcSwitch) {
+      p({ stage: "loader", label: `Installing the ${LOADER_LABELS[plan.packLoader.type]} loader`, current: 0, total: 1 });
       const onLog = (msg: string) => console.log(`[Modpack] ${msg}`);
       if (plan.packLoader.type === "fabric") {
         await installFabricServer(serverRoot, effectiveMcVersion, onLog);
@@ -179,6 +215,7 @@ export async function applyModpackPlan(args: {
       } else {
         await installNeoForgeServer(serverRoot, effectiveMcVersion, { pinnedVersion: plan.packLoader.version, onLog });
       }
+      p({ current: 1 });
     } else if (marker.loaderVersion !== plan.packLoader.version) {
       warnings.push(`Pack pins ${LOADER_LABELS[plan.packLoader.type]} loader ${plan.packLoader.version}; server has ${marker.loaderVersion}.`);
     }
@@ -204,11 +241,18 @@ export async function applyModpackPlan(args: {
       warnings.push("Pack pins no mod loader — its mods/ jars will not load on a vanilla server.");
     }
 
-    for (const cfFile of plan.cfPlan.files) {
+    const fileTotal = plan.cfPlan.files.length;
+    if (fileTotal > 0) p({ stage: "mods", current: 0, total: fileTotal });
+
+    for (const [index, cfFile] of Array.from(plan.cfPlan.files.entries())) {
+      p({ stage: "mods", current: index, total: fileTotal, label: cfFile.displayName || cfFile.fileName });
       // Jars are normalized to mods/<projectId>.jar so installs, updates,
       // uninstall and disk reconcile all share one keying convention.
       const dest = safeJoin(modsDir, `${cfFile.modId}.jar`);
-      await downloadFile(curseForgeDownloadUrl(cfFile), dest);
+      const seen = { n: 0 };
+      await downloadFile(curseForgeDownloadUrl(cfFile), dest, {
+        onProgress: (received) => trackBytes(received, seen),
+      });
       const actual = fs.readFileSync(dest);
       if (!verifyFileHash(actual, { sha1: curseForgeSha1(cfFile)! })) {
         fs.unlinkSync(dest);
@@ -224,6 +268,7 @@ export async function applyModpackPlan(args: {
       });
       installedPackageIds.push(String(cfFile.modId));
       installedCount++;
+      p({ stage: "mods", current: index + 1, total: fileTotal });
     }
 
     if (plan.cfPlan.skippedOptional > 0) {
@@ -238,7 +283,12 @@ export async function applyModpackPlan(args: {
       warnings.push("Pack declares no mod loader — its mods/ jars will not load on a vanilla server.");
     }
 
-    for (const manifestFile of install) {
+    const mrpackBytes = install.reduce((sum, f) => sum + (f.fileSize ?? 0), 0);
+    if (mrpackBytes > 0) bytesTotal = (bytesTotal ?? 0) + mrpackBytes;
+    if (install.length > 0) p({ stage: "mods", current: 0, total: install.length });
+
+    for (const [index, manifestFile] of Array.from(install.entries())) {
+      p({ stage: "mods", current: index, total: install.length, label: manifestFile.path });
       const rel = safePackPath(manifestFile.path);
       const dest = safeJoin(serverRoot, rel);
       fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -248,7 +298,10 @@ export async function applyModpackPlan(args: {
       let lastError: any = null;
       for (const url of manifestFile.downloads ?? []) {
         try {
-          await downloadFile(url, dest);
+          const seen = { n: 0 };
+          await downloadFile(url, dest, {
+            onProgress: (received) => trackBytes(received, seen),
+          });
           if (!verifyFileHash(fs.readFileSync(dest), manifestFile.hashes ?? {})) {
             throw new Error("hash mismatch after download");
           }
@@ -281,6 +334,7 @@ export async function applyModpackPlan(args: {
         installedPackageIds.push(packageId);
       }
       installedCount++;
+      p({ stage: "mods", current: index + 1, total: install.length });
     }
 
     if (optional.length > 0) {
@@ -289,6 +343,7 @@ export async function applyModpackPlan(args: {
   }
 
   // Overrides go on last so pack-provided files win over manifest downloads.
+  p({ stage: "overrides", label: "Applying pack overrides (configs, scripts)" });
   const overridesCount = extractMrpackOverrides(plan.zip, serverRoot, plan.overridesPrefixes);
 
   return {

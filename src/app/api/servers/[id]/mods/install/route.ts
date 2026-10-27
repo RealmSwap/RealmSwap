@@ -6,6 +6,7 @@ import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
+import { beginProgress, emitProgress, endProgress } from "@/lib/mods/progress";
 import { downloadFile } from "@/lib/download";
 import {
   installMinecraftMod, installMinecraftCurseforge, installValheimThunderstore, installZomboidWorkshopMod,
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       version: z.string().optional(),
       downloadUrl: z.string().url("Invalid download URL").optional(),
       workshopId: z.string().optional(),
+      installId: z.string().regex(/^[\w-]{6,64}$/).optional(),
     });
 
     const body = await req.json();
@@ -77,9 +79,17 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
     const serverRoot = path.join(dataRoot(), "local-servers", serverId);
 
+    // Optional live-progress session for the Mod Manager panel.
+    const installId = parsed.data.installId;
+    if (installId) {
+      beginProgress(installId);
+      emitProgress(installId, { stage: "snapshot", label: "Taking a safety snapshot" });
+    }
+
     // 1. Create a Snapshot before touching anything
     const snapshotName = `Pre-install: ${modName || modId || workshopId}`;
     const snapshot = await createSnapshot(serverId, user.id, snapshotName);
+    if (installId) emitProgress(installId, { stage: "mods", label: `Resolving and downloading ${modName || modId || workshopId}` });
 
     // Filled during install for the response and the audit log.
     let warnings: string[] = [];
@@ -249,7 +259,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
       // 3. Sandbox Test
       console.log(`[Sandbox] Running boot test for ${serverId}`);
+      if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the install", current: 0, total: 1 });
       await testServerBoot(serverId, game);
+      if (installId) emitProgress(installId, { current: 1 });
       console.log(`[Sandbox] Boot test passed for ${serverId}`);
 
       // 4. Log action
@@ -261,6 +273,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         },
       });
 
+      if (installId) endProgress(installId, "done");
       return NextResponse.json({
         success: true,
         message:
@@ -274,8 +287,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     } catch (installError: any) {
       // 5. Automatic Rollback
       console.error(`[Sandbox] Error detected. Rolling back ${serverId} to snapshot ${snapshot.id}`);
+      if (installId) emitProgress(installId, { label: "Install failed — rolling back safely" });
       await restoreSnapshot(snapshot.id);
       await discardSnapshot(snapshot.id);
+      if (installId) endProgress(installId, "error", installError.message);
 
       return NextResponse.json({
         error: `Installation failed or crashed the server. Safe Rollback completed. Cause: ${installError.message}`,

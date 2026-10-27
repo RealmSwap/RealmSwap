@@ -17,6 +17,7 @@ import { readRemoteLoaderMarker } from "@/lib/mods/remoteInstallers";
 import fs from "fs";
 import path from "path";
 import { requireLocalServer } from "@/lib/agents/perimeter";
+import { beginProgress, emitProgress, endProgress } from "@/lib/mods/progress";
 
 const LOADER_LABELS: Record<string, string> = {
   fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
@@ -78,6 +79,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
     const bodySchema = z.object({
       loader: z.enum(["fabric", "quilt", "forge", "neoforge", "tmodloader"]),
+      installId: z.string().regex(/^[\w-]{6,64}$/).optional(),
     });
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
@@ -117,9 +119,20 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       );
     }
 
+    const installId = parsed.data.installId;
+    if (installId) {
+      beginProgress(installId);
+      emitProgress(installId, { stage: "snapshot", label: "Taking a safety snapshot" });
+    }
     const snapshot = await createSnapshot(serverId, user.id, `Pre-install: ${loaderName} loader`);
     try {
-      const onLog = (msg: string) => console.log(`[Loader ${serverId}] ${msg}`);
+      // Loader installers log their own milestones (download, installer run)
+      // — each one becomes the live label.
+      const onLog = (msg: string) => {
+        console.log(`[Loader ${serverId}] ${msg}`);
+        if (installId) emitProgress(installId, { stage: "loader", label: msg });
+      };
+      if (installId) emitProgress(installId, { stage: "loader", label: `Installing ${loaderName} for Minecraft ${minecraftVersion}`, current: 0, total: 1 });
       let marker;
       if (parsed.data.loader === "forge") {
         marker = await installForgeServer(installDir, minecraftVersion, { onLog });
@@ -130,7 +143,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       } else {
         marker = await installFabricServer(installDir, minecraftVersion, onLog);
       }
+      if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the loader", current: 0, total: 1 });
       await testServerBoot(serverId, "MINECRAFT");
+      if (installId) emitProgress(installId, { current: 1 });
 
       await prisma.activityLog.create({
         data: {
@@ -140,14 +155,17 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         },
       });
 
+      if (installId) endProgress(installId, "done");
       return NextResponse.json({
         success: true,
         loader: marker,
         message: `${loaderName} ${marker.loaderVersion} installed. The server now loads jars from mods/.`,
       });
     } catch (err: any) {
+      if (installId) emitProgress(installId, { label: "Loader install failed — rolling back safely" });
       await restoreSnapshot(snapshot.id);
       await discardSnapshot(snapshot.id);
+      if (installId) endProgress(installId, "error", err.message);
       return NextResponse.json({
         error: `Loader installation failed and was rolled back. Cause: ${err.message}`,
         ...(err instanceof SandboxBootError ? { bootOutput: err.output } : {}),

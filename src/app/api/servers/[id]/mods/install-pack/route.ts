@@ -15,6 +15,7 @@ import {
   planModpackFromZip, applyModpackPlan, packResultMessage, auditPackInstall, recordInstalledModpack,
   detectPackServerMcVersion, PackPreflightError,
 } from "@/lib/mods/packInstall";
+import { beginProgress, emitProgress, endProgress } from "@/lib/mods/progress";
 import fs from "fs";
 import path from "path";
 import { requireLocalServer } from "@/lib/agents/perimeter";
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     const packInstallSchema = z.object({
       projectId: z.string().regex(/^\d+$/, "A numeric CurseForge modpack id is required"),
       fileId: z.number().int().positive().optional(),
+      installId: z.string().regex(/^[\w-]{6,64}$/).optional(),
     });
     const parsed = packInstallSchema.safeParse(await req.json());
     if (!parsed.success) {
@@ -67,6 +69,12 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
     const serverRoot = path.join(dataRoot(), "local-servers", serverId);
     const warnings: string[] = [];
+
+    // Progress sessions are keyed by the client's installId. The SSE route
+    // auth-checks every subscriber against this server, so a guessed id only
+    // exposes the stage feed of a server the caller can already see.
+    const installId = parsed.data.installId;
+    if (installId) beginProgress(installId);
 
     // Resolve the pack file: a pinned fileId wins, else the newest
     // downloadable file of the project. 400-class failures here cost
@@ -126,13 +134,19 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       try { fs.unlinkSync(tempPack); } catch (_) {}
     }
 
+    if (installId) emitProgress(installId, { stage: "snapshot", label: "Taking a safety snapshot" });
     const snapshot = await createSnapshot(serverId, user.id, `Pre-modpack: ${plan.packName}`);
 
     try {
-      const result = await applyModpackPlan({ plan, serverId, serverRoot, serverMcVersion, warnings });
+      const result = await applyModpackPlan({
+        plan, serverId, serverRoot, serverMcVersion, warnings,
+        progress: (event) => { if (installId) emitProgress(installId, event); },
+      });
 
       console.log(`[Sandbox] Running boot test for ${serverId}`);
+      if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the install", current: 0, total: 1 });
       await testServerBoot(serverId, "MINECRAFT");
+      if (installId) emitProgress(installId, { current: 1 });
       console.log(`[Sandbox] Boot test passed for ${serverId}`);
 
       await auditPackInstall({ userId: user.id, serverName: server.name, plan, result, warnings });
@@ -143,6 +157,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         fileName: packFile.fileName,
       });
 
+      if (installId) endProgress(installId, "done");
       return NextResponse.json({
         success: true,
         message: packResultMessage({ plan, result, warnings }),
@@ -152,8 +167,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     } catch (installError: any) {
       // Automatic Rollback
       console.error(`[Sandbox] Error detected. Rolling back ${serverId} to snapshot ${snapshot.id}`);
+      if (installId) emitProgress(installId, { label: "Install failed — rolling back safely" });
       await restoreSnapshot(snapshot.id);
       await discardSnapshot(snapshot.id);
+      if (installId) endProgress(installId, "error", installError.message);
 
       return NextResponse.json({
         error: `Modpack install failed. Safe Rollback completed. Cause: ${installError.message}`,

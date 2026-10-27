@@ -17,6 +17,8 @@ const VERSION_MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_man
 export interface VanillaServerJar {
   url: string;
   sha1: string | null;
+  /** Reported size in bytes, for progress totals. */
+  size: number | null;
 }
 
 interface VersionManifest {
@@ -24,7 +26,7 @@ interface VersionManifest {
 }
 
 interface VersionMeta {
-  downloads?: { server?: { url: string; sha1?: string } };
+  downloads?: { server?: { url: string; sha1?: string; size?: number } };
 }
 
 /**
@@ -57,7 +59,7 @@ export async function resolveVanillaServerJar(
   if (!server?.url) {
     throw new Error(`Mojang publishes no server download for Minecraft ${mcVersion}.`);
   }
-  return { url: server.url, sha1: server.sha1?.toLowerCase() ?? null };
+  return { url: server.url, sha1: server.sha1?.toLowerCase() ?? null, size: server.size ?? null };
 }
 
 /**
@@ -68,11 +70,13 @@ export async function resolveVanillaServerJar(
 export async function applyVanillaServerSwap(args: {
   serverRoot: string;
   jar: VanillaServerJar;
+  /** Byte-level download progress, for the install progress panel. */
+  onProgress?: (received: number, total: number | null) => void;
 }): Promise<void> {
   const { serverRoot, jar } = args;
   const staging = safeJoin(serverRoot, ".server.jar.staging");
   try {
-    await downloadFile(jar.url, staging);
+    await downloadFile(jar.url, staging, { onProgress: args.onProgress });
     if (jar.sha1 && !verifyFileHash(fs.readFileSync(staging), { sha1: jar.sha1 })) {
       throw new Error("The downloaded server.jar doesn't match Mojang's published checksum.");
     }

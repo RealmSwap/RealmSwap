@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { dataRoot } from "../appPaths";
 import { tmlMarkerPath } from "../mods/tml";
+import { readLoaderMarker, applyLoaderLaunch } from "../mods/mcLoaders";
 
 /**
  * Boot-test failure carrying what the sandboxed server actually printed, so
@@ -27,6 +28,27 @@ function capturedOutput(stdout: string, stderr: string): string {
   if (stdout.trim()) parts.push(`--- stdout ---\n${stdout.slice(-half).trimEnd()}`);
   if (stderr.trim()) parts.push(`--- stderr ---\n${stderr.slice(-half).trimEnd()}`);
   return parts.join("\n\n");
+}
+
+/**
+ * Vanilla + loader servers both announce a successful boot with the
+ * "Done (Xs)!" console line — Fabric, Forge, NeoForge and Quilt preserve it.
+ */
+export function minecraftBootSucceeded(stdout: string): boolean {
+  return /Done \(\d/.test(stdout);
+}
+
+/**
+ * The java command a Minecraft boot test must run: the builtin server.jar
+ * launch with the loader's launch descriptor applied (jar swap or @argsfile).
+ */
+export function minecraftBootArgs(serverDir: string): string[] {
+  const marker = readLoaderMarker(serverDir);
+  return applyLoaderLaunch(
+    ["-jar", "server.jar", "nogui"],
+    marker,
+    (rel) => fs.existsSync(path.join(serverDir, rel))
+  );
 }
 
 /**
@@ -74,67 +96,105 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
         "-steamworkshopfolder", path.join(tmlDir, "steamapps", "workshop"),
       ];
       sandboxMs = 150000; // first boot may fetch the .NET runtime via LaunchUtils
+    } else if (game === "MINECRAFT") {
+      // Minecraft gets a REAL boot test — it is the game where silent
+      // install damage (missing dependencies, loader mismatch, a pack
+      // targeting a different world version) only shows up at boot. Boot
+      // with the loader's launch descriptor applied; a modded first boot
+      // can take minutes, so its window is generous.
+      exePath = "java";
+      args = minecraftBootArgs(serverDir);
+      sandboxMs = readLoaderMarker(serverDir) ? 300000 : 90000;
     } else {
       // Game not supported for sandbox testing, just assume it works
       return resolve(true);
     }
 
-    // Launch the server headlessly
-    if (!fs.existsSync(exePath)) {
+    // Launch the server headlessly. Bare commands (java, cmd.exe) resolve
+    // via PATH at spawn time — a missing one surfaces as ENOENT below; only
+    // absolute executables can be pre-checked.
+    const onPath = !path.isAbsolute(exePath);
+    if (!onPath && !fs.existsSync(exePath)) {
       console.log(`[Sandbox] Server executable not found at ${exePath}. Skipping boot test.`);
       return resolve(true);
     }
     const proc = spawn(exePath, args, {
-      cwd: path.dirname(exePath),
+      // Minecraft reads server.jar, eula.txt and mods/ relative to its cwd.
+      cwd: game === "MINECRAFT" ? serverDir : onPath ? serverDir : path.dirname(exePath),
       detached: false, // keep attached so we can kill it
     });
 
     let stdoutData = "";
     let stderrData = "";
+    let settled = false;
+    const isMinecraft = game === "MINECRAFT";
+
+    const succeed = () => {
+      if (settled) return;
+      settled = true;
+      try { proc.kill("SIGKILL"); } catch (_) {}
+      resolve(true);
+    };
+    const fail = (message: string) => {
+      if (settled) return;
+      settled = true;
+      try { proc.kill("SIGKILL"); } catch (_) {}
+      reject(new SandboxBootError(message, capturedOutput(stdoutData, stderrData)));
+    };
 
     proc.stdout.on("data", (data) => {
       stdoutData += data.toString();
+      // A successful boot ends the test immediately — no reason to burn the
+      // rest of the window (or the machine's RAM on world gen).
+      if (isMinecraft && minecraftBootSucceeded(stdoutData)) succeed();
     });
 
     proc.stderr.on("data", (data) => {
       const errStr = data.toString();
       stderrData += errStr;
 
-      // Look for severe Unity/BepInEx errors
+      // Minecraft's loaders log stack traces for recoverable warnings on
+      // stderr — only the exit code and the Done-line verdict are truth
+      // there. Unity/BepInEx games keep the string-based fatality check.
+      if (isMinecraft) return;
       if (errStr.includes("NullReferenceException") || errStr.includes("[Error]") || errStr.includes("Exception")) {
-        // We found a fatal mod error during boot
-        proc.kill("SIGKILL");
-        return reject(new SandboxBootError(
-          `Sandbox Test Failed! Fatal Error detected in logs:\n${errStr.substring(0, 200)}...`,
-          capturedOutput(stdoutData, stderrData)
-        ));
+        fail(`Sandbox Test Failed! Fatal Error detected in logs:\n${errStr.substring(0, 200)}...`);
       }
     });
 
     proc.on("error", (err) => {
-      return reject(new SandboxBootError(
-        `Failed to start server executable: ${err.message}`,
-        capturedOutput(stdoutData, stderrData)
-      ));
+      // Java not installed / not on PATH: skip the test like a missing exe —
+      // boot testing must never block an install that may still work.
+      if ((err as any)?.code === "ENOENT") {
+        console.log("[Sandbox] java not found on PATH. Skipping Minecraft boot test.");
+        settled = true;
+        resolve(true);
+        return;
+      }
+      fail(`Failed to start server executable: ${err.message}`);
     });
 
     proc.on("close", (code) => {
-      if (code !== null && code !== 0) {
-        return reject(new SandboxBootError(
-          `Server crashed immediately with exit code ${code}.`,
-          capturedOutput(stdoutData, stderrData)
-        ));
+      if (!settled && code !== null && code !== 0) {
+        fail(`Server crashed immediately with exit code ${code}.`);
       }
     });
 
-    // Let it run for the boot window, then forcefully terminate it and declare success
+    // Let it run for the boot window. For Minecraft, expiring without the
+    // Done-line is a failure — a server that can't boot in time is exactly
+    // the kind of install this test exists to catch.
     setTimeout(() => {
-      try {
-        proc.kill("SIGKILL");
-      } catch (e) {
-        // Process might already be dead
+      if (settled) return;
+      if (isMinecraft) {
+        fail(
+          `Minecraft server did not reach a successful boot within ${Math.round(sandboxMs / 1000)}s.` +
+            (stdoutData ? " If this is a heavy modpack on a slow machine, it may genuinely need longer — the output below shows how far it got." : "")
+        );
+      } else {
+        settled = true;
+        try { proc.kill("SIGKILL"); } catch (e) {}
+        resolve(true);
       }
-      resolve(true);
     }, sandboxMs);
   });
 }

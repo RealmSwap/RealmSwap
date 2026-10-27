@@ -9,6 +9,7 @@ import {
   planModpackFromZip, applyModpackPlan, packResultMessage, auditPackInstall, recordInstalledModpack,
   detectPackServerMcVersion, PackPreflightError,
 } from "@/lib/mods/packInstall";
+import { beginProgress, emitProgress, endProgress } from "@/lib/mods/progress";
 import path from "path";
 import { requireLocalServer } from "@/lib/agents/perimeter";
 
@@ -51,6 +52,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     if (!file) {
       return NextResponse.json({ error: "No modpack file provided" }, { status: 400 });
     }
+    // Optional progress session key, validated like the JSON routes do.
+    const rawInstallId = formData.get("installId");
+    const installId = typeof rawInstallId === "string" && /^[\w-]{6,64}$/.test(rawInstallId) ? rawInstallId : undefined;
+    if (installId) beginProgress(installId);
 
     const serverRoot = path.join(dataRoot(), "local-servers", serverId);
     const warnings: string[] = [];
@@ -73,19 +78,26 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       throw preflightError;
     }
 
+    if (installId) emitProgress(installId, { stage: "snapshot", label: "Taking a safety snapshot" });
     const snapshot = await createSnapshot(serverId, user.id, `Pre-modpack: ${plan.packName}`);
 
     try {
-      const result = await applyModpackPlan({ plan, serverId, serverRoot, serverMcVersion, warnings });
+      const result = await applyModpackPlan({
+        plan, serverId, serverRoot, serverMcVersion, warnings,
+        progress: (event) => { if (installId) emitProgress(installId, event); },
+      });
 
       // Sandbox Test
       console.log(`[Sandbox] Running boot test for ${serverId}`);
+      if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the install", current: 0, total: 1 });
       await testServerBoot(serverId, "MINECRAFT");
+      if (installId) emitProgress(installId, { current: 1 });
       console.log(`[Sandbox] Boot test passed for ${serverId}`);
 
       await auditPackInstall({ userId: user.id, serverName: server.name, plan, result, warnings });
       await recordInstalledModpack({ serverId, plan, result });
 
+      if (installId) endProgress(installId, "done");
       return NextResponse.json({
         success: true,
         message: packResultMessage({ plan, result, warnings }),
@@ -95,8 +107,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     } catch (installError: any) {
       // Automatic Rollback
       console.error(`[Sandbox] Error detected. Rolling back ${serverId} to snapshot ${snapshot.id}`);
+      if (installId) emitProgress(installId, { label: "Install failed — rolling back safely" });
       await restoreSnapshot(snapshot.id);
       await discardSnapshot(snapshot.id);
+      if (installId) endProgress(installId, "error", installError.message);
 
       return NextResponse.json({
         error: `Modpack import failed. Safe Rollback completed. Cause: ${installError.message}`,
