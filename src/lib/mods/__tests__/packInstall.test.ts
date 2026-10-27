@@ -202,7 +202,7 @@ describe("applyModpackPlan — loader handling around the version switch", () =>
     writeMarker("neoforge", "21.1.90", "1.21.9");
     const warnings: string[] = [];
     const result = await applyModpackPlan({
-      plan: manualPlan({ mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x", sha1: null, size: null } } }),
+      plan: manualPlan({ mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x/server.jar", sha1: null, size: null, dataVersion: null } } }),
       serverId: "s1",
       serverRoot: root,
       serverMcVersion: "1.21.9",
@@ -234,7 +234,7 @@ describe("applyModpackPlan — loader handling around the version switch", () =>
     await applyModpackPlan({
       plan: manualPlan({
         packLoader: null,
-        mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x", sha1: null, size: null } },
+        mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x/server.jar", sha1: null, size: null, dataVersion: null } },
       }),
       serverId: "s1",
       serverRoot: root,
@@ -348,7 +348,7 @@ describe("applyModpackPlan — progress events", () => {
   it("walks mcswap → loader → overrides in order and reports the switch as a step", async () => {
     const events: any[] = [];
     await applyModpackPlan({
-      plan: manualPlan({ mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x", sha1: null, size: null } } }),
+      plan: manualPlan({ mcSwitch: { from: "1.21.9", to: "1.21.1", jar: { url: "https://x/server.jar", sha1: null, size: null, dataVersion: null } } }),
       serverId: "s1",
       serverRoot: root,
       serverMcVersion: "1.21.9",

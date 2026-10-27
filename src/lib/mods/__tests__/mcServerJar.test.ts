@@ -77,7 +77,7 @@ describe("applyVanillaServerSwap", () => {
 
   it("stages, checksum-verifies, and swaps the jar in", async () => {
     const sha1 = createHash("sha1").update(currentBytes).digest("hex");
-    await applyVanillaServerSwap({ serverRoot: root, jar: { url: "https://x/server.jar", sha1, size: null } });
+    await applyVanillaServerSwap({ serverRoot: root, jar: { url: "https://x/server.jar", sha1, size: null, dataVersion: null } });
     expect(fs.readFileSync(path.join(root, "server.jar"), "utf8")).toBe("jar-bytes");
     expect(fs.existsSync(path.join(root, ".server.jar.staging"))).toBe(false);
   });
@@ -85,7 +85,7 @@ describe("applyVanillaServerSwap", () => {
   it("refuses a checksum mismatch and leaves the old jar in place", async () => {
     fs.writeFileSync(path.join(root, "server.jar"), "old-jar");
     await expect(
-      applyVanillaServerSwap({ serverRoot: root, jar: { url: "https://x/server.jar", sha1: "deadbeef", size: null } })
+      applyVanillaServerSwap({ serverRoot: root, jar: { url: "https://x/server.jar", sha1: "deadbeef", size: null, dataVersion: null } })
     ).rejects.toThrow(/checksum/);
     expect(fs.readFileSync(path.join(root, "server.jar"), "utf8")).toBe("old-jar");
     expect(fs.existsSync(path.join(root, ".server.jar.staging"))).toBe(false);
