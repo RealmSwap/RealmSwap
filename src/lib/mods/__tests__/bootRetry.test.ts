@@ -83,8 +83,36 @@ describe("testServerBootWithQuarantine", () => {
     expect(warnings.join(" ")).toMatch(/requires sodium/);
   });
 
-  it("rethrows when the crash names no jar", async () => {
-    makeJar(path.join(serverRoot, "mods"), "sodium-1.0.jar", { modId: "sodium" });
+  it("quarantines every 'not a valid mod file' jar in one round, even with no Mod file line", async () => {
+    for (const id of ["322506", "385587", "431203", "627557"]) {
+      makeJar(path.join(serverRoot, "mods"), `${id}.jar`, {}); // shader packs: valid zips, no manifest
+    }
+    makeJar(path.join(serverRoot, "mods"), "darkmode-1.0.jar", { modId: "darkmodeeverywhere" });
+    // The shape of the live 2026-10-27 crash: invalid-file entries carry no
+    // "Mod file:" line, only a "Failure message: File …jar is not a valid mod file".
+    fs.writeFileSync(
+      path.join(serverRoot, "crash-reports", "crash-2026-10-27_00.00.00-fml.txt"),
+      "-- Mod loading issue --\n\tMod file: <No mod information provided>\n\tFailure message: File C:\\data\\mods\\322506.jar is not a valid mod file\n" +
+        "-- Mod loading issue --\n\tMod file: <No mod information provided>\n\tFailure message: File C:\\data\\mods\\385587.jar is not a valid mod file\n" +
+        "-- Mod loading issue for: darkmodeeverywhere --\n\tMod file: mods/darkmode-1.0.jar\n\tFailure message: invalid dist DEDICATED_SERVER\n"
+    );
+
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) throw new SandboxBootError("crashed", "");
+    };
+
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    expect(removed.sort()).toEqual([
+      "322506.jar", "385587.jar", "431203.jar", "627557.jar", "darkmode-1.0.jar",
+    ]);
+    expect(calls).toBe(2); // one quarantine round cleared all five
+  });
+
+  it("rethrows when the crash names no jar", async () => {    makeJar(path.join(serverRoot, "mods"), "sodium-1.0.jar", { modId: "sodium" });
     bootBehavior = () => {
       throw new SandboxBootError("Server crashed immediately with exit code 1.", "no mod names here");
     };
@@ -241,6 +269,21 @@ describe("quarantineFromStartCrash", () => {
 
     const { removed } = await quarantineFromStartCrash({ serverRoot });
     expect(removed).toEqual(["earlywindow-1.0.jar"]);
+  });
+
+  it("moves 'not a valid mod file' jars out of mods/ even without dist evidence", async () => {
+    makeJar(path.join(serverRoot, "mods"), "322506.jar", {}); // manifest-less shader pack
+    makeJar(path.join(serverRoot, "mods"), "broken-1.0.jar", { modId: "brokenmod" }); // manifest present, FML still rejects
+    makeJar(path.join(serverRoot, "mods"), "servermod-1.0.jar", { modId: "servermod" });
+    writeReport(
+      "-- Mod loading issue --\n\tMod file: <No mod information provided>\n\tFailure message: File C:\\data\\mods\\322506.jar is not a valid mod file\n" +
+        "-- Mod loading issue --\n\tMod file: <No mod information provided>\n\tFailure message: File C:\\data\\mods\\broken-1.0.jar is not a valid mod file\n"
+    );
+
+    const { removed, quarantineDir } = await quarantineFromStartCrash({ serverRoot, deps: { renameDelaysMs: [5, 5] } });
+    expect(removed.sort()).toEqual(["322506.jar", "broken-1.0.jar"]);
+    expect(fs.existsSync(path.join(quarantineDir!, "322506.jar"))).toBe(true);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "servermod-1.0.jar"))).toBe(true);
   });
 
   it("restores everything when one jar in the closure is locked (all-or-nothing)", async () => {

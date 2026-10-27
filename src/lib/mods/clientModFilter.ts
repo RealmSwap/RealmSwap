@@ -11,12 +11,15 @@
  *    classes and die with "invalid dist DEDICATED_SERVER" (e.g. Dark Mode
  *    Everywhere). FML's crash report names the mod file, so the boot-retry
  *    loop (quarantineExcludedMod) handles those at install time.
+ * 3. Not mods at all: packs bundle shader/resource packs for clients, and a
+ *    zip without a mod manifest in mods/ is rejected by FML outright
+ *    ("File X is not a valid mod file") — a boot-fatal crash.
  *
- * This module handles case 1 statically BEFORE the boot test: scan the
- * downloaded jars, exclude early-window seeds, and close over jars whose
- * REQUIRED toml dependencies reference an excluded mod (optional
- * dependencies like Create→sodium are deliberately left alone — verified
- * server-safe without it).
+ * This module handles cases 1 and 3 statically BEFORE the boot test: scan the
+ * downloaded jars, exclude early-window seeds and manifest-less jars, and
+ * close over jars whose REQUIRED toml dependencies reference an excluded mod
+ * (optional dependencies like Create→sodium are deliberately left alone —
+ * verified server-safe without it).
  */
 
 import fs from "fs";
@@ -27,15 +30,27 @@ export interface JarClientSignals {
   selfModId: string | null;
   /** Declares a neoforgespi.earlywindow (or legacy fml earlywindow) service. */
   hasEarlyWindowService: boolean;
+  /** Carries any Fabric/NeoForge/Quilt mod manifest — without one FML refuses the jar. */
+  hasModManifest: boolean;
+  /** The zip itself couldn't be parsed (duplicate entries, truncation…). */
+  unreadableZip: boolean;
   /** modIds of REQUIRED dependencies parsed from the embedded mods toml. */
   requiredDeps: Set<string>;
 }
 
 const MODS_TOML_RE = /neoforge\.mods\.toml$|(^|\/)mods\.toml$/;
+const MOD_MANIFEST_RE =
+  /neoforge\.mods\.toml$|(^|\/)mods\.toml$|(^|\/)fabric\.mod\.json$|(^|\/)quilt\.mod\.json$|(^|\/)mcmod\.info$/;
 
 /** Read client-risk signals from one jar on disk. Tolerates broken jars. */
 export function scanJarClientSignals(jarPath: string): JarClientSignals {
-  const signals: JarClientSignals = { selfModId: null, hasEarlyWindowService: false, requiredDeps: new Set() };
+  const signals: JarClientSignals = {
+    selfModId: null,
+    hasEarlyWindowService: false,
+    hasModManifest: false,
+    unreadableZip: false,
+    requiredDeps: new Set(),
+  };
   let zip: AdmZip;
   try {
     zip = new AdmZip(jarPath);
@@ -47,12 +62,16 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
     // whole pack install.
     zip.getEntries();
   } catch {
+    signals.unreadableZip = true;
     return signals;
   }
   for (const entry of zip.getEntries()) {
     const name = entry.entryName;
     if (name.startsWith("META-INF/services/") && name.toLowerCase().includes("earlywindow")) {
       signals.hasEarlyWindowService = true;
+    }
+    if (MOD_MANIFEST_RE.test(name)) {
+      signals.hasModManifest = true;
     }
     if (MODS_TOML_RE.test(name)) {
       let data: string;
@@ -110,7 +129,12 @@ export function planClientExclusions(
   for (const c of candidates) {
     if (forceExclude?.has(c.file)) {
       excluded.add(c);
-      reasons.set(c.file, "crashed the boot test (client-only mod)");
+      reasons.set(
+        c.file,
+        c.signals.hasModManifest || c.signals.unreadableZip
+          ? "crashed the boot test (client-only mod)"
+          : "isn't a valid mod file — FML rejected it outright"
+      );
       if (modIdOf(c)) excludedModIds.add(modIdOf(c)!);
       continue;
     }
@@ -121,6 +145,14 @@ export function planClientExclusions(
         "client-only rendering mod — it declares a client display service that crashes dedicated servers at boot"
       );
       if (modIdOf(c)) excludedModIds.add(modIdOf(c)!);
+      continue;
+    }
+    if (!c.signals.hasModManifest && !c.signals.unreadableZip) {
+      excluded.add(c);
+      reasons.set(
+        c.file,
+        "isn't a mod file at all — it carries no Fabric/NeoForge mod manifest (usually a shader or resource pack bundled for clients), and FML refuses it"
+      );
     }
   }
 

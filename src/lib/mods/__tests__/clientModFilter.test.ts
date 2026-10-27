@@ -52,6 +52,20 @@ describe("scanJarClientSignals", () => {
     expect(sig.selfModId).toBeNull();
     expect(sig.hasEarlyWindowService).toBe(false);
     expect(sig.requiredDeps.size).toBe(0);
+    expect(sig.hasModManifest).toBe(false);
+  });
+
+  it("sees a fabric.mod.json as a mod manifest", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+    const p = path.join(dir, "fabric.jar");
+    const zip = new AdmZip();
+    zip.addFile("fabric.mod.json", Buffer.from('{"id":"fabricmod","version":"1.0"}'));
+    zip.addFile("dummy.txt", Buffer.from("x"));
+    zip.writeZip(p);
+    const sig = scanJarClientSignals(p);
+    expect(sig.hasModManifest).toBe(true);
+    expect(sig.selfModId).toBeNull();
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 
   it("returns inert signals for a jar with duplicated entry names instead of throwing", () => {
@@ -67,7 +81,13 @@ describe("scanJarClientSignals", () => {
       ])
     );
     const sig = scanJarClientSignals(p);
-    expect(sig).toEqual({ selfModId: null, hasEarlyWindowService: false, requiredDeps: new Set() });
+    expect(sig).toEqual({
+      selfModId: null,
+      hasEarlyWindowService: false,
+      hasModManifest: false,
+      unreadableZip: true,
+      requiredDeps: new Set(),
+    });
     fs.rmSync(dir, { recursive: true, force: true });
   });
 });
@@ -117,6 +137,36 @@ describe("planClientExclusions", () => {
       expect(excluded.map((c) => c.file)).toEqual([darkmode]);
     } finally {
       fs.rmSync(path.dirname(darkmode), { recursive: true, force: true });
+    }
+  });
+
+  it("excludes manifest-less jars (shader/resource packs) but spares unreadable zips", () => {
+    const shader = makeJar("322506.jar", {}); // valid zip, no mod manifest
+    const unreadable = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-")), "dup.jar");
+    fs.writeFileSync(
+      unreadable,
+      dupEntryZip([
+        { name: "META-INF/LICENSE.TXT", data: "first copy" },
+        { name: "META-INF/LICENSE.TXT", data: "second copy" },
+      ])
+    );
+    try {
+      const { excluded, reasons } = planClientExclusions([shader, unreadable, create].map(candidate));
+      expect(excluded.map((c) => c.file)).toEqual([shader]);
+      expect(reasons.get(shader)).toMatch(/no Fabric\/NeoForge mod manifest/);
+    } finally {
+      fs.rmSync(path.dirname(shader), { recursive: true, force: true });
+      fs.rmSync(path.dirname(unreadable), { recursive: true, force: true });
+    }
+  });
+
+  it("labels a forced manifest-less seed as FML-rejected, not client-only", () => {
+    const shader = makeJar("385587.jar", {});
+    try {
+      const { reasons } = planClientExclusions([shader, create].map(candidate), new Set([shader]));
+      expect(reasons.get(shader)).toMatch(/isn't a valid mod file/);
+    } finally {
+      fs.rmSync(path.dirname(shader), { recursive: true, force: true });
     }
   });
 });
