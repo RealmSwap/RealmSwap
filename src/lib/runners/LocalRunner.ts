@@ -805,7 +805,12 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
     // crashes every Start. When the crash report blames a mod file with
     // client-only evidence, remove it (+ everything that requires it) and
     // relaunch instead of burning the auto-restart budget on the same crash.
-    if (!wasIntentional && isCrash && serverRec.game.toUpperCase() === "MINECRAFT") {
+    // Not gated on isCrash: FML mod-loading crashes exit with code 0 on
+    // Windows ("Process exited with code 0" right after the stack trace), so
+    // a non-zero exit would never reach this. quarantineFromStartCrash only
+    // acts on a crash report younger than 5 minutes with sound blame
+    // evidence — a clean stop is a no-op here.
+    if (!wasIntentional && serverRec.game.toUpperCase() === "MINECRAFT") {
       const healed = await quarantineFromStartCrash({ serverRoot: baseDir }).catch(() => null);
       if (healed && healed.removed.length > 0) {
         for (const w of healed.warnings) appendLog(serverId, w);
