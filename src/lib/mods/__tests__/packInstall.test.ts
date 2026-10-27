@@ -397,7 +397,7 @@ describe("retireReplacedPackMods", () => {
     const retired = await retireReplacedPackMods({
       serverId: "s1", serverRoot: root,
       plan: manualPlan({}),
-      result: { installedCount: 1, clientOnlyCount: 0, overridesCount: 0, installedPackageIds: ["123"] },
+      result: { installedCount: 1, clientOnlyCount: 0, crossLoaderCount: 0, crossLoaderReplaced: 0, overridesCount: 0, installedPackageIds: ["123"] },
       warnings,
     });
     expect(retired).toBe(1);
@@ -413,7 +413,7 @@ describe("retireReplacedPackMods", () => {
     const retired = await retireReplacedPackMods({
       serverId: "s1", serverRoot: root,
       plan: manualPlan({}),
-      result: { installedCount: 1, clientOnlyCount: 0, overridesCount: 0, installedPackageIds: [] },
+      result: { installedCount: 1, clientOnlyCount: 0, crossLoaderCount: 0, crossLoaderReplaced: 0, overridesCount: 0, installedPackageIds: [] },
       warnings: [],
     });
     expect(retired).toBe(0);
@@ -425,7 +425,7 @@ describe("retireReplacedPackMods", () => {
     const retired = await retireReplacedPackMods({
       serverId: "s1", serverRoot: root,
       plan: manualPlan({}),
-      result: { installedCount: 0, clientOnlyCount: 0, overridesCount: 0, installedPackageIds: [] },
+      result: { installedCount: 0, clientOnlyCount: 0, crossLoaderCount: 0, crossLoaderReplaced: 0, overridesCount: 0, installedPackageIds: [] },
       warnings: [],
     });
     expect(retired).toBe(1);

@@ -14,12 +14,24 @@
  * 3. Not mods at all: packs bundle shader/resource packs for clients, and a
  *    zip without a mod manifest in mods/ is rejected by FML outright
  *    ("File X is not a valid mod file") — a boot-fatal crash.
+ * 4. Wrong loader: packs pin Fabric/legacy-Forge builds of mods alongside
+ *    (or instead of) the loader the pack runs. FML refuses them
+ *    ("is a Fabric mod and cannot be loaded" / "for Minecraft Forge or an
+ *    older version of NeoForge"). When the caller knows the server's loader,
+ *    cross-loader jars are dropped up front so the pack's correct-loader
+ *    files are what the boot test sees.
  *
- * This module handles cases 1 and 3 statically BEFORE the boot test: scan the
- * downloaded jars, exclude early-window seeds and manifest-less jars, and
- * close over jars whose REQUIRED toml dependencies reference an excluded mod
- * (optional dependencies like Create→sodium are deliberately left alone —
- * verified server-safe without it).
+ * Deliberately NOT flagged as broken: FMLModType: LIBRARY jars (language
+ * providers like Scala/Kotlin bindings — manifest-less by design) and
+ * jarjar wrappers (META-INF/jarjar/metadata.json — NeoForge loads the
+ * nested mods). Both are manifest-less and boot-healthy; a naive
+ * "no manifest = not a mod" rule would break packs that ship them.
+ *
+ * This module handles cases 1, 3 and 4 statically BEFORE the boot test: scan
+ * the downloaded jars, exclude early-window seeds, manifest-less jars and
+ * cross-loader jars, and close over jars whose REQUIRED toml dependencies
+ * reference an excluded mod (optional dependencies like Create→sodium are
+ * deliberately left alone — verified server-safe without it).
  */
 
 import fs from "fs";
@@ -34,8 +46,36 @@ export interface JarClientSignals {
   hasModManifest: boolean;
   /** The zip itself couldn't be parsed (duplicate entries, truncation…). */
   unreadableZip: boolean;
+  /** Which loader manifests the jar carries: neoforge.mods.toml → "neoforge",
+   *  fabric/quilt json → those, plain mods.toml or mcmod.info → "forge"/"legacy-forge".
+   *  Dual-manifest jars list several; FML loads whichever side matches. */
+  loaders: Set<JarLoader>;
+  /** FMLModType: LIBRARY jar (language providers like Scala/Kotlin bindings).
+   *  Manifest-less on purpose — FML loads these from mods/ directly. */
+  fmlLibrary: boolean;
+  /** A jarjar wrapper (META-INF/jarjar/metadata.json): NeoForge loads the
+   *  nested mods, so the outer jar needs no manifest of its own. */
+  jarJarWrapper: boolean;
   /** modIds of REQUIRED dependencies parsed from the embedded mods toml. */
   requiredDeps: Set<string>;
+}
+
+export type JarLoader = "neoforge" | "forge" | "legacy-forge" | "fabric" | "quilt";
+export type TargetLoader = "neoforge" | "forge" | "fabric" | "quilt";
+
+/** Which jar-level loader manifests a server loader can actually load. */
+const LOADER_FAMILY: Record<TargetLoader, JarLoader[]> = {
+  neoforge: ["neoforge"],
+  // Modern NeoForge refuses legacy mods.toml jars ("for Minecraft Forge or an
+  // older version of NeoForge"), but a Forge server loads them.
+  forge: ["forge", "legacy-forge"],
+  fabric: ["fabric", "quilt"],
+  quilt: ["quilt", "fabric"],
+};
+
+export function loaderAcceptsJar(target: TargetLoader, jarLoaders: Set<JarLoader>): boolean {
+  if (jarLoaders.size === 0) return true; // no signal — not this rule's call
+  return Array.from(jarLoaders).some((l) => LOADER_FAMILY[target].includes(l));
 }
 
 const MODS_TOML_RE = /neoforge\.mods\.toml$|(^|\/)mods\.toml$/;
@@ -49,6 +89,9 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
     hasEarlyWindowService: false,
     hasModManifest: false,
     unreadableZip: false,
+    loaders: new Set(),
+    fmlLibrary: false,
+    jarJarWrapper: false,
     requiredDeps: new Set(),
   };
   let zip: AdmZip;
@@ -70,8 +113,20 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
     if (name.startsWith("META-INF/services/") && name.toLowerCase().includes("earlywindow")) {
       signals.hasEarlyWindowService = true;
     }
+    if (name === "META-INF/MANIFEST.MF") {
+      const manifest = zip.readAsText(entry);
+      if (/FMLModType\s*:\s*LIBRARY/i.test(manifest)) signals.fmlLibrary = true;
+    }
+    if (name === "META-INF/jarjar/metadata.json") {
+      signals.jarJarWrapper = true;
+    }
     if (MOD_MANIFEST_RE.test(name)) {
       signals.hasModManifest = true;
+      if (/neoforge\.mods\.toml$/i.test(name)) signals.loaders.add("neoforge");
+      else if (/fabric\.mod\.json$/i.test(name)) signals.loaders.add("fabric");
+      else if (/quilt\.mod\.json$/i.test(name)) signals.loaders.add("quilt");
+      else if (/mcmod\.info$/i.test(name)) signals.loaders.add("legacy-forge");
+      else signals.loaders.add("forge");
     }
     if (MODS_TOML_RE.test(name)) {
       let data: string;
@@ -118,11 +173,13 @@ export interface ExclusionCandidate {
  */
 export function planClientExclusions(
   candidates: ExclusionCandidate[],
-  forceExclude?: Set<string>
+  forceExclude?: Set<string>,
+  opts?: { targetLoader?: TargetLoader | null }
 ): { excluded: ExclusionCandidate[]; reasons: Map<string, string> } {
   const excluded = new Set<ExclusionCandidate>();
   const reasons = new Map<string, string>();
   const excludedModIds = new Set<string>();
+  const target = opts?.targetLoader ?? null;
 
   const modIdOf = (c: ExclusionCandidate) => c.signals.selfModId;
 
@@ -131,9 +188,11 @@ export function planClientExclusions(
       excluded.add(c);
       reasons.set(
         c.file,
-        c.signals.hasModManifest || c.signals.unreadableZip
-          ? "crashed the boot test (client-only mod)"
-          : "isn't a valid mod file — FML rejected it outright"
+        c.signals.loaders.size > 0 && target && !loaderAcceptsJar(target, c.signals.loaders)
+          ? `built for ${Array.from(c.signals.loaders).join("/")} — it can't load on a ${target} server`
+          : c.signals.hasModManifest || c.signals.unreadableZip
+            ? "crashed the boot test (client-only mod)"
+            : "isn't a valid mod file — FML rejected it outright"
       );
       if (modIdOf(c)) excludedModIds.add(modIdOf(c)!);
       continue;
@@ -147,7 +206,20 @@ export function planClientExclusions(
       if (modIdOf(c)) excludedModIds.add(modIdOf(c)!);
       continue;
     }
-    if (!c.signals.hasModManifest && !c.signals.unreadableZip) {
+    if (target && !loaderAcceptsJar(target, c.signals.loaders)) {
+      excluded.add(c);
+      reasons.set(
+        c.file,
+        `built for ${Array.from(c.signals.loaders).join("/")} — it can't load on a ${target} server (FML refuses cross-loader jars)`
+      );
+      continue;
+    }
+    if (
+      !c.signals.hasModManifest &&
+      !c.signals.unreadableZip &&
+      !c.signals.fmlLibrary &&
+      !c.signals.jarJarWrapper
+    ) {
       excluded.add(c);
       reasons.set(
         c.file,

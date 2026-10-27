@@ -112,6 +112,26 @@ describe("testServerBootWithQuarantine", () => {
     expect(calls).toBe(2); // one quarantine round cleared all five
   });
 
+  it("quarantines a mod FML blames for a missing language provider", async () => {
+    makeJar(path.join(serverRoot, "mods"), "282837.jar", { modId: "scalamod" });
+    makeJar(path.join(serverRoot, "mods"), "plain-1.0.jar", { modId: "plain" });
+    fs.writeFileSync(
+      path.join(serverRoot, "crash-reports", "crash-2026-10-27_00.00.00-fml.txt"),
+      "-- MOD loading --\n\tMod File C:\\data\\mods\\282837.jar needs language provider kotori_scala:3.3.1 or above, 1 or above to load\n"
+    );
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) throw new SandboxBootError("crashed", "");
+    };
+
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    expect(removed).toEqual(["282837.jar"]);
+    expect(calls).toBe(2);
+  });
+
   it("rethrows when the crash names no jar", async () => {    makeJar(path.join(serverRoot, "mods"), "sodium-1.0.jar", { modId: "sodium" });
     bootBehavior = () => {
       throw new SandboxBootError("Server crashed immediately with exit code 1.", "no mod names here");
@@ -283,6 +303,20 @@ describe("quarantineFromStartCrash", () => {
     const { removed, quarantineDir } = await quarantineFromStartCrash({ serverRoot, deps: { renameDelaysMs: [5, 5] } });
     expect(removed.sort()).toEqual(["322506.jar", "broken-1.0.jar"]);
     expect(fs.existsSync(path.join(quarantineDir!, "322506.jar"))).toBe(true);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "servermod-1.0.jar"))).toBe(true);
+  });
+
+  it("moves cross-loader jars ('is a Fabric mod and cannot be loaded') out of mods/", async () => {
+    const zip = new AdmZip();
+    zip.addFile("fabric.mod.json", Buffer.from('{"id":"fabricmod","version":"1.0"}'));
+    zip.writeZip(path.join(serverRoot, "mods", "500525.jar"));
+    makeJar(path.join(serverRoot, "mods"), "servermod-1.0.jar", { modId: "servermod" });
+    fs.writeFileSync(path.join(serverRoot, "realmswap-loader.json"), JSON.stringify({ type: "neoforge", loaderVersion: "21.1.259", minecraftVersion: "1.21.1" }));
+    writeReport("-- Mod loading issue --\n\tMod file: <No mod information provided>\n\tFailure message: File C:\\data\\mods\\500525.jar is a Fabric mod and cannot be loaded\n");
+
+    const { removed, quarantineDir } = await quarantineFromStartCrash({ serverRoot, deps: { renameDelaysMs: [5, 5] } });
+    expect(removed).toEqual(["500525.jar"]);
+    expect(fs.existsSync(path.join(quarantineDir!, "500525.jar"))).toBe(true);
     expect(fs.existsSync(path.join(serverRoot, "mods", "servermod-1.0.jar"))).toBe(true);
   });
 

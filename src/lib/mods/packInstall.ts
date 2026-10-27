@@ -24,11 +24,11 @@ import {
 } from "@/lib/mods/mrpack";
 import {
   readCurseForgeManifest, cfLoaderRequirement, cfOverridesPrefix, resolveCfPackFiles,
-  curseForgeDownloadUrl, curseForgeSha1, type CfManifest,
+  curseForgeDownloadUrl, curseForgeSha1, fetchLoaderBuild, type CfManifest,
 } from "@/lib/mods/curseforge";
 import { resolveVanillaServerJar, applyVanillaServerSwap, type VanillaServerJar } from "@/lib/mods/mcServerJar";
 import type { ModProgressEvent } from "@/lib/mods/progress";
-import { planClientExclusions, scanJarClientSignals, type ExclusionCandidate } from "@/lib/mods/clientModFilter";
+import { planClientExclusions, scanJarClientSignals, loaderAcceptsJar, type ExclusionCandidate } from "@/lib/mods/clientModFilter";
 
 const LOADER_LABELS: Record<string, string> = {
   fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
@@ -147,6 +147,10 @@ export async function planModpackFromZip(args: {
 export interface PackApplyResult {
   installedCount: number;
   clientOnlyCount: number;
+  /** Wrong-loader pack pins skipped outright (no loadable build exists). */
+  crossLoaderCount: number;
+  /** Wrong-loader pack pins self-healed to the project's server-loader build. */
+  crossLoaderReplaced: number;
   overridesCount: number;
   /** Set when the apply swapped server.jar to the pack's Minecraft release. */
   mcSwitchedTo?: string;
@@ -244,6 +248,8 @@ export async function applyModpackPlan(args: {
 
   let installedCount = 0;
   let clientOnlyCount = 0;
+  let crossLoaderCount = 0;
+  let crossLoaderReplaced = 0;
   let installedPackageIds: string[] = [];
   // Downloaded jars from this install, scanned for client-only signals.
   const jarCandidates: ExclusionCandidate[] = [];
@@ -259,6 +265,7 @@ export async function applyModpackPlan(args: {
     const fileTotal = plan.cfPlan.files.length;
     if (fileTotal > 0) p({ stage: "mods", current: 0, total: fileTotal });
 
+    const serverMcVersion = plan.mcSwitch?.to ?? plan.packMcVersion ?? "";
     for (const [index, cfFile] of Array.from(plan.cfPlan.files.entries())) {
       p({ stage: "mods", current: index, total: fileTotal, label: cfFile.displayName || cfFile.fileName });
       // Jars are normalized to mods/<projectId>.jar so installs, updates,
@@ -273,6 +280,45 @@ export async function applyModpackPlan(args: {
         fs.unlinkSync(dest);
         throw new Error(`sha1 mismatch for '${cfFile.displayName}' — the download doesn't match what CurseForge reports.`);
       }
+
+      // Modpack manifests bundle files for OTHER loaders (client shader
+      // packs, Fabric editions of a mod, legacy-Forge builds). A jar whose
+      // manifest targets a different loader than the pack's server loader is
+      // boot-fatal on NeoForge/Forge ("is a Fabric mod and cannot be
+      // loaded"), so: try the same project's build for the server's loader
+      // first — that keeps the mod in the pack — and skip the file only
+      // when the project ships nothing loadable.
+      let signals = scanJarClientSignals(dest);
+      if (plan.packLoader && signals.loaders.size > 0 && !loaderAcceptsJar(plan.packLoader.type, signals.loaders)) {
+        const pinnedLoaders = Array.from(signals.loaders).join("/");
+        let healedName: string | null = null;
+        if (serverMcVersion) {
+          try {
+            const build = await fetchLoaderBuild(cfFile.modId, serverMcVersion, plan.packLoader.type);
+            if (build) {
+              await downloadFile(curseForgeDownloadUrl(build), dest, { onProgress: () => {} });
+              signals = scanJarClientSignals(dest);
+              if (loaderAcceptsJar(plan.packLoader.type, signals.loaders)) healedName = build.displayName || build.fileName;
+            }
+          } catch {
+            /* self-sourcing is best-effort — exclusion below still applies */
+          }
+        }
+        if (!healedName) {
+          fs.rmSync(dest, { force: true });
+          warnings.push(
+            `Skipped '${cfFile.displayName || cfFile.fileName}' — the pack pinned a ${pinnedLoaders} build and the server runs ${plan.packLoader.type}; ` +
+              "the project ships no " + plan.packLoader.type + " build for Minecraft " + (serverMcVersion || "this version") + "."
+          );
+          crossLoaderCount++;
+          continue;
+        }
+        warnings.push(
+          `Replaced '${cfFile.displayName || cfFile.fileName}' (${pinnedLoaders} build) with '${healedName}' — the pack pinned the wrong loader for the server.`
+        );
+        crossLoaderReplaced++;
+      }
+
       await prisma.modInstallation.upsert({
         where: { serverId_provider_packageId: { serverId, provider: "curseforge", packageId: String(cfFile.modId) } },
         update: { version: cfFile.displayName, name: plan.cfPlan.modNames.get(cfFile.modId) || cfFile.fileName },
@@ -286,7 +332,7 @@ export async function applyModpackPlan(args: {
       jarCandidates.push({
         file: dest,
         packageId: String(cfFile.modId),
-        signals: scanJarClientSignals(dest),
+        signals,
       });
       p({ stage: "mods", current: index + 1, total: fileTotal });
     }
@@ -365,8 +411,12 @@ export async function applyModpackPlan(args: {
 
   // Client-mod exclusion BEFORE the boot test: early-window service jars
   // (Sodium-class) crash dedicated servers pre-launch with an unhelpful
-  // ClassNotFoundError; drop them + their required dependents up front.
-  const { excluded, reasons } = planClientExclusions(jarCandidates);
+  // ClassNotFoundError; drop them + their required dependents up front. The
+  // same pass sweeps cross-loader and manifest-less jars the download loop
+  // couldn't fix (e.g. deps of an excluded jar, or a no-loader plan).
+  const { excluded, reasons } = planClientExclusions(jarCandidates, undefined, {
+    targetLoader: plan.packLoader?.type ?? null,
+  });
   for (const c of excluded) {
     try { fs.rmSync(c.file, { force: true }); } catch {}
     if (c.packageId) {
@@ -387,7 +437,7 @@ export async function applyModpackPlan(args: {
   const overridesCount = extractMrpackOverrides(plan.zip, serverRoot, plan.overridesPrefixes);
 
   return {
-    installedCount, clientOnlyCount, overridesCount,
+    installedCount, clientOnlyCount, crossLoaderCount, crossLoaderReplaced, overridesCount,
     ...(plan.mcSwitch ? { mcSwitchedTo: plan.mcSwitch.to } : {}),
     installedPackageIds,
   };
@@ -452,7 +502,10 @@ export function packResultMessage(args: {
   const { plan, result, warnings } = args;
   return (
     `Imported '${plan.packName}' (${plan.packVersion}): ${result.installedCount} files installed, ` +
-    `${result.clientOnlyCount} client-only skipped, ${result.overridesCount} overrides applied.` +
+    `${result.clientOnlyCount} client-only skipped, ` +
+    (result.crossLoaderReplaced ? `${result.crossLoaderReplaced} wrong-loader builds replaced with the server's loader, ` : "") +
+    (result.crossLoaderCount ? `${result.crossLoaderCount} other-loader files skipped, ` : "") +
+    `${result.overridesCount} overrides applied.` +
     (result.mcSwitchedTo ? ` Server switched to Minecraft ${result.mcSwitchedTo}.` : "") +
     (warnings.length ? ` Warnings: ${warnings.join(" ")}` : "")
   );

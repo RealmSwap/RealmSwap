@@ -41,21 +41,42 @@ function newestCrashReport(serverRoot: string): string | null {
 }
 
 /**
- * Every jar a crash report blames. Named-mod failures carry a
- * "Mod file: mods/foo.jar" line; non-mod artifacts (shader/resource packs)
- * instead appear as "Failure message: File …\mods\foo.jar is not a valid
- * mod file" with no "Mod file" line at all — a report containing only
- * those used to read as unblameable and gave up the retry.
+ * Every jar a crash report blames, in any of FML's shapes:
+ * - "Mod file: mods/foo.jar" — named-mod loading failures;
+ * - "Mod File C:\...\foo.jar needs language provider …" — pre-loading fatals;
+ * - "File …\mods\foo.jar is not a valid mod file" — manifest-less artifacts;
+ * - "… is a Fabric mod and cannot be loaded" and "… is for Minecraft Forge
+ *   or an older version of NeoForge, and cannot be loaded" — cross-loader
+ *   jars, which carry no "Mod file" line at all.
  */
 function blamedModFiles(report: string): string[] {
   const names = new Set<string>();
-  for (const m of report.matchAll(/Mod file: ([^\r\n]+?\.jar)/g)) {
-    names.add(m[1].split(/[\\/]/).pop()!);
-  }
-  for (const m of report.matchAll(/File ([^\r\n]+?\.jar) is not a valid mod file/gi)) {
-    names.add(m[1].split(/[\\/]/).pop()!);
+  const patterns = [
+    /Mod [Ff]ile:?\s*([^\r\n]+?\.jar)/g,
+    /File ([^\r\n]+?\.jar) is [^\r\n]*?cannot be loaded/gi,
+    /File ([^\r\n]+?\.jar) is not a valid mod file/gi,
+  ];
+  for (const re of patterns) {
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(report))) names.add(m[1].split(/[\\/]/).pop()!);
   }
   return Array.from(names);
+}
+
+/**
+ * The loader the server runs, from realmswap-loader.json (written by the
+ * loader install). Cross-loader exclusion and start-crash healing both need
+ * it; null when absent — the rules then fall back to manifest-less and
+ * crash-blame handling only.
+ */
+export function serverLoaderType(serverRoot: string): "neoforge" | "forge" | "fabric" | "quilt" | null {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(serverRoot, "realmswap-loader.json"), "utf8"));
+    const t = String(raw?.type ?? "");
+    return t === "neoforge" || t === "forge" || t === "fabric" || t === "quilt" ? t : null;
+  } catch {
+    return null;
+  }
 }
 
 function listModsJarNames(serverRoot: string): string[] {
@@ -85,8 +106,11 @@ async function forceRemoveJar(file: string, delays: number[] = DELETE_DELAYS_MS)
 
 /** Evidence, in the crash report itself, that the blamed mod is client-only. */
 const CLIENT_DIST_EVIDENCE = /invalid dist/i;
-/** FML's verdict on a jar in mods/ that isn't a mod at all. */
-const INVALID_MOD_FILE = /is not a valid mod file/i;
+/** FML's own verdicts that a named file cannot load on this server at all:
+ * manifest-less artifacts ("not a valid mod file") and cross-loader jars
+ * ("is a Fabric mod and cannot be loaded", "for Minecraft Forge or an older
+ * version of NeoForge"). Both are unambiguous — no dist evidence needed. */
+const UNLOADABLE_FILE_EVIDENCE = /is not a valid mod file|cannot be loaded/i;
 
 /**
  * Start-failure self-heal for Minecraft. The boot-retry quarantine above only
@@ -137,14 +161,16 @@ export async function quarantineFromStartCrash(args: {
   const seeds = candidates.filter((c) => blamed.includes(path.basename(c.file)));
   if (seeds.length === 0) return { removed: [], warnings };
   if (
-    !INVALID_MOD_FILE.test(report) &&
+    !UNLOADABLE_FILE_EVIDENCE.test(report) &&
     !CLIENT_DIST_EVIDENCE.test(report) &&
     !seeds.some((s) => s.signals.hasEarlyWindowService)
   ) {
     return { removed: [], warnings };
   }
 
-  const { excluded, reasons } = planClientExclusions(candidates, new Set(seeds.map((s) => s.file)));
+  const { excluded, reasons } = planClientExclusions(candidates, new Set(seeds.map((s) => s.file)), {
+    targetLoader: serverLoaderType(args.serverRoot),
+  });
   if (excluded.length === 0) return { removed: [], warnings };
 
   // Blamed jars first so a failure aborts before any dependent moves.
@@ -255,7 +281,9 @@ export async function testServerBootWithQuarantine(args: {
       const seeds = candidates.filter((c) => blamed.includes(path.basename(c.file)));
       if (seeds.length === 0) throw err;
 
-      const { excluded, reasons } = planClientExclusions(candidates, new Set(seeds.map((s) => s.file)));
+      const { excluded, reasons } = planClientExclusions(candidates, new Set(seeds.map((s) => s.file)), {
+        targetLoader: serverLoaderType(serverRoot),
+      });
       if (excluded.length === 0) throw err;
 
       for (const c of excluded) {

@@ -181,6 +181,29 @@ export function getCurseForgeMods(modIds: number[], deps?: CurseForgeDeps): Prom
   return chunkedPost<number, CurseForgeMod>("/mods", modIds, (ids) => JSON.stringify({ modIds: ids }), deps);
 }
 
+/**
+ * The newest file a project ships for one Minecraft version and loader.
+ * Packs pin wrong-loader files (Fabric/legacy-Forge builds bundled for
+ * clients); this is how the installer self-sources the build that actually
+ * matches the server. Returns null when the project ships nothing for the
+ * combination — the caller then excludes the pinned file instead.
+ */
+export async function fetchLoaderBuild(
+  modId: number,
+  mcVersion: string,
+  loader: "fabric" | "quilt" | "forge" | "neoforge",
+  deps?: CurseForgeDeps
+): Promise<CurseForgeFile | null> {
+  const mod = await getCurseForgeMod(modId, deps);
+  const loaderId = CURSEFORGE_LOADER_IDS[loader];
+  const candidates = (mod.latestFilesIndexes ?? [])
+    .filter((i) => i.gameVersion === mcVersion && i.modLoader === loaderId)
+    .map((i) => i.fileId);
+  if (candidates.length === 0) return null;
+  const files = await getCurseForgeFiles([Math.max(...candidates)], deps);
+  return files[0] ?? null;
+}
+
 /** Numeric category id for a category slug, cached per game (unknown slugs → undefined = no filter). */
 const categoryCache = new Map<number, { bySlug: Map<string, number>; fetchedAt: number }>();
 const CATEGORY_TTL_MS = 10 * 60 * 1000;
