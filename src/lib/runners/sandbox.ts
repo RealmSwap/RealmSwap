@@ -128,11 +128,16 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
       // Minecraft gets a REAL boot test — it is the game where silent
       // install damage (missing dependencies, loader mismatch, a pack
       // targeting a different world version) only shows up at boot. Boot
-      // with the loader's launch descriptor applied; a modded first boot
-      // can take minutes, so its window is generous.
+      // with the loader's launch descriptor applied. The window must fit a
+      // modded pack's FIRST boot on Windows: cold filesystem cache plus
+      // antivirus scanning every jar, and KubeJS running its GraalJS
+      // scripts on the unoptimized polyglot runtime (the optimizing Truffle
+      // runtime needs JDK 25; loader-derived boot java is 21). A warm macOS
+      // repro of ATM10 (499 mods, same Java 21) took ~97s wall to Done;
+      // 300s timed out on the Windows first boot, so this is 600s.
       exePath = resolveSandboxJava(serverDir);
       args = minecraftBootArgs(serverDir);
-      sandboxMs = readLoaderMarker(serverDir) ? 300000 : 90000;
+      sandboxMs = readLoaderMarker(serverDir) ? 600000 : 90000;
     } else {
       // Game not supported for sandbox testing, just assume it works
       return resolve(true);
