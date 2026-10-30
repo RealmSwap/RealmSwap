@@ -4,7 +4,10 @@ import { ModalProvider } from "@/components/ModalProvider";
 import { ToastProvider } from "@/components/ToastProvider";
 
 export const metadata: Metadata = {
-  title: "RealmSwap | Host Locally. Play Globally",
+  title: {
+    default: "RealmSwap | Host Locally. Play Globally",
+    template: "%s | RealmSwap",
+  },
   description: "Manage your local game servers with ease. With RealmSwap, swap between Minecraft, Valheim, Project Zomboid, and ARK instantly.",
   keywords: ["game server hosting", "minecraft hosting", "valheim server", "project zomboid server", "game server backups"],
 };

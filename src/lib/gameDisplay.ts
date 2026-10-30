@@ -22,6 +22,32 @@ export function gameIcon(game: string): string {
   return GAME_ICONS[game?.toUpperCase?.() ?? ""] ?? "🎮";
 }
 
+const GAME_LABELS: Record<string, string> = {
+  MINECRAFT: "Minecraft",
+  VALHEIM: "Valheim",
+  ENSHROUDED: "Enshrouded",
+  ZOMBOID: "Project Zomboid",
+  ARK: "ARK: Survival Evolved",
+  TERRARIA: "Terraria",
+  PALWORLD: "Palworld",
+  RUST: "Rust",
+  SATISFACTORY: "Satisfactory",
+  VRISING: "V Rising",
+  WINDROSE: "Windrose",
+};
+
+/** Raw game enum → human name ("ZOMBOID" → "Project Zomboid"). */
+export function gameLabel(game: string): string {
+  const key = game?.toUpperCase?.() ?? "";
+  if (GAME_LABELS[key]) return GAME_LABELS[key];
+  if (!game) return "Custom game";
+  return game
+    .toLowerCase()
+    .split(/[\s_-]+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 /** Raw DB statuses translated for humans; enums stay untouched everywhere else. */
 export function statusLabel(status: string): string {
   switch (status) {
