@@ -17,7 +17,6 @@ import {
   Coins, 
   Terminal, 
   Check,
-  HardDrive,
   Heart,
   Download,
   Store,
@@ -166,7 +165,7 @@ export default function LandingPage() {
         </h1>
 
         <p className="text-mutedText text-lg sm:text-xl max-w-2xl mb-8 leading-relaxed">
-          Ditch paying for multiple cloud servers your friends only play half the time. Host your own worlds locally on your PC, archive them to your hard drive when you switch games, and restore them instantly. Zero data loss, zero wasted cash.
+          Get a modded server for your friends running tonight — on the PC you already own. One click installs the modpack (and boot-tests it before calling it done), one invite delivers the mods to your friends' clients, and an automated tunnel means nobody touches the router. No rent, no queues, and your world never locks behind a lapsed subscription.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-md mb-4">
@@ -320,29 +319,29 @@ export default function LandingPage() {
               desc: "Don't rent a 2GB RAM cloud server when you have a 32GB beast at home. RealmSwap runs locally on your Windows PC utilizing your own CPU cores for zero lag."
             },
             {
-              icon: Layers,
-              title: "Instant Game Swapping",
-              desc: "Archive your Minecraft world, deploy ARK, and play in under 60 seconds. Our automated systems pack, compress, and save states seamlessly to your hard drive."
+              icon: ShieldCheck,
+              title: "Mods, Boot-Tested",
+              desc: "Every mod install is booted in a sandbox before you ever see 'success' — a bad mod, wrong loader, or missing dependency rolls itself back automatically. CurseForge, Modrinth, and all major Minecraft loaders, one click."
             },
             {
-              icon: HardDrive,
-              title: "Local Hard Drive Vaults",
-              desc: "We back up your world saves, player files, configurations, and mods directly to your disk. You retain 100% ownership of your files, accessible at any time."
+              icon: Zap,
+              title: "Friends Join Through One Link",
+              desc: "Share one invite. The RealmSync companion app downloads every mod your friend's client needs and connects them — the end of 'does my friend need the modpack?'"
             },
             {
               icon: Globe,
-              title: "Auto UPnP Port Forwarding",
-              desc: "Forget logging into your router. RealmSwap uses UPnP to automatically forward and map ports so your friends can connect immediately via your public IP."
-            },
-            {
-              icon: ShieldCheck,
-              title: "Crash Recovery",
-              desc: "Background monitors watch your server processes. If a crash is detected, RealmSwap will automatically try to restart your server to keep your players online."
+              title: "Your Home IP Stays Private",
+              desc: "An automated playit.gg relay carries the connection, so friends join with zero router setup and your home IP is never exposed. UPnP and LAN fallback are handled automatically too."
             },
             {
               icon: Users,
-              title: "Collaborator Access",
-              desc: "Invite your gaming group to the local dashboard. They can help install mods, restart servers, or read audit logs—all from an intuitive UI."
+              title: "Game Night on Autopilot",
+              desc: "Plan sessions in Discord and the server starts itself before game night. Crash alerts come with a one-tap restart button, and the server can shut itself down when nobody's around."
+            },
+            {
+              icon: Layers,
+              title: "Swap Games, Keep Everything",
+              desc: "Archive a whole server — worlds, configs, mods — to your drive and restore it months later in seconds. Eleven games supported, with verified backups protecting every save."
             }
           ].map((item, idx) => (
             <div key={idx} className="glass-panel p-8 rounded-2xl border border-white/5 hover:border-accentPurple/25 transition-all duration-300 group hover:box-glow-purple">
@@ -448,16 +447,20 @@ export default function LandingPage() {
               a: "Yes! RealmSwap is a local application that runs on your own hardware. Because we do not provide cloud servers or off-site data storage, there are absolutely zero subscription fees."
             },
             {
-              q: "How does the Game History Vault actually work?",
+              q: "Can I run modpacks?",
+              a: "Yes — that's the headline feature. Search CurseForge and Modrinth, click once, and RealmSwap resolves every dependency, excludes client-only mods, and boots the server in a sandbox to prove the pack works before you ever see 'success'. If something's broken, it rolls itself back. Fabric, Forge, NeoForge, and Quilt install automatically when the pack needs them."
+            },
+            {
+              q: "How does the RealmSwap Vault actually work?",
               a: "When you archive a server, we run a command to shut down the server process, trigger a full world save, tar-compress your server folder (including world blocks, inventory, configuration files, and installed mods), and store it on your PC's hard drive. When you restore, we pull that archive back out and boot it up. All your progress is exactly where you left it."
             },
             {
               q: "Do I need to know how to port forward?",
-              a: "No! RealmSwap has a built-in UPnP networking layer. When you start a game, it automatically talks to your home router to securely open the necessary ports, and closes them when you shut the server down."
+              a: "No! RealmSwap sets up a connection relay through playit.gg automatically — friends connect through it with zero router access needed, and your home IP stays private. If your router supports UPnP, RealmSwap can also open the ports directly, and it falls back to your local network when neither path is available."
             },
             {
               q: "Do my friends need to install RealmSwap?",
-              a: "No, only the person hosting the server needs to run RealmSwap. Your friends will connect via the game's built-in multiplayer menu using your public IP address, exactly like a normal dedicated server."
+              a: "Only the host runs RealmSwap. Friends join through the game's normal multiplayer menu — or, for modded servers, through the free RealmSync companion app, which downloads every mod their client needs and connects them in one click. Connections ride a playit.gg relay, so friends never see your home IP."
             },
             {
               q: "Can I use RealmSwap while playing the game on the same PC?",
