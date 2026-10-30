@@ -420,17 +420,20 @@ export function cfOverridesPrefix(m: CfManifest): string {
 }
 
 /**
- * Resolve every required file of a CurseForge pack to its API metadata
- * (download URL, sha1, mod names) BEFORE a snapshot is spent. Optional
- * (`required: false`) files are skipped — without per-file env metadata they
- * are usually client-side, and a skipped mod just warns instead of risking
- * the boot test. Throws with a user-presentable message when the pack
- * references files that are gone or locked to CurseForge distribution.
+ * Resolve every file of a CurseForge pack — required AND optional — to its
+ * API metadata (download URL, sha1, mod names) BEFORE a snapshot is spent.
+ * Optional (`required: false`) files are downloaded too and judged by their
+ * OWN manifest at the static exclusion pass: a mod the pack flags optional
+ * but that declares both sides (fabric environment "*" — the Friends For
+ * Life class) must reach the server, because clients require its networking
+ * channels at handshake; true client-only jars are swept there. Throws with
+ * a user-presentable message when the pack references files that are gone
+ * or locked to CurseForge distribution.
  */
 export async function resolveCfPackFiles(
   manifest: CfManifest,
   deps?: CurseForgeDeps
-): Promise<{ files: CurseForgeFile[]; modNames: Map<number, string>; skippedOptional: number }> {
+): Promise<{ files: CurseForgeFile[]; modNames: Map<number, string> }> {
   const unique = new Map<number, { projectID: number; fileID: number; required: boolean }>();
   for (const f of manifest.files ?? []) {
     if (typeof f?.projectID !== "number" || typeof f?.fileID !== "number") {
@@ -439,14 +442,12 @@ export async function resolveCfPackFiles(
     const existing = unique.get(f.fileID);
     if (!existing || (existing.required === false && f.required !== false)) unique.set(f.fileID, f);
   }
-  const required = Array.from(unique.values()).filter((f) => f.required !== false);
-  const skippedOptional = unique.size - required.length;
-
-  const apiFiles = required.length > 0 ? await getCurseForgeFiles(required.map((f) => f.fileID), deps) : [];
+  const entries = Array.from(unique.values());
+  const apiFiles = entries.length > 0 ? await getCurseForgeFiles(entries.map((f) => f.fileID), deps) : [];
   const byFileId = new Map(apiFiles.map((f) => [f.id, f]));
 
   const files: CurseForgeFile[] = [];
-  for (const entry of required) {
+  for (const entry of entries) {
     const file = byFileId.get(entry.fileID);
     if (!file) {
       throw new Error(`This pack references CurseForge file ${entry.fileID}, which no longer exists on CurseForge.`);
@@ -463,7 +464,7 @@ export async function resolveCfPackFiles(
   const modIds = Array.from(new Set(files.map((f) => f.modId)));
   const mods = modIds.length > 0 ? await getCurseForgeMods(modIds, deps) : [];
   const modNames = new Map(mods.map((m) => [m.id, m.name]));
-  return { files, modNames, skippedOptional };
+  return { files, modNames };
 }
 
 /**

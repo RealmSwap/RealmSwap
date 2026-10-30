@@ -69,7 +69,7 @@ describe("scanJarClientSignals", () => {
     expect(sig.jarJarWrapper).toBe(false);
   });
 
-  it("sees a fabric.mod.json as a mod manifest", () => {
+  it("sees a fabric.mod.json as a mod manifest and reads its id and side", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
     const p = path.join(dir, "fabric.jar");
     const zip = new AdmZip();
@@ -79,7 +79,68 @@ describe("scanJarClientSignals", () => {
     const sig = scanJarClientSignals(p);
     expect(sig.hasModManifest).toBe(true);
     expect(sig.loaders.has("fabric")).toBe(true);
-    expect(sig.selfModId).toBeNull();
+    // The manifest id feeds the blame index — fabric jars have no toml, and
+    // without this they are invisible to boot-output blame.
+    expect(sig.selfModId).toBe("fabricmod");
+    expect(sig.sides).toBe("both"); // absent environment defaults to both sides
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("reads the manifest side declaration: fabric environment and forge clientSideOnly", () => {
+    const mk = (name: string, manifest: { file: string; content: string }) => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+      const p = path.join(dir, name);
+      const zip = new AdmZip();
+      zip.addFile(manifest.file, Buffer.from(manifest.content));
+      zip.addFile("dummy.txt", Buffer.from("x"));
+      zip.writeZip(p);
+      return p;
+    };
+    const bothFabric = mk("both.jar", { file: "fabric.mod.json", content: '{"id":"a","environment":"*"}' });
+    const clientFabric = mk("client.jar", { file: "fabric.mod.json", content: '{"id":"b","environment":"client"}' });
+    const clientForge = mk("forgeclient.jar", {
+      file: "META-INF/neoforge.mods.toml",
+      content: '[[mods]]\nmodId="c"\nclientSideOnly=true\n',
+    });
+    // Hybrid: fabric side is both, forge side has no client declaration — the
+    // jar is usable on the fabric side, so it must count as both.
+    const hybridDir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+    const hybrid = path.join(hybridDir, "hybrid.jar");
+    const hz = new AdmZip();
+    hz.addFile("fabric.mod.json", Buffer.from('{"id":"d","environment":"*"}'));
+    hz.addFile("META-INF/neoforge.mods.toml", Buffer.from('[[mods]]\nmodId="d"\n'));
+    hz.writeZip(hybrid);
+    try {
+      expect(scanJarClientSignals(bothFabric).sides).toBe("both");
+      expect(scanJarClientSignals(clientFabric).sides).toBe("client");
+      expect(scanJarClientSignals(clientForge).sides).toBe("client");
+      expect(scanJarClientSignals(hybrid).sides).toBe("both");
+    } finally {
+      for (const p of [bothFabric, clientFabric, clientForge]) {
+        fs.rmSync(path.dirname(p), { recursive: true, force: true });
+      }
+      fs.rmSync(hybridDir, { recursive: true, force: true });
+    }
+  });
+
+  it("derives selfModId from [[mods]] blocks only — never from a dependency block", () => {
+    // Live poison (Homestead 2.0.1): a toml that declares dependencies before
+    // its [[mods]] block parsed modId="minecraft", and once "minecraft" was in
+    // the excluded set the closure swept every jar requiring minecraft.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+    const p = path.join(dir, "deps-first.jar");
+    const zip = new AdmZip();
+    zip.addFile(
+      "META-INF/neoforge.mods.toml",
+      Buffer.from('[[dependencies.towns]]\nmodId="minecraft"\ntype="required"\n[[dependencies.towns]]\nmodId="terralith"\ntype="optional"\n[[mods]]\nmodId="towns"\n')
+    );
+    zip.addFile("dummy.txt", Buffer.from("x"));
+    zip.writeZip(p);
+    const sig = scanJarClientSignals(p);
+    expect(sig.selfModId).toBe("towns");
+    expect(sig.allModIds).toEqual(["towns"]);
+    expect(sig.requiredDeps.has("minecraft")).toBe(true);
+    expect(sig.requiredDeps.has("terralith")).toBe(false);
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
@@ -114,6 +175,7 @@ describe("scanJarClientSignals", () => {
       allModIds: [],
       hasEarlyWindowService: false,
       hasModManifest: false,
+      sides: "unknown",
       unreadableZip: true,
       loaders: new Set(),
       fmlLibrary: false,
@@ -248,6 +310,98 @@ describe("planClientExclusions", () => {
       expect(reasons.get(shader)).toMatch(/isn't a valid mod file/);
     } finally {
       fs.rmSync(path.dirname(shader), { recursive: true, force: true });
+    }
+  });
+
+  it("excludes manifest-declared client-only jars, but never both-sides mods", () => {
+    const clientModDir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+    const clientMod = path.join(clientModDir, "ambientsounds.jar");
+    const cz = new AdmZip();
+    cz.addFile("fabric.mod.json", Buffer.from('{"id":"ambientsounds","environment":"client"}'));
+    cz.addFile("dummy.txt", Buffer.from("x"));
+    cz.writeZip(clientMod);
+    // Friends For Life class: fabric environment "*" — it runs on the server
+    // and its channel is required at client handshake. Sweeping it kicked
+    // every joining client (live: Homestead 2.0.1, 2026-10-30).
+    const bothDir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+    const bothMod = path.join(bothDir, "friendsforlife.jar");
+    const fz = new AdmZip();
+    fz.addFile("fabric.mod.json", Buffer.from('{"id":"friendsforlife","environment":"*"}'));
+    fz.addFile("dummy.txt", Buffer.from("x"));
+    fz.writeZip(bothMod);
+    try {
+      const { excluded, reasons } = planClientExclusions([clientMod, bothMod, create].map(candidate));
+      expect(excluded.map((c) => c.file)).toEqual([clientMod]);
+      expect(reasons.get(clientMod)).toMatch(/declares itself client-only/);
+    } finally {
+      fs.rmSync(clientModDir, { recursive: true, force: true });
+      fs.rmSync(bothDir, { recursive: true, force: true });
+    }
+  });
+
+  it("the closure never sweeps jars over vanilla ids like minecraft (deps-first toml poison)", () => {
+    // A seed whose toml declares dependencies BEFORE [[mods]] once parsed
+    // modId="minecraft" into the excluded set — every jar requiring
+    // minecraft then got swept as "requires minecraft (excluded as
+    // client-only)". Live: the Homestead install lost ~25 server-safe mods.
+    const seedDir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+    const seed = path.join(seedDir, "crashed.jar");
+    const sz = new AdmZip();
+    sz.addFile(
+      "META-INF/neoforge.mods.toml",
+      Buffer.from('[[dependencies.towns]]\nmodId="minecraft"\ntype="required"\n[[mods]]\nmodId="towns"\n')
+    );
+    sz.addFile("dummy.txt", Buffer.from("x"));
+    sz.writeZip(seed);
+    const requirerDir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+    const requirer = path.join(requirerDir, "serilum.jar");
+    const rz = new AdmZip();
+    rz.addFile(
+      "META-INF/neoforge.mods.toml",
+      Buffer.from('[[mods]]\nmodId="stackrefill"\n[[dependencies.stackrefill]]\nmodId="minecraft"\ntype="required"\n[[dependencies.stackrefill]]\nmodId="collective"\ntype="required"\n')
+    );
+    rz.addFile("dummy.txt", Buffer.from("x"));
+    rz.writeZip(requirer);
+    try {
+      // Seed is forced (a real boot-crash blame) — but its modId is "towns",
+      // and "minecraft" must never enter the excluded set.
+      const { excluded, reasons } = planClientExclusions([seed, requirer, create].map(candidate), new Set([seed]));
+      expect(excluded.map((c) => c.file)).toEqual([seed]);
+      expect(reasons.get(seed)).toMatch(/crashed the boot test/);
+    } finally {
+      fs.rmSync(seedDir, { recursive: true, force: true });
+      fs.rmSync(requirerDir, { recursive: true, force: true });
+    }
+  });
+
+  it("the closure still pulls true required dependents of an excluded mod", () => {
+    // collective is a real mod — a legit boot-crash blame on it must still
+    // sweep the Serilum mods that hard-require it.
+    const collectiveDir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+    const collective = path.join(collectiveDir, "collective.jar");
+    const cz = new AdmZip();
+    cz.addFile(
+      "META-INF/neoforge.mods.toml",
+      Buffer.from('[[mods]]\nmodId="collective"\n[[dependencies.collective]]\nmodId="minecraft"\ntype="required"\n')
+    );
+    cz.addFile("dummy.txt", Buffer.from("x"));
+    cz.writeZip(collective);
+    const requirerDir = fs.mkdtempSync(path.join(os.tmpdir(), "clientmod-"));
+    const requirer = path.join(requirerDir, "stackrefill.jar");
+    const rz = new AdmZip();
+    rz.addFile(
+      "META-INF/neoforge.mods.toml",
+      Buffer.from('[[mods]]\nmodId="stackrefill"\n[[dependencies.stackrefill]]\nmodId="collective"\ntype="required"\n')
+    );
+    rz.addFile("dummy.txt", Buffer.from("x"));
+    rz.writeZip(requirer);
+    try {
+      const { excluded, reasons } = planClientExclusions([collective, requirer, create].map(candidate), new Set([collective]));
+      expect(excluded.map((c) => c.file)).toEqual([collective, requirer]);
+      expect(reasons.get(requirer)).toMatch(/requires collective/);
+    } finally {
+      fs.rmSync(collectiveDir, { recursive: true, force: true });
+      fs.rmSync(requirerDir, { recursive: true, force: true });
     }
   });
 });
