@@ -31,15 +31,22 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-// Tests stage real jar bytes per URL for the CF download path.
-const downloadFixtures = new Map<string, Buffer>();
+// Tests stage real jar bytes per URL for the CF download path. Both the
+// fixture map and the download impl live in vi.hoisted so the hoisted
+// vi.mock factory can close over them.
+const downloadBag = vi.hoisted(() => ({ fixtures: new Map<string, Buffer>() }));
+const downloadFixtures = downloadBag.fixtures;
+const downloadFixtureImpl = vi.hoisted(() => async (url: string, dest: string) => {
+  const fixture = downloadBag.fixtures.get(url);
+  if (!fixture) throw new Error(`no download fixture staged for ${url}`);
+  const fs = (await import("fs")).default;
+  const path = (await import("path")).default;
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.writeFileSync(dest, fixture);
+});
 vi.mock("@/lib/download", () => ({
-  downloadFile: async (url: string, dest: string) => {
-    const fixture = downloadFixtures.get(url);
-    if (!fixture) throw new Error(`no download fixture staged for ${url}`);
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.writeFileSync(dest, fixture);
-  },
+  downloadFile: downloadFixtureImpl,
+  downloadFileWithRetry: downloadFixtureImpl,
 }));
 
 vi.mock("@/lib/mods/mcServerJar", () => ({

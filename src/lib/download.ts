@@ -13,6 +13,17 @@ export function downloadFile(url: string, dest: string, opts: DownloadOpts = {})
   return new Promise((resolve, reject) => {
     if (maxRedirects < 0) return reject(new Error("Too many redirects"));
     const file = fs.createWriteStream(dest);
+    // A write-stream failure (Windows AV scanners transiently hold freshly
+    // created files: EPERM/EBUSY — seen live on modpack installs) must
+    // reject the promise, not crash the process on an unhandled 'error'.
+    let settled = false;
+    const fail = (err: Error) => {
+      if (settled) return;
+      settled = true;
+      fs.unlink(dest, () => {});
+      reject(err);
+    };
+    file.on("error", fail);
     https.get(url, (response) => {
       if (response.statusCode === 301 || response.statusCode === 302) {
         const redirectUrl = response.headers.location;
@@ -49,15 +60,46 @@ export function downloadFile(url: string, dest: string, opts: DownloadOpts = {})
         received += chunk.length;
         emit();
       });
+      response.on("error", fail);
       response.pipe(file);
       file.on("finish", () => {
         file.close();
         emit(true);
-        resolve();
+      });
+      file.on("close", () => {
+        if (!settled) {
+          settled = true;
+          resolve();
+        }
       });
     }).on("error", (err) => {
       fs.unlink(dest, () => {});
       reject(err);
     });
   });
+}
+
+/**
+ * downloadFile with retries for Windows file-lock errors. Antivirus scanners
+ * routinely take EPERM/EBUSY handles on freshly-downloaded jars — a plain
+ * downloadFile call fails mid-pack-install (dozens of jars in a row). The
+ * schedule spreads ~14s across 6 attempts; only lock errors retry — missing
+ * files, redirects, and HTTP failures fail immediately.
+ */
+export async function downloadFileWithRetry(
+  url: string,
+  dest: string,
+  opts: DownloadOpts = {},
+  delaysMs: number[] = [500, 1000, 2000, 3000, 4000, 4000],
+): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await downloadFile(url, dest, opts);
+      return;
+    } catch (err: any) {
+      const lock = err?.code === "EPERM" || err?.code === "EBUSY" || err?.code === "EACCES";
+      if (!lock || attempt >= delaysMs.length) throw err;
+      await new Promise((resolve) => setTimeout(resolve, delaysMs[attempt]));
+    }
+  }
 }

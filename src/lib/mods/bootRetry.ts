@@ -5,19 +5,22 @@
  * bundled for clients) die with "File X is not a valid mod file" lines;
  * version-range failures ("Mod X only supports Y <range>") name modIds only.
  * This helper wraps testServerBoot: on failure it reads the newest crash
- * report, heals what it can — bumping out-of-range dependencies within the
- * same project, quarantining every named jar (plus anything in the pack
- * that REQUIRES them) — and retries, up to a small cap. Each action
+ * report — falling back to the captured boot output when FML died before
+ * writing one — and heals what it can: bumping out-of-range dependencies
+ * within the same project, quarantining every named jar (plus anything in
+ * the pack that REQUIRES them), and quarantining the jar behind a mixin
+ * handler mod id when the report carries client-dist evidence. Each action
  * surfaces as a warning so the user sees exactly what changed and why.
  */
 
 import fs from "fs";
 import path from "path";
+import AdmZip from "adm-zip";
 import { dataRoot } from "@/lib/appPaths";
 import { testServerBoot, SandboxBootError, resolveSandboxJava } from "@/lib/runners/sandbox";
 import { planClientExclusions, scanJarClientSignals, type ExclusionCandidate, type TargetLoader } from "@/lib/mods/clientModFilter";
 import { fetchLoaderBuild, curseForgeDownloadUrl } from "@/lib/mods/curseforge";
-import { downloadFile } from "@/lib/download";
+import { downloadFileWithRetry as downloadFile } from "@/lib/download";
 
 const MAX_QUARANTINE_ROUNDS = 3;
 
@@ -271,6 +274,97 @@ export function parseRangeErrors(report: string): { requiring: string; required:
 }
 
 /**
+ * Mixin handler frames in a stack trace name the owning MOD ID, not the jar:
+ * "ResourceLocation.handler$bjn000$etf$illegalPathOverride" — the shape of the
+ * live Society: Sunlit Valley crash, where a mod's mixin into ResourceLocation
+ * loaded client-only Screen and FML's dist cleaner killed the JVM before any
+ * crash report was written, so the boot output is the only evidence.
+ */
+export function parseMixinHandlerModIds(report: string): string[] {
+  const out = new Set<string>();
+  const re = /handler\$[^$\s]+\$([A-Za-z0-9_-]+)\$/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(report))) out.add(m[1].toLowerCase());
+  return Array.from(out);
+}
+
+/**
+ * Blame seeds for a boot failure the crash-report parser can't attribute to a
+ * jar. Every shape here was seen live on v0.5.13/14 installs (Society: Sunlit
+ * Valley's client-heavy manifest):
+ * - mixin handler frames name the owning mixin config namespace ("etf") —
+ *   trusted only with client-dist evidence in the output;
+ * - FML named errors ("<Mod> has class loading errors", e.g. Oculus);
+ * - missing dependencies after an exclusion ("Mod colorwheel requires
+ *   oculus ...") — the REQUIRING mod goes, its dep was removed deliberately;
+ * - mod construction failures ("Failed to create mod instance. ModID:
+ *   watermedia" — WATERMeDIA refuses servers);
+ * - root-cause stack-frame jar annotations ("~[869524.jar%23NNN...").
+ * Color codes (§0-§f) are stripped first — FML interleaves them with mod ids.
+ * Returns files in mods/ (basenames); empty when nothing maps.
+ */
+export function blameModsFromOutput(
+  output: string,
+  modsByIdentifier: Map<string, string>,
+): string[] {
+  const clean = output.replace(/§./g, "");
+  const hit = new Set<string>();
+  const add = (ids: string[]) => {
+    for (const id of ids) {
+      const f = modsByIdentifier.get(id.toLowerCase());
+      if (f) hit.add(f);
+    }
+  };
+  const classLoad: RegExpExecArray[] = [];
+  let m6: RegExpExecArray | null;
+  const re6 = /([A-Za-z0-9_]+) has class loading errors/g;
+  while ((m6 = re6.exec(clean))) classLoad.push(m6);
+  add(classLoad.map((m) => m[1]));
+  const requires: RegExpExecArray[] = [];
+  const re7 = /Mod ([a-z0-9_]+) requires ([a-z0-9_]+)/g;
+  while ((m6 = re7.exec(clean))) requires.push(m6);
+  add(requires.map((m) => m[1]));
+  const modIds: RegExpExecArray[] = [];
+  const re8 = /Failed to create mod instance\. ModID: ([a-z0-9_]+)/g;
+  while ((m6 = re8.exec(clean))) modIds.push(m6);
+  add(modIds.map((m) => m[1]));
+  if (CLIENT_DIST_EVIDENCE.test(clean)) add(parseMixinHandlerModIds(clean));
+  const rootCause = clean.slice(clean.lastIndexOf("Caused by:"));
+  const re9 = /~\[(\d+)\.jar%/g;
+  while ((m6 = re9.exec(rootCause))) hit.add(`${m6[1]}.jar`);
+  const names = new Set(Array.from(hit).map((f) => path.basename(f)));
+  return Array.from(names);
+}
+
+/**
+ * Map every jar in mods/ to its identifiers: Forge/NeoForge/Fabric modIds and
+ * mixin config namespaces (the handler-frame segment can be either — live
+ * case: modId entity_texture_features, config mixins.etf.common.json →
+ * "etf"). Side segments (mixins/common/client/...) are ignored.
+ */
+export function modIdentifierIndex(serverRoot: string): Map<string, string> {
+  const byId = new Map<string, string>();
+  const modsDir = path.join(serverRoot, "mods");
+  const SIDES = new Set(["mixins", "common", "client", "server", "main", "forge", "fabric", "neoforge", "quilt"]);
+  for (const name of listModsJarNames(serverRoot)) {
+    const file = path.join(modsDir, name);
+    const ids = scanJarClientSignals(file).allModIds.map((i) => i.toLowerCase());
+    try {
+      const zip = new AdmZip(file);
+      for (const e of zip.getEntries()) {
+        if (!/(^|\/)[^/]*mixins[^/]*\.json$/i.test(e.entryName)) continue;
+        const base = path.basename(e.entryName).replace(/\.json$/i, "");
+        for (const seg of base.split(".")) {
+          if (seg && !SIDES.has(seg.toLowerCase())) ids.push(seg.toLowerCase());
+        }
+      }
+    } catch { /* unreadable jar — modId index only */ }
+    for (const id of ids) if (!byId.has(id)) byId.set(id, file);
+  }
+  return byId;
+}
+
+/**
  * Version-range self-heal: replace the named dependency with the same
  * project's newest build for the server's loader + Minecraft version (live
  * fix: modern_industrialization 2.5.10 → 2.5.11 satisfied tesseract_api).
@@ -412,16 +506,30 @@ export async function testServerBootWithQuarantine(args: {
       }
 
       const blamed = blamedModFiles(report);
-      if (blamed.length === 0) throw err;
-
       // Signals for every jar currently in mods/ — the closure needs the
       // whole graph to pull in required dependents of the blamed jars.
       const candidates: ExclusionCandidate[] = listModsJarNames(serverRoot).map((name) => ({
         file: path.join(serverRoot, "mods", name),
         signals: scanJarClientSignals(path.join(serverRoot, "mods", name)),
       }));
-      const seeds = candidates.filter((c) => blamed.includes(path.basename(c.file)));
+      let seeds = candidates.filter((c) => blamed.includes(path.basename(c.file)));
+
+      // No jar named anywhere: the boot output still names the culprit by
+      // mod id or stack-frame jar (mixin handlers, construction failures,
+      // missing deps after an exclusion, class-load errors).
+      let outputBlameNote: string | null = null;
+      if (seeds.length === 0) {
+        const outputBlamed = blameModsFromOutput(report, modIdentifierIndex(serverRoot));
+        if (outputBlamed.length > 0) {
+          seeds = candidates.filter((c) => outputBlamed.includes(path.basename(c.file)));
+          if (seeds.length > 0) {
+            outputBlameNote = `The boot output implicates ${outputBlamed.join(", ")} with no jar named in a crash report — excluding their jar(s).`;
+          }
+        }
+      }
+
       if (seeds.length === 0) throw err;
+      if (outputBlameNote) warnings.push(outputBlameNote);
 
       const { excluded, reasons } = planClientExclusions(candidates, new Set(seeds.map((s) => s.file)), {
         targetLoader: loader,
