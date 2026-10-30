@@ -16,7 +16,7 @@ import {
   planModpackFromZip, applyModpackPlan, packResultMessage, auditPackInstall, recordInstalledModpack,
   detectPackServerMcVersion, retireReplacedPackMods, PackPreflightError,
 } from "@/lib/mods/packInstall";
-import { beginProgress, emitProgress, endProgress } from "@/lib/mods/progress";
+import { beginProgress, emitProgress, endProgress, createBootLogEmitter } from "@/lib/mods/progress";
 import { testServerBootWithQuarantine } from "@/lib/mods/bootRetry";
 import fs from "fs";
 import path from "path";
@@ -148,9 +148,11 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       console.log(`[Sandbox] Running boot test for ${serverId}`);
       await retireReplacedPackMods({ serverId, serverRoot, plan, result, warnings });
       if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the install", current: 0, total: 1 });
+      const bootLog = createBootLogEmitter(installId);
       const quarantined = await testServerBootWithQuarantine({
         serverId, serverRoot, game: "MINECRAFT", warnings,
         onProgress: (lbl) => { console.log(`[Sandbox] ${lbl}`); if (installId) emitProgress(installId, { label: lbl }); },
+        onBootLine: bootLog,
       });
       if (quarantined.length > 0) {
         // Quarantined jars' install rows are keyed by jar basename.

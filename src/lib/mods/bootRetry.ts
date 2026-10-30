@@ -22,7 +22,12 @@ import { planClientExclusions, scanJarClientSignals, type ExclusionCandidate, ty
 import { fetchLoaderBuild, curseForgeDownloadUrl } from "@/lib/mods/curseforge";
 import { downloadFileWithRetry as downloadFile } from "@/lib/download";
 
-const MAX_QUARANTINE_ROUNDS = 3;
+/**
+ * Boot-heal rounds. Every round must remove or replace a jar to continue, so
+ * this bounds reboots, not blind looping — a large pack can carry several
+ * independent bad mods, each costing its own round.
+ */
+const MAX_QUARANTINE_ROUNDS = 8;
 
 /**
  * Waits between delete attempts for a jar Windows is holding. Windows AV
@@ -337,6 +342,86 @@ export function blameModsFromOutput(
   return Array.from(names);
 }
 
+/** Vanilla/loader namespaces. A stack frame into these must not blame
+ *  whichever mod jar happens to shade them. */
+const NON_MOD_PACKAGE_RE =
+  /^(?:java|javax|jdk|sun|kotlin|net\.minecraft|net\.minecraftforge|net\.neoforged|net\.fabricmc|org\.spongepowered|org\.quiltmc|com\.mojang|org\.jetbrains|org\.joml)\./;
+
+/**
+ * Map class-package prefixes (first three segments, dot form) to the jar in
+ * mods/ carrying them. Stack traces name the culprit's code even when no FML
+ * error line names the mod — this is the generic fallback that keeps an
+ * unknown crash shape from rolling the whole install back.
+ */
+export function classPackageIndex(serverRoot: string): Map<string, string> {
+  const byPackage = new Map<string, string>();
+  const modsDir = path.join(serverRoot, "mods");
+  for (const name of listModsJarNames(serverRoot)) {
+    try {
+      const zip = new AdmZip(path.join(modsDir, name));
+      const seen = new Set<string>();
+      for (const e of zip.getEntries()) {
+        if (!e.entryName.endsWith(".class")) continue;
+        const segs = e.entryName.split("/").slice(0, 3);
+        if (segs.length < 3) continue;
+        const pkg = segs.join(".").toLowerCase();
+        if (seen.has(pkg) || NON_MOD_PACKAGE_RE.test(pkg)) continue;
+        seen.add(pkg);
+        if (!byPackage.has(pkg)) byPackage.set(pkg, name);
+        if (seen.size >= 200) break; // enough anchors per jar
+      }
+    } catch { /* unreadable jar — no package anchors */ }
+  }
+  return byPackage;
+}
+
+/**
+ * Crash reports append a full inventory of every installed mod after the
+ * trace ("!-- MODS --", "System Details", Fabric's "Fabric Mods:"). The
+ * generic matcher must never see that list — it names every jar and would
+ * blame the whole pack.
+ */
+const MOD_INVENTORY_MARKERS = /!-- MODS --|Fabric Mods:|System Details/;
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Generic last-resort blame when no specific error shape matched: scan the
+ * failure region — the trace at the tail of the output, ABOVE any mod
+ * inventory — for known identifiers (mod ids, mixin namespaces) as bare
+ * tokens and dotted class-package prefixes, and return the jars that carry
+ * them. Catches crash shapes the specific parsers have never seen.
+ */
+export function blameModsFromFailureTail(
+  report: string,
+  identifierIndex: Map<string, string>,
+  packageIndex: Map<string, string>,
+  tailLines = 120,
+): string[] {
+  const cut = report.search(MOD_INVENTORY_MARKERS);
+  const region = (cut === -1 ? report : report.slice(0, cut)).split(/\r?\n/);
+  const clean = region.slice(Math.max(0, region.length - tailLines)).join("\n")
+    .replace(/§./g, "")
+    .replace(/\u001B\[[\d;]*m/g, "");
+  const hit = new Set<string>();
+  // Handler-frame segments (handler$bjn000$etf$...) are not trusted on their
+  // own — that blame requires client-dist evidence, which the specific
+  // parser above already gates. Strip every $-prefixed identifier run before
+  // token matching.
+  const tokens = clean.replace(/\$[^$\s]+/g, "");
+  for (const [id, file] of Array.from(identifierIndex)) {
+    if (new RegExp(`(?<![\\w-])${escapeRegExp(id)}(?![\\w-])`, "i").test(tokens)) hit.add(path.basename(file));
+  }
+  const dotted = tokens.match(/\b[a-z][A-Za-z0-9_$]*(?:\.[a-zA-Z_$][A-Za-z0-9_$]*){2,}\b/g) ?? [];
+  for (const d of Array.from(new Set(dotted.map((t) => t.split(".").slice(0, 3).join(".").toLowerCase())))) {
+    const f = packageIndex.get(d);
+    if (f) hit.add(path.basename(f));
+  }
+  return Array.from(hit);
+}
+
 /**
  * Map every jar in mods/ to its identifiers: Forge/NeoForge/Fabric modIds and
  * mixin config namespaces (the handler-frame segment can be either — live
@@ -433,10 +518,12 @@ export async function testServerBootWithQuarantine(args: {
   game: string;
   warnings: string[];
   onProgress?: (label: string) => void;
+  /** Live boot output per line — forwarded to every boot attempt so install flows can show what the server is doing. */
+  onBootLine?: (line: string) => void;
   /** Overrides for tests: delete-retry waits and the java-label probe. */
   deps?: { deleteDelaysMs?: number[]; javaExe?: string };
 }): Promise<string[]> {
-  const { serverId, serverRoot, game, warnings, onProgress } = args;
+  const { serverId, serverRoot, game, warnings, onProgress, onBootLine } = args;
   const removed: string[] = [];
   const bumpedDeps = new Set<string>();
 
@@ -451,10 +538,11 @@ export async function testServerBootWithQuarantine(args: {
 
   for (let round = 0; ; round++) {
     try {
-      await testServerBoot(serverId, game);
+      await testServerBoot(serverId, game, onBootLine);
       return removed;
     } catch (err) {
       if (!(err instanceof SandboxBootError) || round >= MAX_QUARANTINE_ROUNDS) throw err;
+      onProgress?.(`Boot attempt ${round + 1} failed — diagnosing the crash`);
       // Prefer the crash report (full text); fall back to the captured tail.
       const reportPath = newestCrashReport(serverRoot);
       const report = reportPath ? fs.readFileSync(reportPath, "utf8") : err.output;
@@ -517,10 +605,17 @@ export async function testServerBootWithQuarantine(args: {
 
       // No jar named anywhere: the boot output still names the culprit by
       // mod id or stack-frame jar (mixin handlers, construction failures,
-      // missing deps after an exclusion, class-load errors).
+      // missing deps after an exclusion, class-load errors). Failing that,
+      // the failure trace itself names the culprit's code — package
+      // prefixes and identifiers in the tail map to jars, so an unknown
+      // future crash shape still heals instead of rolling the install back.
       let outputBlameNote: string | null = null;
       if (seeds.length === 0) {
-        const outputBlamed = blameModsFromOutput(report, modIdentifierIndex(serverRoot));
+        const idIndex = modIdentifierIndex(serverRoot);
+        let outputBlamed = blameModsFromOutput(report, idIndex);
+        if (outputBlamed.length === 0) {
+          outputBlamed = blameModsFromFailureTail(report, idIndex, classPackageIndex(serverRoot));
+        }
         if (outputBlamed.length > 0) {
           seeds = candidates.filter((c) => outputBlamed.includes(path.basename(c.file)));
           if (seeds.length > 0) {

@@ -87,7 +87,12 @@ export function minecraftBootArgs(serverDir: string): string[] {
  * @returns true if boot was successful, throws a SandboxBootError (with the
  *          captured boot output) if it crashed
  */
-export async function testServerBoot(serverId: string, game: string): Promise<boolean> {
+export async function testServerBoot(
+  serverId: string,
+  game: string,
+  /** Live boot output, one line per call — lets install flows surface what the sandboxed server is doing right now. */
+  onLine?: (line: string) => void
+): Promise<boolean> {
   return new Promise((resolve, reject) => {
     let exePath = "";
     let args: string[] = [];
@@ -125,6 +130,14 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
       ];
       sandboxMs = 150000; // first boot may fetch the .NET runtime via LaunchUtils
     } else if (game === "MINECRAFT") {
+      // The server exits 0 at the EULA prompt when eula.txt is missing, and a
+      // dir that skipped the creation template (imports, hand-built roots)
+      // reads as a mysterious ten-minute hang. The app already accepts the
+      // EULA at server creation (builtins template) — keep parity here.
+      try {
+        const eulaPath = path.join(serverDir, "eula.txt");
+        if (!fs.existsSync(eulaPath)) fs.writeFileSync(eulaPath, "eula=true\n");
+      } catch { /* read-only root — the close handler reports the exit */ }
       // Minecraft gets a REAL boot test — it is the game where silent
       // install damage (missing dependencies, loader mismatch, a pack
       // targeting a different world version) only shows up at boot. Boot
@@ -176,7 +189,9 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
     };
 
     proc.stdout.on("data", (data) => {
-      stdoutData += data.toString();
+      const text = data.toString();
+      stdoutData += text;
+      if (onLine) for (const line of text.split(/\r?\n/)) if (line.trim()) onLine(line);
       // A successful boot ends the test immediately — no reason to burn the
       // rest of the window (or the machine's RAM on world gen).
       if (isMinecraft && minecraftBootSucceeded(stdoutData)) succeed();
@@ -185,6 +200,7 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
     proc.stderr.on("data", (data) => {
       const errStr = data.toString();
       stderrData += errStr;
+      if (onLine) for (const line of errStr.split(/\r?\n/)) if (line.trim()) onLine(line);
 
       // Minecraft's loaders log stack traces for recoverable warnings on
       // stderr — only the exit code and the Done-line verdict are truth
@@ -219,8 +235,24 @@ export async function testServerBoot(serverId: string, game: string): Promise<bo
     });
 
     proc.on("close", (code) => {
-      if (!settled && code !== null && code !== 0) {
+      if (settled) return;
+      if (isMinecraft) {
+        // ANY exit before the Done line fails the test. A clean exit-0 was
+        // left pending here until the whole window expired — the install sat
+        // "hung" for up to ten minutes after the process was already gone
+        // (the EULA prompt exits 0; so do several loader config fatals).
+        fail(
+          code === 0 || code === null
+            ? "The server exited (code " + (code ?? "null") + ") before reaching a successful boot — no Done line."
+            : `Server crashed immediately with exit code ${code}.`
+        );
+      } else if (code !== null && code !== 0) {
         fail(`Server crashed immediately with exit code ${code}.`);
+      } else {
+        // Non-daemon games: a clean exit is a pass — the old path waited out
+        // the whole window before resolving the same verdict.
+        settled = true;
+        resolve(true);
       }
     });
 

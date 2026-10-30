@@ -3,7 +3,10 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import AdmZip from "adm-zip";
-import { testServerBootWithQuarantine, quarantineFromStartCrash, blameModsFromOutput } from "../bootRetry";
+import {
+  testServerBootWithQuarantine, quarantineFromStartCrash, blameModsFromOutput,
+  blameModsFromFailureTail, classPackageIndex,
+} from "../bootRetry";
 import { SandboxBootError } from "@/lib/runners/sandbox";
 import { fetchLoaderBuild } from "@/lib/mods/curseforge";
 
@@ -302,7 +305,7 @@ describe("testServerBootWithQuarantine", () => {
   });
 
   it("gives up after the retry cap when every round fails on a new offender", async () => {
-    const offenders = ["a", "b", "c", "d"];
+    const offenders = ["a", "b", "c", "d", "e", "f", "g", "h", "i"];
     offenders.forEach((m, i) => makeJar(path.join(serverRoot, "mods"), `${m}-1.0.jar`, { modId: m }));
     let round = 0;
     bootBehavior = () => {
@@ -317,7 +320,57 @@ describe("testServerBootWithQuarantine", () => {
     await expect(
       testServerBootWithQuarantine({ serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings })
     ).rejects.toThrow(/crashed/);
-    expect(round).toBe(4); // initial + 3 quarantine rounds
+    expect(round).toBe(9); // initial + 8 quarantine rounds (the cap)
+  });
+
+  it("heals an unknown crash shape by blaming the jar that owns the failing code", async () => {
+    // No FML error line names the mod — the stack trace is the only evidence.
+    makeJar(path.join(serverRoot, "mods"), "weirdmod-1.0.jar", {
+      modId: "weirdmod",
+      extraEntries: { "dev/weird/mod/core/Engine.class": "x" },
+    });
+    makeJar(path.join(serverRoot, "mods"), "innocent-1.0.jar", { modId: "innocent" });
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) {
+        throw new SandboxBootError(
+          "Server crashed immediately with exit code 1.",
+          [
+            "java.lang.IllegalStateException: a failure shape no parser has seen",
+            "\tat dev.weird.mod.core.Engine.boot(Engine.java:42) ~[weirdmod-1.0.jar%23412]",
+            "\tat java.base/java.lang.Thread.run(Thread.java:833)",
+          ].join("\n")
+        );
+      }
+    };
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    expect(calls).toBe(2);
+    expect(removed).toEqual(["weirdmod-1.0.jar"]);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "innocent-1.0.jar"))).toBe(true);
+  });
+
+  it("heals when the failure tail only names the mod's own log output", async () => {
+    makeJar(path.join(serverRoot, "mods"), "serverphobe-1.0.jar", { modId: "serverphobe" });
+    makeJar(path.join(serverRoot, "mods"), "bystander-1.0.jar", { modId: "bystander" });
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) {
+        throw new SandboxBootError(
+          "Server crashed immediately with exit code 1.",
+          "[Server thread/ERROR]: Encountered an unexpected exception\n[serverphobe] This build refuses dedicated servers"
+        );
+      }
+    };
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    expect(calls).toBe(2);
+    expect(removed).toEqual(["serverphobe-1.0.jar"]);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "bystander-1.0.jar"))).toBe(true);
   });
 
   const posixOnly = process.platform === "win32" ? it.skip : it;
@@ -530,5 +583,81 @@ describe("blameModsFromOutput", () => {
     const frame = "at net.minecraft.client.gui.screens.ResourceLocation.handler$bjn000$etf$illegalPathOverride";
     expect(blameModsFromOutput(frame, index)).toEqual([]);
     expect(blameModsFromOutput(frame + "\nScreen for invalid dist DEDICATED_SERVER", index)).toEqual(["568563.jar"]);
+  });
+});
+
+describe("blameModsFromFailureTail", () => {
+  it("blames package prefixes and bare identifiers in the trace, never the crash report's mod inventory", () => {
+    const report = [
+      "java.lang.NullPointerException: boom",
+      "\tat dev.unknown.pkg.Core.run(Core.java:1)",
+      "",
+      "!-- MODS --",
+      "\tMods:",
+      "\t * innocentmod@1.0 (innocent-1.0.jar)",
+      "\t * othermod@2.0 (other-1.0.jar)",
+    ].join("\n");
+    const idIndex = new Map([
+      ["innocentmod", "mods/innocent-1.0.jar"],
+      ["othermod", "mods/other-1.0.jar"],
+    ]);
+    const pkgIndex = new Map([["dev.unknown.pkg", "culprit-1.0.jar"]]);
+    // The inventory below "!-- MODS --" names every jar — only the trace above it counts.
+    expect(blameModsFromFailureTail(report, idIndex, pkgIndex)).toEqual(["culprit-1.0.jar"]);
+
+    // Fabric/Forge shape: same cut for "System Details" sections.
+    const fabric = [
+      "java.lang.IllegalStateException: boom",
+      "\tat dev.unknown.pkg.Core.run(Core.java:1)",
+      "\t-- System Details --",
+      "\tFabric Mods: innocentmod@1.0 othermod@2.0",
+    ].join("\n");
+    expect(blameModsFromFailureTail(fabric, idIndex, pkgIndex)).toEqual(["culprit-1.0.jar"]);
+  });
+
+  it("returns nothing when the tail names nothing installed", () => {
+    const idIndex = new Map([["sodium", "mods/sodium.jar"]]);
+    const pkgIndex = new Map([["com.sodium", "mods/sodium.jar"]]);
+    expect(blameModsFromFailureTail("no mod names here", idIndex, pkgIndex)).toEqual([]);
+    // An id followed by a hyphen (a versioned artifact name) is not the mod id.
+    expect(blameModsFromFailureTail("sodium-1.0.jar got downloaded", idIndex, pkgIndex)).toEqual([]);
+  });
+
+  it("does not blame tokens inside mixin handler-frame segments — that gate stays with the dist-evidence parser", () => {
+    const frame = "at net.minecraft.client.gui.screens.ResourceLocation.handler$bjn000$etf$illegalPathOverride";
+    const idIndex = new Map([["etf", "mods/568563.jar"]]);
+    expect(blameModsFromFailureTail(frame, idIndex, new Map())).toEqual([]);
+  });
+});
+
+describe("classPackageIndex", () => {
+  let dataDir = "";
+  let serverRoot = "";
+  beforeAll(() => {
+    dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "pkgidx-"));
+    process.env.GAMEVAULT_DATA_DIR = dataDir;
+  });
+  afterAll(() => {
+    delete process.env.GAMEVAULT_DATA_DIR;
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+  beforeEach(() => {
+    serverRoot = path.join(dataDir, "local-servers", "pkg" + Math.random().toString(36).slice(2, 8));
+    fs.mkdirSync(path.join(serverRoot, "mods"), { recursive: true });
+  });
+
+  it("indexes package prefixes from jar entries, skipping loader namespaces", () => {
+    makeJar(path.join(serverRoot, "mods"), "acme-1.0.jar", {
+      modId: "acme",
+      extraEntries: {
+        "com/acme/great/Thing.class": "x",
+        "net/minecraftforge/fml/Shadow.class": "x", // loader namespace — not a mod's code
+      },
+    });
+    makeJar(path.join(serverRoot, "mods"), "broken.jar", { modId: "broken" }); // no .class entries
+    const idx = classPackageIndex(serverRoot);
+    expect(idx.get("com.acme.great")).toBe("acme-1.0.jar");
+    expect(idx.has("net.minecraftforge.fml")).toBe(false);
+    expect(idx.size).toBe(1);
   });
 });

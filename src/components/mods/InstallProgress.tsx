@@ -11,6 +11,7 @@ export interface ModProgressEvent {
   total?: number;
   bytesDone?: number;
   bytesTotal?: number;
+  bootLines?: string[];
   error?: string;
 }
 
@@ -180,6 +181,16 @@ export function InstallProgressPanel({ event, onDismiss }: { event: ModProgressE
           style={{ width: `${pct}%` }}
         />
       </div>
+
+      {/* Live boot-test output — a modded boot can run for minutes; this is
+          what the sandboxed server is printing right now. Kept visible when
+          the boot fails: the last lines before the exit are usually the
+          actual cause. */}
+      {(event.stage === "boot" || event.stage === "error") && event.bootLines && event.bootLines.length > 0 && (
+        <pre className="max-h-28 overflow-y-auto rounded-lg bg-black/40 p-2 font-mono text-[10px] leading-relaxed text-slate-300 whitespace-pre-wrap break-all">
+          {event.bootLines.join("\n")}
+        </pre>
+      )}
 
       <div className="flex items-center justify-between">
         <ol className="flex items-center gap-1.5 text-[10px] uppercase tracking-wide">

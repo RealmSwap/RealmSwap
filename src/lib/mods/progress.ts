@@ -23,6 +23,8 @@ export interface ModProgressEvent {
   bytesDone?: number;
   /** Total bytes when the provider reports sizes up front. */
   bytesTotal?: number;
+  /** Rolling tail of the sandbox boot test's live output (boot stage). */
+  bootLines?: string[];
   error?: string;
 }
 
@@ -101,6 +103,38 @@ export function endProgress(installId: string, stage: "done" | "error", error?: 
   session.endTimer = setTimeout(() => {
     sessions.delete(installId);
   }, END_GRACE_MS);
+}
+
+/**
+ * Rolling boot-log tail for the progress panel. A modded boot test runs up
+ * to ten minutes with nothing to show but a spinner — this buffers the
+ * sandbox's live output lines and emits the last few as `bootLines`,
+ * throttled so a chatty server can't flood the SSE stream.
+ */
+export function createBootLogEmitter(
+  installId: string | undefined,
+  opts?: { maxLines?: number; intervalMs?: number }
+): (line: string) => void {
+  if (!installId) return () => {};
+  const maxLines = opts?.maxLines ?? 8;
+  const intervalMs = opts?.intervalMs ?? 800;
+  let tail: string[] = [];
+  let lastEmit = 0;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const flush = () => {
+    timer = null;
+    lastEmit = Date.now();
+    emitProgress(installId, { bootLines: [...tail] });
+  };
+  return (line: string) => {
+    const clean = line.trim().slice(0, 200);
+    if (!clean || clean === tail[tail.length - 1]) return;
+    tail.push(clean);
+    if (tail.length > maxLines) tail.shift();
+    if (timer) return;
+    const wait = Math.max(0, intervalMs - (Date.now() - lastEmit));
+    timer = setTimeout(flush, wait);
+  };
 }
 
 /** Test seam: drop all sessions. */
