@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import path from "node:path";
 
 // DockerRunner class guards — the honest-behavior contract for the runner the
 // 2026-10-23 audit traced end to end (no fakes found; these tests keep it
@@ -246,8 +247,10 @@ describe("DockerRunner", () => {
       expect(bag.docker.mock.calls[1][0][0]).toBe("run");
       // argv built by the real buildRunArgs: no shell, world data bind-mounted
       // from the same local-servers/<id> dir the Local runner and backups use
+      // (path.join so the mount string matches on Windows separators too)
+      const srvMount = (root: string) => `${path.join(root, "local-servers", "srv")}:/data`;
       expect(bag.docker.mock.calls[1][0]).toContain(
-        "/tmp/realswap-docker-runner-test/local-servers/srv:/data"
+        srvMount("/tmp/realswap-docker-runner-test")
       );
       expect(bag.spawned).toHaveLength(2); // logs -f + wait
       expect(bag.spawned.map((p) => p.args[0])).toEqual(["logs", "wait"]);
@@ -264,11 +267,12 @@ describe("DockerRunner", () => {
         await runner.start(bag.server);
 
         // The daemon must see the HOST path, not the container-internal one.
+        const srvMount = (root: string) => `${path.join(root, "local-servers", "srv")}:/data`;
         expect(bag.docker.mock.calls[1][0]).toContain(
-          "/mnt/raid/realmswap/local-servers/srv:/data"
+          srvMount("/mnt/raid/realmswap")
         );
         expect(bag.docker.mock.calls[1][0]).not.toContain(
-          "/tmp/realswap-docker-runner-test/local-servers/srv:/data"
+          srvMount("/tmp/realswap-docker-runner-test")
         );
       } finally {
         if (prev === undefined) delete process.env.GAMEVAULT_HOST_DATA_DIR;

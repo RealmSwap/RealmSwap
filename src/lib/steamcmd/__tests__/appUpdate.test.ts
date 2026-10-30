@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { EventEmitter } from "node:events";
+import path from "node:path";
 import {
   runSteamAppUpdate,
   classifySteamFailure,
@@ -47,9 +48,13 @@ function fakeCache(existing: string[]) {
   };
 }
 
-const EXE = "/data/steamcmd/steamcmd.exe";
-const APPCACHE = "/data/steamcmd/appcache";
-const CONFIG_VDF = "/data/steamcmd/config/config.vdf";
+// Derived with path.join so the shapes match steamCmdCachePaths on every
+// platform (a hardcoded "/data/..." root broke on Windows, where the same
+// join produces "\data\...").
+const STEAM_ROOT = path.join("/", "data", "steamcmd");
+const EXE = path.join(STEAM_ROOT, "steamcmd.exe");
+const APPCACHE = path.join(STEAM_ROOT, "appcache");
+const CONFIG_VDF = path.join(STEAM_ROOT, "config", "config.vdf");
 
 // Verbatim shape of the failure that broke an Enshrouded update on a real install.
 const TIMEOUT_RUN: Script = {

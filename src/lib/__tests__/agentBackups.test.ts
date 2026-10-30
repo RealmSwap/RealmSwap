@@ -143,10 +143,14 @@ async function stageAgentUpload(valheim: boolean, srcRelDir: string, worldFiles:
   }
   const tarPath = path.join(tmp, "staged-upload.tar");
   const { execFileSync } = await import("child_process");
+  // Mirror backupService's Windows tar handling: --force-local (GNU tar reads
+  // "C:..." as host:path) with forward slashes (it mangles backslashes).
+  const forceLocal = process.platform === "win32" ? ["--force-local"] : [];
+  const fwd = (p: string) => (process.platform === "win32" ? p.split("\\").join("/") : p);
   if (valheim) {
-    execFileSync("tar", ["-cf", tarPath, "-C", srcAbs, ...Object.keys(worldFiles)]);
+    execFileSync("tar", [...forceLocal, "-cf", fwd(tarPath), "-C", fwd(srcAbs), ...Object.keys(worldFiles)]);
   } else {
-    execFileSync("tar", ["-cf", tarPath, "-C", dataDir, srcRelDir]);
+    execFileSync("tar", [...forceLocal, "-cf", fwd(tarPath), "-C", fwd(dataDir), srcRelDir]);
   }
   bag.uploadId = recordUpload(tarPath, "node-1", "srv");
   bag.awaitOutcome = { ok: true, output: JSON.stringify({ uploadId: bag.uploadId }) };
