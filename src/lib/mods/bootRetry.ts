@@ -297,8 +297,9 @@ export function parseMixinHandlerModIds(report: string): string[] {
  * - FML named errors ("<Mod> has class loading errors", e.g. Oculus);
  * - missing dependencies after an exclusion ("Mod colorwheel requires
  *   oculus ...") — the REQUIRING mod goes, its dep was removed deliberately;
- * - mod construction failures ("Failed to create mod instance. ModID:
- *   watermedia" — WATERMeDIA refuses servers);
+ * - mod construction / auto-subscriber failures ("Failed to create mod
+ *   instance. ModID: watermedia" — WATERMeDIA refuses servers; "Failed to
+ *   register automatic subscribers. ModID: create");
  * - root-cause stack-frame jar annotations ("~[869524.jar%23NNN...").
  * Color codes (§0-§f) are stripped first — FML interleaves them with mod ids.
  * Returns files in mods/ (basenames); empty when nothing maps.
@@ -325,7 +326,7 @@ export function blameModsFromOutput(
   while ((m6 = re7.exec(clean))) requires.push(m6);
   add(requires.map((m) => m[1]));
   const modIds: RegExpExecArray[] = [];
-  const re8 = /Failed to create mod instance\. ModID: ([a-z0-9_]+)/g;
+  const re8 = /Failed to (?:create mod instance|register automatic subscribers)\. ModID: ([A-Za-z0-9_-]+)/g;
   while ((m6 = re8.exec(clean))) modIds.push(m6);
   add(modIds.map((m) => m[1]));
   if (CLIENT_DIST_EVIDENCE.test(clean)) add(parseMixinHandlerModIds(clean));

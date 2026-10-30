@@ -509,6 +509,7 @@ describe("blameModsFromOutput", () => {
     const index = new Map([
       ["oculus", "mods/581495.jar"],
       ["watermedia", "mods/869524.jar"],
+      ["create", "mods/624283.jar"],
     ]);
     const output = [
       "\tOculus has class loading errors",
@@ -516,11 +517,12 @@ describe("blameModsFromOutput", () => {
       "Caused by: net.minecraftforge.fml.ModLoadingException: WATERMeDIA does not support server side",
       "\tat watermedia.SolidMediaMain.<init>(~[869524.jar%23412!/:1.2.6]) {}",
       "Failed to create mod instance. ModID: watermedia",
+      "Failed to register automatic subscribers. ModID: create, class com.simibubi.create.Create",
     ].join("\n");
     // The MixinTransformerError alone has no dist evidence — handler frames are
     // not trusted from plain stdout. The named error, ModID and root "Caused
     // by" frame each land on their jar.
-    expect(blameModsFromOutput(output, index)).toEqual(["581495.jar", "869524.jar"]);
+    expect(blameModsFromOutput(output, index)).toEqual(["581495.jar", "869524.jar", "624283.jar"]);
   });
 
   it("blames mixin handler frames only with client-dist evidence", () => {
