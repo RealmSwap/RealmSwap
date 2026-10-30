@@ -30,13 +30,14 @@ const bag = vi.hoisted(() => ({
   fetchRoutes: null as null | ((url: string, init?: RequestInit) => Response | Promise<Response>),
 }));
 
-vi.mock("@/lib/download", () => ({
-  downloadFile: async (url: string, dest: string) => {
+vi.mock("@/lib/download", () => {
+  const downloadBody = async (url: string, dest: string) => {
     const body = bag.downloadBodies?.(url);
     if (!body) throw new Error(`no download body stubbed for ${url}`);
     fs.writeFileSync(dest, body);
-  },
-}));
+  };
+  return { downloadFile: downloadBody, downloadFileWithRetry: downloadBody };
+});
 vi.mock("@/lib/auth", () => ({ getAuthenticatedUser: async () => ({ id: "user1" }) }));
 vi.mock("@/lib/serverAuth", () => ({
   verifyServerAccess: async () => bag.access,

@@ -13,7 +13,7 @@ import AdmZip from "adm-zip";
 import { prisma } from "@/lib/db";
 import { dataRoot } from "@/lib/appPaths";
 import { safeJoin } from "@/lib/safePath";
-import { downloadFile } from "@/lib/download";
+import { downloadFileWithRetry as downloadFile } from "@/lib/download";
 import {
   readLoaderMarker, detectMinecraftVersion,
   installFabricServer, installForgeServer, installNeoForgeServer, installQuiltServer,

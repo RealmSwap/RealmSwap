@@ -3,7 +3,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import AdmZip from "adm-zip";
-import { testServerBootWithQuarantine, quarantineFromStartCrash } from "../bootRetry";
+import { testServerBootWithQuarantine, quarantineFromStartCrash, blameModsFromOutput } from "../bootRetry";
 import { SandboxBootError } from "@/lib/runners/sandbox";
 import { fetchLoaderBuild } from "@/lib/mods/curseforge";
 
@@ -24,7 +24,7 @@ vi.mock("@/lib/mods/curseforge", () => ({
   curseForgeDownloadUrl: (f: { id: number }) => `cf://files/${f.id}`,
 }));
 vi.mock("@/lib/download", () => ({
-  downloadFile: vi.fn(async (_url: string, dest: string) => {
+  downloadFileWithRetry: async (_url: string, dest: string) => {
     const AdmZip = (await import("adm-zip")).default;
     const zip = new AdmZip();
     zip.addFile(
@@ -32,14 +32,14 @@ vi.mock("@/lib/download", () => ({
       Buffer.from('[[mods]]\nmodId="modern_industrialization"\nversion="2.5.11"\n')
     );
     zip.writeZip(dest);
-  }),
+  },
 }));
 
 vi.mock("@/lib/appPaths", () => ({
   dataRoot: () => process.env.GAMEVAULT_DATA_DIR ?? process.cwd(),
 }));
 
-function makeJar(dir: string, name: string, opts: { modId?: string; requiredDeps?: string[] }) {
+function makeJar(dir: string, name: string, opts: { modId?: string; requiredDeps?: string[]; extraEntries?: Record<string, string> }) {
   const zip = new AdmZip();
   if (opts.modId) {
     let toml = `[[mods]]\nmodId="${opts.modId}"\n`;
@@ -47,6 +47,9 @@ function makeJar(dir: string, name: string, opts: { modId?: string; requiredDeps
       toml += `\n[[dependencies.${opts.modId}]]\nmodId="${dep}"\ntype="required"\n`;
     }
     zip.addFile("META-INF/neoforge.mods.toml", Buffer.from(toml));
+  }
+  for (const [entry, content] of Object.entries(opts.extraEntries ?? {})) {
+    zip.addFile(entry, Buffer.from(content));
   }
   zip.addFile("dummy.txt", Buffer.from("x"));
   zip.writeZip(path.join(dir, name));
@@ -152,6 +155,80 @@ describe("testServerBootWithQuarantine", () => {
     });
     expect(removed).toEqual(["282837.jar"]);
     expect(calls).toBe(2);
+  });
+
+  // The live Society: Sunlit Valley crash: a mod's mixin into ResourceLocation
+  // loads client-only Screen; FML's dist cleaner kills the JVM before any
+  // crash report is written, and the stack names the mod id ("etf"), never a
+  // jar. Only the captured boot output carries the evidence.
+  const mixinCrashOutput = [
+    "[main/ERROR] [RuntimeDistCleaner/DISTXFORM]: Attempted to load class net/minecraft/client/gui/screens/Screen for invalid dist DEDICATED_SERVER",
+    "Exception in thread \"main\" java.lang.RuntimeException: java.lang.reflect.InvocationTargetException",
+    "Caused by: java.lang.ExceptionInInitializerError",
+    "Caused by: java.lang.RuntimeException: Attempted to load class net/minecraft/client/gui/screens/Screen for invalid dist DEDICATED_SERVER",
+    "\tat TRANSFORMER/minecraft@1.20.1/net.minecraft.resources.ResourceLocation.handler$bjn000$etf$illegalPathOverride(ResourceLocation.java:525)",
+    "\tat TRANSFORMER/minecraft@1.20.1/net.minecraft.network.chat.Style.<clinit>(Style.java:39)",
+  ].join("\n");
+
+  it("quarantines the jar behind a mixin handler mod id when no crash report names a jar", async () => {
+    makeJar(path.join(serverRoot, "mods"), "576889.jar", { modId: "etf" });
+    makeJar(path.join(serverRoot, "mods"), "plain-1.0.jar", { modId: "plain" });
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) throw new SandboxBootError("crashed", mixinCrashOutput);
+    };
+
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    expect(removed).toEqual(["576889.jar"]);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "576889.jar"))).toBe(false);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "plain-1.0.jar"))).toBe(true);
+    expect(calls).toBe(2);
+    expect(warnings.join(" ")).toMatch(/implicates 576889\.jar/);
+  });
+
+  // The jar's Forge modId can differ from the mixin config namespace the
+  // handler names (live case: modId entity_texture_features, config
+  // mixins.etf.common.json — the id comes after "mixins").
+  it("matches the mixin handler id against mixin config namespaces too", async () => {
+    makeJar(path.join(serverRoot, "mods"), "123456.jar", {
+      modId: "entity_texture_features",
+      extraEntries: { "mixins.etf.common.json": "{\"package\":\"net.etf\"}" },
+    });
+    makeJar(path.join(serverRoot, "mods"), "plain-1.0.jar", { modId: "plain" });
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) throw new SandboxBootError("crashed", mixinCrashOutput);
+    };
+
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+    });
+    expect(removed).toEqual(["123456.jar"]);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "123456.jar"))).toBe(false);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "plain-1.0.jar"))).toBe(true);
+    expect(calls).toBe(2);
+  });
+
+  it("does not blame a mixin handler mod id without dist evidence in the report", async () => {
+    makeJar(path.join(serverRoot, "mods"), "576889.jar", { modId: "etf" });
+    const output = mixinCrashOutput.replaceAll("for invalid dist DEDICATED_SERVER", "for another reason entirely");
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) throw new SandboxBootError("crashed", output);
+    };
+
+    await expect(
+      testServerBootWithQuarantine({
+        serverId: path.basename(serverRoot), serverRoot, game: "MINECRAFT", warnings,
+      })
+    ).rejects.toThrow("crashed");
+    expect(calls).toBe(1);
+    expect(fs.existsSync(path.join(serverRoot, "mods", "576889.jar"))).toBe(true);
   });
 
   it("bumps an out-of-range dependency from the same project and boots", async () => {
@@ -421,5 +498,37 @@ describe("quarantineFromStartCrash", () => {
     } finally {
       renameSpy.mockRestore();
     }
+  });
+});
+
+describe("blameModsFromOutput", () => {
+  // Live shapes from v0.5.14 Society: Sunlit Valley boot crashes. FML names
+  // mods by display name ("Oculus"), mod id (construction failures), or jar
+  // annotation only — none of which appear in a crash report's Mod file lines.
+  it("maps named errors, construction failures and root-cause frames to jars", () => {
+    const index = new Map([
+      ["oculus", "mods/581495.jar"],
+      ["watermedia", "mods/869524.jar"],
+      ["create", "mods/624283.jar"],
+    ]);
+    const output = [
+      "\tOculus has class loading errors",
+      "§7org.spongepowered.asm.mixin.transformer.throwables.MixinTransformerError",
+      "Caused by: net.minecraftforge.fml.ModLoadingException: WATERMeDIA does not support server side",
+      "\tat watermedia.SolidMediaMain.<init>(~[869524.jar%23412!/:1.2.6]) {}",
+      "Failed to create mod instance. ModID: watermedia",
+      "Failed to register automatic subscribers. ModID: create, class com.simibubi.create.Create",
+    ].join("\n");
+    // The MixinTransformerError alone has no dist evidence — handler frames are
+    // not trusted from plain stdout. The named error, ModID and root "Caused
+    // by" frame each land on their jar.
+    expect(blameModsFromOutput(output, index)).toEqual(["581495.jar", "869524.jar", "624283.jar"]);
+  });
+
+  it("blames mixin handler frames only with client-dist evidence", () => {
+    const index = new Map([["etf", "mods/568563.jar"]]);
+    const frame = "at net.minecraft.client.gui.screens.ResourceLocation.handler$bjn000$etf$illegalPathOverride";
+    expect(blameModsFromOutput(frame, index)).toEqual([]);
+    expect(blameModsFromOutput(frame + "\nScreen for invalid dist DEDICATED_SERVER", index)).toEqual(["568563.jar"]);
   });
 });
