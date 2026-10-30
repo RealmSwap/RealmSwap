@@ -16,6 +16,16 @@ import path from "path";
 import { safeJoin } from "../safePath";
 import { safePackPath } from "./mrpack";
 
+/**
+ * A collision-free staging zip path. The routes only guard on server status,
+ * so two concurrent installs for the same stopped server (double-click, two
+ * tabs) share the mod dirs — a fixed staging name let the second download
+ * clobber the first's mid-extract.
+ */
+export function uniqueStagingZip(dir: string, prefix: string): string {
+  return path.join(dir, `.${prefix}.staging-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.zip`);
+}
+
 export interface ThunderstoreVersion {
   version_number: string;
   download_url: string;

@@ -180,6 +180,9 @@ function jsonReq(url: string, method: string, body?: unknown): NextRequest {
 
 describe("Zomboid install route", () => {
   it("records a ModInstallation row (both ids) and writes servertest.ini", async () => {
+    // The route refuses installs before the server itself exists.
+    fs.mkdirSync(path.join(dir, "local-servers", "s1", "zomboid-server"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "local-servers", "s1", "zomboid-server", "StartServer64.bat"), "@echo off");
     const res = await installMod(
       jsonReq("/api/servers/s1/mods/install", "POST", {
         modType: "STEAM_WORKSHOP",
@@ -228,6 +231,8 @@ describe("Zomboid install route", () => {
 
   it("includes the sandbox boot output when the boot failure carries it", async () => {
     bag.bootError = new SandboxBootError("Server crashed immediately with exit code 1.", "--- stderr ---\nFATAL");
+    fs.mkdirSync(path.join(dir, "local-servers", "s1", "zomboid-server"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "local-servers", "s1", "zomboid-server", "StartServer64.bat"), "@echo off");
     const res = await installMod(
       jsonReq("/api/servers/s1/mods/install", "POST", {
         modType: "STEAM_WORKSHOP",
@@ -283,7 +288,8 @@ describe("ARK install + uninstall route", () => {
   });
 
   it("appends the workshop id to ActiveMods= and records the row", async () => {
-    fs.mkdirSync(path.join(dir, "local-servers", "s1", "ark-server"), { recursive: true });
+    // The route refuses installs before the server itself exists.
+    fs.mkdirSync(path.join(dir, "local-servers", "s1", "ark-server", "ShooterGame"), { recursive: true });
     const res = await installMod(
       jsonReq("/api/servers/s1/mods/install", "POST", {
         modType: "STEAM_WORKSHOP",

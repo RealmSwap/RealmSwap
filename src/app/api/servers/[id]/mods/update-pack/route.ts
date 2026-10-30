@@ -161,9 +161,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       });
 
       // Retire mods the new manifest dropped — ONLY within the set the old
-      // pack version owned (recorded at its install).
+      // pack version owned (recorded at its install). No provider filter: the
+      // jar is gone, so every row claiming that id must go, including when
+      // the new pack came from the other mod platform.
       const newIds = new Set(result.installedPackageIds);
-      const provider = plan.kind === "curseforge" ? "curseforge" : "modrinth";
       const retired: string[] = [];
       for (const packageId of oldPackageIds) {
         if (newIds.has(packageId)) continue;
@@ -172,7 +173,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
           fs.unlinkSync(jarPath);
         } catch {}
         await prisma.modInstallation.deleteMany({
-          where: { serverId, provider, packageId },
+          where: { serverId, packageId },
         });
         retired.push(packageId);
       }

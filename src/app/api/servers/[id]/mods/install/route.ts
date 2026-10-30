@@ -198,6 +198,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         }
 
       } else if (game === "ZOMBOID") {
+        if (!fs.existsSync(path.join(serverRoot, "zomboid-server", "StartServer64.bat"))) {
+          throw new Error("Project Zomboid server is not installed yet — install the server before adding mods.");
+        }
         if (!workshopId) {
           throw new Error("A Workshop ID is required for Project Zomboid mods.");
         }
@@ -208,6 +211,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         });
 
       } else if (game === "ARK") {
+        if (!fs.existsSync(path.join(serverRoot, "ark-server", "ShooterGame"))) {
+          throw new Error("ARK server is not installed yet — install the server before adding mods.");
+        }
         if (!workshopId) {
           throw new Error("A Workshop ID is required for ARK mods.");
         }

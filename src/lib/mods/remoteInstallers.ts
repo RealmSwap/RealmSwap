@@ -501,7 +501,16 @@ export async function installZomboidWorkshopModRemote(args: {
       { key: "id", regex: "^id=(.+)$" },
       { key: "name", regex: "^name=(.+)$" },
     ]);
-    modIds = infos.map((f) => f.fields.id).filter((id): id is string => !!id);
+    modIds = infos
+      .map((f) => {
+        const id = f.fields.id?.trim();
+        if (id) return id;
+        // Mirror the local derivation's folder-name fallback: without it a
+        // mod.info lacking id= fails closed here but succeeds locally.
+        const parts = f.relPath.split(/[\\/]+/);
+        return parts.length >= 2 ? parts[parts.length - 2] : "";
+      })
+      .filter((id): id is string => !!id);
     if (modIds.length === 0) {
       throw new Error(
         `Workshop item ${workshopId} downloaded on the node but exposed no mod.info id= entries — its content layout isn't a server mod.`
@@ -826,6 +835,12 @@ export async function resolveRemoteModUpdate(
   }
   if (installation.provider === "workshop" && game === "ZOMBOID") {
     throw new UpdateResolutionError("Zomboid workshop updates on nodes aren't supported yet — uninstall and reinstall the mod.");
+  }
+  if (installation.provider === "workshop" && game === "TERRARIA") {
+    throw new UpdateResolutionError("tModLoader workshop updates on nodes aren't supported yet — uninstall and reinstall the mod.");
+  }
+  if (installation.provider === "ficsit") {
+    throw new UpdateResolutionError("ficsit.app mod updates on nodes aren't supported yet — uninstall and reinstall the mod.");
   }
 
   throw new UpdateResolutionError("Mod updates aren't supported for this provider on remote-node servers yet.");

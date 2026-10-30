@@ -6,7 +6,7 @@ import { readZomboidModLists, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { curatedZomboidWorkshopName } from "@/lib/mods/providers/SteamWorkshopProvider";
 import { readArkActiveMods, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 import { OXIDE_CORE_MARKER, OXIDE_CORE_PACKAGE_ID, oxidePluginsDir } from "@/lib/mods/umod";
-import { WORKSHOP_APP_IDS } from "@/lib/mods/workshop";
+import { WORKSHOP_APP_IDS, getWorkshopDetails } from "@/lib/mods/workshop";
 import {
   tmlInstallDir, tmlWorkshopRoot, tmlEnabledJsonPath, readTmlMarker,
   readTmlEnabledMods, addTmlEnabledMods, removeTmlEnabledMods, deriveTmodNames,
@@ -50,6 +50,27 @@ function isDirectory(target: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Restore real Workshop versions for rows reconcile re-creates. A restore
+ * wiped the `time_updated` these rows carried, and without an ISO version
+ * the update checks refuse them forever ("reinstall once to enable update
+ * checks") — one best-effort batch lookup brings that coverage back.
+ * Offline: rows are created versionless, same as before.
+ */
+async function workshopTimeUpdated(ids: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  if (ids.length === 0) return out;
+  try {
+    const details = await getWorkshopDetails(ids);
+    for (const [id, d] of Array.from(details)) {
+      if (d.timeUpdated) out.set(id, d.timeUpdated);
+    }
+  } catch {
+    // Steam unreachable — fall through to the versionless defaults.
+  }
+  return out;
 }
 
 /**
@@ -312,23 +333,21 @@ async function reconcileZomboid(serverId: string, serverRoot: string): Promise<R
     }
   }
 
-  let added = 0;
-  for (const workshopId of Array.from(workshopIdSet)) {
-    if (!survivingIds.has(workshopId)) {
-      await prisma.modInstallation.create({
-        data: {
-          serverId,
-          provider: "workshop",
-          packageId: workshopId,
-          version: "Workshop",
-          name: curatedZomboidWorkshopName(workshopId) ?? `Workshop ${workshopId}`,
-        },
-      });
-      added++;
-    }
+  const addedIds = Array.from(workshopIdSet).filter((id) => !survivingIds.has(id));
+  const versions = await workshopTimeUpdated(addedIds);
+  for (const workshopId of addedIds) {
+    await prisma.modInstallation.create({
+      data: {
+        serverId,
+        provider: "workshop",
+        packageId: workshopId,
+        version: versions.get(workshopId) ?? "Workshop",
+        name: curatedZomboidWorkshopName(workshopId) ?? `Workshop ${workshopId}`,
+      },
+    });
   }
 
-  return { removed, added, repaired };
+  return { removed, added: addedIds.length, repaired };
 }
 
 /**
@@ -390,22 +409,21 @@ async function reconcileTml(serverId: string, serverRoot: string): Promise<Recon
     addTmlEnabledMods(enabledJson, names);
   }
 
-  let added = 0;
-  for (const workshopId of Array.from(diskIds)) {
-    if (!survivingIds.has(workshopId)) {
-      await prisma.modInstallation.create({
-        data: {
-          serverId,
-          provider: "workshop",
-          packageId: workshopId,
-          version: "unknown",
-          name: `Workshop ${workshopId}`,
-        },
-      });
-      added++;
-      addTmlEnabledMods(enabledJson, namesFor(workshopId));
-    }
+  const addedIds = Array.from(diskIds).filter((id) => !survivingIds.has(id));
+  const versions = await workshopTimeUpdated(addedIds);
+  for (const workshopId of addedIds) {
+    await prisma.modInstallation.create({
+      data: {
+        serverId,
+        provider: "workshop",
+        packageId: workshopId,
+        version: versions.get(workshopId) ?? "unknown",
+        name: `Workshop ${workshopId}`,
+      },
+    });
+    addTmlEnabledMods(enabledJson, namesFor(workshopId));
   }
+  const added = addedIds.length;
 
   // enabled.json is part of the disk truth too: anything listed but absent
   // from every item on disk would make tML warn at boot — trim it.

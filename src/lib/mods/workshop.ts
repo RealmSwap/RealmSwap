@@ -105,13 +105,13 @@ function toItem(f: QueryFileItem): WorkshopSearchItem {
 }
 
 // query_type 9 = ranked by text search; 3 = most subscribed. The other
-// sort orders fall back to text search (probed: other types ignore
-// search_text, so they would return unrelated results).
+// query types ignore search_text (probed) and would return unrelated
+// results — and Steam offers no text-searchable "recently updated" sort,
+// so that option isn't offered for Workshop-backed games.
 const SORT_QUERY_TYPES: Record<string, string> = {
   relevance: "9",
   downloads: "3",
   rating: "3",
-  updated: "9",
 };
 
 /**

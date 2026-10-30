@@ -17,7 +17,7 @@ import {
 import {
   communityForGame, fetchCommunityIndex, findVersionEntry, newestVersion,
   collectDependencies, extractThunderstorePackage, extractCorePack,
-  isBepInExCoreInstall, VALHEIM_CORE_PACKAGE_ID, VRISING_CORE_PACKAGE_ID,
+  isBepInExCoreInstall, uniqueStagingZip, VALHEIM_CORE_PACKAGE_ID, VRISING_CORE_PACKAGE_ID,
 } from "@/lib/mods/thunderstore";
 // Re-exported for callers that key rows off the V Rising core pack id.
 export { VRISING_CORE_PACKAGE_ID } from "@/lib/mods/thunderstore";
@@ -320,7 +320,7 @@ async function installBepInExThunderstore(args: {
     // Framework, not content: the plugins-dir layout would leave BepInEx
     // unusable, so the pack goes over the server root with its wrapper
     // folder stripped (BepInEx/, doorstop_config.ini, winhttp.dll, ...).
-    const tempZip = safeJoin(serverDir, ".bepinex-core.staging.zip");
+    const tempZip = uniqueStagingZip(serverDir, "bepinex-core");
     await downloadFile(versionEntry.download_url, tempZip);
     try {
       extractCorePack(new AdmZip(tempZip), serverDir);
@@ -376,7 +376,7 @@ async function installBepInExThunderstore(args: {
     url: string,
     dependenciesJson?: string
   ) => {
-    const tempZip = safeJoin(pluginsDir, `.${depPackageId}.staging.zip`);
+    const tempZip = uniqueStagingZip(pluginsDir, depPackageId);
     await downloadFile(url, tempZip);
     try {
       const zip = new AdmZip(tempZip);
@@ -434,7 +434,7 @@ export async function installValheimThunderstore(args: {
       // Official BepInEx release zip (Valheim is Mono). The recorded row is
       // keyed to the community core pack id that dependency strings
       // reference, so the resolver's BepInExPack skip stays truthful.
-      const zipPath = path.join(path.dirname(valheimDir), "bepinex.zip");
+      const zipPath = uniqueStagingZip(path.dirname(valheimDir), "bepinex");
       const defaultBepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
 
       await downloadFile(defaultBepInExUrl, zipPath);
@@ -485,7 +485,7 @@ async function ensureVRisingCore(serverId: string, vrisingDir: string, force: bo
     throw new Error("BepInExPack_V_Rising is no longer available on Thunderstore — it is required for V Rising plugins.");
   }
 
-  const tempZip = safeJoin(vrisingDir, ".bepinex-core.staging.zip");
+  const tempZip = uniqueStagingZip(vrisingDir, "bepinex-core");
   await downloadFile(versionEntry.download_url, tempZip);
   try {
     // The pack wraps everything in BepInExPack_V_Rising/ — stripped so
@@ -744,7 +744,7 @@ export async function ensureShimloaderCore(serverId: string, palworldDir: string
     throw new Error("unreal_shimloader is no longer available on Thunderstore — it is required for Palworld mods.");
   }
 
-  const tempZip = safeJoin(palworldDir, ".shimloader.staging.zip");
+  const tempZip = uniqueStagingZip(palworldDir, "shimloader");
   await downloadFile(versionEntry.download_url, tempZip);
   try {
     // The wrapper keeps its zip layout (dwmapi.dll + UE4SS/ at the root) —
@@ -796,7 +796,7 @@ export async function installPalworldThunderstore(args: {
     throw new Error(`Version '${versionNumber}' of '${packageId}' is no longer available on Thunderstore.`);
   }
 
-  const tempZip = safeJoin(palworldDir, ".palworld-mod.staging.zip");
+  const tempZip = uniqueStagingZip(palworldDir, "palworld-mod");
   await downloadFile(versionEntry.download_url, tempZip);
   let zip: AdmZip;
   try {
@@ -919,7 +919,7 @@ async function installResolvedFicsit(args: {
   const modDir = safeJoin(modsRoot, mod.modReference);
   fs.mkdirSync(modDir, { recursive: true });
 
-  const tempZip = safeJoin(satisfactoryDir, ".ficsit-mod.staging.zip");
+  const tempZip = uniqueStagingZip(satisfactoryDir, "ficsit-mod");
   await downloadFile(downloadUrl, tempZip);
   try {
     // Zip entries are rooted at the plugin files (no wrapper dir); extract
