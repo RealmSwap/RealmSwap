@@ -28,9 +28,7 @@ async function resolveSteamCmdExe(onLog: (msg: string) => void): Promise<string>
   if (process.platform !== "win32") {
     throw new Error("Steam Workshop installs require a Windows host (SteamCMD is only set up there).");
   }
-  // Dynamic import: LocalRunner is a heavy module and only needed on the
-  // Windows runtime path.
-  const { setupSteamCMD } = await import("@/lib/runners/LocalRunner");
+  const { setupSteamCMD } = await import("@/lib/steamcmd/setup");
   return setupSteamCMD(onLog);
 }
 
