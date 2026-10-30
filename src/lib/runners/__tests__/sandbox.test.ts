@@ -205,7 +205,10 @@ describe("testServerBoot — Minecraft verdicts (fake java on PATH)", () => {
   });
 
   posixOnly("forwards live boot output lines to onLine", async () => {
-    fakeJava('echo "Loading mods"; echo "fatal boom" 1>&2; echo "Done (1.5s)!"');
+    // The sleep guarantees the stderr data event delivers before the Done
+    // line's early-exit kills the process — back-to-back writes raced the
+    // kill on fast pipes and dropped the stderr line.
+    fakeJava('echo "Loading mods"; echo "fatal boom" 1>&2; sleep 1; echo "Done (1.5s)!"');
     const lines: string[] = [];
     await expect(testServerBoot(serverId, "MINECRAFT", (l) => lines.push(l))).resolves.toBe(true);
     expect(lines).toContain("Loading mods");
