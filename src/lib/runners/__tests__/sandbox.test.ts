@@ -183,6 +183,36 @@ describe("testServerBoot — Minecraft verdicts (fake java on PATH)", () => {
     await expect(testServerBoot(serverId, "MINECRAFT")).resolves.toBe(true);
   });
 
+  posixOnly("fails fast on a clean exit-0 before Done instead of hanging out the window", async () => {
+    // The EULA prompt (and several loader config fatals) exit 0. This used to
+    // leave the promise pending until the whole 600s window expired — the
+    // install sat "hung" after the process was already gone.
+    fakeJava('echo "You need to agree to the EULA"; exit 0');
+    const started = Date.now();
+    const err = await testServerBoot(serverId, "MINECRAFT").catch((e) => e);
+    expect(err).toBeInstanceOf(SandboxBootError);
+    expect(err.message).toMatch(/exited \(code 0\)/);
+    expect(err.output).toMatch(/agree to the EULA/);
+    expect(Date.now() - started).toBeLessThan(5000);
+  });
+
+  posixOnly("writes eula.txt into the server dir when it is missing", async () => {
+    fakeJava('echo "Done (1.0s)!"');
+    const dir = path.join(dataDir, "local-servers", "mc-eula-missing");
+    fs.mkdirSync(dir, { recursive: true });
+    await expect(testServerBoot("mc-eula-missing", "MINECRAFT")).resolves.toBe(true);
+    expect(fs.readFileSync(path.join(dir, "eula.txt"), "utf8")).toContain("eula=true");
+  });
+
+  posixOnly("forwards live boot output lines to onLine", async () => {
+    fakeJava('echo "Loading mods"; echo "fatal boom" 1>&2; echo "Done (1.5s)!"');
+    const lines: string[] = [];
+    await expect(testServerBoot(serverId, "MINECRAFT", (l) => lines.push(l))).resolves.toBe(true);
+    expect(lines).toContain("Loading mods");
+    expect(lines).toContain("fatal boom");
+    expect(lines.some((l) => l.startsWith("Done (1.5s)!"))).toBe(true);
+  });
+
   it("skips a missing java on a VANILLA server but fails loud on a MODDED one", async () => {
     // No java anywhere on PATH for this scenario.
     process.env.PATH = emptyBin;

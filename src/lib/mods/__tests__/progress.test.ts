@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
-  beginProgress, emitProgress, subscribeProgress, endProgress, resetProgress, type ModProgressEvent,
+  beginProgress, emitProgress, subscribeProgress, endProgress, resetProgress,
+  createBootLogEmitter, type ModProgressEvent,
 } from "../progress";
 
 describe("mod install progress hub", () => {
@@ -80,5 +81,53 @@ describe("mod install progress hub", () => {
     beginProgress("fresh1"); // sweep runs on begin
     expect(subscribeProgress("stale1", () => {})).toBeNull();
     expect(subscribeProgress("fresh1", () => {})).not.toBeNull();
+  });
+});
+
+describe("boot log emitter", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    resetProgress();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    resetProgress();
+  });
+
+  it("emits a throttled rolling tail of boot lines to the session", () => {
+    beginProgress("boot01");
+    const seen: ModProgressEvent[] = [];
+    subscribeProgress("boot01", (e) => seen.push(e));
+
+    const onLine = createBootLogEmitter("boot01", { intervalMs: 800 });
+    for (let i = 1; i <= 12; i++) onLine(`[12:00:${String(i).padStart(2, "0")}] Server line ${i}`);
+    // Nothing yet — the first flush waits one interval.
+    expect(seen).toHaveLength(1); // catch-up only
+    vi.advanceTimersByTime(800);
+    const frame = seen.at(-1)!;
+    expect(frame.stage).toBe("resolving"); // merged into session state
+    expect(frame.bootLines).toEqual([
+      "[12:00:05] Server line 5", "[12:00:06] Server line 6", "[12:00:07] Server line 7", "[12:00:08] Server line 8",
+      "[12:00:09] Server line 9", "[12:00:10] Server line 10", "[12:00:11] Server line 11", "[12:00:12] Server line 12",
+    ]);
+  });
+
+  it("drops blank lines and collapses consecutive repeats (progress-bar spam)", () => {
+    beginProgress("boot02");
+    const seen: ModProgressEvent[] = [];
+    subscribeProgress("boot02", (e) => seen.push(e));
+
+    const onLine = createBootLogEmitter("boot02", { maxLines: 4 });
+    onLine("Preparing start region");
+    onLine("   ");
+    onLine("Preparing start region");
+    onLine("Done (3.2s)!");
+    vi.advanceTimersByTime(800);
+    expect(seen.at(-1)?.bootLines).toEqual(["Preparing start region", "Done (3.2s)!"]);
+  });
+
+  it("no-ops without an installId", () => {
+    expect(createBootLogEmitter(undefined)).toBeInstanceOf(Function);
+    expect(() => createBootLogEmitter(undefined)("anything")).not.toThrow();
   });
 });

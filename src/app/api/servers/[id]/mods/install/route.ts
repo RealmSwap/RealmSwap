@@ -7,7 +7,7 @@ import { dataRoot } from "@/lib/appPaths";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
 import { SandboxBootError } from "@/lib/runners/sandbox";
 import { testServerBootWithQuarantine } from "@/lib/mods/bootRetry";
-import { beginProgress, emitProgress, endProgress } from "@/lib/mods/progress";
+import { beginProgress, emitProgress, endProgress, createBootLogEmitter } from "@/lib/mods/progress";
 import { downloadFile } from "@/lib/download";
 import {
   installMinecraftMod, installMinecraftCurseforge, installValheimThunderstore, installZomboidWorkshopMod,
@@ -261,9 +261,11 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       // 3. Sandbox Test
       console.log(`[Sandbox] Running boot test for ${serverId}`);
       if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the install", current: 0, total: 1 });
+      const bootLog = createBootLogEmitter(installId);
       const quarantined = await testServerBootWithQuarantine({
         serverId, serverRoot, game, warnings,
         onProgress: (lbl) => { console.log(`[Sandbox] ${lbl}`); if (installId) emitProgress(installId, { label: lbl }); },
+        onBootLine: bootLog,
       });
       // Quarantined jars' install rows are keyed by jar basename — drop them
       // so the Installed list doesn't resurrect what the boot test removed.
