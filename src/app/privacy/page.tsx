@@ -32,7 +32,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-xl font-bold text-white mb-3">2. How We Use Your Information</h2>
             <p>
-              We use the information we collect primarily to provide, maintain, and improve the RealmSwap application. Specifically, your server data and configuration files are processed to enable features such as cloud backups (if configured), server migrations, and performance monitoring. Your authentication data is used to secure access to your personal GameVault dashboard.
+              We use the information we collect primarily to provide, maintain, and improve the RealmSwap application. Specifically, your server data and configuration files are processed to enable features such as cloud backups (if configured), server migrations, and performance monitoring. Your authentication data is used to secure access to your personal RealmSwap dashboard.
             </p>
           </section>
 

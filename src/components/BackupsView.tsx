@@ -3,7 +3,7 @@
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   FolderSync,
@@ -25,24 +25,30 @@ import {
   Terminal,
   CloudUpload,
 } from "lucide-react";
-import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import { useModal } from "@/components/ModalProvider";
+import { useActiveServer } from "@/components/dashboard/ActiveServerProvider";
+import { ServerTargetBar } from "@/components/dashboard/ServerTargetBar";
+import { statusLabel } from "@/lib/gameDisplay";
+import { apiFetch } from "@/lib/apiFetch";
 
 interface BackupsViewProps {
-  servers: any[];
   user: any;
 }
 
-import { useSearchParams } from "next/navigation";
-
-export default function BackupsView({ servers, user }: BackupsViewProps) {
-  const router = useRouter();
+export default function BackupsView({ user }: BackupsViewProps) {
   const searchParams = useSearchParams();
   const serverIdFromUrl = searchParams.get("server");
-  
-  const [selectedServer, setSelectedServer] = useState<any | null>(
-    serverIdFromUrl ? (servers.find(s => s.id === serverIdFromUrl) || servers[0]) : (servers[0] || null)
-  );
+
+  // Shared, persisted selection — follows the user across dashboard pages.
+  const { servers, loading: serversLoading, activeServer: selectedServer, setActiveServerId } = useActiveServer();
+
+  // Honor a ?server= deep link once the shared server list has loaded.
+  useEffect(() => {
+    if (!serverIdFromUrl || serversLoading) return;
+    if (servers.some((s) => s.id === serverIdFromUrl)) {
+      setActiveServerId(serverIdFromUrl);
+    }
+  }, [serverIdFromUrl, serversLoading, servers, setActiveServerId]);
   
   const [backups, setBackups] = useState<any[]>([]);
   const [customBackupName, setCustomBackupName] = useState("");
@@ -53,6 +59,16 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const { showModal } = useModal();
+
+  // Long-operation progress banner state — creating/restoring a backup of a
+  // large world can take minutes, and a frozen button alone reads as "broken".
+  const [busy, setBusy] = useState<{ label: string; since: number } | null>(null);
+  const [nowTick, setNowTick] = useState(Date.now());
+  useEffect(() => {
+    if (!busy) return;
+    const t = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [busy]);
 
   // Offsite (S3) settings — ADMIN-only. Blank credential inputs mean "keep saved".
   const isAdmin = user?.role === "ADMIN";
@@ -65,15 +81,13 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
   // Fetch backups for the selected server
   const loadBackups = async (serverId: string) => {
     try {
-      const res = await fetch(`/api/servers/${serverId}/backups`);
-      if (res.ok) {
-        const data = await res.json();
-        setBackups(data);
-      } else {
-        console.error("Failed to load backups");
-      }
-    } catch (err) {
-      console.error("Error loading backups:", err);
+      const data = await apiFetch<any[]>(`/api/servers/${serverId}/backups`);
+      setBackups(Array.isArray(data) ? data : []);
+      setError(null);
+    } catch (err: any) {
+      // An empty list here would look like "all my backups are gone" — say why.
+      setBackups([]);
+      setError(`Couldn't load your backups: ${err.message}`);
     }
   };
 
@@ -167,16 +181,6 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-      router.refresh();
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
-
   // Change automated snapshot interval setting
   const handleUpdateSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,7 +198,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update backup settings");
 
-      setSuccess(`Backup settings updated successfully!${data.prunedBackups > 0 ? ` Retention removed ${data.prunedBackups} old snapshot(s).` : ""}`);
+      setSuccess(`Backup settings updated successfully!${data.prunedBackups > 0 ? ` Retention removed ${data.prunedBackups} old backup(s).` : ""}`);
       // Update selectedServer state
       selectedServer.snapshotInterval = snapshotInterval;
       selectedServer.backupRetention = backupRetention;
@@ -215,21 +219,20 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
     setSuccess(null);
 
     try {
-      const res = await fetch(`/api/servers/${selectedServer.id}/backups`, {
+      setBusy({ label: `Backing up "${selectedServer.name}"...`, since: Date.now() });
+      const data = await apiFetch(`/api/servers/${selectedServer.id}/backups`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customName: customBackupName.trim() || undefined }),
+        json: { customName: customBackupName.trim() || undefined },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create snapshot");
 
-      setSuccess(`Snapshot '${data.name}' created successfully!`);
+      setSuccess(`Backup '${data.name}' created successfully!`);
       setCustomBackupName("");
       loadBackups(selectedServer.id);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setBusy(null);
     }
   };
 
@@ -262,29 +265,28 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
 
     showModal({
       type: "warning",
-      title: "Restore Snapshot",
-      message: `WARNING: Restoring the snapshot '${backup.name}'${offsite ? " from its offsite cloud copy" : ""} will OVERWRITE the current world save of the server '${selectedServer.name}'.\n\nThis action cannot be undone. Are you sure you want to restore?`,
+      title: "Restore Backup",
+      message: `WARNING: Restoring the backup '${backup.name}'${offsite ? " from its offsite cloud copy" : ""} will OVERWRITE the current world save of the server '${selectedServer.name}'.\n\nThis action cannot be undone. Are you sure you want to restore?`,
       confirmText: "Restore World",
       cancelText: "Cancel",
       onConfirm: async () => {
         setActionLoading(`${backup.id}-restore`);
         setError(null);
         setSuccess(null);
+        setBusy({ label: `Restoring "${backup.name}" to "${selectedServer.name}"...`, since: Date.now() });
 
         try {
-          const res = await fetch(`/api/backups/${backup.id}/restore`, {
+          const data = await apiFetch(`/api/backups/${backup.id}/restore`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ offsite }),
+            json: { offsite },
           });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Failed to restore snapshot");
 
-          setSuccess(`Successfully restored world to snapshot '${backup.name}'!`);
+          setSuccess(`Successfully restored world to backup '${backup.name}'!`);
         } catch (err: any) {
           setError(err.message);
         } finally {
           setActionLoading(null);
+          setBusy(null);
         }
       }
     });
@@ -294,8 +296,8 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
   const handleDelete = (backup: any) => {
     showModal({
       type: "error",
-      title: "Delete Snapshot",
-      message: `Are you sure you want to permanently delete snapshot '${backup.name}'?`,
+      title: "Delete Backup",
+      message: `Are you sure you want to permanently delete backup '${backup.name}'?`,
       confirmText: "Delete",
       cancelText: "Cancel",
       onConfirm: async () => {
@@ -304,13 +306,9 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
         setSuccess(null);
 
         try {
-          const res = await fetch(`/api/backups/${backup.id}`, {
-            method: "DELETE",
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Failed to delete snapshot");
+          await apiFetch(`/api/backups/${backup.id}`, { method: "DELETE" });
 
-          setSuccess("Snapshot permanently deleted.");
+          setSuccess("Backup permanently deleted.");
           loadBackups(selectedServer.id);
         } catch (err: any) {
           setError(err.message);
@@ -348,37 +346,13 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
             <FolderSync className="w-6 h-6 text-accentPurple animate-float" />
-            <span>World Backups & Snapshots</span>
+            <span>World Backups</span>
           </h1>
-          <p className="text-sm text-mutedText mt-1">Configure automated world save backups, take manual snapshots, and restore world files instantly.</p>
+          <p className="text-sm text-mutedText mt-1">Automatically back up world saves on a schedule, take manual backups any time, and restore instantly.</p>
         </div>
 
         {/* Server Target Bar */}
-        <div className="glass-panel p-5 rounded-2xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <span className="text-xs font-bold text-mutedText uppercase tracking-wider block mb-1">Target Server Folder</span>
-            <span className="text-[11px] text-mutedText">Select which local game server to view backups for.</span>
-          </div>
-
-          <div className="min-w-[200px]">
-            {servers.length === 0 ? (
-              <span className="text-xs text-red-400 font-bold">No servers deployed yet</span>
-            ) : (
-              <select
-                value={selectedServer?.id || ""}
-                onChange={(e) => {
-                  const s = servers.find(srv => srv.id === e.target.value);
-                  setSelectedServer(s || null);
-                }}
-                className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors cursor-pointer font-bold"
-              >
-                {servers.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.game})</option>
-                ))}
-              </select>
-            )}
-          </div>
-        </div>
+        <ServerTargetBar />
 
         {/* Feedback alerts */}
         {error && (
@@ -392,6 +366,22 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
           <div className="p-4 mb-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm flex items-center gap-3 animate-slide-down">
             <Check className="w-5 h-5 flex-shrink-0" />
             <span>{success}</span>
+          </div>
+        )}
+
+        {/* Long-operation progress banner */}
+        {busy && (
+          <div className="mb-6 glass-panel rounded-xl border border-accentPurple/20 p-4 animate-slide-down">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <span className="text-sm font-bold text-slate-200">{busy.label}</span>
+              <span className="text-xs font-bold text-mutedText tabular-nums">
+                {Math.max(1, Math.floor((nowTick - busy.since) / 1000))}s elapsed
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-slate-950 overflow-hidden">
+              <div className="h-full w-full rounded-full bg-accentPurple animate-pulse"></div>
+            </div>
+            <p className="text-[11px] text-mutedText mt-2">Large worlds can take a few minutes — keep this page open until it finishes.</p>
           </div>
         )}
 
@@ -412,9 +402,9 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
               <div className="glass-panel rounded-2xl border border-white/5 p-6 space-y-4">
                 <h3 className="font-extrabold text-base text-white flex items-center gap-2">
                   <History className="w-4.5 h-4.5 text-accentPurple" />
-                  <span>Snapshot History</span>
+                  <span>Backup History</span>
                 </h3>
-                <p className="text-xs text-mutedText">Saved points in time containing your game saves. Restoring a snapshot replaces the active world.</p>
+                <p className="text-xs text-mutedText">Every saved point-in-time copy of this world. Restoring a backup replaces the active world.</p>
 
                 <div className="overflow-x-auto pt-2">
                   {backups.length === 0 ? (
@@ -425,7 +415,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         <tr className="bg-slate-950/30 text-mutedText font-bold uppercase border-b border-white/5">
-                          <th className="p-3">Snapshot Name</th>
+                          <th className="p-3">Backup Name</th>
                           <th className="p-3">Date Taken</th>
                           <th className="p-3">Type</th>
                           <th className="p-3">Size</th>
@@ -506,7 +496,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                                   onClick={() => handleVerify(backup)}
                                   disabled={loading || !!actionLoading}
                                   className="px-3 py-1.5 rounded bg-slate-900 border border-white/5 hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed text-[10px] font-bold text-slate-300 transition-colors"
-                                  title="Check that this archive can actually be restored"
+                                  title="Check that this backup can actually be restored"
                                 >
                                   {isVerifying ? "Verifying..." : "Verify"}
                                 </button>
@@ -550,11 +540,11 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
               {/* Manual Backup Panel */}
               <div className="glass-panel rounded-2xl border border-white/5 p-6 space-y-4">
                 <h3 className="font-extrabold text-base text-white">Create Manual Backup</h3>
-                <p className="text-xs text-mutedText">Take an immediate local zip snapshot of the current save state folder.</p>
+                <p className="text-xs text-mutedText">Save an immediate zip backup of the current world save folder.</p>
                 
                 <form onSubmit={handleCreateSnapshot} className="flex gap-4 items-end">
                   <div className="flex-1">
-                    <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1">Optional Snapshot Label</label>
+                    <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1">Label (optional)</label>
                     <input
                       type="text"
                       value={customBackupName}
@@ -569,7 +559,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                     className="px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors flex items-center gap-1.5"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>Take Snapshot</span>
+                    <span>{loading ? "Backing Up..." : "Back Up Now"}</span>
                   </button>
                 </form>
               </div>
@@ -583,9 +573,9 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
               <div className="glass-panel rounded-2xl border border-white/5 p-6 space-y-4">
                 <div className="flex items-center gap-2">
                   <Settings className="w-4.5 h-4.5 text-accentPurple" />
-                  <h3 className="font-extrabold text-base text-white">Snapshot Schedule</h3>
+                  <h3 className="font-extrabold text-base text-white">Automatic Backups</h3>
                 </div>
-                <p className="text-xs text-mutedText leading-normal">Configure the RealmSwap runner to automatically package and zip local files on a recurring timer.</p>
+                <p className="text-xs text-mutedText leading-normal">Have RealmSwap automatically package and zip this world on a recurring timer.</p>
 
                 <form onSubmit={handleUpdateSchedule} className="space-y-4 pt-2">
                   <div>
@@ -604,7 +594,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Keep Last N Snapshots</label>
+                    <label className="text-[10px] font-bold text-mutedText uppercase tracking-wider block mb-1.5">Keep Last N Backups</label>
                     <input
                       type="number"
                       min={0}
@@ -613,7 +603,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                       onChange={(e) => setBackupRetention(parseInt(e.target.value, 10) || 0)}
                       className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors font-bold"
                     />
-                    <p className="text-[10px] text-mutedText mt-1.5 leading-normal">When more snapshots exist, the oldest are deleted automatically. 0 keeps everything. The newest verified snapshot is never deleted.</p>
+                    <p className="text-[10px] text-mutedText mt-1.5 leading-normal">When more backups exist, the oldest are deleted automatically. 0 keeps everything. The newest verified backup is never deleted.</p>
                   </div>
 
                   <div className="flex justify-end pt-2">
@@ -635,7 +625,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                   <FolderSync className="w-4.5 h-4.5 text-blue-400" />
                   <h3 className="font-extrabold text-base text-white">Offsite Cloud Storage (S3)</h3>
                 </div>
-                <p className="text-xs text-mutedText leading-normal">Automatically replicate every snapshot zip to any S3-compatible cloud bucket (AWS, Cloudflare R2, Backblaze B2). Upload results are recorded per snapshot, and you are notified if an upload fails.</p>
+                <p className="text-xs text-mutedText leading-normal">Automatically replicate every backup zip to any S3-compatible cloud bucket (AWS, Cloudflare R2, Backblaze B2). Upload results are recorded per backup, and you are notified if an upload fails.</p>
 
                 {s3Loading ? (
                   <p className="text-xs text-mutedText pt-2">Loading saved settings…</p>
@@ -702,7 +692,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                       onChange={(e) => setS3Form({ ...s3Form, enabled: e.target.checked })}
                       className="w-3.5 h-3.5 accent-blue-500"
                     />
-                    <span>Upload new snapshots to the bucket automatically</span>
+                    <span>Upload new backups to the bucket automatically</span>
                   </label>
                   <p className="text-[10px] text-mutedText leading-normal">Credentials are encrypted on this machine and used for every server you own. A test upload check runs against the bucket when you click Test — nothing is saved by testing.</p>
 
@@ -736,7 +726,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                   <div className={`w-3.5 h-3.5 rounded-full ${selectedServer.status === "RUNNING" ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`}></div>
                   <div>
                     <span className="font-extrabold text-sm text-slate-200 block">{selectedServer.name}</span>
-                    <span className="text-[10px] text-mutedText">Status: {selectedServer.status}</span>
+                    <span className="text-[10px] text-mutedText">Status: {statusLabel(selectedServer.status)}</span>
                   </div>
                 </div>
 
@@ -745,7 +735,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                     <AlertTriangle className="w-5 h-5 flex-shrink-0" />
                     <div>
                       <span className="font-bold block">Restoration Locked</span>
-                      <span>You must turn off the server in the dashboard before restoring snapshots. Overwriting live save databases causes severe save corruption.</span>
+                      <span>You must turn off the server in the dashboard before restoring backups. Overwriting live save databases causes severe save corruption.</span>
                     </div>
                   </div>
                 )}
@@ -755,7 +745,7 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                     <Check className="w-5 h-5 flex-shrink-0" />
                     <div>
                       <span className="font-bold block">Restore Enabled</span>
-                      <span>Server is stopped. Snapshots can be restored safely now.</span>
+                      <span>Server is stopped. Backups can be restored safely now.</span>
                     </div>
                   </div>
                 )}
@@ -766,8 +756,8 @@ export default function BackupsView({ servers, user }: BackupsViewProps) {
                 <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider block">Local Storage Info</span>
 
                 <div className="text-xs text-slate-400 leading-normal space-y-3">
-                  <p>💾 **Disk used:** <span className="font-bold text-slate-200">{totalBackupMB.toFixed(1)} MB</span> across {backups.length} snapshot{backups.length === 1 ? "" : "s"} for this server.</p>
-                  <p>✂️ **Auto-cleanup:** {backupRetention > 0 ? `Only the last ${backupRetention} snapshots are kept — the oldest are deleted after each new snapshot, and the newest verified snapshot always survives.` : "Snapshots are kept forever (no limit set)."}</p>
+                  <p>💾 **Disk used:** <span className="font-bold text-slate-200">{totalBackupMB.toFixed(1)} MB</span> across {backups.length} backup{backups.length === 1 ? "" : "s"} for this server.</p>
+                  <p>✂️ **Auto-cleanup:** {backupRetention > 0 ? `Only the last ${backupRetention} backups are kept — the oldest are deleted after each new backup, and the newest verified backup always survives.` : "Backups are kept forever (no limit set)."}</p>
                   <p>📁 **Local path:** Backups are compressed into `.zip` files and stored inside `local-backups/[serverId]` in your RealmSwap folder.</p>
                   <p>⏱️ **Scheduler requirements:** Automated snapshots only execute while the local runner app is running and the target server is active.</p>
                 </div>

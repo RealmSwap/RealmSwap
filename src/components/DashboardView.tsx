@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/components/ModalProvider";
 import { useToast } from "@/components/ToastProvider";
+import { useActiveServer } from "@/components/dashboard/ActiveServerProvider";
 import { CloudAdvisorModal } from "@/components/dashboard/advisor/CloudAdvisorModal";
 import {
   Server as ServerIcon,
@@ -54,6 +55,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   const router = useRouter();
   const { showModal } = useModal();
   const { addToast } = useToast();
+  const { activeServerId, setActiveServerId, refresh: refreshActiveServers } = useActiveServer();
   const seenLogIdsRef = useRef<Set<string>>(new Set());
   const initialLoadRef = useRef(true);
   const [data, setData] = useState(initialData);
@@ -74,19 +76,12 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   // Stats history for sparklines
   const [serverStats, setServerStats] = useState<Record<string, { cpu: number[]; memory: number[] }>>({});
 
-  // Selected server for Health Sidebar
-  const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
+  // Selected server comes from the shared ActiveServerProvider, so the server
+  // you click here is the one Mods/Backups/Console target afterwards.
 
   // The first-run wizard stays mounted through its post-deploy step even once
   // the server exists, until the user clicks Finish.
   const [wizardActive, setWizardActive] = useState(false);
-
-  // Initialize selected server on first load
-  useEffect(() => {
-    if (!selectedServerId && data.servers.length > 0) {
-      setSelectedServerId(data.servers[0].id);
-    }
-  }, [data.servers, selectedServerId]);
 
   // Live install/download progress for STARTING/UPDATING servers
   const [progressMap, setProgressMap] = useState<
@@ -290,7 +285,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
         method: "POST",
       });
       const archive = await res.json();
-      if (!res.ok) throw new Error(archive.error || "Failed to vault server");
+      if (!res.ok) throw new Error(archive.error || "Failed to archive server");
 
       // Refetch whole state because a server was deleted and an archive created
       const stateRes = await fetch("/api/servers", { cache: "no-store" });
@@ -298,6 +293,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
         const fresh = await stateRes.json();
         setData(fresh);
       }
+      refreshActiveServers();
     } catch (err: any) {
       setErrorMessage(err.message);
     } finally {
@@ -322,6 +318,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
         const fresh = await stateRes.json();
         setData(fresh);
       }
+      refreshActiveServers();
     } catch (err: any) {
       setErrorMessage(err.message);
     } finally {
@@ -333,8 +330,8 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   const handleDeleteArchive = (archiveId: string) => {
     showModal({
       type: "warning",
-      title: "Delete Vaulted World",
-      message: "Are you sure you want to permanently delete this vaulted game world? This cannot be undone.",
+      title: "Delete Archived World",
+      message: "Are you sure you want to permanently delete this archived world? This cannot be undone.",
       confirmText: "Delete Permanently",
       cancelText: "Cancel",
       onConfirm: async () => {
@@ -355,6 +352,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
             const fresh = await stateRes.json();
             setData(fresh);
           }
+          refreshActiveServers();
         } catch (err: any) {
           setErrorMessage(err.message);
         } finally {
@@ -477,8 +475,8 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                     progressMap={progressMap}
                     isServerLoading={actionLoading?.split("-")[0] === server.id}
                     copiedIp={copiedIp}
-                    isSelected={selectedServerId === server.id}
-                    onSelect={() => setSelectedServerId(server.id)}
+                    isSelected={activeServerId === server.id}
+                    onSelect={() => setActiveServerId(server.id)}
                     actions={{
                       handlePowerAction,
                       handleArchiveServer,
@@ -498,6 +496,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                   <FirstServerWizard
                     onDeployed={(deployed: any) => {
                       setWizardActive(true);
+                      refreshActiveServers();
                       fetch("/api/servers", { cache: "no-store" })
                         .then((r) => r.ok && r.json())
                         .then((fresh) => fresh && setData(fresh));
@@ -512,13 +511,18 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
             
             {/* Right Column: Server Health */}
             <HealthSidebar 
-              server={data.servers.find((s: any) => s.id === selectedServerId) || data.servers[0]} 
+              server={data.servers.find((s: any) => s.id === activeServerId) || data.servers[0]} 
             />
           </div>
 
           {/* Vault and Feed Row */}
           <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] gap-8 h-[420px] items-stretch w-full max-w-[calc(1280px+320px+2rem)]">
-            <VaultSection archives={data.archives} actions={{ handleRestoreArchive, handleDeleteArchive }} actionLoading={actionLoading} />
+            <VaultSection
+              archives={data.archives}
+              servers={data.servers}
+              actions={{ handleRestoreArchive, handleDeleteArchive, handleArchiveServer }}
+              actionLoading={actionLoading}
+            />
             <ActivityFeed activityLogs={data.activityLogs} />
           </div>
           

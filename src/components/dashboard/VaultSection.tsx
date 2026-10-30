@@ -1,43 +1,103 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Archive, Plus, Trash2 } from "lucide-react";
-import { gameIcon as getGameIcon } from "@/lib/gameDisplay";
+import { gameIcon as getGameIcon, gameLabel, statusLabel } from "@/lib/gameDisplay";
 
 export function VaultSection({ 
   archives, 
+  servers = [],
   actions, 
   actionLoading 
 }: { 
   archives: any[],
+  servers?: any[],
   actions: any,
   actionLoading: string | null
 }) {
-    if (archives.length === 0) {
+  // Inline "pick a server to archive" chooser, opened from the empty state.
+  const [choosing, setChoosing] = useState(false);
+  const [pickId, setPickId] = useState("");
+
+  const openChooser = () => {
+    setChoosing(true);
+    setPickId(servers[0]?.id ?? "");
+  };
+
+  if (archives.length === 0) {
     return (
       <section className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[18px] shadow-xl overflow-hidden h-full flex flex-col">
         <div className="p-4 border-b border-white/5 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 shrink-0">
           <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
             <Archive className="w-4 h-4 text-accentPurple" />
-            <span>RealmSwap Vault</span>
+            <span>Archived Worlds</span>
           </h2>
         </div>
-        <div className="px-12 pt-8 pb-24 flex flex-col items-center justify-center text-center flex-1">
+        <div className="px-12 pt-8 pb-24 flex flex-col items-center justify-center text-center flex-1 overflow-y-auto custom-scrollbar">
           <div className="mb-6 relative group flex items-center justify-center">
             <div className="absolute inset-0 rounded-full bg-accentPurple/20 animate-ping opacity-10 blur-xl"></div>
             <img 
               src="/vault-empty.png" 
-              alt="Empty Vault" 
+              alt="No archived worlds" 
               className="w-32 h-auto group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300 relative z-10" 
             />
           </div>
-          <h3 className="text-xl font-extrabold text-white mb-2">Vault is empty</h3>
+          <h3 className="text-xl font-extrabold text-white mb-2">Nothing archived yet</h3>
           <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
             Archiving stores a server away safely and frees its disk space — restore it instantly whenever your group picks the game back up.
           </p>
-          <button className="px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all shadow-lg shadow-black/20">
-            Archive a Server
-          </button>
+
+          {!choosing ? (
+            <button
+              onClick={openChooser}
+              disabled={servers.length === 0}
+              title={servers.length === 0 ? "Deploy a server first — you can archive it once it exists" : undefined}
+              className="px-6 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all shadow-lg shadow-black/20 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Archive a Server
+            </button>
+          ) : servers.length === 0 ? (
+            <p className="text-xs text-slate-400 font-bold">Deploy a server first — you can archive it once it exists.</p>
+          ) : (
+            <div className="w-full max-w-sm glass-panel rounded-xl border border-white/10 p-4 space-y-3">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block text-left">
+                Pick the server to archive
+              </label>
+              <select
+                value={pickId}
+                onChange={(e) => setPickId(e.target.value)}
+                className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors cursor-pointer font-bold"
+              >
+                {servers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {getGameIcon(s.game)} {s.name} — {gameLabel(s.game)} ({statusLabel(s.status)})
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-slate-500 text-left leading-normal">
+                The server stops and leaves your dashboard; its worlds are kept here. Restoring brings everything back.
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setChoosing(false)}
+                  className="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 font-bold text-xs transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (!pickId) return;
+                    setChoosing(false);
+                    actions.handleArchiveServer(pickId);
+                  }}
+                  disabled={!!actionLoading || !pickId}
+                  className="px-4 py-1.5 rounded-lg bg-accentPurple hover:bg-accentPurpleHover disabled:opacity-50 text-white font-bold text-xs transition-colors shadow-lg shadow-accentPurple/20"
+                >
+                  Archive Server
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     );
@@ -48,10 +108,10 @@ export function VaultSection({
       <div className="p-4 border-b border-white/5 bg-slate-950/40 flex flex-wrap items-center justify-between gap-4 shrink-0">
         <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
           <Archive className="w-4 h-4 text-accentPurple" />
-          <span>RealmSwap Vault</span>
+          <span>Archived Worlds</span>
         </h2>
         <div className="text-xs font-bold text-slate-400 bg-slate-900/50 px-3 py-1 rounded-full border border-white/5">
-          {archives.length} items
+          {archives.length} archived
         </div>
       </div>
       
@@ -62,7 +122,7 @@ export function VaultSection({
               <th className="p-4 font-bold">Game</th>
               <th className="p-4 font-bold">World Name</th>
               <th className="p-4 font-bold text-center">Save Footprint</th>
-              <th className="p-4 font-bold">Date Vaulted</th>
+              <th className="p-4 font-bold">Date Archived</th>
               <th className="p-4 font-bold text-right">Actions</th>
             </tr>
           </thead>

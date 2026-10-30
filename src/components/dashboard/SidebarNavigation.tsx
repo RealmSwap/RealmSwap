@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { initClientErrorReporting } from "@/lib/sentry.client";
 import {
   Server as ServerIcon,
@@ -18,7 +17,9 @@ import {
   Network,
   HardDrive,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Menu,
+  X
 } from "lucide-react";
 
 export function SidebarNavigation({ user }: { user: any }) {
@@ -26,6 +27,12 @@ export function SidebarNavigation({ user }: { user: any }) {
   // Activate opt-in crash reporting (inert without DSN + user consent).
   useEffect(() => { initClientErrorReporting(); }, []);
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Close the mobile sheet whenever the route changes.
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   const navSections = [
     {
@@ -42,7 +49,7 @@ export function SidebarNavigation({ user }: { user: any }) {
         { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
         { label: "Server Config", icon: Settings, href: "/dashboard/config" },
         { label: "Automation", icon: Clock, href: "/dashboard/schedules" },
-        { label: "Nodes", icon: Network, href: "/dashboard/nodes" },
+        { label: "Remote Hosts", icon: Network, href: "/dashboard/nodes" },
       ]
     },
     {
@@ -51,11 +58,20 @@ export function SidebarNavigation({ user }: { user: any }) {
         { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
         { label: "Audit Logs", icon: History, href: "/dashboard/logs" },
         { label: "Game Players", icon: Users, href: "/dashboard/players" },
-        { label: "App Access", icon: Users, href: "/dashboard/team" },
-        { label: "File Locations", icon: HardDrive, href: "/dashboard/storage" },
+        { label: "Team", icon: Users, href: "/dashboard/team" },
+        { label: "Storage", icon: HardDrive, href: "/dashboard/storage" },
       ]
     }
   ];
+
+  const allLinks = navSections.flatMap((s) => s.links);
+  const mobilePrimary = [
+    { label: "Servers", icon: ServerIcon, href: "/dashboard" },
+    { label: "Mods", icon: Wrench, href: "/dashboard/mods" },
+    { label: "Console", icon: Terminal, href: "/dashboard/console" },
+    { label: "Backups", icon: FolderSync, href: "/dashboard/backups" },
+  ];
+  const mobilePrimaryHrefs = new Set(mobilePrimary.map((l) => l.href));
 
   return (
     <>
@@ -81,6 +97,7 @@ export function SidebarNavigation({ user }: { user: any }) {
                     <Link
                       key={link.href}
                       href={link.href}
+                      aria-current={isActive ? "page" : undefined}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold transition-all group ${
                         isActive 
                           ? "bg-gradient-to-r from-accentPurple/20 to-accentPurple/5 text-accentPurple border border-accentPurple/20 shadow-[0_0_15px_rgba(167,139,250,0.1)]" 
@@ -129,19 +146,16 @@ export function SidebarNavigation({ user }: { user: any }) {
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation — 4 primaries + a "More" sheet covering
+          everything else, so no page is unreachable on a phone. */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-xl border-t border-white/5 z-50 px-6 py-3 flex items-center justify-between shadow-[0_-10px_40px_rgba(0,0,0,0.5)] pb-safe">
-        {[
-          { label: "Servers", icon: ServerIcon, href: "/dashboard" },
-          { label: "Mods", icon: Wrench, href: "/dashboard/mods" },
-          { label: "Console", icon: Terminal, href: "/dashboard/console" },
-          { label: "Settings", icon: Settings, href: "/dashboard/settings" },
-        ].map((link) => {
+        {mobilePrimary.map((link) => {
           const isActive = pathname === link.href;
           return (
             <Link
               key={link.href}
               href={link.href}
+              aria-current={isActive ? "page" : undefined}
               className={`flex flex-col items-center gap-1 transition-all ${
                 isActive ? "text-accentPurple scale-110" : "text-slate-500 hover:text-slate-300"
               }`}
@@ -151,7 +165,80 @@ export function SidebarNavigation({ user }: { user: any }) {
             </Link>
           );
         })}
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          aria-label="All pages"
+          aria-expanded={mobileMenuOpen}
+          className={`flex flex-col items-center gap-1 transition-all ${
+            !mobilePrimaryHrefs.has(pathname) && pathname.startsWith("/dashboard")
+              ? "text-accentPurple"
+              : "text-slate-500 hover:text-slate-300"
+          }`}
+        >
+          <Menu className="w-6 h-6" />
+          <span className="text-[10px] font-bold">More</span>
+        </button>
       </nav>
+
+      {/* Mobile "More" sheet */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-[60] flex items-end" role="dialog" aria-label="All pages">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="relative w-full max-h-[80vh] overflow-y-auto custom-scrollbar bg-slate-900 border-t border-white/10 rounded-t-2xl p-6 pb-10 shadow-2xl animate-slide-up">
+            <div className="flex items-center justify-between mb-4 sticky top-0 bg-slate-900 pb-2">
+              <span className="text-sm font-extrabold text-white uppercase tracking-wider">All Pages</span>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close menu"
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {navSections.map((section, idx) => (
+              <div key={idx} className="mb-5">
+                <div className="px-1 mb-2 text-[10px] font-extrabold tracking-widest text-slate-500 uppercase">
+                  {section.title}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {section.links.map((link) => {
+                    const isActive = pathname === link.href;
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                          isActive
+                            ? "bg-accentPurple/15 border border-accentPurple/30 text-accentPurple"
+                            : "text-slate-300 hover:bg-white/5 border border-transparent"
+                        }`}
+                      >
+                        <link.icon className="w-4 h-4 shrink-0" />
+                        <span className="truncate">{link.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            <Link
+              href="/dashboard/settings"
+              className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                pathname === "/dashboard/settings"
+                  ? "bg-accentPurple/15 border border-accentPurple/30 text-accentPurple"
+                  : "text-slate-300 hover:bg-white/5 border border-transparent"
+              }`}
+            >
+              <Settings className="w-4 h-4 shrink-0" />
+              <span>Settings</span>
+            </Link>
+          </div>
+        </div>
+      )}
     </>
   );
 }

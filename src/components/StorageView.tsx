@@ -12,7 +12,6 @@ import {
   Check,
   FolderOpen,
 } from "lucide-react";
-import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import { useToast } from "@/components/ToastProvider";
 
 interface Location {

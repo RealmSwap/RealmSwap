@@ -1,19 +1,28 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Users, ShieldAlert, Plus, Edit, Trash2, Shield, Search, X, Activity, Server as ServerIcon, Gavel, UserX } from "lucide-react";
+import { Users, ShieldAlert, Plus, Edit, Trash2, Shield, Search, X, Activity, Gavel, UserX } from "lucide-react";
 
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
+import { useActiveServer } from "@/components/dashboard/ActiveServerProvider";
+import { ServerTargetBar } from "@/components/dashboard/ServerTargetBar";
+import { useToast } from "@/components/ToastProvider";
 
-export default function PlayersView({ user, servers = [] }: { user: any; servers?: any[] }) {
+export default function PlayersView({ user }: { user: any }) {
+  // Shared, persisted selection — follows the user across dashboard pages.
+  const { activeServer: selectedServer, setActiveServerId } = useActiveServer();
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<"global" | "live">("global");
-  const [selectedServer, setSelectedServer] = useState<any | null>(servers[0] || null);
   const [livePlayers, setLivePlayers] = useState<string[]>([]);
   const [loadingLive, setLoadingLive] = useState(false);
   const [players, setPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
+
+  // Broadcast composer (replaces the old prompt() dialog)
+  const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
+  const [broadcastMessage, setBroadcastMessage] = useState("");
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -50,30 +59,40 @@ export default function PlayersView({ user, servers = [] }: { user: any; servers
     }
   };
 
-  const handleLiveAction = async (action: string, playerName: string) => {
+  const executeLiveAction = async (action: string, playerName: string, message = "") => {
     if (!selectedServer) return;
     try {
-      let message = "";
-      if (action === "say") {
-        message = prompt("Enter broadcast message:") || "";
-        if (!message) return;
-      }
-
       const res = await fetch(`/api/servers/${selectedServer.id}/rcon/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, playerName, message }),
       });
       if (res.ok) {
-        alert(`Action '${action}' executed successfully.`);
+        addToast("success", action === "say" ? "Broadcast sent!" : `Action '${action}' executed.`);
         fetchLivePlayers(selectedServer.id);
       } else {
-        const err = await res.json();
-        alert(`Action failed: ${err.error}`);
+        const err = await res.json().catch(() => ({}));
+        addToast("error", `Action failed: ${err.error || "The server rejected the command."}`);
       }
     } catch (e) {
-      console.error(e);
+      addToast("error", "Couldn't reach the server to run that action.");
     }
+  };
+
+  const handleLiveAction = (action: string, playerName: string) => {
+    if (action === "say") {
+      setBroadcastMessage("");
+      setIsBroadcastOpen(true);
+      return;
+    }
+    executeLiveAction(action, playerName);
+  };
+
+  const handleBroadcastSubmit = async () => {
+    const message = broadcastMessage.trim();
+    if (!message || !selectedServer) return;
+    setIsBroadcastOpen(false);
+    await executeLiveAction("say", "", message);
   };
 
   const fetchPlayers = async () => {
@@ -104,12 +123,12 @@ export default function PlayersView({ user, servers = [] }: { user: any; servers
         setIsBanModalOpen(false);
         setBanReason("");
       } else {
-        const errorData = await res.json();
-        alert(`Failed to ban player: ${errorData.error}`);
+        const errorData = await res.json().catch(() => ({}));
+        addToast("error", `Failed to ban player: ${errorData.error || "Unknown error"}`);
       }
     } catch (e: any) {
       console.error(e);
-      alert(`Error: ${e.message}`);
+      addToast("error", `Error: ${e.message}`);
     }
   };
 
@@ -126,12 +145,12 @@ export default function PlayersView({ user, servers = [] }: { user: any; servers
           setSelectedPlayer({ ...selectedPlayer, isGloballyBanned: false, globalBanReason: null });
         }
       } else {
-        const errorData = await res.json();
-        alert(`Failed to revoke ban: ${errorData.error}`);
+        const errorData = await res.json().catch(() => ({}));
+        addToast("error", `Failed to revoke ban: ${errorData.error || "Unknown error"}`);
       }
     } catch (e: any) {
       console.error(e);
-      alert(`Error: ${e.message}`);
+      addToast("error", `Error: ${e.message}`);
     }
   };
 
@@ -154,12 +173,12 @@ export default function PlayersView({ user, servers = [] }: { user: any; servers
         setIsAddModalOpen(false);
         setNewPlayerForm({ name: "", steamId: "", minecraftUuid: "", xboxId: "", discordId: "" });
       } else {
-        const errorData = await res.json();
-        alert(`Failed to add player: ${errorData.error}`);
+        const errorData = await res.json().catch(() => ({}));
+        addToast("error", `Failed to add player: ${errorData.error || "Unknown error"}`);
       }
     } catch (e: any) {
       console.error(e);
-      alert(`Error: ${e.message}`);
+      addToast("error", `Error: ${e.message}`);
     }
   };
 
@@ -183,12 +202,12 @@ export default function PlayersView({ user, servers = [] }: { user: any; servers
         setSelectedPlayer({ ...selectedPlayer, ...updated });
         setIsEditModalOpen(false);
       } else {
-        const errorData = await res.json();
-        alert(`Failed to update player: ${errorData.error}`);
+        const errorData = await res.json().catch(() => ({}));
+        addToast("error", `Failed to update player: ${errorData.error || "Unknown error"}`);
       }
     } catch (e: any) {
       console.error(e);
-      alert(`Error: ${e.message}`);
+      addToast("error", `Error: ${e.message}`);
     }
   };
 
@@ -196,12 +215,13 @@ export default function PlayersView({ user, servers = [] }: { user: any; servers
     try {
       const res = await fetch(`/api/players/${serverId}/sync`, { method: "POST" });
       if (res.ok) {
-        alert("Server synchronized successfully!");
+        addToast("success", "Server synchronized successfully!");
       } else {
-        alert("Failed to sync server");
+        const err = await res.json().catch(() => ({}));
+        addToast("error", `Failed to sync server: ${err.error || "Unknown error"}`);
       }
     } catch (e) {
-      console.error(e);
+      addToast("error", "Couldn't reach the server to sync.");
     }
   };
 
@@ -436,32 +456,30 @@ export default function PlayersView({ user, servers = [] }: { user: any; servers
 
       {activeTab === "live" && (
         <div className="flex flex-col gap-6 flex-1 min-h-0">
-          <div className="flex items-center gap-4 bg-slate-900/50 p-4 rounded-xl border border-white/5">
-            <ServerIcon className="w-5 h-5 text-slate-400" />
-            <select
-              value={selectedServer?.id || ""}
-              onChange={(e) => {
-                const s = servers?.find(s => s.id === e.target.value);
-                if (s) setSelectedServer(s);
-              }}
-              className="bg-slate-950 border border-white/10 rounded-lg px-4 py-2 text-white font-bold focus:outline-none focus:border-accentPurple"
-            >
-              {servers?.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} ({s.game})
-                </option>
-              ))}
-            </select>
+          <ServerTargetBar
+            className="mb-0"
+            label="Target Server"
+            helper="Pick the server whose live roster you're viewing."
+          />
+          <div className="flex items-center gap-4 -mt-3">
             {selectedServer && selectedServer.status !== "RUNNING" && (
               <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-3 py-1 rounded-full">Server is offline</span>
             )}
             {selectedServer && selectedServer.status === "RUNNING" && (
-              <button 
-                onClick={() => fetchLivePlayers(selectedServer.id)}
-                className="text-xs text-accentPurple hover:text-white font-bold ml-auto"
-              >
-                Refresh Roster
-              </button>
+              <div className="flex items-center gap-4 ml-auto">
+                <button
+                  onClick={() => handleLiveAction("say", "")}
+                  className="text-xs text-accentPurple hover:text-white font-bold"
+                >
+                  Broadcast Message
+                </button>
+                <button
+                  onClick={() => fetchLivePlayers(selectedServer.id)}
+                  className="text-xs text-accentPurple hover:text-white font-bold"
+                >
+                  Refresh Roster
+                </button>
+              </div>
             )}
           </div>
 
@@ -474,7 +492,8 @@ export default function PlayersView({ user, servers = [] }: { user: any; servers
             ) : livePlayers.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-500">
                 <Users className="w-16 h-16 mb-4 opacity-20" />
-                <p className="text-sm font-bold">No players currently online or RCON not configured.</p>
+                <p className="text-sm font-bold">No one is online right now</p>
+                <p className="text-xs mt-1 text-slate-600">Or the server's remote console (RCON) isn't configured yet.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -698,6 +717,46 @@ export default function PlayersView({ user, servers = [] }: { user: any; servers
                   Confirm Ban
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Broadcast Message Modal */}
+      {isBroadcastOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-accentPurple/30 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onClick={() => setIsBroadcastOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-bold text-white mb-2">Broadcast Message</h2>
+            <p className="text-sm text-slate-400 mb-4">
+              Send a chat message to everyone online on <strong className="text-white">{selectedServer?.name}</strong>.
+            </p>
+            <textarea
+              autoFocus
+              rows={3}
+              value={broadcastMessage}
+              onChange={(e) => setBroadcastMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleBroadcastSubmit();
+              }}
+              placeholder="e.g. Server restarting in 5 minutes!"
+              className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accentPurple transition-colors resize-none"
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={() => setIsBroadcastOpen(false)}
+                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBroadcastSubmit}
+                disabled={!broadcastMessage.trim()}
+                className="flex-1 py-3 bg-accentPurple hover:bg-accentPurpleHover disabled:opacity-50 text-white rounded-xl font-bold transition-all"
+              >
+                Send Broadcast
+              </button>
             </div>
           </div>
         </div>

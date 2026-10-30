@@ -3,8 +3,11 @@
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import { InstallProgressPanel, newInstallId, useModInstallProgress } from "@/components/mods/InstallProgress";
 import { toast } from "sonner";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useModal } from "@/components/ModalProvider";
+import { useActiveServer } from "@/components/dashboard/ActiveServerProvider";
+import { ServerTargetBar } from "@/components/dashboard/ServerTargetBar";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -39,7 +42,6 @@ import {
 /* ─── Types ────────────────────────────────────────────────────── */
 
 interface ModsViewProps {
-  servers: any[];
   user: any;
 }
 
@@ -386,13 +388,13 @@ function formatCount(n: number | undefined): string {
 
 /* ─── Component ───────────────────────────────────────────────── */
 
-export default function ModsView({ servers, user }: ModsViewProps) {
+export default function ModsView({ user }: ModsViewProps) {
   const router = useRouter();
+  const { showModal } = useModal();
 
-  /* Server & global state */
-  const [selectedServer, setSelectedServer] = useState<any | null>(
-    servers[0] || null
-  );
+  /* Server & global state — shared, persisted selection follows the user
+   * across dashboard pages. */
+  const { activeServer: selectedServer, setActiveServerId } = useActiveServer();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorBootOutput, setErrorBootOutput] = useState<string | null>(null);
@@ -417,6 +419,23 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     setError(message ? message + suffix : message);
     setErrorBootOutput(bootOutput ?? null);
   };
+
+  // Reset transient browse/search state when the (shared) target server changes.
+  const prevServerIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const currentId = selectedServer?.id ?? null;
+    if (prevServerIdRef.current !== null && prevServerIdRef.current !== currentId) {
+      showError(null);
+      setSuccess(null);
+      setSearchQuery("");
+      setSearchResults([]);
+      setPopularMods([]);
+      setBrowseOffset(0);
+      setActiveTab("discover");
+    }
+    prevServerIdRef.current = currentId;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedServer?.id]);
 
   /* Tabs */
   const [activeTab, setActiveTab] = useState<TabId>("discover");
@@ -833,32 +852,39 @@ export default function ModsView({ servers, user }: ModsViewProps) {
     }
   };
 
-  const handleDeleteMod = async (mod: any) => {
+  const handleDeleteMod = (mod: any) => {
     if (!selectedServer) return;
-    if (!confirm(`Are you sure you want to uninstall ${mod.name}?`)) return;
+    showModal({
+      type: "warning",
+      title: "Uninstall Mod",
+      message: `Are you sure you want to uninstall ${mod.name}? A snapshot is taken first, so you can roll back if anything breaks.`,
+      confirmText: "Uninstall",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setLoading(true);
+        showError(null);
+        setSuccess(null);
 
-    setLoading(true);
-    showError(null);
-    setSuccess(null);
+        try {
+          const res = await fetch(`/api/servers/${selectedServer.id}/mods/${mod.packageId || mod.modId}`, {
+            method: "DELETE",
+          });
+          const data = await res.json();
+          if (!res.ok) { const e = new Error(data.error || "Failed to uninstall mod"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
 
-    try {
-      const res = await fetch(`/api/servers/${selectedServer.id}/mods/${mod.packageId || mod.modId}`, {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (!res.ok) { const e = new Error(data.error || "Failed to uninstall mod"); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
+          setSuccess(`Successfully uninstalled ${mod.name}`);
 
-      setSuccess(`Successfully uninstalled ${mod.name}`);
-      
-      // Refresh
-      const modsRes = await fetch(`/api/servers/${selectedServer.id}/mods`);
-      const modsData = await modsRes.json();
-      if (modsData.mods) setInstalledMods(modsData.mods);
-    } catch (err: any) {
-      showError(err.message, (err as any).bootOutput, (err as any).warnings);
-    } finally {
-      setLoading(false);
-    }
+          // Refresh
+          const modsRes = await fetch(`/api/servers/${selectedServer.id}/mods`);
+          const modsData = await modsRes.json();
+          if (modsData.mods) setInstalledMods(modsData.mods);
+        } catch (err: any) {
+          showError(err.message, (err as any).bootOutput, (err as any).warnings);
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   const handleInstallMod = async (mod: {
@@ -1112,7 +1138,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       if (!res.ok) throw new Error(data.error);
       setConfigSections(data.sections || []);
     } catch (err: any) {
-      alert(err.message || "Failed to load config");
+      toast.error(err.message || "Failed to load config");
       setConfigModalOpen(false);
     } finally {
       setConfigLoading(false);
@@ -1133,10 +1159,10 @@ export default function ModsView({ servers, user }: ModsViewProps) {
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      alert("Configuration saved successfully!");
+      toast.success("Configuration saved!");
       setConfigModalOpen(false);
     } catch (err: any) {
-      alert(err.message || "Failed to save config");
+      toast.error(err.message || "Failed to save config");
     } finally {
       setConfigSaving(false);
     }
@@ -1187,57 +1213,7 @@ export default function ModsView({ servers, user }: ModsViewProps) {
         </div>
 
         {/* Server Selector Bar */}
-        <div className="glass-panel p-5 rounded-2xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <span className="text-xs font-bold text-mutedText uppercase tracking-wider block mb-1">
-              Active Server Target
-            </span>
-            <span className="text-[11px] text-mutedText">
-              Select which local game server to manage.
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Game icon badge */}
-            {theme && (
-              <span className="text-2xl" title={game}>
-                {theme.icon}
-              </span>
-            )}
-
-            <div className="min-w-[200px]">
-              {servers.length === 0 ? (
-                <span className="text-xs text-red-400 font-bold">
-                  No servers deployed yet
-                </span>
-              ) : (
-                <select
-                  value={selectedServer?.id || ""}
-                  onChange={(e) => {
-                    const s = servers.find(
-                      (srv) => srv.id === e.target.value
-                    );
-                    setSelectedServer(s || null);
-                    showError(null);
-                    setSuccess(null);
-                    setSearchQuery("");
-                    setSearchResults([]);
-                    setPopularMods([]);
-                    setBrowseOffset(0);
-                    setActiveTab("discover");
-                  }}
-                  className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors cursor-pointer font-bold"
-                >
-                  {servers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({s.game})
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-          </div>
-        </div>
+        <ServerTargetBar helper="Select which server to manage mods for." />
 
         {/* Notifications */}
         {installEvent && (

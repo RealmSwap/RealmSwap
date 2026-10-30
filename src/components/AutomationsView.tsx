@@ -19,15 +19,21 @@ import {
 } from "lucide-react";
 import AutomationEditor from "./AutomationEditor";
 import { expandOccurrences, EVENT_TRIGGER_TYPES } from "@/lib/automations/schedule";
+import { useActiveServer } from "@/components/dashboard/ActiveServerProvider";
+import { ServerTargetBar } from "@/components/dashboard/ServerTargetBar";
+import { useToast } from "@/components/ToastProvider";
+import { useModal } from "@/components/ModalProvider";
 
 interface AutomationsViewProps {
-  servers: any[];
   user: any;
 }
 
-export default function AutomationsView({ servers, user }: AutomationsViewProps) {
+export default function AutomationsView({ user }: AutomationsViewProps) {
   const router = useRouter();
-  const [selectedServer, setSelectedServer] = useState<any | null>(servers[0] || null);
+  // Shared, persisted selection — follows the user across dashboard pages.
+  const { activeServer: selectedServer } = useActiveServer();
+  const { addToast } = useToast();
+  const { showModal } = useModal();
   const [automations, setAutomations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +86,7 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
       setShowEditor(false);
       setEditingAutomation(null);
     } catch (err: any) {
-      alert(err.message);
+      addToast("error", err.message);
     }
   };
 
@@ -89,21 +95,35 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
     try {
       const res = await fetch(`/api/servers/${selectedServer.id}/automations/${automationId}/execute`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to start execution");
+      addToast("success", "Automation started — check execution history in a moment.");
       // Could poll or just refresh after a few seconds
       setTimeout(() => fetchAutomations(selectedServer.id), 2000);
     } catch (err: any) {
-      alert(err.message);
+      addToast("error", err.message);
     }
   };
 
-  const handleDelete = async (automationId: string) => {
-    if (!selectedServer || !confirm("Delete this automation?")) return;
-    try {
-      await fetch(`/api/servers/${selectedServer.id}/automations/${automationId}`, { method: "DELETE" });
-      setAutomations(automations.filter(a => a.id !== automationId));
-    } catch (err: any) {
-      alert(err.message);
-    }
+  const handleDelete = (automationId: string) => {
+    if (!selectedServer) return;
+    showModal({
+      type: "warning",
+      title: "Delete Automation",
+      message: "Are you sure you want to delete this automation? Its schedule and history will be removed.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/servers/${selectedServer.id}/automations/${automationId}`, { method: "DELETE" });
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || "Failed to delete automation");
+          }
+          setAutomations(automations.filter(a => a.id !== automationId));
+        } catch (err: any) {
+          addToast("error", err.message);
+        }
+      },
+    });
   };
 
   const handleToggle = async (automation: any) => {
@@ -202,7 +222,7 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
           <div>
             <h1 className="text-3xl font-black text-white flex items-center gap-3 tracking-tight">
               <Settings2 className="w-8 h-8 text-accentPurple" />
-              Automation Engine
+              Automation
             </h1>
             <p className="text-slate-400 mt-2 text-sm font-medium">Workflows, schedules, and overnight update windows — everything that runs your servers on autopilot. (Update windows are set per server in Server Config → Game Settings.)</p>
           </div>
@@ -232,26 +252,7 @@ export default function AutomationsView({ servers, user }: AutomationsViewProps)
         </div>
 
         {/* Server Target Bar */}
-        <div className="glass-panel p-5 rounded-2xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <span className="text-xs font-bold text-mutedText uppercase tracking-wider block mb-1">Target Server</span>
-            <span className="text-[11px] text-mutedText">Select which server's automations to manage.</span>
-          </div>
-
-          <div className="min-w-[200px]">
-            {servers.length === 0 ? (
-              <span className="text-xs text-red-400 font-bold">No servers deployed yet</span>
-            ) : (
-              <select
-                value={selectedServer?.id || ""}
-                onChange={(e) => setSelectedServer(servers.find(srv => srv.id === e.target.value) || null)}
-                className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors cursor-pointer font-bold"
-              >
-                {servers.map(s => <option key={s.id} value={s.id}>{s.name} ({s.game})</option>)}
-              </select>
-            )}
-          </div>
-        </div>
+        <ServerTargetBar helper="Select which server's automations to manage." />
 
         {error && (
           <div className="p-4 mb-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-3">
