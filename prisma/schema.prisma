@@ -286,6 +286,7 @@ model ModInstallation {
   name         String
   dependencies String? // JSON array of required packageIds
   workshopModId String? // Zomboid: the mod ID written to Mods= in servertest.ini (packageId is the Workshop ID)
+  disabled     Boolean  @default(false) // files kept on disk but delisted from the game's mod list (see lifecycle.ts)
   installedAt  DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

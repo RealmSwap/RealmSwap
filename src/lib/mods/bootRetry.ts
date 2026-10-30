@@ -16,11 +16,13 @@
 import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
+import { prisma } from "@/lib/db";
 import { dataRoot } from "@/lib/appPaths";
 import { testServerBoot, SandboxBootError, resolveSandboxJava } from "@/lib/runners/sandbox";
 import { planClientExclusions, scanJarClientSignals, type ExclusionCandidate, type TargetLoader } from "@/lib/mods/clientModFilter";
 import { fetchLoaderBuild, curseForgeDownloadUrl } from "@/lib/mods/curseforge";
 import { downloadFileWithRetry as downloadFile } from "@/lib/download";
+import { removeModFiles } from "@/lib/mods/uninstall";
 
 /**
  * Boot-heal rounds. Every round must remove or replace a jar to continue, so
@@ -522,8 +524,14 @@ export async function testServerBootWithQuarantine(args: {
   onBootLine?: (line: string) => void;
   /** Overrides for tests: delete-retry waits and the java-label probe. */
   deps?: { deleteDelaysMs?: number[]; javaExe?: string };
+  /** Package ids this flow just installed/updated. Non-Minecraft games have
+   *  no jar/crash-report healers — on a boot crash the delta itself is
+   *  quarantined (per-game physical removal + row delete) and the boot
+   *  retried once; a repeat crash rethrows so the caller's snapshot rollback
+   *  takes over. Minecraft ignores this and runs its own blame loop. */
+  blame?: string[];
 }): Promise<string[]> {
-  const { serverId, serverRoot, game, warnings, onProgress, onBootLine } = args;
+  const { serverId, serverRoot, game, warnings, onProgress, onBootLine, blame } = args;
   const removed: string[] = [];
   const bumpedDeps = new Set<string>();
 
@@ -538,6 +546,34 @@ export async function testServerBootWithQuarantine(args: {
     warnings.push(
       `Boot test: ${javaExe === "java" ? "running on the system PATH java" : `running on the bundled runtime (${javaExe})`}`
     );
+  }
+
+  if (game !== "MINECRAFT") {
+    try {
+      await testServerBoot(serverId, game, onBootLine);
+      return removed;
+    } catch (err) {
+      if (!(err instanceof SandboxBootError) || !blame || blame.length === 0) throw err;
+      onProgress?.("Boot failed — quarantining the mods this flow just changed");
+      for (const packageId of blame) {
+        const row = await prisma.modInstallation.findFirst({ where: { serverId, packageId } });
+        if (!row) continue;
+        try {
+          removeModFiles({ game, serverRoot, installation: row });
+        } catch (cleanupErr: any) {
+          warnings.push(`Couldn't fully remove '${packageId}': ${cleanupErr.message}`);
+        }
+        await prisma.modInstallation.deleteMany({ where: { serverId, packageId } });
+        removed.push(packageId);
+        warnings.push(`Removed '${row.name || packageId}' — it crashed the boot test.`);
+      }
+      if (removed.length === 0) throw err; // nothing quarantineable — let the rollback take it
+      // The remaining mods get one more chance; a second crash rethrows and
+      // the caller's snapshot rollback restores everything (reconcile then
+      // rebuilds the rows from disk).
+      await testServerBoot(serverId, game, onBootLine);
+      return removed;
+    }
   }
 
   for (let round = 0; ; round++) {

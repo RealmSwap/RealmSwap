@@ -271,6 +271,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       const bootLog = createBootLogEmitter(installId);
       const quarantined = await testServerBootWithQuarantine({
         serverId, serverRoot, game, warnings,
+        // Non-MC games get delta-quarantine: if the boot crashes, the mods
+        // this install just added are removed and the boot retried (see
+        // bootRetry). MC runs its own crash-report blame loop instead.
+        blame: game === "MINECRAFT" ? undefined : [modId, workshopId].filter((x): x is string => !!x),
         onProgress: (lbl) => { console.log(`[Sandbox] ${lbl}`); if (installId) emitProgress(installId, { label: lbl }); },
         onBootLine: bootLog,
       });

@@ -80,7 +80,7 @@ async function workshopTimeUpdated(ids: string[]): Promise<Map<string, string>> 
 async function applyRowDelta(
   serverId: string,
   provider: string,
-  rows: { id: string; packageId: string }[],
+  rows: { id: string; packageId: string; disabled?: boolean }[],
   diskIds: Set<string>,
   makeRow: (packageId: string) => {
     serverId: string;
@@ -92,6 +92,9 @@ async function applyRowDelta(
 ): Promise<ReconcileResult> {
   let removed = 0;
   for (const row of rows) {
+    // Disabled mods are deliberately parked outside the scanned locations —
+    // reconcile must not read their absence as "uninstalled".
+    if (row.disabled) continue;
     if (!diskIds.has(row.packageId)) {
       await prisma.modInstallation.delete({ where: { id: row.id } });
       removed++;
@@ -260,6 +263,7 @@ async function reconcileArk(serverId: string, serverRoot: string): Promise<Recon
   let added = 0;
   const survivingIds = new Set<string>();
   for (const row of rows) {
+    if (row.disabled) { survivingIds.add(row.packageId); continue; } // disabled: not on ActiveMods= by design
     if (!activeMods.has(row.packageId)) {
       await prisma.modInstallation.delete({ where: { id: row.id } });
       removed++;
@@ -306,6 +310,8 @@ async function reconcileZomboid(serverId: string, serverRoot: string): Promise<R
   let repaired = 0;
   const survivingIds = new Set<string>();
   for (const row of rows) {
+    // Disabled rows keep their ini pairing — enable needs the mod IDs back.
+    if (row.disabled) { survivingIds.add(row.packageId); continue; }
     if (!workshopIdSet.has(row.packageId)) {
       await prisma.modInstallation.delete({ where: { id: row.id } });
       removed++;
@@ -386,6 +392,8 @@ async function reconcileTml(serverId: string, serverRoot: string): Promise<Recon
   let repaired = 0;
   const survivingIds = new Set<string>();
   for (const row of rows) {
+    // Disabled rows: don't re-add their names to enabled.json, don't rederive.
+    if (row.disabled) { survivingIds.add(row.packageId); continue; }
     if (!diskIds.has(row.packageId)) {
       await prisma.modInstallation.delete({ where: { id: row.id } });
       removed++;

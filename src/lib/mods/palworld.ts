@@ -192,9 +192,11 @@ export function applyPalworldPlan(args: {
 
 /**
  * Remove a package's installed files using its manifest, pruning directories
- * it emptied. A missing manifest (pre-manifest install) removes only the
- * overlay wrapper — the mod/pak contributions are left alone and reported
- * by the caller.
+ * it emptied. Files that ANOTHER package's manifest still claims are left
+ * alone (packages can ship identical payloads — last writer wins at install,
+ * so the survivor belongs to the other package). A missing manifest
+ * (pre-manifest install) removes only the overlay wrapper — the mod/pak
+ * contributions are left alone and reported by the caller.
  */
 export function uninstallPalworldPackage(args: {
   palworldDir: string;
@@ -215,7 +217,25 @@ export function uninstallPalworldPackage(args: {
   } catch {
     manifestMissing = true;
   }
+
+  // Paths every OTHER installed package still claims: those files outlive
+  // this uninstall (they'll go when the last claimant does).
+  const otherClaimed = new Set<string>();
+  for (const name of fs.readdirSync(palworldManifestDir(palworldDir))) {
+    if (!name.endsWith(".json") || name === `${fullName}.json`) continue;
+    try {
+      for (const rel of JSON.parse(fs.readFileSync(path.join(palworldManifestDir(palworldDir), name), "utf-8")).files ?? []) {
+        if (typeof rel === "string") otherClaimed.add(rel);
+      }
+    } catch {
+      // Unreadable manifest — its claims can't be known; this uninstall
+      // proceeds and a later reconcile/reinstall repairs the residue.
+    }
+  }
+
+  const removedRels: string[] = [];
   for (const rel of destRels) {
+    if (otherClaimed.has(rel)) continue;
     const target = safeJoin(palworldDir, rel);
     try {
       const stat = fs.statSync(target);
@@ -224,6 +244,7 @@ export function uninstallPalworldPackage(args: {
         fs.unlinkSync(target);
         removedFiles++;
       }
+      removedRels.push(rel);
     } catch {
       // Already gone.
     }
@@ -232,7 +253,7 @@ export function uninstallPalworldPackage(args: {
   const managedRoots = [PALWORLD_MODS_DIR, PALWORLD_PAKS_DIR, PALWORLD_CFGS_DIR].map((d) =>
     path.join(palworldDir, d)
   );
-  for (const rel of destRels) {
+  for (const rel of removedRels) {
     let dir = path.dirname(safeJoin(palworldDir, rel));
     while (managedRoots.some((r) => dir.startsWith(r + path.sep))) {
       let entries: fs.Dirent[] = [];

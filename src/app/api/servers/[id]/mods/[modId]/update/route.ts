@@ -47,6 +47,12 @@ export async function POST(
     if (!installation) {
       return NextResponse.json({ error: "Installed mod not found." }, { status: 404 });
     }
+    if (installation.disabled) {
+      return NextResponse.json(
+        { error: `'${installation.name}' is disabled — enable it before updating.` },
+        { status: 400 }
+      );
+    }
     if ((await packOwnedPackageIds(serverId)).has(installation.packageId)) {
       return NextResponse.json(
         { error: `'${installation.name}' is part of the server's modpack — packs are version-locked sets and are updated as a unit via update-pack.` },
@@ -121,7 +127,18 @@ export async function POST(
       const serverRoot = path.join(dataRoot(), "local-servers", serverId);
       const quarantined = await testServerBootWithQuarantine({
         serverId, serverRoot, game, warnings,
+        blame: game === "MINECRAFT" ? undefined : [installation.packageId],
       });
+      // A quarantined UPDATED mod means the new version breaks the boot: the
+      // healer removed it, so there is no row to bump — restore the old
+      // version and say so instead of reporting a success without the mod.
+      if (quarantined.includes(installation.packageId)) {
+        await restoreSnapshot(snapshot.id);
+        await discardSnapshot(snapshot.id);
+        return NextResponse.json({
+          error: `The updated '${installation.name}' (${newVersionNumber}) crashed the boot test and was removed — the previous version was restored.`,
+        }, { status: 500 });
+      }
       // Quarantined jars' rows are keyed by jar basename; the updated row
       // below must survive, so only delete the quarantined ones.
       for (const name of quarantined) {

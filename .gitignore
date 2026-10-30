@@ -87,3 +87,6 @@ secret.key
 /agent-uploads/
 /steamcmd/
 /runtimes/
+
+# prisma generate crash leftovers (engine binary locked mid-rename)
+src/generated/client/*.tmp*

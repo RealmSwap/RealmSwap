@@ -10,6 +10,8 @@ export interface InstalledModRow {
   packageId: string;
   version: string;
   name: string;
+  /** Disabled mods aren't loaded — there is nothing to update-check. */
+  disabled?: boolean;
 }
 
 export interface StaleMod {
@@ -54,7 +56,8 @@ export async function checkModUpdates(opts: {
   rows: InstalledModRow[];
   deps?: CheckUpdatesDeps;
 }): Promise<ModUpdatesResult> {
-  const { game, serverRoot, rows, deps = {} } = opts;
+  const { game, serverRoot, deps = {} } = opts;
+  const rows = opts.rows.filter((r) => !r.disabled);
   const doFetchVersions = deps.fetchVersions ?? fetchVersions;
   const doFetchIndex = deps.fetchIndex ?? fetchCommunityIndex;
 

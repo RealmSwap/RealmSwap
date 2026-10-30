@@ -42,6 +42,20 @@ vi.mock("@/lib/appPaths", () => ({
   dataRoot: () => process.env.GAMEVAULT_DATA_DIR ?? process.cwd(),
 }));
 
+// The non-Minecraft delta-quarantine reads and deletes rows directly.
+const dbBag = vi.hoisted(() => ({ row: null as any, deleted: [] as any[] }));
+vi.mock("@/lib/db", () => ({
+  prisma: {
+    modInstallation: {
+      findFirst: async () => dbBag.row,
+      deleteMany: async (args: any) => {
+        dbBag.deleted.push(args.where);
+        return {};
+      },
+    },
+  },
+}));
+
 function makeJar(dir: string, name: string, opts: { modId?: string; requiredDeps?: string[]; extraEntries?: Record<string, string> }) {
   const zip = new AdmZip();
   if (opts.modId) {
@@ -76,6 +90,8 @@ describe("testServerBootWithQuarantine", () => {
     fs.mkdirSync(path.join(serverRoot, "mods"), { recursive: true });
     fs.mkdirSync(path.join(serverRoot, "crash-reports"), { recursive: true });
     bootBehavior = () => {};
+    dbBag.row = null;
+    dbBag.deleted = [];
     vi.mocked(fetchLoaderBuild).mockClear();
     cfBag.builds.clear();
   });
@@ -109,6 +125,50 @@ describe("testServerBootWithQuarantine", () => {
     expect(fs.existsSync(path.join(serverRoot, "mods", "create-1.0.jar"))).toBe(true);
     expect(warnings.join(" ")).toMatch(/Excluded 'sodium-1\.0\.jar'/);
     expect(warnings.join(" ")).toMatch(/requires sodium/);
+  });
+
+  it("non-Minecraft: quarantines the blamed delta, deletes its row, and retries once", async () => {
+    const plugin = path.join(serverRoot, "valheim-server", "BepInEx", "plugins", "author-BadPlugin");
+    fs.mkdirSync(plugin, { recursive: true });
+    fs.writeFileSync(path.join(plugin, "bad.dll"), "dll");
+    dbBag.row = { id: "r1", provider: "thunderstore", packageId: "author-BadPlugin", name: "Bad Plugin" };
+
+    let calls = 0;
+    bootBehavior = () => {
+      calls++;
+      if (calls === 1) throw new SandboxBootError("crashed", "");
+    };
+
+    const toggleWarnings: string[] = [];
+    const removed = await testServerBootWithQuarantine({
+      serverId: path.basename(serverRoot), serverRoot, game: "VALHEIM", warnings: toggleWarnings,
+      blame: ["author-BadPlugin"],
+    });
+
+    expect(removed).toEqual(["author-BadPlugin"]);
+    expect(fs.existsSync(plugin)).toBe(false);
+    expect(dbBag.deleted).toEqual([{ serverId: path.basename(serverRoot), packageId: "author-BadPlugin" }]);
+    expect(toggleWarnings.join(" ")).toMatch(/Bad Plugin.*crashed the boot test/);
+    expect(calls).toBe(2);
+  });
+
+  it("non-Minecraft: without blame (or with an unknown row) the boot error rethrows for rollback", async () => {
+    bootBehavior = () => {
+      throw new SandboxBootError("crashed", "");
+    };
+    await expect(
+      testServerBootWithQuarantine({
+        serverId: path.basename(serverRoot), serverRoot, game: "ZOMBOID", warnings: [],
+      })
+    ).rejects.toThrow("crashed");
+
+    dbBag.row = null; // blame given, but nothing to remove
+    await expect(
+      testServerBootWithQuarantine({
+        serverId: path.basename(serverRoot), serverRoot, game: "ZOMBOID", warnings: [],
+        blame: ["ghost-pkg"],
+      })
+    ).rejects.toThrow("crashed");
   });
 
   it("quarantines every 'not a valid mod file' jar in one round, even with no Mod file line", async () => {
