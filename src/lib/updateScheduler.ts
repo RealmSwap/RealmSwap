@@ -44,7 +44,18 @@ async function checkScheduledUpdates() {
       try {
         const { runSteamUpdate } = await import("./runners/LocalRunner");
         const result = await runSteamUpdate(server.id);
-        if (!result.ran) continue; // non-SteamCMD game — nothing to do
+        if (!result.ran) {
+          // Skipped because a start/restart was in flight (not a permanent
+          // "no"): give the slot back so a later tick tonight can retry,
+          // instead of waiting until tomorrow.
+          if (!result.skipRetry && server.lastAutoUpdateAt) {
+            await prisma.server.update({
+              where: { id: server.id },
+              data: { lastAutoUpdateAt: server.lastAutoUpdateAt },
+            }).catch(() => {});
+          }
+          continue;
+        }
 
         if (result.updated) {
           await sendNotification(

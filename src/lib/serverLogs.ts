@@ -75,13 +75,36 @@ export function clearLogs(serverId: string): void {
   }
 }
 
+// Read only the tail of the log file — the file rotates at 50MB and this runs
+// on every console GET and inside crash handling, so a full read would block
+// the event loop on a sync 50MB read.
+const TAIL_BYTES = 1024 * 1024;
+
 export function getServerLogTail(serverId: string, lines = 150): string {
   const file = serverLogFile(serverId);
-  if (!fs.existsSync(file)) {
+  let size = 0;
+  try {
+    size = fs.statSync(file).size;
+  } catch {
     return "No logs available. Start the server to generate logs.";
   }
-  const content = fs.readFileSync(file, "utf-8");
-  const allLines = content.split("\n");
+  const windowBytes = Math.min(size, TAIL_BYTES);
+  let text = "";
+  try {
+    const fd = fs.openSync(file, "r");
+    try {
+      const buf = Buffer.alloc(windowBytes);
+      const bytesRead = fs.readSync(fd, buf, 0, windowBytes, size - windowBytes);
+      text = buf.subarray(0, bytesRead).toString("utf8");
+    } finally {
+      fs.closeSync(fd);
+    }
+  } catch {
+    return "No logs available. Start the server to generate logs.";
+  }
+  const allLines = text.split("\n");
+  // Mid-file start: the first line is partial — drop it.
+  if (windowBytes < size) allLines.shift();
   // Drop trailing empty string produced by a file that ends with "\n"
   const trimmed = allLines.at(-1) === "" ? allLines.slice(0, -1) : allLines;
   return trimmed.slice(-lines).join("\n") + "\n";

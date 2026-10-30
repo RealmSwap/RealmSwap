@@ -6,12 +6,12 @@ import path from "path";
 import https from "https";
 import AdmZip from "adm-zip";
 import checkDiskSpace from "check-disk-space";
-import pidusage from "pidusage";
-import pidtree from "pidtree";
 import net from "net";
 import { prisma } from "../db";
 import { mapPort, unmapPort, getPublicIP, getLanIP } from "../upnp";
 import { startMonitoring, stopMonitoring, clearStatsHistory } from "../processMonitor";
+import { getTreeStats } from "./winProcessStats";
+import { claimStart, releaseStart } from "./startClaims";
 import { serverEventBus } from "../eventBus";
 import { markFirstOnline } from "../firstOnline";
 import { parseSpec } from "../definitions/serialize";
@@ -37,7 +37,6 @@ const globalForRunner = globalThis as unknown as {
   intentionalStops: Set<string> | undefined;
   crashCounters: Map<string, CrashCounter> | undefined;
   javaMajorOverrides: Map<string, number> | undefined;
-  localServersReconciled: boolean | undefined;
 };
 
 if (!globalForRunner.localProcesses) {
@@ -58,34 +57,10 @@ const intentionalStops = globalForRunner.intentionalStops;
 const crashCounters = globalForRunner.crashCounters;
 const javaMajorOverrides = globalForRunner.javaMajorOverrides;
 
-// SteamCMD info mapping for each game (kept for backwards compat; no longer used by the runner)
-export function getGameSteamInfo(game: string): { appId: string; installSubDir: string; checkFile: string } | null {
-  switch (game.toUpperCase()) {
-    case "VALHEIM": return { appId: "896660", installSubDir: "valheim-server", checkFile: "valheim_server.exe" };
-    case "ENSHROUDED": return { appId: "2278520", installSubDir: "enshrouded-server", checkFile: "enshrouded_server.exe" };
-    case "ZOMBOID": return { appId: "380870", installSubDir: "zomboid-server", checkFile: "StartServer64.bat" };
-    case "ARK": return { appId: "376030", installSubDir: "ark-server", checkFile: "ShooterGame/Binaries/Win64/ShooterGameServer.exe" };
-    case "TERRARIA": return { appId: "282440", installSubDir: "terraria-server", checkFile: "TerrariaServer.exe" };
-    case "PALWORLD": return { appId: "2394010", installSubDir: "palworld-server", checkFile: "PalServer.exe" };
-    case "RUST": return { appId: "258550", installSubDir: "rust-server", checkFile: "RustDedicated.exe" };
-    default: return null;
-  }
-}
+// SteamCMD info mapping for each game was superseded by the definition
+// engine (planInstall) and removed.
 
 const STEAMCMD_ZIP_URL = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
-
-// Check if Java is installed (Required only for Minecraft)
-export function checkJavaInstalled(): Promise<boolean> {
-  return new Promise((resolve) => {
-    exec("java -version", (err) => {
-      if (err) {
-        resolve(false);
-      } else {
-        resolve(true);
-      }
-    });
-  });
-}
 
 // Ensure local directories exist
 function getLocalServerDir(serverId: string, sub?: string): string {
@@ -107,8 +82,28 @@ function downloadFile(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
-    https.get(url, (response) => {
+    // Write-stream failures (disk full, permissions) surface here, not on the
+    // request — unhandled, they are a fatal 'error' event that takes the whole
+    // dashboard process down mid-install.
+    file.on("error", (err) => {
+      clearTimeout(stall);
+      req.destroy();
+      fs.unlink(dest, () => {});
+      reject(err);
+    });
+    // A stalled connection must not hang the install (and the STARTING status)
+    // forever.
+    const stall = setTimeout(() => {
+      req.destroy();
+      file.destroy();
+      fs.unlink(dest, () => {});
+      reject(new Error("Download stalled: no data received for 30 seconds"));
+    }, 30000);
+    const req = https.get(url, (response) => {
       if (response.statusCode !== 200) {
+        clearTimeout(stall);
+        file.destroy();
+        fs.unlink(dest, () => {});
         reject(new Error(`Failed to download: Status Code ${response.statusCode}`));
         return;
       }
@@ -117,6 +112,7 @@ function downloadFile(
       let lastEmit = 0;
       if (onProgress) onProgress(computePercent(received, total));
       response.on("data", (chunk) => {
+        stall.refresh();
         received += chunk.length;
         const now = Date.now();
         // Throttle to ~4x/sec to avoid spamming the store on every chunk.
@@ -125,13 +121,20 @@ function downloadFile(
           onProgress(computePercent(received, total));
         }
       });
+      response.on("error", (err) => {
+        clearTimeout(stall);
+        fs.unlink(dest, () => {});
+        reject(err);
+      });
       response.pipe(file);
       file.on("finish", () => {
+        clearTimeout(stall);
         file.close();
         if (onProgress) onProgress(computePercent(received, total));
         resolve();
       });
     }).on("error", (err) => {
+      clearTimeout(stall);
       fs.unlink(dest, () => {}); // Delete partial file
       reject(err);
     });
@@ -392,6 +395,16 @@ function waitForReadiness(
       markReady("10-second fallback timeout reached");
     }, 10000);
   }
+
+  // If the child dies before becoming ready, stop polling: the interval would
+  // otherwise leak forever, and a stale watcher could flip the DB to RUNNING
+  // off whatever process binds the port later. handleProcessExit tells the
+  // truth about the exit instead.
+  child.once("exit", () => {
+    isReady = true;
+    clearTimeout(timeoutId);
+    clearInterval(intervalId);
+  });
 }
 
 // Main: Start a local game server
@@ -441,9 +454,11 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     spec,
   });
 
-  // 2. Map router ports using UPnP if requested or enabled by default
+  // 2. Map router ports using UPnP — the user's explicit choice, no runner
+  // default. (This used to force-map for every LOCAL server, ignoring a
+  // deliberately disabled toggle.)
   let upnpMapped = false;
-  if (server.enableUpnp || server.runnerType === "LOCAL") {
+  if (server.enableUpnp) {
     logWriter("[UPnP] Requesting router port forwarding rules...");
     try {
       for (const pm of planPorts(spec, ctx)) {
@@ -666,6 +681,21 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
       env: { ...process.env, ...(launch.env || {}) },
     });
   }
+
+  // Attach stream/error handlers BEFORE the liveness check: a spawn failure
+  // (ENOENT) emits 'error' asynchronously, and an unhandled 'error' event on
+  // a ChildProcess is a fatal throw — it would take the dashboard process
+  // down and orphan every other running server with it.
+  child.on("error", (err) =>
+    appendLog(serverId, `[Process] Server process error: ${err.message}`)
+  );
+  // Writing stdin to a just-died process (sendCommand, stdin stop) emits
+  // EPIPE here instead of crashing the process.
+  child.stdin.on("error", (err) =>
+    appendLog(serverId, `[Process] stdin error (server likely exiting): ${err.message}`)
+  );
+  child.stdout.on("error", () => {});
+  child.stderr.on("error", () => {});
 
   if (!child.pid) throw new Error("Failed to spawn server child process.");
   localProcesses.set(serverId, child);
@@ -923,6 +953,9 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
           data: { status: "CRASHED", pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 },
         });
         serverEventBus.emit("status_update", { serverId, status: "CRASHED" });
+        // A crashed server is not a running one: give the router its ports
+        // back (the renewal timers for the mappings die with the unmap too).
+        await releaseUpnpMappings(serverRec, (m) => appendLog(serverId, m));
         // Dynamic import — actionScheduler pulls the runner chain via the action registry.
         import("../actionScheduler").then(({ fireServerCrashAutomations }) =>
           fireServerCrashAutomations(serverId)
@@ -943,6 +976,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
       },
     });
     serverEventBus.emit("status_update", { serverId, status: "STOPPED" });
+    await releaseUpnpMappings(serverRec, (m) => appendLog(serverId, m));
 
     await prisma.activityLog.create({
       data: {
@@ -957,73 +991,45 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
   appendLog(serverId, `Process exited with code ${code} and signal ${signal}`);
 }
 
+// Release this server's UPnP port maps. Needs the definition to know which
+// ports to release; failures are logged, never thrown — a stuck mapping is
+// better than a failed stop.
+async function releaseUpnpMappings(server: Server, log: (msg: string) => void): Promise<void> {
+  if (!server.enableUpnp) return;
+  log("[UPnP] Releasing router port mappings...");
+  try {
+    const resolvedDef = await resolveDefinition(server);
+    const ctx = buildContext({
+      name: server.name,
+      password: server.password,
+      port: server.port,
+      ram: server.ramAllocation,
+      paramValuesJson: server.paramValues,
+      spec: resolvedDef.spec,
+    });
+    for (const pm of planPorts(resolvedDef.spec, ctx)) {
+      await unmapPort(pm.port, pm.protocol);
+    }
+  } catch (e: any) {
+    log(`[UPnP Error] Failed to release port forwarding: ${e.message}`);
+  }
+}
+
 // Main: Stop local game server gracefully
 async function stopLocalServer(serverId: string): Promise<void> {
   const child = localProcesses.get(serverId);
   const server = await prisma.server.findUnique({ where: { id: serverId } });
 
-  // Mark as intentional stop so crash detection doesn't trigger
-  intentionalStops.add(serverId);
-  // Reset crash counter on intentional stop
-  crashCounters.delete(serverId);
-
-  // Resolve definition once; reuse for both UPnP and stdinStopCommand
-  const resolvedDef = server ? await resolveDefinition(server).catch(() => null) : null;
-
-  if (server && (server.enableUpnp || server.runnerType === "LOCAL")) {
-    appendLog(serverId, "[UPnP] Releasing router port mappings...");
-    try {
-      if (!resolvedDef) throw new Error("No game definition found");
-      const { spec } = resolvedDef;
-      const ctx = buildContext({
-        name: server.name,
-        password: server.password,
-        port: server.port,
-        ram: server.ramAllocation,
-        paramValuesJson: server.paramValues,
-        spec,
-      });
-      for (const pm of planPorts(spec, ctx)) {
-        await unmapPort(pm.port, pm.protocol);
-      }
-    } catch (e: any) {
-      appendLog(serverId, `[UPnP Error] Failed to release port forwarding: ${e.message}`);
+  // No live child handle: either a stale DB row or a server adopted after an
+  // app restart (monitor-only, no stdio). Kill by the recorded pid instead —
+  // the old code silently "stopped" such servers in the DB while the process
+  // kept running.
+  if (!child) {
+    if (server?.pid) {
+      appendLog(serverId, `Termination request received. Killing process tree (pid ${server.pid})...`);
+      await new Promise<void>((resolve) => exec(`taskkill /F /T /PID ${server.pid}`, () => resolve()));
     }
-  }
-
-  if (child) {
-    appendLog(serverId, "Termination request received. Terminating process tree...");
-
-    // Use the spec's stdinStopCommand for graceful shutdown (e.g. Minecraft sends "stop\n")
-    const { spec } = resolvedDef ?? { spec: null as any };
-    if (child && spec?.launch?.stdinStopCommand) {
-      try {
-        child.stdin.write(spec.launch.stdinStopCommand);
-      } catch {
-        child.kill("SIGTERM");
-      }
-    } else if (child) {
-      exec(`taskkill /F /T /PID ${child.pid}`, (err) => {
-        if (err) child.kill("SIGKILL");
-      });
-    }
-
-    const timeout = setTimeout(() => {
-      if (localProcesses.has(serverId)) {
-        appendLog(serverId, "Shutdown timed out. Force killing process...");
-        child.kill("SIGKILL");
-        // Force kill sub-processes on Windows
-        exec(`taskkill /F /T /PID ${child.pid}`, () => {});
-      }
-    }, 7000);
-
-    await new Promise<void>((resolve) => {
-      child.on("exit", () => {
-        clearTimeout(timeout);
-        resolve();
-      });
-    });
-  } else {
+    if (server) await releaseUpnpMappings(server, (m) => appendLog(serverId, m));
     await prisma.server.update({
       where: { id: serverId },
       data: {
@@ -1035,7 +1041,58 @@ async function stopLocalServer(serverId: string): Promise<void> {
       }
     });
     serverEventBus.emit("status_update", { serverId, status: "STOPPED" });
+    return;
   }
+
+  // Attach the exit waiter FIRST. If the process died between the map lookup
+  // and here, exitCode/signalCode is already set and a fresh `child.on("exit")`
+  // would never fire — that was a hang that spun the stop button forever and
+  // left a stale intentional-stop flag behind (suppressing the next real
+  // crash's auto-restart).
+  const exitPromise = new Promise<void>((resolve) => {
+    if (child.exitCode !== null || child.signalCode !== null) resolve();
+    else child.once("exit", () => resolve());
+  });
+
+  // Mark as intentional stop so crash detection doesn't trigger
+  intentionalStops.add(serverId);
+  // Reset crash counter on intentional stop
+  crashCounters.delete(serverId);
+
+  appendLog(serverId, "Termination request received. Terminating process tree...");
+
+  // Use the spec's stdinStopCommand for graceful shutdown (e.g. Minecraft sends "stop\n")
+  const { spec } = (server ? await resolveDefinition(server).catch(() => null) : null) ?? { spec: null as any };
+  if (spec?.launch?.stdinStopCommand) {
+    try {
+      child.stdin.write(spec.launch.stdinStopCommand);
+    } catch {
+      child.kill("SIGTERM");
+    }
+  } else {
+    exec(`taskkill /F /T /PID ${child.pid}`, (err) => {
+      if (err) child.kill("SIGKILL");
+    });
+  }
+
+  // Release the router maps while the process drains: the time-boxed UPnP
+  // round-trips overlap the grace period instead of extending it.
+  const unmap = server
+    ? releaseUpnpMappings(server, (m) => appendLog(serverId, m))
+    : Promise.resolve();
+
+  const timeout = setTimeout(() => {
+    if (localProcesses.has(serverId)) {
+      appendLog(serverId, "Shutdown timed out. Force killing process...");
+      child.kill("SIGKILL");
+      // Force kill sub-processes on Windows
+      exec(`taskkill /F /T /PID ${child.pid}`, () => {});
+    }
+  }, 7000);
+
+  await exitPromise;
+  clearTimeout(timeout);
+  await unmap;
 }
 
 // Reads tail logs of local server
@@ -1055,6 +1112,12 @@ async function updateGameServer(serverId: string): Promise<void> {
   const baseDir = path.join(dataRoot(), "local-servers", serverId);
   const installDir = path.join(baseDir, installPlan.installSubDir!);
   const logWriter = (msg: string) => appendLog(serverId, msg);
+
+  // app_update against a live install rewrites binaries under the process —
+  // refuse rather than corrupt. Claim single-flight so a concurrent start
+  // gets a clean 409 instead of racing this update.
+  if (localProcesses.has(serverId)) throw new Error("Stop the server before updating it.");
+  if (!claimStart(serverId)) throw new Error("A start, restart, or update is already in progress for this server.");
 
   try {
     await prisma.server.update({
@@ -1106,6 +1169,8 @@ async function updateGameServer(serverId: string): Promise<void> {
     }).catch(() => {});
     serverEventBus.emit("status_update", { serverId, status: "STOPPED" });
     throw err;
+  } finally {
+    releaseStart(serverId);
   }
 }
 
@@ -1130,40 +1195,32 @@ export class LocalRunner implements ServerRunner {
   async sendCommand(server: Server, command: string): Promise<void> {
     const child = localProcesses.get(server.id);
     if (!child || !child.stdin) {
-      throw new Error("Server is not running locally or process not found.");
+      throw new Error(
+        server.status === "RUNNING"
+          ? "Console input is unavailable for this session (the app restarted since launch). Restart the server to reattach the console."
+          : "Server is not running locally or process not found."
+      );
     }
     child.stdin.write(command + "\n");
   }
 
   async getStats(server: Server): Promise<ProcessStats> {
+    // Fall back to the recorded pid for servers adopted after an app restart
+    // (monitor-only — no live child handle in this process).
     const child = localProcesses.get(server.id);
-    if (!child || !child.pid) {
+    const rootPid = child?.pid ?? server.pid ?? 0;
+    if (!rootPid) {
       return { cpuPercent: 0, memoryMB: 0 };
     }
-    
+
     try {
-      // Get the root PID and all descendant PIDs for the server process tree
-      const pids = await pidtree(child.pid, { root: true });
-      const stats = await pidusage(pids);
-      
-      let totalCpu = 0;
-      let totalMem = 0;
-      
-      for (const p in stats) {
-        if (stats[p]) {
-          totalCpu += stats[p].cpu;
-          totalMem += stats[p].memory; // bytes
-        }
-      }
-      
-      const memoryMB = parseFloat((totalMem / (1024 * 1024)).toFixed(1));
-      const cpuPercent = parseFloat(totalCpu.toFixed(1));
-      
-      return { cpuPercent, memoryMB };
+      return await getTreeStats(server.id, rootPid);
     } catch (err: any) {
-      // If process ended while querying
-      if (err.message && (err.message.includes("No matching pid found") || err.code === "ENOENT")) {
-        return { cpuPercent: 0, memoryMB: 0 };
+      // If the process ended while querying: for adopted servers this is how
+      // the monitor learns the game died without an exit event — surface it
+      // rather than reporting a healthy-looking zero.
+      if (err.message?.includes("No matching pid found")) {
+        throw err;
       }
       throw new Error(`Process stats failed: ${err.message}`);
     }
@@ -1181,26 +1238,38 @@ export class LocalRunner implements ServerRunner {
  * servers current so starts are instant. Returns whether new files were
  * downloaded ("already up to date" counts as no).
  */
-export async function runSteamUpdate(serverId: string): Promise<{ ran: boolean; updated: boolean; detail?: string }> {
+export async function runSteamUpdate(serverId: string): Promise<{ ran: boolean; updated: boolean; skipRetry?: boolean; detail?: string }> {
   const record = await prisma.server.findUnique({ where: { id: serverId } });
-  if (!record) return { ran: false, updated: false, detail: "server record missing" };
+  if (!record) return { ran: false, updated: false, skipRetry: true, detail: "server record missing" };
 
   const { spec, installMethod } = await resolveDefinition(record);
   if (installMethod !== "STEAMCMD") {
-    return { ran: false, updated: false, detail: "not a SteamCMD game" };
+    return { ran: false, updated: false, skipRetry: true, detail: "not a SteamCMD game" };
   }
+
+  // Never app_update a live install: re-check at the moment of running (the
+  // overnight window can race a manual start) and claim the server so a start
+  // clicked mid-update gets a clean 409 instead of file corruption.
+  const fresh = await prisma.server.findUnique({ where: { id: serverId }, select: { status: true } });
+  if (!fresh || fresh.status !== "STOPPED" || localProcesses.has(serverId)) {
+    return { ran: false, updated: false, detail: `server is ${fresh?.status ?? "unknown"} — skipped` };
+  }
+  if (!claimStart(serverId)) {
+    return { ran: false, updated: false, detail: "another operation is already running for this server" };
+  }
+
   const installPlan = planInstall(spec, "STEAMCMD");
   const appId = installPlan.appId;
-  if (!appId) return { ran: false, updated: false, detail: "no appId" };
-
-  const installDir = installPlan.installSubDir ? getLocalServerDir(serverId, installPlan.installSubDir) : getLocalServerDir(serverId);
-  const logWriter = (m: string) => appendLog(serverId, `[Update Window] ${m}`);
-  logWriter(`Starting SteamCMD update check for app ${appId}…`);
-
-  const steamcmdExe = await setupSteamCMD((m) => logWriter(m));
-  await ensureSteamCmdUpdated(steamcmdExe, (m) => logWriter(m));
+  if (!appId) return { ran: false, updated: false, skipRetry: true, detail: "no appId" };
 
   try {
+    const installDir = installPlan.installSubDir ? getLocalServerDir(serverId, installPlan.installSubDir) : getLocalServerDir(serverId);
+    const logWriter = (m: string) => appendLog(serverId, `[Update Window] ${m}`);
+    logWriter(`Starting SteamCMD update check for app ${appId}…`);
+
+    const steamcmdExe = await setupSteamCMD((m) => logWriter(m));
+    await ensureSteamCmdUpdated(steamcmdExe, (m) => logWriter(m));
+
     const result = await runSteamAppUpdate({
       steamcmdExe,
       installDir,
@@ -1213,5 +1282,7 @@ export async function runSteamUpdate(serverId: string): Promise<{ ran: boolean; 
     return { ran: true, updated };
   } catch (err: any) {
     return { ran: true, updated: false, detail: err?.message ?? String(err) };
+  } finally {
+    releaseStart(serverId);
   }
 }

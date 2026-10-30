@@ -66,13 +66,18 @@ export async function* tailFile(
   let leftover = "";
   let justReset = false;
 
-  // Initial snapshot
+  // Initial snapshot — read only the tail of the file (it rotates at 50MB;
+  // a full sync read here blocks the event loop on every SSE reconnect).
   if (fs.existsSync(filePath)) {
-    const content = fs.readFileSync(filePath, "utf8");
+    const size = statSize(filePath);
+    const windowBytes = Math.min(size, 2 * 1024 * 1024);
+    const content = windowBytes > 0 ? readRange(filePath, size - windowBytes, size) : "";
     const lines = content.split("\n");
+    // Mid-file start: the first line is partial — drop it.
+    if (windowBytes < size && lines.length > 0) lines.shift();
     if (lines.length && lines[lines.length - 1] === "") lines.pop();
     yield lines.slice(-tailLines);
-    offset = Buffer.byteLength(content, "utf8");
+    offset = size;
   } else {
     yield [LOG_PLACEHOLDER];
     offset = 0;
