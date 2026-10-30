@@ -29,7 +29,7 @@ import {
 import { resolveVanillaServerJar, applyVanillaServerSwap, type VanillaServerJar } from "@/lib/mods/mcServerJar";
 import { stashWorldForMcSwitch } from "@/lib/mods/worldVersion";
 import type { ModProgressEvent } from "@/lib/mods/progress";
-import { planClientExclusions, scanJarClientSignals, loaderAcceptsJar, type ExclusionCandidate } from "@/lib/mods/clientModFilter";
+import { planClientExclusions, scanJarClientSignals, loaderAcceptsJar, type ExclusionCandidate, type JarClientSignals } from "@/lib/mods/clientModFilter";
 
 const LOADER_LABELS: Record<string, string> = {
   fabric: "Fabric", quilt: "Quilt", forge: "Forge", neoforge: "NeoForge",
@@ -169,6 +169,35 @@ export interface PackApplyResult {
  * byte-level events for the Mod Manager's progress panel; it must never
  * throw into the install.
  */
+/**
+ * Run one task per item with at most `limit` in flight. Pack installs
+ * download hundreds of files whose per-file mirror latency dwarfed the
+ * transfer itself — a serial loop was the bulk of a 20-30 minute import.
+ * The first error stops new work; in-flight downloads drain, then the error
+ * rethrows, so the caller rolls back exactly as it did for serial failures.
+ */
+async function mapPool<T>(
+  items: T[],
+  limit: number,
+  task: (item: T, index: number) => Promise<void>
+): Promise<void> {
+  let next = 0;
+  let firstError: unknown = null;
+  const workers = Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, async () => {
+    while (firstError === null) {
+      const i = next++;
+      if (i >= items.length) return;
+      try {
+        await task(items[i], i);
+      } catch (err) {
+        firstError = err;
+      }
+    }
+  });
+  await Promise.all(workers);
+  if (firstError !== null) throw firstError;
+}
+
 export async function applyModpackPlan(args: {
   plan: ModpackPlan;
   serverId: string;
@@ -289,8 +318,22 @@ export async function applyModpackPlan(args: {
     if (fileTotal > 0) p({ stage: "mods", current: 0, total: fileTotal });
 
     const serverMcVersion = plan.mcSwitch?.to ?? plan.packMcVersion ?? "";
-    for (const [index, cfFile] of Array.from(plan.cfPlan.files.entries())) {
-      p({ stage: "mods", current: index, total: fileTotal, label: cfFile.displayName || cfFile.fileName });
+    // Phase 1 — download, hash-verify, scan and cross-loader heal in a pool
+    // (per-file mirror latency dwarfed the transfer; a serial loop was the
+    // bulk of a 20-30 minute import). Phase 2 — DB rows and warnings stay
+    // serial, in file order, so rows and messages read identically to the
+    // old loop.
+    interface CfDownload {
+      index: number;
+      cfFile: (typeof plan.cfPlan.files)[number];
+      dest: string;
+      signals: JarClientSignals;
+      pinnedLoaders: string | null;
+      healedName: string | null;
+    }
+    const downloads: CfDownload[] = [];
+    let completed = 0;
+    await mapPool(plan.cfPlan.files, 6, async (cfFile, index) => {
       // Jars are normalized to mods/<projectId>.jar so installs, updates,
       // uninstall and disk reconcile all share one keying convention.
       const dest = safeJoin(modsDir, `${cfFile.modId}.jar`);
@@ -312,9 +355,10 @@ export async function applyModpackPlan(args: {
       // first — that keeps the mod in the pack — and skip the file only
       // when the project ships nothing loadable.
       let signals = scanJarClientSignals(dest);
+      let pinnedLoaders: string | null = null;
+      let healedName: string | null = null;
       if (plan.packLoader && signals.loaders.size > 0 && !loaderAcceptsJar(plan.packLoader.type, signals.loaders)) {
-        const pinnedLoaders = Array.from(signals.loaders).join("/");
-        let healedName: string | null = null;
+        pinnedLoaders = Array.from(signals.loaders).join("/");
         if (serverMcVersion) {
           try {
             const build = await fetchLoaderBuild(cfFile.modId, serverMcVersion, plan.packLoader.type);
@@ -327,17 +371,26 @@ export async function applyModpackPlan(args: {
             /* self-sourcing is best-effort — exclusion below still applies */
           }
         }
-        if (!healedName) {
+      }
+      downloads.push({ index, cfFile, dest, signals, pinnedLoaders, healedName });
+      completed++;
+      p({ stage: "mods", current: completed, total: fileTotal, label: cfFile.displayName || cfFile.fileName });
+    });
+
+    for (const d of downloads.sort((a, b) => a.index - b.index)) {
+      const { cfFile, dest } = d;
+      if (d.pinnedLoaders !== null) {
+        if (!d.healedName) {
           fs.rmSync(dest, { force: true });
           warnings.push(
-            `Skipped '${cfFile.displayName || cfFile.fileName}' — the pack pinned a ${pinnedLoaders} build and the server runs ${plan.packLoader.type}; ` +
-              "the project ships no " + plan.packLoader.type + " build for Minecraft " + (serverMcVersion || "this version") + "."
+            `Skipped '${cfFile.displayName || cfFile.fileName}' — the pack pinned a ${d.pinnedLoaders} build and the server runs ${plan.packLoader!.type}; ` +
+              "the project ships no " + plan.packLoader!.type + " build for Minecraft " + (serverMcVersion || "this version") + "."
           );
           crossLoaderCount++;
           continue;
         }
         warnings.push(
-          `Replaced '${cfFile.displayName || cfFile.fileName}' (${pinnedLoaders} build) with '${healedName}' — the pack pinned the wrong loader for the server.`
+          `Replaced '${cfFile.displayName || cfFile.fileName}' (${d.pinnedLoaders} build) with '${d.healedName}' — the pack pinned the wrong loader for the server.`
         );
         crossLoaderReplaced++;
       }
@@ -355,9 +408,8 @@ export async function applyModpackPlan(args: {
       jarCandidates.push({
         file: dest,
         packageId: String(cfFile.modId),
-        signals,
+        signals: d.signals,
       });
-      p({ stage: "mods", current: index + 1, total: fileTotal });
     }
 
     // Optional (`required: false`) CF files were downloaded like the rest;
@@ -376,8 +428,15 @@ export async function applyModpackPlan(args: {
     if (mrpackBytes > 0) bytesTotal = (bytesTotal ?? 0) + mrpackBytes;
     if (install.length > 0) p({ stage: "mods", current: 0, total: install.length });
 
-    for (const [index, manifestFile] of Array.from(install.entries())) {
-      p({ stage: "mods", current: index, total: install.length, label: manifestFile.path });
+    // Downloads run in a pool; DB rows land serially below in file order.
+    interface MrpackDownload {
+      index: number;
+      rel: string;
+      dest: string;
+    }
+    const mrDownloads: MrpackDownload[] = [];
+    let mrCompleted = 0;
+    await mapPool(install, 6, async (manifestFile, index) => {
       const rel = safePackPath(manifestFile.path);
       const dest = safeJoin(serverRoot, rel);
       fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -411,20 +470,25 @@ export async function applyModpackPlan(args: {
       // uninstall flow cover them; pack support files (configs, datapacks…)
       // are reverted via snapshot only.
       if (rel.startsWith(`mods${path.sep}`) && rel.endsWith(".jar")) {
-        const packageId = path.basename(rel, ".jar");
-        await prisma.modInstallation.upsert({
-          where: { serverId_provider_packageId: { serverId, provider: "modrinth", packageId } },
-          update: { version: plan.packVersion },
-          create: {
-            serverId, provider: "modrinth", packageId,
-            version: plan.packVersion, name: packageId,
-          },
-        });
-        installedPackageIds.push(packageId);
-        jarCandidates.push({ file: dest, packageId, signals: scanJarClientSignals(dest) });
+        mrDownloads.push({ index, rel, dest });
       }
       installedCount++;
-      p({ stage: "mods", current: index + 1, total: install.length });
+      mrCompleted++;
+      p({ stage: "mods", current: mrCompleted, total: install.length, label: manifestFile.path });
+    });
+
+    for (const d of mrDownloads.sort((a, b) => a.index - b.index)) {
+      const packageId = path.basename(d.rel, ".jar");
+      await prisma.modInstallation.upsert({
+        where: { serverId_provider_packageId: { serverId, provider: "modrinth", packageId } },
+        update: { version: plan.packVersion },
+        create: {
+          serverId, provider: "modrinth", packageId,
+          version: plan.packVersion, name: packageId,
+        },
+      });
+      installedPackageIds.push(packageId);
+      jarCandidates.push({ file: d.dest, packageId, signals: scanJarClientSignals(d.dest) });
     }
 
     if (optional.length > 0) {

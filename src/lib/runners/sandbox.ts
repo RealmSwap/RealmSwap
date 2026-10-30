@@ -91,7 +91,9 @@ export async function testServerBoot(
   serverId: string,
   game: string,
   /** Live boot output, one line per call — lets install flows surface what the sandboxed server is doing right now. */
-  onLine?: (line: string) => void
+  onLine?: (line: string) => void,
+  /** Overrides for tests: the no-output stall threshold. */
+  opts?: { stallMs?: number }
 ): Promise<boolean> {
   return new Promise((resolve, reject) => {
     let exePath = "";
@@ -174,16 +176,25 @@ export async function testServerBoot(
     let stderrData = "";
     let settled = false;
     const isMinecraft = game === "MINECRAFT";
+    // A booting Minecraft server logs nearly continuously; total output
+    // silence means the JVM wedged (live: a mod's init exception froze the
+    // process with 0ms CPU while the whole window ticked away). Fail the
+    // attempt early so the healer takes over minutes sooner.
+    const stallMs = opts?.stallMs ?? 150000;
+    let lastOutputAt = Date.now();
+    let stallTimer: ReturnType<typeof setInterval> | null = null;
 
     const succeed = () => {
       if (settled) return;
       settled = true;
+      if (stallTimer) clearInterval(stallTimer);
       try { proc.kill("SIGKILL"); } catch (_) {}
       resolve(true);
     };
     const fail = (message: string) => {
       if (settled) return;
       settled = true;
+      if (stallTimer) clearInterval(stallTimer);
       try { proc.kill("SIGKILL"); } catch (_) {}
       reject(new SandboxBootError(message, capturedOutput(stdoutData, stderrData)));
     };
@@ -191,6 +202,7 @@ export async function testServerBoot(
     proc.stdout.on("data", (data) => {
       const text = data.toString();
       stdoutData += text;
+      lastOutputAt = Date.now();
       if (onLine) for (const line of text.split(/\r?\n/)) if (line.trim()) onLine(line);
       // A successful boot ends the test immediately — no reason to burn the
       // rest of the window (or the machine's RAM on world gen).
@@ -200,6 +212,7 @@ export async function testServerBoot(
     proc.stderr.on("data", (data) => {
       const errStr = data.toString();
       stderrData += errStr;
+      lastOutputAt = Date.now();
       if (onLine) for (const line of errStr.split(/\r?\n/)) if (line.trim()) onLine(line);
 
       // Minecraft's loaders log stack traces for recoverable warnings on
@@ -259,6 +272,20 @@ export async function testServerBoot(
     // Let it run for the boot window. For Minecraft, expiring without the
     // Done-line is a failure — a server that can't boot in time is exactly
     // the kind of install this test exists to catch.
+    if (isMinecraft) {
+      stallTimer = setInterval(() => {
+        if (settled) {
+          if (stallTimer) clearInterval(stallTimer);
+          return;
+        }
+        if (Date.now() - lastOutputAt > stallMs) {
+          fail(
+            `The server produced no output for ${Math.round(stallMs / 1000)}s — its boot stalled. ` +
+              "The captured output shows how far it got."
+          );
+        }
+      }, 5000);
+    }
     setTimeout(() => {
       if (settled) return;
       if (isMinecraft) {

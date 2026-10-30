@@ -216,6 +216,20 @@ describe("testServerBoot — Minecraft verdicts (fake java on PATH)", () => {
     expect(lines.some((l) => l.startsWith("Done (1.5s)!"))).toBe(true);
   });
 
+  posixOnly("fails a wedged server on output silence instead of burning the whole window", async () => {
+    // Live shape (Homestead 2.0.1, 2026-10-30): a mod's init exception froze
+    // the JVM at 0ms CPU with no further output while the 600s window ran
+    // out. The stall detector must hand the attempt to the healer minutes
+    // sooner. Short threshold so the test stays fast; sleep keeps the
+    // process alive to prove it's the silence — not the exit — that fails.
+    fakeJava('echo "Loading mods"; sleep 30');
+    const started = Date.now();
+    const err = await testServerBoot(serverId, "MINECRAFT", undefined, { stallMs: 1000 }).catch((e) => e);
+    expect(err).toBeInstanceOf(SandboxBootError);
+    expect(err.message).toMatch(/no output for 1s — its boot stalled/);
+    expect(Date.now() - started).toBeLessThan(15000);
+  });
+
   it("skips a missing java on a VANILLA server but fails loud on a MODDED one", async () => {
     // No java anywhere on PATH for this scenario.
     process.env.PATH = emptyBin;
