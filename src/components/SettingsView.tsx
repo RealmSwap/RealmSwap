@@ -106,21 +106,37 @@ export function SettingsView({ user }: { user: any }) {
     }
   };
 
-  const savePreferences = async () => {
+  const savePreferences = async (
+    next: { notifyDiscord: boolean; notifyEmail: boolean; notifyWebPush: boolean }
+  ) => {
     try {
-      setLoading(true);
       const res = await fetch("/api/user/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notifyDiscord, notifyEmail, notifyWebPush })
+        body: JSON.stringify(next),
       });
       if (!res.ok) throw new Error("Failed to save preferences");
-      toast.success("Notification preferences saved!");
+      return true;
     } catch (err: any) {
       toast.error(err.message || "Failed to save preferences");
-    } finally {
-      setLoading(false);
+      return false;
     }
+  };
+
+  // Toggles save the moment they flip — same semantic as the crash-reports
+  // toggle directly above them. The old explicit "Save Preferences" button
+  // mixed save models in one list: flip + navigate away silently lost the
+  // change.
+  const togglePreference = async (
+    key: "notifyDiscord" | "notifyEmail" | "notifyWebPush",
+    value: boolean
+  ) => {
+    const next = { notifyDiscord, notifyEmail, notifyWebPush, [key]: value };
+    if (key === "notifyDiscord") setNotifyDiscord(value);
+    if (key === "notifyEmail") setNotifyEmail(value);
+    if (key === "notifyWebPush") setNotifyWebPush(value);
+    const ok = await savePreferences(next);
+    if (ok) toast.success("Preference saved.");
   };
 
   return (
@@ -210,7 +226,7 @@ export function SettingsView({ user }: { user: any }) {
             )}
           </form>
 
-          <form onSubmit={(e) => { e.preventDefault(); savePreferences(); }} className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5">
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5">
             <div>
               <h2 className="text-xl font-bold text-white mb-1">Notifications</h2>
               <p className="text-xs text-slate-400 mb-6">
@@ -250,7 +266,7 @@ export function SettingsView({ user }: { user: any }) {
                     <p className="text-xs text-slate-500">Receive an instant DM from the RealmSwap bot.</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" checked={notifyDiscord} onChange={(e) => setNotifyDiscord(e.target.checked)} />
+                    <input type="checkbox" className="sr-only peer" checked={notifyDiscord} onChange={(e) => togglePreference("notifyDiscord", e.target.checked)} />
                     <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
                   </label>
                 </div>
@@ -262,7 +278,7 @@ export function SettingsView({ user }: { user: any }) {
                     <p className="text-xs text-slate-500">Receive alerts to your registered email address.</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" checked={notifyEmail} onChange={(e) => setNotifyEmail(e.target.checked)} />
+                    <input type="checkbox" className="sr-only peer" checked={notifyEmail} onChange={(e) => togglePreference("notifyEmail", e.target.checked)} />
                     <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
                   </label>
                 </div>
@@ -285,7 +301,7 @@ export function SettingsView({ user }: { user: any }) {
                       </button>
                     )}
                     <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" checked={notifyWebPush} onChange={(e) => setNotifyWebPush(e.target.checked)} disabled={!pushSupported} />
+                      <input type="checkbox" className="sr-only peer" checked={notifyWebPush} onChange={(e) => togglePreference("notifyWebPush", e.target.checked)} disabled={!pushSupported} />
                       <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple peer-disabled:opacity-50"></div>
                     </label>
                   </div>
@@ -293,19 +309,8 @@ export function SettingsView({ user }: { user: any }) {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-white/5 flex justify-end">
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex items-center gap-2 bg-accentPurple hover:bg-purple-500 text-white px-5 py-2 rounded-lg font-bold text-sm transition-colors disabled:opacity-50"
-              >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4" />
-                )}
-                Save Preferences
-              </button>
+            <div className="pt-4 border-t border-white/5">
+              <p className="text-[10px] text-slate-500 text-right">Preferences save the moment you flip a toggle.</p>
             </div>
           </form>
 

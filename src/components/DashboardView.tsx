@@ -68,6 +68,17 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   const [connectionServer, setConnectionServer] = useState<any>(null);
   const [celebrationServer, setCelebrationServer] = useState<any>(null);
   const [importMapServer, setImportMapServer] = useState<any>(null);
+
+  // Escape closes the import-map dialog — it's a standalone overlay outside
+  // the shared ModalProvider, so it needs its own escape hatch.
+  useEffect(() => {
+    if (!importMapServer) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setImportMapServer(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [importMapServer]);
   const [importWorldPath, setImportWorldPath] = useState("");
   const [importLoading, setImportLoading] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
@@ -276,54 +287,77 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
     }
   };
 
-  // Archive / Vault Server
-  const handleArchiveServer = async (serverId: string) => {
-    setActionLoading(`${serverId}-archive`);
-    setErrorMessage(null);
-    try {
-      const res = await fetch(`/api/servers/${serverId}/archive`, {
-        method: "POST",
-      });
-      const archive = await res.json();
-      if (!res.ok) throw new Error(archive.error || "Failed to archive server");
+  // Archive / Vault Server. Confirmed before acting: "Vault" reads like
+  // "view my vault", but it stops the server and removes it from the
+  // dashboard — a surprise should be one click away, not one click done.
+  const handleArchiveServer = (serverId: string) => {
+    const target = data.servers.find((s) => s.id === serverId);
+    showModal({
+      type: "confirmation",
+      title: "Vault This Server?",
+      message: `'${target?.name ?? "This server"}' will stop and leave your dashboard. Its worlds are kept safely in the Vault — you can restore it any time.`,
+      confirmText: "Vault Server",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setActionLoading(`${serverId}-archive`);
+        setErrorMessage(null);
+        try {
+          const res = await fetch(`/api/servers/${serverId}/archive`, {
+            method: "POST",
+          });
+          const archive = await res.json();
+          if (!res.ok) throw new Error(archive.error || "Failed to archive server");
 
-      // Refetch whole state because a server was deleted and an archive created
-      const stateRes = await fetch("/api/servers", { cache: "no-store" });
-      if (stateRes.ok) {
-        const fresh = await stateRes.json();
-        setData(fresh);
+          // Refetch whole state because a server was deleted and an archive created
+          const stateRes = await fetch("/api/servers", { cache: "no-store" });
+          if (stateRes.ok) {
+            const fresh = await stateRes.json();
+            setData(fresh);
+          }
+          refreshActiveServers();
+        } catch (err: any) {
+          setErrorMessage(err.message);
+        } finally {
+          setActionLoading(null);
+        }
       }
-      refreshActiveServers();
-    } catch (err: any) {
-      setErrorMessage(err.message);
-    } finally {
-      setActionLoading(null);
-    }
+    });
   };
 
-  // Restore Archive
-  const handleRestoreArchive = async (archiveId: string) => {
-    setActionLoading(`${archiveId}-restore`);
-    setErrorMessage(null);
-    try {
-      const res = await fetch(`/api/archives/${archiveId}/restore`, {
-        method: "POST",
-      });
-      const restored = await res.json();
-      if (!res.ok) throw new Error(restored.error || "Failed to restore server");
+  // Restore Archive. Confirmed because restoring consumes one of the active
+  // server slots — at the slot limit the click would otherwise surface as a
+  // confusing error or an unexpected new server.
+  const handleRestoreArchive = (archiveId: string) => {
+    showModal({
+      type: "info",
+      title: "Restore This World?",
+      message: "The archived world comes back as a server on your dashboard, using one of your active server slots.",
+      confirmText: "Restore World",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        setActionLoading(`${archiveId}-restore`);
+        setErrorMessage(null);
+        try {
+          const res = await fetch(`/api/archives/${archiveId}/restore`, {
+            method: "POST",
+          });
+          const restored = await res.json();
+          if (!res.ok) throw new Error(restored.error || "Failed to restore server");
 
-      // Refetch whole state
-      const stateRes = await fetch("/api/servers", { cache: "no-store" });
-      if (stateRes.ok) {
-        const fresh = await stateRes.json();
-        setData(fresh);
+          // Refetch whole state
+          const stateRes = await fetch("/api/servers", { cache: "no-store" });
+          if (stateRes.ok) {
+            const fresh = await stateRes.json();
+            setData(fresh);
+          }
+          refreshActiveServers();
+        } catch (err: any) {
+          setErrorMessage(err.message);
+        } finally {
+          setActionLoading(null);
+        }
       }
-      refreshActiveServers();
-    } catch (err: any) {
-      setErrorMessage(err.message);
-    } finally {
-      setActionLoading(null);
-    }
+    });
   };
 
   // Delete Archive

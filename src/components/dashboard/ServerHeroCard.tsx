@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Sparkline } from "./Sparkline";
-import { statusLabel } from "@/lib/gameDisplay";
+import { statusLabel, gameLabel } from "@/lib/gameDisplay";
 import { formatSessionStart } from "@/lib/sessions";
 import { motion } from "framer-motion";
 import {
@@ -134,9 +134,19 @@ export function ServerHeroCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
     >
-    <div 
-      className={`bg-slate-900/40 backdrop-blur-xl border ${isSelected ? 'border-accentPurple shadow-[0_0_20px_rgba(167,139,250,0.3)] ring-1 ring-accentPurple' : 'border-white/5 hover:border-accentPurple/30'} rounded-[18px] shadow-xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-accentPurple/10 flex flex-col group cursor-pointer`}
-      onClick={onSelect}
+    <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      aria-label={`Select server ${server.name}`}
+      onClick={() => onSelect?.()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect?.();
+        }
+      }}
+      className={`bg-slate-900/40 backdrop-blur-xl border ${isSelected ? 'border-accentPurple shadow-[0_0_20px_rgba(167,139,250,0.3)] ring-1 ring-accentPurple' : 'border-white/5 hover:border-accentPurple/30'} rounded-[18px] shadow-xl overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-accentPurple/10 flex flex-col group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accentPurple`}
     >
       {/* Thumbnail Header */}
       <div 
@@ -158,7 +168,7 @@ export function ServerHeroCard({
         
         <div className="relative z-10 flex justify-between items-start">
           <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10">
-            <span className="text-xs font-bold text-white tracking-wide">{server.game}</span>
+            <span className="text-xs font-bold text-white tracking-wide">{gameLabel(server.game)}</span>
           </div>
           
           <div className={`px-2.5 py-1 rounded-lg border backdrop-blur-md text-xs font-bold shadow-lg flex items-center gap-1.5

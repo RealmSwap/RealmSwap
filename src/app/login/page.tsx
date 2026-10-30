@@ -129,13 +129,17 @@ export default function LoginPage(props: { searchParams: Promise<{ link?: string
             </button>
           </form>
 
-          {/* Test credentials helper */}
-          <div className="mt-6 pt-5 border-t border-white/5 text-center">
-            <span className="text-xs text-mutedText block mb-1">Testing Demo Credentials:</span>
-            <code className="text-[10px] bg-slate-950 px-2 py-1 rounded border border-white/5 text-accentBlue">
-              demo@realmswap.gg / password123
-            </code>
-          </div>
+          {/* Test credentials helper — dev builds only; a real product login
+              screen advertising a public demo account undermines trust and
+              exposes any deployment that ships it. */}
+          {process.env.NODE_ENV !== "production" && (
+            <div className="mt-6 pt-5 border-t border-white/5 text-center">
+              <span className="text-xs text-mutedText block mb-1">Testing Demo Credentials:</span>
+              <code className="text-[10px] bg-slate-950 px-2 py-1 rounded border border-white/5 text-accentBlue">
+                demo@realmswap.gg / password123
+              </code>
+            </div>
+          )}
         </div>
 
         {/* Footer Link */}

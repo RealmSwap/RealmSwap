@@ -53,10 +53,17 @@ export function FirstServerWizard({
   const [snapshotBusy, setSnapshotBusy] = useState(false);
 
   useEffect(() => {
+    // A failed game-list load must not look like an empty catalog — without
+    // the r.ok check a server error silently rendered an empty grid.
     fetch("/api/definitions")
-      .then((r) => r.json())
-      .then((d) => setDefinitions(d.definitions || []))
-      .catch(() => setError("Failed to load game list"))
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`definitions request failed (${r.status})`);
+        const d = await r.json();
+        const list = d.definitions || [];
+        setDefinitions(list);
+        if (list.length === 0) setError("No games are available yet — import a game definition or ask the server owner to.");
+      })
+      .catch(() => setError("Couldn't load the game list — the app may still be starting. Reopen this page in a moment."))
       .finally(() => setLoading(false));
     // Headless deployments (NAS/mini PC) have no local-machine runner — when a
     // Docker daemon is reachable, deploys default to the container runtime.
@@ -233,6 +240,17 @@ export function FirstServerWizard({
               className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-sm text-white focus:border-accentPurple focus:outline-none"
             />
           </div>
+          {/* Say the quiet part up front: the first Start downloads the game
+              files (and Java, for Minecraft-family games) — minutes, not
+              seconds. Learning this at the moment of pressing Start feels
+              like the app hanging. */}
+          {(picked.installMethod === "STEAMCMD" || picked.spec?.requiresJava || picked.spec?.install?.url) && (
+            <p className="text-[11px] text-slate-500 leading-relaxed bg-slate-950/60 border border-white/5 rounded-lg px-3 py-2">
+              ℹ️ Heads up: the first start downloads the game server files
+              {picked.spec?.requiresJava ? " and the right Java runtime" : ""} automatically — that's a one-time
+              multi-minute download, and progress shows right on the server card.
+            </p>
+          )}
           <div className="flex justify-between pt-2">
             <button onClick={() => setStep(1)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-slate-400 hover:text-white text-sm font-bold transition-colors">
               <ArrowLeft className="w-4 h-4" /> Back

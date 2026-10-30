@@ -9,12 +9,16 @@ import React, {
   useState,
   ReactNode,
 } from "react";
+import { toast } from "sonner";
+import { apiFetch } from "@/lib/apiFetch";
 
 const STORAGE_KEY = "rs-active-server";
 
 interface ActiveServerContextType {
   servers: any[];
   loading: boolean;
+  /** True when the last load failed — an empty list otherwise means "no servers yet". */
+  loadFailed: boolean;
   activeServerId: string | null;
   activeServer: any | null;
   setActiveServerId: (id: string | null) => void;
@@ -33,14 +37,16 @@ export function ActiveServerProvider({ children }: { children: ReactNode }) {
   const [servers, setServers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeServerId, setActiveServerIdState] = useState<string | null>(null);
+  // Distinguish "you have no servers" from "we couldn't load them" — a dead
+  // API used to render as an empty dashboard.
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch("/api/servers", { cache: "no-store" });
-      if (!res.ok) return [];
-      const data = await res.json();
+      const data = await apiFetch<{ servers?: any[] }>("/api/servers");
       const list: any[] = data?.servers ?? [];
       setServers(list);
+      setLoadFailed(false);
       setActiveServerIdState((current) => {
         if (current && list.some((s) => s.id === current)) return current;
         let stored: string | null = null;
@@ -51,7 +57,9 @@ export function ActiveServerProvider({ children }: { children: ReactNode }) {
         return list[0]?.id ?? null;
       });
       return list;
-    } catch {
+    } catch (err: any) {
+      setLoadFailed(true);
+      toast.error(err?.message || "Couldn't load your servers — check that the app is still running.");
       return [];
     } finally {
       setLoading(false);
@@ -77,7 +85,7 @@ export function ActiveServerProvider({ children }: { children: ReactNode }) {
 
   return (
     <ActiveServerContext.Provider
-      value={{ servers, loading, activeServerId, activeServer, setActiveServerId, refresh }}
+      value={{ servers, loading, loadFailed, activeServerId, activeServer, setActiveServerId, refresh }}
     >
       {children}
     </ActiveServerContext.Provider>

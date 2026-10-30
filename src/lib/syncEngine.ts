@@ -140,17 +140,23 @@ export class SyncTask extends EventEmitter {
 
   autoDetectGameDir(gameName: string): string | null {
     // A simplified Steam game locator for Windows
-    // Normally we'd read libraryfolders.vdf, but for this MVP, we check the default path
+    // Normally we'd read libraryfolders.vdf, but for this MVP, we check the default path.
+    // The roots are assembled from parts (not a single path.join literal) because
+    // bundlers statically resolve literal path.join(...) strings as filesystem
+    // asset references — which fails `next build` on any machine that doesn't
+    // have that exact Steam folder.
     let folderName = gameName;
     if (gameName.toLowerCase() === "valheim") folderName = "Valheim";
     if (gameName.toLowerCase() === "lethal company") folderName = "Lethal Company";
 
-    const defaultPath = path.join("C:\\Program Files (x86)\\Steam\\steamapps\\common", folderName);
-    if (fs.existsSync(defaultPath)) return defaultPath;
-
-    // Check D drive fallback
-    const dPath = path.join("D:\\SteamLibrary\\steamapps\\common", folderName);
-    if (fs.existsSync(dPath)) return dPath;
+    const steamRoots = [
+      ["C:", "Program Files (x86)", "Steam", "steamapps", "common"],
+      ["D:", "SteamLibrary", "steamapps", "common"],
+    ];
+    for (const parts of steamRoots) {
+      const candidate = parts.join(path.sep) + path.sep + folderName;
+      if (fs.existsSync(candidate)) return candidate;
+    }
 
     return null;
   }
