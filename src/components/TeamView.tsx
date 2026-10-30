@@ -298,12 +298,12 @@ export default function TeamView({ user }: TeamViewProps) {
                 <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider block">Invite Process Guidelines</span>
                 
                 <div className="text-xs text-slate-400 leading-normal space-y-3">
-                  <p>👥 **SQLite Registry Requirement:** RealmSwap runs completely locally. In order to invite a friend, they must first connect to your RealmSwap instance (using your public/local IP) and create an account via the Register page.</p>
-                  <p>🔐 **Role Privileges:**
-                    <br/>• **Co-Host:** Can start, stop, restart, and view live console logs.
-                    <br/>• **Admin:** Can also install mods, take manual backups, and restore world saves.
+                  <p>👥 <span className="font-bold text-slate-300">Invite requirements:</span> RealmSwap runs completely locally — a friend joins by connecting to your server (your public or LAN IP) and creating an account via the Register page.</p>
+                  <p>🔐 <span className="font-bold text-slate-300">Role privileges:</span>
+                    <br/>• <span className="font-bold text-slate-300">Co-Host:</span> Can start, stop, restart, and view live console logs.
+                    <br/>• <span className="font-bold text-slate-300">Admin:</span> Can also install mods, take manual backups, and restore world saves.
                   </p>
-                  <p>🚫 **Safety Rules:** Collaborators cannot delete or archive the server, or invite other collaborators. Only the server owner retains full deletion rights.</p>
+                  <p>🚫 <span className="font-bold text-slate-300">Safety rules:</span> Collaborators cannot delete, vault, or invite other collaborators. Only the server owner retains full deletion rights.</p>
                 </div>
               </div>
 

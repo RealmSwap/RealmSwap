@@ -756,10 +756,10 @@ export default function BackupsView({ user }: BackupsViewProps) {
                 <span className="text-[10px] font-bold text-mutedText uppercase tracking-wider block">Local Storage Info</span>
 
                 <div className="text-xs text-slate-400 leading-normal space-y-3">
-                  <p>💾 **Disk used:** <span className="font-bold text-slate-200">{totalBackupMB.toFixed(1)} MB</span> across {backups.length} backup{backups.length === 1 ? "" : "s"} for this server.</p>
-                  <p>✂️ **Auto-cleanup:** {backupRetention > 0 ? `Only the last ${backupRetention} backups are kept — the oldest are deleted after each new backup, and the newest verified backup always survives.` : "Backups are kept forever (no limit set)."}</p>
-                  <p>📁 **Local path:** Backups are compressed into `.zip` files and stored inside `local-backups/[serverId]` in your RealmSwap folder.</p>
-                  <p>⏱️ **Scheduler requirements:** Automated snapshots only execute while the local runner app is running and the target server is active.</p>
+                  <p>💾 <span className="font-bold text-slate-300">Disk used:</span> <span className="font-bold text-slate-200">{totalBackupMB.toFixed(1)} MB</span> across {backups.length} backup{backups.length === 1 ? "" : "s"} for this server.</p>
+                  <p>✂️ <span className="font-bold text-slate-300">Auto-cleanup:</span> {backupRetention > 0 ? `Only the last ${backupRetention} backups are kept — the oldest are deleted after each new backup, and the newest verified backup always survives.` : "Backups are kept forever (no limit set)."}</p>
+                  <p>📁 <span className="font-bold text-slate-300">Where they live:</span> Backups are compressed into .zip files inside the local-backups folder for this server, in your RealmSwap data folder.</p>
+                  <p>⏱️ <span className="font-bold text-slate-300">Scheduled snapshots:</span> run only while the RealmSwap app is running and the server exists.</p>
                 </div>
               </div>
 

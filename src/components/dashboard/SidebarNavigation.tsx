@@ -17,6 +17,7 @@ import {
   Network,
   HardDrive,
   LogOut,
+  CreditCard,
   ChevronRight,
   Menu,
   X
@@ -28,6 +29,20 @@ export function SidebarNavigation({ user }: { user: any }) {
   useEffect(() => { initClientErrorReporting(); }, []);
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const signOut = async () => {
+    // Actually clear the session — navigating away alone left the cookie
+    // live, so the next person on a shared PC inherited the account.
+    setSigningOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // best-effort: still leave the dashboard
+    }
+    router.push("/login");
+    router.refresh();
+  };
 
   // Close the mobile sheet whenever the route changes.
   useEffect(() => {
@@ -40,6 +55,7 @@ export function SidebarNavigation({ user }: { user: any }) {
       links: [
         { label: "Servers", icon: ServerIcon, href: "/dashboard" },
         { label: "Marketplace", icon: Store, href: "/dashboard/marketplace" },
+        { label: "Billing", icon: CreditCard, href: "/dashboard/billing" },
       ]
     },
     {
@@ -116,9 +132,13 @@ export function SidebarNavigation({ user }: { user: any }) {
 
         {/* User Profile & Legal */}
         <div className="p-4 border-t border-white/5 flex flex-col gap-3">
-          <div 
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Account settings"
             onClick={() => router.push("/dashboard/settings")}
-            className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-white/5 hover:border-white/10 transition-colors group cursor-pointer"
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); router.push("/dashboard/settings"); } }}
+            className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-white/5 hover:border-white/10 transition-colors group cursor-pointer focus:outline-none focus:border-accentPurple/60"
           >
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-accentPurple to-blue-500 flex items-center justify-center text-white font-bold shrink-0 shadow-lg shadow-accentPurple/20">
@@ -129,9 +149,11 @@ export function SidebarNavigation({ user }: { user: any }) {
                 <div className="text-[10px] text-accentPurple font-semibold uppercase tracking-wider group-hover:text-white transition-colors">Settings</div>
               </div>
             </div>
-            <button 
-              onClick={(e) => { e.stopPropagation(); router.push("/login"); }}
-              className="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+            <button
+              onClick={(e) => { e.stopPropagation(); signOut(); }}
+              disabled={signingOut}
+              aria-label="Sign out"
+              className="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-red-400/50 disabled:opacity-40"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />

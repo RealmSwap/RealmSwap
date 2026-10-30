@@ -47,6 +47,16 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
   const [shareCode, setShareCode] = useState<string | null>(server.statusShareCode ?? null);
   const [shareBusy, setShareBusy] = useState(false);
 
+  // Escape closes — this is the dashboard's most-used dialog, and it was
+  // reachable only by mouse (backdrop click / X button).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   const manageStatusShare = async (action: "enable" | "disable" | "rotate") => {
     setShareBusy(true);
     try {
@@ -149,7 +159,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
   const report = data?.report;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" role="dialog" aria-modal="true" aria-label={`Connection — ${server.name}`} onClick={onClose}>
       <div
         className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-900 border border-white/10 rounded-2xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}

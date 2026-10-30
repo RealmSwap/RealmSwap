@@ -122,14 +122,18 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
       return;
     }
 
+    // Validate everything BEFORE flipping the button to "Deploying..." —
+    // this early return used to fire after setLoading(true) and leave the
+    // form stuck on a disabled "Deploying Server..." forever.
+    if (runtime === "AGENT" && !nodeId) {
+      setError("Choose a remote host to deploy to.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      if (runtime === "AGENT" && !nodeId) {
-        setError("Choose a remote host to deploy to.");
-        return;
-      }
       const res = await fetch("/api/servers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -392,8 +396,18 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                   return (
                     <div
                       key={game.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={selectedGame?.id === game.id}
+                      aria-label={`Select ${game.displayName}`}
                       onClick={() => !isLocked && handleGameSelect(game)}
-                      className={`p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between h-40 relative overflow-hidden group ${
+                      onKeyDown={(e) => {
+                        if (!isLocked && (e.key === "Enter" || e.key === " ")) {
+                          e.preventDefault();
+                          handleGameSelect(game);
+                        }
+                      }}
+                      className={`p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between h-40 relative overflow-hidden group focus:outline-none focus-visible:ring-2 focus-visible:ring-accentPurple ${
                         isLocked
                           ? "opacity-30 cursor-not-allowed border-white/5 bg-slate-950/10"
                           : selectedGame?.id === game.id
@@ -544,11 +558,15 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                     </label>
                   </div>
                   <div className="flex items-center justify-between text-[10px] font-bold border-t border-white/5 pt-2 mt-2">
-                    <span className="text-emerald-400 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                      Localhost (127.0.0.1) & Public WAN IP
+                    <span className={enableUpnp ? "text-emerald-400 flex items-center gap-1" : "text-slate-500 flex items-center gap-1"}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${enableUpnp ? "bg-emerald-400" : "bg-slate-600"}`}></span>
+                      {enableUpnp
+                        ? "Router forwards your game port automatically at server start"
+                        : "Forwarding off — friends join via LAN, or set up a tunnel later"}
                     </span>
-                    <span className="text-accentPurple font-mono">UPnP Active</span>
+                    <span className={enableUpnp ? "text-accentPurple font-mono" : "text-slate-500 font-mono"}>
+                      {enableUpnp ? "Auto-Forward On" : "Auto-Forward Off"}
+                    </span>
                   </div>
                 </div>
               </div>
