@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { loadPackagedEnv, PROVIDER_KEY_NAMES } from "../packagedEnv.js";
 
 let tmpDir;
@@ -93,7 +94,9 @@ describe("loadPackagedEnv", () => {
   it("allowlist matches the keys the release workflow writes", () => {
     // The writer single-sources its key list from this module; a round-trip
     // through the real script proves the two stay in sync end to end.
-    const script = new URL("../../scripts/write-packaged-env.js", import.meta.url).pathname;
+    // fileURLToPath, not .pathname — on Windows the pathname keeps a leading
+    // slash ("/C:/..."), which node resolves as "C:\C:\..." and fails to load.
+    const script = fileURLToPath(new URL("../../scripts/write-packaged-env.js", import.meta.url));
     const out = path.join(tmpDir, "out.json");
     const env = { ...process.env };
     delete env.CURSEFORGE_API_KEY;

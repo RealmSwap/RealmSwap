@@ -212,12 +212,25 @@ async function assembleAndRecordBackup(
   }
 }
 
+/**
+ * Arguments for the system tar on Windows: --force-local stops GNU tar
+ * (Git Bash) reading "C:..." as host:path, and forward slashes stop it
+ * mangling backslashes in filenames. Windows' bsdtar accepts both forms.
+ */
+function systemTarArgs(op: "-xf" | "-cf", tarPath: string, changeTo: string | null, rest: string[] = []): string[] {
+  if (process.platform !== "win32") {
+    return [op, tarPath, ...(changeTo ? ["-C", changeTo] : []), ...rest];
+  }
+  const fwd = (p: string) => p.split("\\").join("/");
+  return ["--force-local", op, fwd(tarPath), ...(changeTo ? ["-C", fwd(changeTo)] : []), ...rest];
+}
+
 /** Extract a tar archive into destDir with the system tar (agent transfers). */
 async function extractTar(tarPath: string, destDir: string): Promise<void> {
   fs.mkdirSync(destDir, { recursive: true });
   const { execFile } = await import("child_process");
   await new Promise<void>((resolve, reject) => {
-    execFile("tar", ["-xf", tarPath, "-C", destDir], (err) => {
+    execFile("tar", systemTarArgs("-xf", tarPath, destDir), (err) => {
       if (err) reject(new Error(`tar extract failed: ${err.message}`));
       else resolve();
     });
@@ -228,7 +241,7 @@ async function extractTar(tarPath: string, destDir: string): Promise<void> {
 async function createTar(baseDir: string, entries: string[], tarPath: string): Promise<void> {
   const { execFile } = await import("child_process");
   await new Promise<void>((resolve, reject) => {
-    execFile("tar", ["-cf", tarPath, "-C", baseDir, ...entries], (err) => {
+    execFile("tar", systemTarArgs("-cf", tarPath, baseDir, entries), (err) => {
       if (err) reject(new Error(`tar create failed: ${err.message}`));
       else resolve();
     });

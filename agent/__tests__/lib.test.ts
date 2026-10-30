@@ -309,7 +309,11 @@ describe("agent tunnel paths", () => {
     const stateDir = "/state";
     expect(tunnelSecretPath(stateDir, "srv1")).toBe(path.join(stateDir, "playit-srv1.toml"));
     expect(tunnelPidPath(stateDir, "srv1")).toBe(path.join(stateDir, "playit-srv1.pid"));
-    expect(tunnelSocketPath(stateDir, "srv1")).toContain("playitd-srv1.sock");
+    expect(tunnelSocketPath(stateDir, "srv1")).toBe(
+      process.platform === "win32"
+        ? "\\\\.\\pipe\\realmswap-agent-playitd-srv1"
+        : path.join(stateDir, "playitd-srv1.sock")
+    );
     expect(() => tunnelSecretPath(stateDir, "../../etc")).toThrow();
     expect(() => tunnelPidPath(stateDir, "a/b")).toThrow();
   });
