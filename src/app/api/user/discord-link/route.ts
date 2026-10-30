@@ -40,10 +40,23 @@ export async function POST(req: NextRequest) {
     }
 
     // Link the discordId
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { discordId: linkCode.discordId }
-    });
+    try {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { discordId: linkCode.discordId }
+      });
+    } catch (err: any) {
+      if (err?.code === "P2002") {
+        // discordId is unique: that Discord account is already attached to
+        // another local account. A plain 500 here confused the one flow the
+        // bot integration depends on.
+        return NextResponse.json(
+          { error: "That Discord account is already linked to another account." },
+          { status: 409 }
+        );
+      }
+      throw err;
+    }
 
     // Delete the used code
     await prisma.discordLinkCode.delete({ where: { id: linkCode.id } });

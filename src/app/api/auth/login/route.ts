@@ -3,6 +3,11 @@ import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { ensureLocalUser } from "@/lib/auth";
 import { getEntitlement, syncEntitlementToMirror } from "@/lib/entitlement";
+import { checkRateLimit } from "@/lib/rateLimit";
+
+function clientKey(req: NextRequest): string {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,6 +17,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Email and password are required" },
         { status: 400 },
+      );
+    }
+
+    // Credential stuffing lands here first; Supabase's platform-side limits
+    // are the last line of defense, not the first.
+    if (!checkRateLimit(`auth_login_${clientKey(req)}`, { limit: 10, windowMs: 5 * 60 * 1000 })) {
+      return NextResponse.json(
+        { error: "Too many attempts. Try again in a few minutes." },
+        { status: 429 },
       );
     }
 

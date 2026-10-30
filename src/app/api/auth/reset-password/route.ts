@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 /**
  * Sends the Supabase recovery email. The response is identical whether or not
@@ -16,6 +17,16 @@ export async function POST(req: NextRequest) {
 
   if (!email || typeof email !== "string") {
     return NextResponse.json({ error: "Email is required" }, { status: 400 });
+  }
+
+  // Reset-email spam (each request sends real mail) is limited per-IP before
+  // it reaches Supabase.
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  if (!checkRateLimit(`auth_reset_${ip}`, { limit: 5, windowMs: 60 * 60 * 1000 })) {
+    return NextResponse.json(
+      { error: "Too many reset emails requested. Please try again later." },
+      { status: 429 }
+    );
   }
 
   const origin = req.nextUrl.origin;

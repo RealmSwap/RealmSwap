@@ -19,10 +19,12 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
     const serverId = params.id;
 
-    // Find and verify server access
+    // Find and verify server access. Vaulting stops the server and removes it
+    // from the dashboard — an owner decision, not a collaborator one, even at
+    // ADMIN rank.
     const access = await verifyServerAccess(serverId, user.id, "ADMIN");
-    if (!access) {
-      return NextResponse.json({ error: "Server not found or insufficient permissions (Requires ADMIN)" }, { status: 403 });
+    if (!access || !access.isOwner) {
+      return NextResponse.json({ error: "Server not found or insufficient permissions (Owner only)" }, { status: 403 });
     }
     const { server } = access;
     // Vaulting used to behave degenerately for AGENT servers: the LOCAL file
