@@ -26,7 +26,7 @@ import AdmZip from "adm-zip";
 import { prisma } from "@/lib/db";
 import { downloadFile } from "@/lib/download";
 import { safeJoin } from "@/lib/safePath";
-import { extractThunderstorePackage } from "@/lib/mods/thunderstore";
+import { extractThunderstorePackage, uniqueStagingZip } from "@/lib/mods/thunderstore";
 
 export interface UmodPlugin {
   /** The .cs file name — how Oxide identifies the plugin (e.g. "Teleporter"). */
@@ -93,26 +93,40 @@ async function umodJson<T = any>(url: string, deps?: UmodDeps): Promise<T> {
 }
 
 /**
- * Search uMod's plugin catalog and keep the plugins that run on Rust. One
- * request per (query, page), cached 10 minutes — the catalog spans all uMod
- * games, so a page can return few (or no) Rust matches for a query.
+ * Search uMod's plugin catalog and keep the plugins that run on Rust. Up to
+ * two requests per (query, browse slot), cached 10 minutes — the catalog
+ * spans all uMod games, so a page can return few (or no) Rust matches for a
+ * query.
  */
 export async function searchUmodPlugins(
   opts: { query?: string; offset?: number } = {},
   deps?: UmodDeps
 ): Promise<{ plugins: UmodPlugin[]; total: number }> {
   const query = (opts.query ?? "").trim();
-  const page = Math.floor((opts.offset ?? 0) / 10) + 1;
-  const cacheKey = `${query}|${page}`;
+  // The Browse tab steps 20 results at a time, but uMod's catalog pages 10 raw
+  // rows — mapping offset directly to a page number silently skipped every
+  // second raw page. Fetch BOTH raw pages backing this browse slot instead.
+  const RAW_PAGE_SIZE = 10;
+  const BROWSE_STEP = 20;
+  const firstPage = Math.floor((opts.offset ?? 0) / BROWSE_STEP) * 2 + 1;
+  const cacheKey = `${query}|${firstPage}`;
   const cached = searchCache.get(cacheKey);
   if (cached && Date.now() - cached.fetchedAt < SEARCH_TTL_MS) {
     return { plugins: cached.plugins, total: cached.total };
   }
 
-  const params = new URLSearchParams({ search: query, page: String(page) });
-  const json = await umodJson(`https://umod.org/plugins/search.json?${params.toString()}`, deps);
-  const rows: any[] = Array.isArray(json?.data) ? json.data : [];
-  const total: number = typeof json?.total === "number" ? json.total : rows.length;
+  const fetchPage = async (page: number) => {
+    const params = new URLSearchParams({ search: query, page: String(page) });
+    return umodJson(`https://umod.org/plugins/search.json?${params.toString()}`, deps);
+  };
+  const first = await fetchPage(firstPage);
+  const rows: any[] = Array.isArray(first?.data) ? [...first.data] : [];
+  let total: number = typeof first?.total === "number" ? first.total : rows.length;
+  if (rows.length >= RAW_PAGE_SIZE) {
+    const second = await fetchPage(firstPage + 1);
+    if (Array.isArray(second?.data)) rows.push(...second.data);
+    if (typeof second?.total === "number") total = second.total;
+  }
   const plugins = rows
     .map(mapUmodPlugin)
     .filter((p): p is UmodPlugin => p !== null && isRustPlugin(p.categoryTags));
@@ -141,7 +155,7 @@ export async function installOxideCore(args: {
   const { serverId, rustDir } = args;
   if (fs.existsSync(path.join(rustDir, OXIDE_CORE_MARKER))) return;
 
-  const tempZip = safeJoin(rustDir, ".oxide-core.staging.zip");
+  const tempZip = uniqueStagingZip(rustDir, "oxide-core");
   await downloadFile(OXIDE_CORE_DOWNLOAD_URL, tempZip);
   try {
     // Per-entry re-anchored extraction (traversal-safe); no wrapper folder

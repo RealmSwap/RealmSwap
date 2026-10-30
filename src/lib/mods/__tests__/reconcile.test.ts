@@ -17,6 +17,7 @@ const bag = vi.hoisted(() => ({
   deletes: [] as any[],
   creates: [] as any[],
   updates: [] as any[],
+  workshopVersions: {} as Record<string, string>,
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -50,6 +51,21 @@ vi.mock("@/lib/appPaths", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/appPaths")>();
   return { ...actual, dataRoot: () => bag.dataRoot };
 });
+// reconcile re-creating workshop rows does one best-effort version lookup —
+// keep it off the network and scriptable per test.
+vi.mock("@/lib/mods/workshop", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/mods/workshop")>();
+  return {
+    ...actual,
+    getWorkshopDetails: vi.fn(async (ids: string[]) => {
+      const map = new Map<string, { timeUpdated: string }>();
+      for (const id of ids) {
+        if (bag.workshopVersions[id]) map.set(id, { timeUpdated: bag.workshopVersions[id] });
+      }
+      return map;
+    }),
+  };
+});
 
 import { reconcileInstalledMods } from "@/lib/mods/reconcile";
 
@@ -70,6 +86,7 @@ beforeEach(() => {
   bag.deletes = [];
   bag.creates = [];
   bag.updates = [];
+  bag.workshopVersions = {};
   fs.rmSync(path.join(tmp, "local-servers"), { recursive: true, force: true });
 });
 
@@ -188,6 +205,27 @@ describe("reconcileInstalledMods", () => {
         `WorkshopItems=${workshopIds.join(";")}\nMods=${modIds.join(";")}\n`
       );
     }
+
+    it("restores the Workshop time_updated on re-created rows so update checks keep working", async () => {
+      fs.mkdirSync(path.join(serverRoot(), "zomboid-server", "zomboid-data", "Server"), { recursive: true });
+      fs.writeFileSync(
+        path.join(serverRoot(), "zomboid-server", "zomboid-data", "Server", "servertest.ini"),
+        "WorkshopItems=2875848298\n"
+      );
+      bag.workshopVersions["2875848298"] = "2026-01-02T03:04:05.000Z";
+      bag.server = { id: "s1", game: "ZOMBOID" };
+      bag.rows = [];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result.added).toBe(1);
+      // The ISO version is what the update checks gate on — without it the
+      // re-created row could never be update-checked again.
+      expect(bag.creates[0]).toMatchObject({
+        packageId: "2875848298",
+        version: "2026-01-02T03:04:05.000Z",
+      });
+    });
 
     it("keys rows on WorkshopItems, repairs stale workshopModId, deletes gone ids", async () => {
       writeIni(["w1", "w2", "2875848298"], ["m1", "m2"]);

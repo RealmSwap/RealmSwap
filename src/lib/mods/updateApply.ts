@@ -21,6 +21,7 @@ import {
   newestVersion,
   extractThunderstorePackage,
   extractCorePack,
+  uniqueStagingZip,
 } from "@/lib/mods/thunderstore";
 import { uninstallPalworldPackage } from "@/lib/mods/palworld";
 import { WORKSHOP_APP_IDS, getWorkshopDetails } from "@/lib/mods/workshop";
@@ -298,7 +299,7 @@ export async function resolveModUpdate(
       // The core pack installs over the server root, not the plugins dir —
       // same as the install route's auto-provisioning. The wrapper folder is
       // stripped when the pack has one.
-      const tempZip = safeJoin(serverDir, ".bepinex-core.staging.zip");
+      const tempZip = uniqueStagingZip(serverDir, "bepinex-core");
       return {
         newVersionNumber: latest.version_number,
         applyUpdate: async () => {
@@ -311,7 +312,7 @@ export async function resolveModUpdate(
         },
       };
     }
-    const tempZip = safeJoin(pluginsDir, `.${installation.packageId}.staging.zip`);
+    const tempZip = uniqueStagingZip(pluginsDir, installation.packageId);
     return {
       newVersionNumber: latest.version_number,
       applyUpdate: async () => {

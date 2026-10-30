@@ -86,7 +86,10 @@ const METADATA_FILES = new Set(["icon.png", "manifest.json", "readme.md", "licen
 function mapPalworldEntry(entry: string, packageName: string, fullName: string): PalworldFilePlan | null {
   const norm = entry.split("\\").join("/");
   const lower = norm.toLowerCase();
-  if (METADATA_FILES.has(lower)) return null;
+  // By basename: Thunderstore also drops metadata files nested in wrapper
+  // folders, and a nested docs file would otherwise fail layout classification.
+  const base = lower.slice(lower.lastIndexOf("/") + 1);
+  if (METADATA_FILES.has(base)) return null;
   if (/\.(msi|exe)$/i.test(norm)) {
     throw new Error(
       `Package ships a Windows installer (${norm}) instead of mod files — it can't be installed on a server.`
@@ -107,11 +110,12 @@ function mapPalworldEntry(entry: string, packageName: string, fullName: string):
 
   // Convention 3: game-rooted trees. The mods/paks subtrees map into the
   // manager dirs (shimloader virtualizes those game paths); Win64-rooted
-  // files outside Mods/ are overlay wrapper material.
-  if (norm.startsWith("Pal/Binaries/Win64/Mods/") || norm.startsWith("pal/binaries/win64/mods/")) {
-    const rest = norm.slice("Pal/Binaries/Win64/Mods/".length);
+  // files outside Mods/ are overlay wrapper material. All case-insensitive:
+  // packages in the wild mix Palmodders' casing conventions.
+  const win64Mods = /^pal\/binaries\/win64\/mods\/(.+)$/i.exec(norm);
+  if (win64Mods) {
     // A game-rooted package names its mod dir itself (e.g. Mods/BasesPlus/).
-    return { entry, destRel: path.posix.join(PALWORLD_MODS_DIR, rest) };
+    return { entry, destRel: path.posix.join(PALWORLD_MODS_DIR, win64Mods[1]) };
   }
   if (/^pal\/content\/paks\/logicmods\//i.test(norm)) {
     const rest = norm.slice("Pal/Content/Paks/LogicMods/".length);

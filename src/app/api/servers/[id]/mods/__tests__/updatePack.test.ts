@@ -233,7 +233,11 @@ describe("update-pack route", () => {
     expect(fs.existsSync(path.join(modsDir, "222.jar"))).toBe(false);
     const retired = bag.deleteMany.map((d) => d.where.packageId).sort();
     expect(retired).toEqual(["222", "333"]);
-    for (const d of bag.deleteMany) expect(d.where.provider).toBe("curseforge");
+    // Retired rows delete regardless of provider — the jar is gone either
+    // way, including when the new pack comes from the other mod platform.
+    for (const d of bag.deleteMany) {
+      expect(d.where).toEqual({ serverId: d.where.serverId, packageId: d.where.packageId });
+    }
     expect(bag.upserts.map((u) => u.where.serverId_provider_packageId.packageId)).toEqual(["111"]);
 
     // New pack identity recorded (fileId 20, new manifest's packageIds only).

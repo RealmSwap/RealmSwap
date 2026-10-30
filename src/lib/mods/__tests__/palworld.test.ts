@@ -63,6 +63,32 @@ describe("planPalworldPackage", () => {
     ]);
   });
 
+  it("maps mixed-case Pal/Binaries/Win64/Mods prefixes like the canonical casing", () => {
+    // Packages in the wild mix casing; before this only the exact canonical
+    // and all-lowercase forms mapped — anything else landed in the overlay.
+    const zip = zipFrom({
+      "Pal/Binaries/Win64/mods/MixedCase/Enabled.txt": "",
+      "pal/Binaries/win64/Mods/MixedCase/Scripts/main.lua": "",
+    });
+    const plan = planPalworldPackage({ zip, fullName: "Author-MixedCase", packageName: "MixedCase" });
+    expect(plan.files.map((f) => f.destRel).sort()).toEqual([
+      "mods/MixedCase/Enabled.txt",
+      "mods/MixedCase/Scripts/main.lua",
+    ]);
+  });
+
+  it("drops metadata files wherever they sit in the wrapper tree", () => {
+    // Nested docs used to fall through to layout classification and fail the
+    // whole install with "Unrecognized file layout".
+    const zip = zipFrom({
+      "docs/README.md": "",
+      "src/changelog.md": "",
+      "mod/enabled.txt": "",
+    });
+    const plan = planPalworldPackage({ zip, fullName: "Author-Nested", packageName: "Nested" });
+    expect(plan.files.map((f) => f.destRel)).toEqual(["mods/Nested/enabled.txt"]);
+  });
+
   it("maps game-rooted package paths (BasesPlus layout) into the manager dirs", () => {
     const zip = zipFrom({
       "Pal/Binaries/Win64/Mods/BasesPlus/Enabled.txt": "",

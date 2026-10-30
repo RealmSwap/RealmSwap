@@ -562,7 +562,6 @@ export async function retireReplacedPackMods(args: {
   })();
 
   const newIds = new Set(result.installedPackageIds);
-  const provider = plan.kind === "curseforge" ? "curseforge" : "modrinth";
   let retired = 0;
   for (const packageId of oldIds) {
     if (newIds.has(packageId)) continue;
@@ -570,7 +569,11 @@ export async function retireReplacedPackMods(args: {
     try {
       fs.rmSync(jarPath, { force: true });
     } catch {}
-    await prisma.modInstallation.deleteMany({ where: { serverId, provider, packageId } });
+    // No provider filter: the jar is gone, so every row claiming that id must
+    // go — replacing a CurseForge pack with an .mrpack import (or vice versa)
+    // would otherwise retire the file but leave the other provider's row as a
+    // phantom until the next reconcile.
+    await prisma.modInstallation.deleteMany({ where: { serverId, packageId } });
     retired++;
   }
   if (retired > 0) {

@@ -127,14 +127,28 @@ describe("searchUmodPlugins", () => {
     expect(plugins.map((p) => p.name)).toEqual(["Kits", "ImageLibrary"]);
   });
 
-  it("maps offset to uMod's 10-per-page pagination", async () => {
+  it("fetches both raw pages backing each 20-slot browse offset", async () => {
     const seen: string[] = [];
     const fetchImpl = async (url: string) => {
       seen.push(new URL(url).searchParams.get("page") ?? "?");
       return jsonResponse({ total: 0, data: [] });
     };
-    await searchUmodPlugins({ query: "x", offset: 10 }, { fetchImpl });
-    expect(seen).toEqual(["2"]);
+    // Offsets 0 and 10 both sit in the first browse slot → raw page 1 only
+    // (a short page can't continue). Offset 20 opens the second slot → page 3.
+    await searchUmodPlugins({ query: "x0", offset: 0 }, { fetchImpl });
+    await searchUmodPlugins({ query: "x10", offset: 10 }, { fetchImpl });
+    await searchUmodPlugins({ query: "x20", offset: 20 }, { fetchImpl });
+    expect(seen).toEqual(["1", "1", "3"]);
+
+    // A full raw page does continue — the second backing page is fetched.
+    seen.length = 0;
+    const full = async (url: string) => {
+      seen.push(new URL(url).searchParams.get("page") ?? "?");
+      return jsonResponse({ total: 100, data: Array.from({ length: 10 }, () => row()) });
+    };
+    const { plugins } = await searchUmodPlugins({ query: "full", offset: 0 }, { fetchImpl: full });
+    expect(seen).toEqual(["1", "2"]);
+    expect(plugins.length).toBe(20);
   });
 
   it("caches searches per (query, page)", async () => {

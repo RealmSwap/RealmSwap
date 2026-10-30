@@ -1550,7 +1550,6 @@ export default function ModsView({ user }: ModsViewProps) {
                           <option value="relevance">Relevance</option>
                           <option value="downloads">Most Downloads</option>
                           <option value="rating">Highest Rated</option>
-                          <option value="updated">Recently Updated</option>
                         </select>
                       </div>
 
