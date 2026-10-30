@@ -360,10 +360,10 @@ export async function applyModpackPlan(args: {
       p({ stage: "mods", current: index + 1, total: fileTotal });
     }
 
-    if (plan.cfPlan.skippedOptional > 0) {
-      clientOnlyCount = plan.cfPlan.skippedOptional;
-      warnings.push(`${plan.cfPlan.skippedOptional} optional file(s) skipped — CurseForge marks them non-required (usually client-side).`);
-    }
+    // Optional (`required: false`) CF files were downloaded like the rest;
+    // the static exclusion pass below decides by each jar's own manifest
+    // which of them are truly client-only, so both-sides mods the pack
+    // flagged optional (Friends For Life class) reach the server.
   } else if (plan.mrpackIndex) {
     const { install, clientOnly, optional } = selectServerFiles(plan.mrpackIndex.files);
     clientOnlyCount = clientOnly.length;

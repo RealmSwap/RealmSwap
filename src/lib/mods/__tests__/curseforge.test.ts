@@ -304,7 +304,7 @@ describe("resolveCfPackFiles", () => {
     files: [],
   };
 
-  it("resolves required files, dedupes, and skips optionals", async () => {
+  it("resolves required and optional files, dedupes preferring required", async () => {
     const manifest = {
       ...baseManifest,
       files: [
@@ -313,7 +313,7 @@ describe("resolveCfPackFiles", () => {
         { projectID: 3, fileID: 300, required: false },
       ],
     } as any;
-    const { files, modNames, skippedOptional } = await resolveCfPackFiles(manifest, {
+    const { files, modNames } = await resolveCfPackFiles(manifest, {
       fetchImpl: (async (url: string | URL, init?: any) => {
         const u = url.toString();
         const json = (data: any) => ({ ok: true, status: 200, json: async () => data }) as any;
@@ -326,15 +326,18 @@ describe("resolveCfPackFiles", () => {
           const byId: Record<number, CurseForgeFile> = {
             100: cfFile({ id: 100, modId: 1, displayName: "A 1.0" }),
             200: cfFile({ id: 200, modId: 2, displayName: "B 1.0" }),
+            300: cfFile({ id: 300, modId: 3, displayName: "Optional 1.0" }),
           };
           return json({ data: body.fileIds.map((id) => byId[id]).filter(Boolean) });
         }
         return { ok: false, status: 404, json: async () => ({}) } as any;
       }) as any,
     });
-    expect(files.map((f) => f.id)).toEqual([100, 200]);
+    // Optional files resolve too — the static exclusion pass judges them by
+    // their own manifest, so a pack-flagged-optional mod that declares both
+    // sides (Friends For Life class) still reaches the server.
+    expect(files.map((f) => f.id).sort((a, b) => a - b)).toEqual([100, 200, 300]);
     expect(modNames.get(1)).toBe("Mod 1");
-    expect(skippedOptional).toBe(1);
     expect(manifest.files).toHaveLength(3); // input untouched
   });
 

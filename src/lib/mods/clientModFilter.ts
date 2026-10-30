@@ -40,12 +40,20 @@ import AdmZip from "adm-zip";
 
 export interface JarClientSignals {
   selfModId: string | null;
-  /** Every [[mods]] modId across the jar's tomls — multi-mod jars list several. */
+  /** Every [[mods]] modId across the jar's tomls + the fabric/quilt manifest
+   *  id — multi-mod jars list several. */
   allModIds: string[];
   /** Declares a neoforgespi.earlywindow (or legacy fml earlywindow) service. */
   hasEarlyWindowService: boolean;
   /** Carries any Fabric/NeoForge/Quilt mod manifest — without one FML refuses the jar. */
   hasModManifest: boolean;
+  /** Side declaration from the jar's OWN manifest (fabric/quilt `environment`,
+   *  forge/neo `clientSideOnly=true`): the authoritative answer to "does this
+   *  jar run on a dedicated server". "unknown" only for manifest-less jars.
+   *  A jar declaring both sides must never be swept as client-only — mods
+   *  like Friends For Life ship client-side pack flags but register server
+   *  channels, and dropping them kicks every joining client at handshake. */
+  sides: "both" | "client" | "unknown";
   /** The zip itself couldn't be parsed (duplicate entries, truncation…). */
   unreadableZip: boolean;
   /** Which loader manifests the jar carries: neoforge.mods.toml → "neoforge",
@@ -84,6 +92,13 @@ const MODS_TOML_RE = /neoforge\.mods\.toml$|(^|\/)mods\.toml$/;
 const MOD_MANIFEST_RE =
   /neoforge\.mods\.toml$|(^|\/)mods\.toml$|(^|\/)fabric\.mod\.json$|(^|\/)quilt\.mod\.json$|(^|\/)mcmod\.info$/;
 
+/** Loader/vanilla ids that appear in dependency blocks but are never jars in
+ *  mods/ — a misparsed modId must never poison the closure through them. */
+const VANILLA_DEP_IDS = new Set([
+  "minecraft", "java", "fabricloader", "quilt_loader", "forgelang", "javafml",
+  "forge", "neoforge", "legacyforge", "minecraftserver",
+]);
+
 /** Read client-risk signals from one jar on disk. Tolerates broken jars. */
 export function scanJarClientSignals(jarPath: string): JarClientSignals {
   const signals: JarClientSignals = {
@@ -91,6 +106,7 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
     allModIds: [],
     hasEarlyWindowService: false,
     hasModManifest: false,
+    sides: "unknown",
     unreadableZip: false,
     loaders: new Set(),
     fmlLibrary: false,
@@ -111,6 +127,13 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
     signals.unreadableZip = true;
     return signals;
   }
+  // Side declarations seen so far: every manifest votes, and the jar counts
+  // as client-only only when EVERY manifest declares it client-only.
+  let sideVotes: Array<"both" | "client"> = [];
+  const addSide = (side: "both" | "client") => {
+    sideVotes.push(side);
+    signals.sides = sideVotes.every((s) => s === "client") ? "client" : "both";
+  };
   for (const entry of zip.getEntries()) {
     const name = entry.entryName;
     if (name.startsWith("META-INF/services/") && name.toLowerCase().includes("earlywindow")) {
@@ -122,6 +145,20 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
     }
     if (name === "META-INF/jarjar/metadata.json") {
       signals.jarJarWrapper = true;
+    }
+    if (/(^|\/)fabric\.mod\.json$/i.test(name) || /(^|\/)quilt\.mod\.json$/i.test(name)) {
+      let fm: any;
+      try {
+        fm = JSON.parse(zip.readAsText(entry));
+      } catch {
+        fm = null;
+      }
+      if (fm && typeof fm.id === "string") {
+        const id = fm.id.toLowerCase();
+        if (!signals.allModIds.includes(id)) signals.allModIds.push(id);
+      }
+      // The loader's own default for an absent environment is both sides.
+      addSide(fm?.environment === "client" ? "client" : "both");
     }
     if (MOD_MANIFEST_RE.test(name)) {
       signals.hasModManifest = true;
@@ -138,12 +175,13 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
       } catch {
         continue;
       }
-      if (signals.selfModId === null) {
-        const m = /(?:^|\n)\s*modId\s*=\s*["']([\w-]+)["']/.exec(data);
-        if (m) signals.selfModId = m[1].toLowerCase();
-      }
       // Every [[mods]] block — multi-mod jars (a toml with two [[mods]])
       // provide more than one modId, and dep-resolution needs them all.
+      // modIds come ONLY from [[mods]] blocks: taking the first `modId=`
+      // anywhere reads [[dependencies.minecraft]] when a toml declares its
+      // dependencies first, and a jar whose modId parses as "minecraft" (or
+      // "collective") poisons the closure — every jar requiring it gets
+      // swept (live: the Homestead 2.0.1 install lost ~25 server-safe mods).
       const modsSplit = data.split(/(?=\[\[mods\]\])/);
       for (const modsBlock of modsSplit) {
         if (!modsBlock.startsWith("[[mods]]")) continue;
@@ -153,6 +191,9 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
           if (!signals.allModIds.includes(id)) signals.allModIds.push(id);
         }
       }
+      // A hybrid jar's toml counts as a side vote too; clientSideOnly=true
+      // is Forge's own client-only declaration.
+      addSide(/clientSideOnly\s*=\s*true/.test(data) ? "client" : "both");
       // [[dependencies.<target>]] blocks: the body's modId is the dependency.
       const split = data.split(/(?=\[\[dependencies\.[\w-]+\]\])/);
       for (const block of split) {
@@ -168,6 +209,7 @@ export function scanJarClientSignals(jarPath: string): JarClientSignals {
       }
     }
   }
+  if (signals.allModIds.length > 0) signals.selfModId = signals.allModIds[0];
   return signals;
 }
 
@@ -228,6 +270,14 @@ export function planClientExclusions(
       );
       continue;
     }
+    if (c.signals.sides === "client") {
+      excluded.add(c);
+      reasons.set(
+        c.file,
+        "declares itself client-only in its own manifest (fabric environment / clientSideOnly) — it would never load on the dedicated server"
+      );
+      continue;
+    }
     if (
       !c.signals.hasModManifest &&
       !c.signals.unreadableZip &&
@@ -247,7 +297,9 @@ export function planClientExclusions(
     changed = false;
     for (const c of candidates) {
       if (excluded.has(c)) continue;
-      const hit = Array.from(c.signals.requiredDeps).find((dep) => excludedModIds.has(dep));
+      const hit = Array.from(c.signals.requiredDeps).find(
+        (dep) => excludedModIds.has(dep) && !VANILLA_DEP_IDS.has(dep)
+      );
       if (hit) {
         excluded.add(c);
         reasons.set(c.file, `requires ${hit} (excluded as client-only)`);

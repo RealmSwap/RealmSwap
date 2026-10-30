@@ -86,7 +86,7 @@ vi.mock("@/lib/mods/mcLoaders", async (importOriginal) => ({
 // Keep manifest parsing real; only the per-file API resolution is a boundary.
 vi.mock("@/lib/mods/curseforge", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../curseforge")>()),
-  resolveCfPackFiles: async () => ({ files: [], modNames: new Map(), skippedOptional: 0 }),
+  resolveCfPackFiles: async () => ({ files: [], modNames: new Map() }),
 }));
 
 function cfPackZip(mcVersion: string, loaderId: string): Buffer {
@@ -179,7 +179,7 @@ function manualPlan(overrides: Partial<ModpackPlan>): ModpackPlan {
     packLoader: { type: "neoforge", version: "21.1.95" },
     mcSwitch: null,
     cfManifest: null,
-    cfPlan: { files: [], modNames: new Map(), skippedOptional: 0 },
+    cfPlan: { files: [], modNames: new Map() },
     mrpackIndex: null,
     overridesPrefixes: ["overrides/"],
     ...overrides,
@@ -287,7 +287,6 @@ describe("applyModpackPlan — client-mod exclusion", () => {
             { id: 2, modId: 501, displayName: "Sodium Extra", fileName: "sodium-extra.jar", downloadUrl: "https://x/sodium-extra.jar", hashes: [{ value: sha1Of(extraBytes), algo: 1 }], gameVersions: [], dependencies: [], isAvailable: true, fileLength: extraBytes.length },
           ] as any,
           modNames: new Map(),
-          skippedOptional: 0,
         },
         packLoader: null,
       }),
@@ -325,7 +324,6 @@ describe("applyModpackPlan — client-mod exclusion", () => {
             { id: 3, modId: 502, displayName: "Shaded Lib Mod", fileName: "dup.jar", downloadUrl: "https://x/dup.jar", hashes: [{ value: sha1Of(dupBytes), algo: 1 }], gameVersions: [], dependencies: [], isAvailable: true, fileLength: dupBytes.length },
           ] as any,
           modNames: new Map(),
-          skippedOptional: 0,
         },
       }),
       serverId: "s1",
