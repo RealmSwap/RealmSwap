@@ -147,6 +147,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
   };
 
   const invite = data?.invite ? { ...data.invite, inviteCode } : undefined;
+  const addressPath: "tunnel" | "public" | "lan" | "loopback" | undefined = data?.invite?.addressPath;
   const inviteText = invite
     ? [
         `Join my ${invite.gameDisplayName} server — ${invite.serverName}`,
@@ -217,6 +218,30 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
                     </button>
                   </div>
                 </div>
+                {addressPath === "tunnel" && (
+                  <p className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">
+                    <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0" />
+                    Friends connect through the playit relay — your home IP stays private.
+                  </p>
+                )}
+                {addressPath === "public" && (
+                  <p className="flex items-start gap-1.5 text-[11px] font-bold text-amber-300">
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>This is your home&apos;s public IP — anyone you share the server with can see it, and it points at your router. Turn on the playit tunnel below to route friends through a relay instead and keep your home IP private.</span>
+                  </p>
+                )}
+                {addressPath === "lan" && (
+                  <p className="flex items-start gap-1.5 text-[11px] font-bold text-amber-300">
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>Works for friends on your network. For friends elsewhere, turn on the playit tunnel below — no router setup, and your home IP stays private.</span>
+                  </p>
+                )}
+                {addressPath === "loopback" && (
+                  <p className="flex items-start gap-1.5 text-[11px] font-bold text-amber-300">
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>This is a local-only address — friends can&apos;t reach it from outside your machine. Turn on the playit tunnel below to get a shareable address.</span>
+                  </p>
+                )}
                 {invite.password !== "" && (
                   <div>
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Password</span>
@@ -269,7 +294,14 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
           <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5 space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-sm font-bold text-slate-200">Playit tunnel</h4>
+                <h4 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                  Playit tunnel
+                  {!tunnelOn && addressPath && addressPath !== "tunnel" && (
+                    <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                      Recommended
+                    </span>
+                  )}
+                </h4>
                 <p className="text-xs text-slate-500">
                   {tunnelOn && data?.tunnel?.alive && data?.tunnel?.url
                     ? `Tunnel live — friends connect through ${data.tunnel.url}.`
@@ -277,7 +309,7 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
                       ? "Waiting for you to claim the agent below — RealmSwap then creates the tunnel and writes your address automatically."
                       : tunnelOn
                         ? "Agent starting — the public address appears here as soon as playit reports one."
-                        : "Off — lets friends join through the internet with zero router setup."}
+                        : "Off — turn it on and friends connect through a playit relay: zero router setup, works behind strict routers, and your home IP stays private."}
                 </p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">

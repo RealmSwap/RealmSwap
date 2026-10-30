@@ -4,7 +4,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { parseSpec } from "@/lib/definitions/serialize";
 import { runConnectivityChecks } from "@/lib/connectivityCheck";
-import { advertisedGameAddress } from "@/lib/advertisedAddress";
+import { advertisedGameAddress, classifyAddressPath } from "@/lib/advertisedAddress";
 import { isTunnelAlive } from "@/lib/tunnels";
 
 // GET: everything the "Connection" dialog needs in one round trip —
@@ -45,6 +45,10 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
         // CGNAT), otherwise the server's recorded address (public IP when
         // direct access works, LAN otherwise).
         address: advertisedGameAddress(server, tunnelAlive),
+        // Which route that address takes — the dialog uses it to say honestly
+        // whether friends connect via the relay (home IP private) or via the
+        // home's public IP (exposed), and to recommend the tunnel otherwise.
+        addressPath: classifyAddressPath(server, tunnelAlive),
         password: server.password ?? "",
         inviteCode: server.inviteCode ?? null,
       },
