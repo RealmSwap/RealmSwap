@@ -33,7 +33,15 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT (@supabase/ssr): do not insert code between creating the client
   // and calling getUser(); it triggers the token refresh.
-  await supabase.auth.getUser();
+  //
+  // Race a timeout: with Supabase unreachable (offline, captive portal), an
+  // unbounded getUser() stalls EVERY request. The refresh is best-effort —
+  // auth.ts verifies the access token locally when possible, so an offline
+  // dashboard keeps working with an unexpired session.
+  await Promise.race([
+    supabase.auth.getUser(),
+    new Promise((resolve) => setTimeout(resolve, 4000)),
+  ]);
 
   return response;
 }

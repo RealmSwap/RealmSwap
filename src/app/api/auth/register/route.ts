@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { ensureLocalUser } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,6 +12,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Name, email, and password are required" },
         { status: 400 },
+      );
+    }
+
+    // Account-creation spam (each signup sends a real email) is limited
+    // per-IP before it reaches Supabase.
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+    if (!checkRateLimit(`auth_register_${ip}`, { limit: 5, windowMs: 60 * 60 * 1000 })) {
+      return NextResponse.json(
+        { error: "Too many accounts created from this machine. Try again later." },
+        { status: 429 },
       );
     }
 
