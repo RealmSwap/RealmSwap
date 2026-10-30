@@ -16,8 +16,11 @@ import {
 } from "@/lib/mods/curseforge";
 import {
   communityForGame, fetchCommunityIndex, findVersionEntry, newestVersion,
-  collectDependencies, extractThunderstorePackage, extractCorePack, isBepInExCore,
+  collectDependencies, extractThunderstorePackage, extractCorePack,
+  isBepInExCoreInstall, VALHEIM_CORE_PACKAGE_ID, VRISING_CORE_PACKAGE_ID,
 } from "@/lib/mods/thunderstore";
+// Re-exported for callers that key rows off the V Rising core pack id.
+export { VRISING_CORE_PACKAGE_ID } from "@/lib/mods/thunderstore";
 import { addZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { addArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 import {
@@ -313,7 +316,7 @@ async function installBepInExThunderstore(args: {
     );
   }
 
-  if (isBepInExCore(packageId)) {
+  if (isBepInExCoreInstall(packageId)) {
     // Framework, not content: the plugins-dir layout would leave BepInEx
     // unusable, so the pack goes over the server root with its wrapper
     // folder stripped (BepInEx/, doorstop_config.ini, winhttp.dll, ...).
@@ -447,14 +450,14 @@ export async function installValheimThunderstore(args: {
           serverId_provider_packageId: {
             serverId,
             provider: "thunderstore",
-            packageId: "denikson-BepInExPack_Valheim"
+            packageId: VALHEIM_CORE_PACKAGE_ID
           }
         },
         update: { version: "5.4.2202" },
         create: {
           serverId,
           provider: "thunderstore",
-          packageId: "denikson-BepInExPack_Valheim",
+          packageId: VALHEIM_CORE_PACKAGE_ID,
           version: "5.4.2202",
           name: "BepInExPack Valheim"
         }
@@ -469,8 +472,8 @@ export async function installValheimThunderstore(args: {
 }
 
 /** The V Rising community's BepInEx core pack (BepInEx 6 for IL2CPP — the
- * official Mono BepInEx 5 zip Valheim uses would never load here). */
-export const VRISING_CORE_PACKAGE_ID = "BepInEx-BepInExPack_V_Rising";
+ * official Mono BepInEx 5 zip Valheim uses would never load here). Defined
+ * in thunderstore.ts next to isBepInExCoreInstall so the ids can't drift. */
 
 async function ensureVRisingCore(serverId: string, vrisingDir: string, force: boolean): Promise<void> {
   if (!force && fs.existsSync(path.join(vrisingDir, "doorstop_config.ini"))) return;
@@ -875,9 +878,12 @@ async function installResolvedFicsit(args: {
   resolved: NonNullable<Awaited<ReturnType<typeof getFicsitModVersion>>>;
   warnings: string[];
   skipDependencies?: boolean;
+  /** References already resolved on this install walk — guards dependency cycles. */
+  visited?: Set<string>;
 }): Promise<{ dependencyCount: number }> {
   const { serverId, satisfactoryDir, resolved, warnings, skipDependencies } = args;
   const { mod, version } = resolved;
+  const visited = args.visited ?? new Set<string>([mod.modReference]);
 
   const downloadUrl = pickFicsitServerDownload(version);
   if (!downloadUrl) {
@@ -898,9 +904,13 @@ async function installResolvedFicsit(args: {
         warnings.push(`A required dependency (${dep.mod_id}) is no longer available on ficsit.app — the server may fail to boot without it.`);
         continue;
       }
+      if (visited.has(depResolved.mod.modReference)) continue; // cycle / already planned
+      visited.add(depResolved.mod.modReference);
       const depDir = path.join(satisfactoryDir, "FactoryGame", "Mods", depResolved.mod.modReference);
       if (fs.existsSync(depDir)) continue; // installed (or user-managed) — leave it
-      await installResolvedFicsit({ serverId, satisfactoryDir, resolved: depResolved, warnings, skipDependencies: true });
+      // Recurse WITHOUT skipDependencies: a dep's own deps would otherwise be
+      // silently dropped (only SML was provisioned transitively before).
+      await installResolvedFicsit({ serverId, satisfactoryDir, resolved: depResolved, warnings, visited });
       dependencyCount += 1;
     }
   }

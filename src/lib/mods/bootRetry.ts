@@ -527,14 +527,18 @@ export async function testServerBootWithQuarantine(args: {
   const removed: string[] = [];
   const bumpedDeps = new Set<string>();
 
-  // Always say which java the verification will run on. The packaged app's
-  // console is invisible, and the v0.5.8 incident (a PATH-only lookup that
-  // silently skipped every boot test) was only diagnosed from screenshots —
-  // this line makes "ran" vs "skipped" a fact in the response itself.
-  const javaExe = args.deps?.javaExe ?? resolveSandboxJava(serverRoot);
-  warnings.push(
-    `Boot test: ${javaExe === "java" ? "running on the system PATH java" : `running on the bundled runtime (${javaExe})`}`
-  );
+  // Minecraft only: say which java the verification will run on. The
+  // packaged app's console is invisible, and the v0.5.8 incident (a
+  // PATH-only lookup that silently skipped every boot test) was only
+  // diagnosed from screenshots — this line makes "ran" vs "skipped" a fact
+  // in the response itself. Other games boot their own exe/bat (or have no
+  // sandbox boot at all), so a java label there would be fiction.
+  if (game === "MINECRAFT") {
+    const javaExe = args.deps?.javaExe ?? resolveSandboxJava(serverRoot);
+    warnings.push(
+      `Boot test: ${javaExe === "java" ? "running on the system PATH java" : `running on the bundled runtime (${javaExe})`}`
+    );
+  }
 
   for (let round = 0; ; round++) {
     try {

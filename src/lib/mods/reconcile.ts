@@ -11,6 +11,8 @@ import {
   tmlInstallDir, tmlWorkshopRoot, tmlEnabledJsonPath, readTmlMarker,
   readTmlEnabledMods, addTmlEnabledMods, removeTmlEnabledMods, deriveTmodNames,
 } from "@/lib/mods/tml";
+import { palworldManifestDir, SHIMLOADER_PACKAGE_ID, shimloaderMarkerPath } from "@/lib/mods/palworld";
+import { VALHEIM_CORE_PACKAGE_ID, VRISING_CORE_PACKAGE_ID } from "@/lib/mods/thunderstore";
 
 /**
  * Mod rows ↔ disk reconciliation.
@@ -33,9 +35,6 @@ export interface ReconcileResult {
   added: number;
   repaired: number;
 }
-
-const BEPINEX_CORE_PACKAGE_ID = "denikson-BepInExPack_Valheim";
-const VRISING_CORE_PACKAGE_ID = "BepInEx-BepInExPack_V_Rising";
 
 function listDir(dir: string): string[] {
   try {
@@ -181,7 +180,7 @@ async function reconcileBepInexGame(
 }
 
 async function reconcileValheim(serverId: string, valheimDir: string): Promise<ReconcileResult> {
-  return reconcileBepInexGame(serverId, valheimDir, BEPINEX_CORE_PACKAGE_ID, "BepInExPack Valheim");
+  return reconcileBepInexGame(serverId, valheimDir, VALHEIM_CORE_PACKAGE_ID, "BepInExPack Valheim");
 }
 
 async function reconcileVRising(serverId: string, vrisingDir: string): Promise<ReconcileResult> {
@@ -419,6 +418,66 @@ async function reconcileTml(serverId: string, serverRoot: string): Promise<Recon
 }
 
 /**
+ * Palworld: every shimloader-package install writes an uninstall manifest at
+ * .realmswap/<fullName>.json — the manifest set IS the installed-package set
+ * on disk. The shimloader core (no manifest; extracted directly) is keyed by
+ * its dwmapi.dll marker, like the BepInEx cores.
+ */
+async function reconcilePalworld(serverId: string, palworldDir: string): Promise<ReconcileResult> {
+  const diskIds = new Set(
+    listDir(palworldManifestDir(palworldDir))
+      .filter((f) => f.endsWith(".json"))
+      .map((f) => f.slice(0, -".json".length))
+  );
+  const corePresent = fs.existsSync(shimloaderMarkerPath(palworldDir));
+  if (corePresent) diskIds.add(SHIMLOADER_PACKAGE_ID);
+
+  const rows = await prisma.modInstallation.findMany({
+    where: { serverId, provider: "thunderstore" },
+  });
+  return applyRowDelta(serverId, "thunderstore", rows, diskIds, (packageId) =>
+    packageId === SHIMLOADER_PACKAGE_ID
+      ? {
+          serverId,
+          provider: "thunderstore",
+          packageId,
+          version: "unknown",
+          name: "unreal_shimloader (UE4SS)",
+        }
+      : {
+          serverId,
+          provider: "thunderstore",
+          packageId,
+          version: "unknown",
+          name: packageId,
+        }
+  );
+}
+
+/**
+ * Satisfactory: ficsit rows are keyed by the FactoryGame/Mods/<reference>
+ * directory (SML included — it installs like any ficsit mod). A missing Mods
+ * dir means nothing is installed, so all rows go.
+ */
+async function reconcileSatisfactory(serverId: string, satisfactoryDir: string): Promise<ReconcileResult> {
+  const modsRoot = path.join(satisfactoryDir, "FactoryGame", "Mods");
+  const diskIds = new Set(
+    listDir(modsRoot).filter((entry) => isDirectory(path.join(modsRoot, entry)))
+  );
+
+  const rows = await prisma.modInstallation.findMany({
+    where: { serverId, provider: "ficsit" },
+  });
+  return applyRowDelta(serverId, "ficsit", rows, diskIds, (packageId) => ({
+    serverId,
+    provider: "ficsit",
+    packageId,
+    version: "unknown",
+    name: packageId,
+  }));
+}
+
+/**
  * Rebuild a server's ModInstallation rows from what is actually on disk.
  * No-op for games without disk-verifiable mod installs.
  */
@@ -442,6 +501,10 @@ export async function reconcileInstalledMods(serverId: string): Promise<Reconcil
       return reconcileArk(serverId, serverRoot);
     case "TERRARIA":
       return reconcileTml(serverId, serverRoot);
+    case "PALWORLD":
+      return reconcilePalworld(serverId, path.join(serverRoot, "palworld-server"));
+    case "SATISFACTORY":
+      return reconcileSatisfactory(serverId, path.join(serverRoot, "satisfactory-server"));
     default:
       return { removed: 0, added: 0, repaired: 0 };
   }

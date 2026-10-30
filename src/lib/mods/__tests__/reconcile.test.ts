@@ -420,4 +420,82 @@ describe("reconcileInstalledMods", () => {
       expect(bag.creates).toHaveLength(0);
     });
   });
+
+  describe("Palworld", () => {
+    const palworldDir = () => path.join(serverRoot(), "palworld-server");
+
+    it("keys rows on uninstall manifests, core row on the dwmapi.dll marker", async () => {
+      fs.mkdirSync(path.join(palworldDir(), ".realmswap"), { recursive: true });
+      fs.writeFileSync(path.join(palworldDir(), ".realmswap", "localcc-HelloWorld.json"), "{}");
+      fs.mkdirSync(path.join(palworldDir(), "overlay", "Thunderstore-unreal_shimloader"), { recursive: true });
+      fs.writeFileSync(path.join(palworldDir(), "overlay", "Thunderstore-unreal_shimloader", "dwmapi.dll"), "shim");
+      bag.server = { id: "s1", game: "PALWORLD" };
+      bag.rows = [
+        { id: "r1", packageId: "localcc-HelloWorld", provider: "thunderstore" },
+        { id: "r2", packageId: "gone-Pkg", provider: "thunderstore" },
+        { id: "r3", packageId: "Thunderstore-unreal_shimloader", provider: "thunderstore" },
+      ];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result).toEqual({ removed: 1, added: 0, repaired: 0 });
+      expect(bag.deletes).toEqual(["r2"]);
+    });
+
+    it("deletes the core row when the shimloader marker is gone", async () => {
+      bag.server = { id: "s1", game: "PALWORLD" };
+      bag.rows = [{ id: "r1", packageId: "Thunderstore-unreal_shimloader", provider: "thunderstore" }];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result.removed).toBe(1);
+      expect(bag.deletes).toEqual(["r1"]);
+    });
+
+    it("adds minimal rows for manifests without rows", async () => {
+      fs.mkdirSync(path.join(palworldDir(), ".realmswap"), { recursive: true });
+      fs.writeFileSync(path.join(palworldDir(), ".realmswap", "localcc-HelloWorld.json"), "{}");
+      bag.server = { id: "s1", game: "PALWORLD" };
+      bag.rows = [];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result.added).toBe(1);
+      expect(bag.creates).toEqual([
+        { serverId: "s1", provider: "thunderstore", packageId: "localcc-HelloWorld", version: "unknown", name: "localcc-HelloWorld" },
+      ]);
+    });
+  });
+
+  describe("Satisfactory", () => {
+    it("keys rows on FactoryGame/Mods directories", async () => {
+      const modsRoot = path.join(serverRoot(), "satisfactory-server", "FactoryGame", "Mods");
+      fs.mkdirSync(path.join(modsRoot, "ModularUI"), { recursive: true });
+      fs.mkdirSync(path.join(modsRoot, "TxtHelper"), { recursive: true });
+      fs.writeFileSync(path.join(modsRoot, "stray.txt"), "not a mod dir");
+      bag.server = { id: "s1", game: "SATISFACTORY" };
+      bag.rows = [
+        { id: "r1", packageId: "ModularUI", provider: "ficsit" },
+        { id: "r2", packageId: "GoneMod", provider: "ficsit" },
+      ];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result).toEqual({ removed: 1, added: 1, repaired: 0 });
+      expect(bag.deletes).toEqual(["r2"]);
+      expect(bag.creates).toEqual([
+        { serverId: "s1", provider: "ficsit", packageId: "TxtHelper", version: "unknown", name: "TxtHelper" },
+      ]);
+    });
+
+    it("treats a missing Mods dir as nothing installed", async () => {
+      bag.server = { id: "s1", game: "SATISFACTORY" };
+      bag.rows = [{ id: "r1", packageId: "ModularUI", provider: "ficsit" }];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result.removed).toBe(1);
+      expect(bag.deletes).toEqual(["r1"]);
+    });
+  });
 });

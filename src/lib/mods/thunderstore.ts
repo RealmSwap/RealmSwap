@@ -87,6 +87,23 @@ export function isBepInExCore(packageId: string): boolean {
   return packageId.includes("BepInExPack");
 }
 
+/** Row ids the auto-provisioned BepInEx cores are recorded under. Valheim
+ *  installs the official BepInEx zip but keys the row to the community pack
+ *  id that dependency strings reference; V Rising uses the community pack. */
+export const VALHEIM_CORE_PACKAGE_ID = "denikson-BepInExPack_Valheim";
+export const VRISING_CORE_PACKAGE_ID = "BepInEx-BepInExPack_V_Rising";
+
+/**
+ * True only for the concrete core packs that install OVER THE SERVER ROOT
+ * (wrapper folder stripped). Unlike isBepInExCore this must not match content
+ * packages that merely have "BepInExPack" in their name — extracting one of
+ * those to the root would dump a plugin tree next to the exe. Owner-anchored
+ * ("BepInEx-...") so future official core packs still qualify.
+ */
+export function isBepInExCoreInstall(packageId: string): boolean {
+  return packageId === VALHEIM_CORE_PACKAGE_ID || packageId.startsWith("BepInEx-");
+}
+
 export interface ResolvedDependency {
   packageId: string;
   name: string;
@@ -157,7 +174,10 @@ export function extractThunderstorePackage(zip: AdmZip, destDir: string): number
   let count = 0;
   for (const entry of zip.getEntries()) {
     if (entry.isDirectory) continue;
-    const target = safeJoin(destDir, safePackPath(entry.entryName));
+    // Some zip authors use backslash separators (a legal-but-rare PKWARE
+    // form adm-zip preserves verbatim) — normalize before the safety check,
+    // which rejects raw backslashes as traversal-looking.
+    const target = safeJoin(destDir, safePackPath(entry.entryName.split("\\").join("/")));
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, entry.getData());
     count++;

@@ -109,6 +109,8 @@ vi.mock("@/lib/snapshots", () => ({
 }));
 vi.mock("@/lib/runners/sandbox", () => ({
   resolveSandboxJava: () => "java",
+  hasRealBootTest: (game: string) =>
+    ["MINECRAFT", "VALHEIM", "ZOMBOID", "TERRARIA"].includes(game.toUpperCase()),
   testServerBoot: async () => {
     if (bag.bootError) throw bag.bootError;
     return true;
