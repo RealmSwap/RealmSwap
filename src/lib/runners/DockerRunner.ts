@@ -135,7 +135,7 @@ export class DockerRunner implements ServerRunner {
     appendLog(serverId, `[Docker] Container ${containerName(serverId)} started. Pulling/validating game files via SteamCMD…`);
     this.attachFollower(serverId, spec);
     this.attachExitWatcher(serverId, record.game, record.ramAllocation);
-    startMonitoring(record);
+    startMonitoring(record, this);
   }
 
   // Follow container stdout: persist to server.log, drive the download-progress
@@ -369,7 +369,7 @@ export class DockerRunner implements ServerRunner {
           appendLog(server.id, "[Docker] Reattached to running container after app restart.");
           this.attachFollower(server.id, spec);
           this.attachExitWatcher(server.id, record.game, record.ramAllocation);
-          startMonitoring(record);
+          startMonitoring(record, this);
         } else {
           await setStatus(server.id, "STOPPED", { pid: null, ipAddress: "127.0.0.1", cpuUsage: 0, memoryUsage: 0 });
           appendLog(server.id, "[Docker] Container not found after app restart — marked stopped.");
