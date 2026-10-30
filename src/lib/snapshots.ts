@@ -39,7 +39,18 @@ export async function createSnapshot(serverId: string, userId: string, name: str
     fs.rmSync(stagingDir, { recursive: true, force: true });
 
     try {
-      fs.cpSync(sourceDir, stagingDir, { recursive: true, force: true });
+      fs.cpSync(sourceDir, stagingDir, {
+        recursive: true,
+        force: true,
+        // Logs and crash reports are diagnostics, not rollback state — a
+        // 350-mod server's logs alone can outsize its configs, and they are
+        // rewritten on the very next boot. Top-level dirs only, so a mod's
+        // own config/logs subdirectory is never skipped.
+        filter: (src) => {
+          const rel = path.relative(sourceDir, src);
+          return rel === "" || !["logs", "crash-reports"].includes(rel.split(path.sep)[0]);
+        },
+      });
       fs.renameSync(stagingDir, destDir);
 
       const updatedSnapshot = await prisma.serverSnapshot.update({
