@@ -134,7 +134,7 @@ export function SettingsView({ user }: { user: any }) {
               Settings
             </h1>
             <p className="text-slate-400 text-sm">
-              Manage your personal GameVault preferences and integrations.
+              Manage your personal RealmSwap preferences and integrations.
             </p>
           </div>
 
@@ -142,7 +142,7 @@ export function SettingsView({ user }: { user: any }) {
             <div>
               <h2 className="text-xl font-bold text-white mb-1">Discord Integration</h2>
               <p className="text-xs text-slate-400 mb-4">
-                Connect your Discord account to manage your servers via the GameVault Discord Bot.
+                Connect your Discord account to manage your servers via the RealmSwap Discord Bot.
               </p>
               
               <div className="max-w-md">
@@ -247,7 +247,7 @@ export function SettingsView({ user }: { user: any }) {
                 <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
                   <div>
                     <h3 className="text-sm font-bold text-slate-200">Discord Direct Messages</h3>
-                    <p className="text-xs text-slate-500">Receive an instant DM from the GameVault bot.</p>
+                    <p className="text-xs text-slate-500">Receive an instant DM from the RealmSwap bot.</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" checked={notifyDiscord} onChange={(e) => setNotifyDiscord(e.target.checked)} />

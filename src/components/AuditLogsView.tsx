@@ -3,7 +3,6 @@
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   History,
@@ -21,7 +20,6 @@ import {
   Clock,
   Terminal,
 } from "lucide-react";
-import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 
 interface AuditLogsViewProps {
   initialLogs: any[];
@@ -29,20 +27,9 @@ interface AuditLogsViewProps {
 }
 
 export default function AuditLogsView({ initialLogs, user }: AuditLogsViewProps) {
-  const router = useRouter();
   const [logs, setLogs] = useState<any[]>(initialLogs);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionFilter, setActionFilter] = useState("ALL");
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-      router.refresh();
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
 
   // Filter logs based on search and selected action category
   const filteredLogs = logs.filter((log) => {

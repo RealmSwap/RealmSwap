@@ -23,17 +23,17 @@ import {
   Clock,
   Terminal,
 } from "lucide-react";
-import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import { useModal } from "@/components/ModalProvider";
+import { useActiveServer } from "@/components/dashboard/ActiveServerProvider";
+import { ServerTargetBar } from "@/components/dashboard/ServerTargetBar";
 
 interface TeamViewProps {
-  servers: any[];
   user: any;
 }
 
-export default function TeamView({ servers, user }: TeamViewProps) {
-  const router = useRouter();
-  const [selectedServer, setSelectedServer] = useState<any | null>(servers[0] || null);
+export default function TeamView({ user }: TeamViewProps) {
+  // Shared, persisted selection — follows the user across dashboard pages.
+  const { activeServer: selectedServer } = useActiveServer();
   const [collaborators, setCollaborators] = useState<any[]>([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("CO_HOST");
@@ -50,11 +50,13 @@ export default function TeamView({ servers, user }: TeamViewProps) {
       if (res.ok) {
         const data = await res.json();
         setCollaborators(data);
+        setError(null);
       } else {
-        console.error("Failed to load collaborators");
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Couldn't load the collaborator list for this server.");
       }
     } catch (err) {
-      console.error("Error loading collaborators:", err);
+      setError("Couldn't reach the server to load collaborators.");
     }
   };
 
@@ -65,16 +67,6 @@ export default function TeamView({ servers, user }: TeamViewProps) {
       setSuccess(null);
     }
   }, [selectedServer]);
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-      router.refresh();
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
 
   // Add collaborator
   const handleInvite = async (e: React.FormEvent) => {
@@ -162,37 +154,13 @@ export default function TeamView({ servers, user }: TeamViewProps) {
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
             <Users className="w-6 h-6 text-accentPurple animate-float" />
-            <span>App Access</span>
+            <span>Team</span>
           </h1>
-          <p className="text-sm text-mutedText mt-1">Delegate server controls to your friends so they can start, stop, configure mods, or restore snapshots.</p>
+          <p className="text-sm text-mutedText mt-1">Delegate server controls to your friends so they can start, stop, configure mods, or restore backups.</p>
         </div>
 
         {/* Server Target selector */}
-        <div className="glass-panel p-5 rounded-2xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <span className="text-xs font-bold text-mutedText uppercase tracking-wider block mb-1">Target Managed Server</span>
-            <span className="text-[11px] text-mutedText">Select which of your local servers to configure access permissions for.</span>
-          </div>
-
-          <div className="min-w-[200px]">
-            {servers.length === 0 ? (
-              <span className="text-xs text-red-400 font-bold">No servers deployed yet</span>
-            ) : (
-              <select
-                value={selectedServer?.id || ""}
-                onChange={(e) => {
-                  const s = servers.find(srv => srv.id === e.target.value);
-                  setSelectedServer(s || null);
-                }}
-                className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors cursor-pointer font-bold"
-              >
-                {servers.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.game})</option>
-                ))}
-              </select>
-            )}
-          </div>
-        </div>
+        <ServerTargetBar label="Managed Server" helper="Select which of your servers to configure access permissions for." />
 
         {/* Feedback Messages */}
         {error && (
@@ -333,9 +301,9 @@ export default function TeamView({ servers, user }: TeamViewProps) {
                   <p>👥 **SQLite Registry Requirement:** RealmSwap runs completely locally. In order to invite a friend, they must first connect to your RealmSwap instance (using your public/local IP) and create an account via the Register page.</p>
                   <p>🔐 **Role Privileges:**
                     <br/>• **Co-Host:** Can start, stop, restart, and view live console logs.
-                    <br/>• **Admin:** Can also install mods, take manual snapshots, and restore world back-ups.
+                    <br/>• **Admin:** Can also install mods, take manual backups, and restore world saves.
                   </p>
-                  <p>🚫 **Safety Rules:** Collaborators cannot delete/vault the server or invite other collaborators. Only the server owner retains full deletion rights.</p>
+                  <p>🚫 **Safety Rules:** Collaborators cannot delete or archive the server, or invite other collaborators. Only the server owner retains full deletion rights.</p>
                 </div>
               </div>
 

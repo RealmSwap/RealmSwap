@@ -22,12 +22,12 @@ import {
   FolderOpen,
   Archive,
 } from "lucide-react";
-import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import { useToast } from "@/components/ToastProvider";
+import { useActiveServer } from "@/components/dashboard/ActiveServerProvider";
+import { ServerTargetBar } from "@/components/dashboard/ServerTargetBar";
 import { classifyLogLevel, highlightSegments } from "@/lib/consoleFormat";
 
 interface ConsoleViewProps {
-  servers: any[];
   user: any;
 }
 
@@ -37,15 +37,21 @@ interface LogArchiveMeta {
   createdAt: string;
 }
 
-export default function ConsoleView({ servers, user }: ConsoleViewProps) {
-  const router = useRouter();
+export default function ConsoleView({ user }: ConsoleViewProps) {
   const { addToast } = useToast();
   const searchParams = useSearchParams();
   const serverIdFromUrl = searchParams.get("server");
 
-  const [selectedServer, setSelectedServer] = useState<any | null>(
-    serverIdFromUrl ? (servers.find(s => s.id === serverIdFromUrl) || servers[0]) : (servers[0] || null)
-  );
+  // Shared, persisted selection — follows the user across dashboard pages.
+  const { servers, loading: serversLoading, activeServer: selectedServer, setActiveServerId } = useActiveServer();
+
+  // Honor a ?server= deep link once the shared server list has loaded.
+  useEffect(() => {
+    if (!serverIdFromUrl || serversLoading) return;
+    if (servers.some((s) => s.id === serverIdFromUrl)) {
+      setActiveServerId(serverIdFromUrl);
+    }
+  }, [serverIdFromUrl, serversLoading, servers, setActiveServerId]);
 
   // Console State
   const [consoleLines, setConsoleLines] = useState<string[]>([]);
@@ -282,16 +288,6 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
     );
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-      router.refresh();
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
-
   return (
     <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
       {/* Sidebar Navigation */}
@@ -320,31 +316,10 @@ export default function ConsoleView({ servers, user }: ConsoleViewProps) {
         </div>
 
         {/* Server Selector Bar */}
-        <div className="glass-panel p-5 rounded-2xl border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 flex-shrink-0">
-          <div>
-            <span className="text-xs font-bold text-mutedText uppercase tracking-wider block mb-1">Active Server Target</span>
-            <span className="text-[11px] text-mutedText">Select which local game server console to monitor.</span>
-          </div>
-
-          <div className="min-w-[200px]">
-            {servers.length === 0 ? (
-              <span className="text-xs text-red-400 font-bold">No servers deployed yet</span>
-            ) : (
-              <select
-                value={selectedServer?.id || ""}
-                onChange={(e) => {
-                  const s = servers.find(srv => srv.id === e.target.value);
-                  setSelectedServer(s || null);
-                }}
-                className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors cursor-pointer font-bold"
-              >
-                {servers.map(s => (
-                  <option key={s.id} value={s.id}>{s.name} ({s.game})</option>
-                ))}
-              </select>
-            )}
-          </div>
-        </div>
+        <ServerTargetBar
+          className="flex-shrink-0"
+          helper="Select which server console to monitor."
+        />
 
         {/* Console Viewer */}
         {selectedServer ? (

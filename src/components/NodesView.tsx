@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import { Server, Plus, Copy, Check, Trash2, Loader2 } from "lucide-react";
+import { useModal } from "@/components/ModalProvider";
 
 /**
  * Remote agent nodes — machines running the RealmSwap agent that host game
@@ -43,6 +44,7 @@ function setupCommand(token: string): string {
 }
 
 export default function NodesView({ user }: { user: { id: string; role: string; name?: string } }) {
+  const { showModal } = useModal();
   const [nodes, setNodes] = useState<AgentNodeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
@@ -93,15 +95,23 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
     }
   };
 
-  const revoke = async (id: string, nodeName: string) => {
-    if (!confirm(`Revoke node '${nodeName}'? Its agent loses access immediately and its servers are marked CRASHED.`)) return;
-    const res = await fetch(`/api/nodes/${id}`, { method: "DELETE" });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error || "Failed to revoke node");
-      return;
-    }
-    load();
+  const revoke = (id: string, nodeName: string) => {
+    showModal({
+      type: "warning",
+      title: "Revoke Host",
+      message: `Revoke host '${nodeName}'? Its agent loses access immediately and its servers are marked as crashed.`,
+      confirmText: "Revoke",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        const res = await fetch(`/api/nodes/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setError(data.error || "Failed to revoke host");
+          return;
+        }
+        load();
+      },
+    });
   };
 
   return (
@@ -111,11 +121,11 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
       <main className="flex-1 p-8 max-w-4xl">
         <div className="flex items-center gap-3 mb-2">
           <Server className="w-6 h-6 text-accentPurple" />
-          <h1 className="text-2xl font-bold">Nodes</h1>
+          <h1 className="text-2xl font-bold">Remote Hosts</h1>
         </div>
         <p className="text-sm text-mutedText mb-6 leading-relaxed max-w-2xl">
-          Machines running the RealmSwap agent host game servers in Docker, managed from this dashboard.
-          The agent dials home — nothing listens on the node. Deploy to a node from the server create form.
+          Extra machines running the RealmSwap agent host game servers in Docker, managed from this dashboard.
+          The agent dials home — nothing listens on the host. Deploy to a host from the server create form.
         </p>
 
         {error && (
@@ -126,7 +136,7 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
 
         {isAdmin && (
           <section className="mb-8">
-            <h2 className="text-lg font-bold text-white mb-1">Add a node</h2>
+            <h2 className="text-lg font-bold text-white mb-1">Add a host</h2>
             <p className="text-xs text-mutedText mb-4">
               Mint a single-use enrollment token, then run the register command on the target machine.
             </p>
@@ -135,7 +145,7 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && createNode()}
-                placeholder="Node name (e.g. Synology NAS)"
+                placeholder="Host name (e.g. Synology NAS)"
                 className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-accentPurple"
               />
               <button
@@ -144,7 +154,7 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-accentPurple hover:bg-accentPurpleHover disabled:bg-accentPurple/50 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors"
               >
                 {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                Add Node
+                Add Host
               </button>
             </div>
           </section>
@@ -157,9 +167,9 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
             </h2>
             <div className="p-4 rounded-xl bg-accentPurple/10 border border-accentPurple/30 space-y-2 animate-slide-down">
               <p className="text-xs text-mutedText leading-relaxed">
-                On the node machine (needs Node 22, Docker, and git) — paste this once; it clones the
+                On the host machine (needs Node 22, Docker, and git) — paste this once; it clones the
                 repo, installs, enrolls with the single-use token, and starts the agent (token expires
-                in 24h; the command stays on this node&rsquo;s card below until the agent enrolls, so
+                in 24h; the command stays on this host&rsquo;s card below until the agent enrolls, so
                 you can leave this page):
               </p>
               <div className="flex items-center gap-2 bg-black/40 rounded-lg px-3 py-2 font-mono text-xs break-all">
@@ -177,7 +187,7 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
         )}
 
         <section>
-          <h2 className="text-lg font-bold text-white mb-1">Your nodes</h2>
+          <h2 className="text-lg font-bold text-white mb-1">Your hosts</h2>
           <p className="text-xs text-mutedText mb-4">
             {nodes.length > 0
               ? `${nodes.filter((n) => n.online).length} of ${nodes.length} online · refreshes every 10s`
@@ -186,11 +196,11 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
 
           {loading ? (
             <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5 text-sm text-mutedText">
-              Loading nodes…
+              Loading hosts…
             </div>
           ) : nodes.length === 0 ? (
             <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5 text-sm text-mutedText">
-              No nodes yet. {isAdmin ? "Add one above, then run the register command on the target machine." : "Ask an admin to add one."}
+              No hosts yet. {isAdmin ? "Add one above, then run the register command on the target machine." : "Ask an admin to add one."}
             </div>
           ) : (
             <div className="space-y-3">
@@ -235,7 +245,7 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
                         <button
                           onClick={() => revoke(n.id, n.name)}
                           className="shrink-0 text-mutedText hover:text-red-400 transition-colors"
-                          title="Revoke node"
+                          title="Revoke host"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -261,7 +271,7 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
                       n.enroll ? (
                         <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
                           <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                            Waiting for enrollment — paste this on the node (needs Node 22, Docker, git):
+                            Waiting for enrollment — paste this on the host (needs Node 22, Docker, git):
                           </div>
                           <div className="flex items-center gap-2 bg-black/40 rounded-lg px-3 py-2 font-mono text-xs break-all">
                             <span className="flex-1">{setupCommand(n.enroll.token)}</span>
@@ -282,7 +292,7 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
                         </div>
                       ) : (
                         <div className="mt-3 pt-3 border-t border-white/5 text-xs text-amber-400">
-                          Enrollment token expired or consumed — revoke this node and add it again to mint a fresh one.
+                          Enrollment token expired or consumed — revoke this host and add it again to mint a fresh one.
                         </div>
                       )
                     )}

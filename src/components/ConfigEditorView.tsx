@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -26,11 +26,11 @@ import {
   FolderOpen,
   SlidersHorizontal,
 } from "lucide-react";
-import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import DefinitionParamFields from "@/components/DefinitionParamFields";
 import { computeNextRunAt } from "@/lib/automations/schedule";
-import { gameIcon as getGameIcon } from "@/lib/gameDisplay";
+import { gameIcon as getGameIcon, gameLabel } from "@/lib/gameDisplay";
 import { toast } from "sonner";
+import { useActiveServer } from "@/components/dashboard/ActiveServerProvider";
 
 interface ConfigEditorViewProps {
   user: any;
@@ -41,7 +41,8 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const searchParams = useSearchParams();
   const initialServerId = searchParams.get("server");
 
-  const [servers, setServers] = useState<any[]>([]);
+  // Shared, persisted selection — follows the user across dashboard pages.
+  const { servers, loading: serversLoading, activeServerId, activeServer: contextServer, setActiveServerId } = useActiveServer();
   const [selectedServer, setSelectedServer] = useState<any | null>(null);
   const [configContent, setConfigContent] = useState("");
   const [configFilename, setConfigFilename] = useState("");
@@ -76,25 +77,22 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const [hasChanges, setHasChanges] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
 
-  // Fetch servers on mount
+  // Honor a ?server= deep link once the shared server list has loaded.
   useEffect(() => {
-    const fetchServers = async () => {
-      try {
-        const res = await fetch("/api/servers");
-        if (res.ok) {
-          const data = await res.json();
-          setServers(data.servers || []);
-          if (data.servers?.length > 0 && !selectedServer) {
-            const target = initialServerId ? data.servers.find((s: any) => s.id === initialServerId) : null;
-            loadConfig(target || data.servers[0]);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch servers:", err);
-      }
-    };
-    fetchServers();
-  }, []);
+    if (!initialServerId || serversLoading) return;
+    if (servers.some((s) => s.id === initialServerId) && activeServerId !== initialServerId) {
+      setActiveServerId(initialServerId);
+    }
+  }, [initialServerId, serversLoading, servers, activeServerId, setActiveServerId]);
+
+  // Load config whenever the shared selection lands on a new server.
+  const loadedServerRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!contextServer || loadedServerRef.current === contextServer.id) return;
+    loadedServerRef.current = contextServer.id;
+    loadConfig(contextServer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contextServer]);
 
   const loadConfig = async (server: any) => {
     setSelectedServer(server);
@@ -246,16 +244,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      
-      // Update local state
-      setServers(servers.map(s => {
-        if (s.id === selectedServer.id) {
-          if (action === "TOGGLE_TUNNEL") return { ...s, tunnelEnabled: enable };
-          if (action === "TOGGLE_AUTO_UPDATE") return { ...s, autoUpdate: enable };
-          if (action === "TOGGLE_IDLE_STOP") return { ...s, idleStopEnabled: enable };
-        }
-        return s;
-      }));
+
       setSelectedServer((prev: any) => {
         if (action === "TOGGLE_TUNNEL") return { ...prev, tunnelEnabled: enable };
         if (action === "TOGGLE_AUTO_UPDATE") return { ...prev, autoUpdate: enable };
@@ -279,7 +268,6 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setSelectedServer((prev: any) => ({ ...prev, autoUpdateHour: hour }));
-      setServers(servers.map(s => s.id === selectedServer.id ? { ...s, autoUpdateHour: hour } : s));
     } catch (err: any) {
       setError(err.message);
       setTimeout(() => setError(null), 3000);
@@ -298,20 +286,9 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setSelectedServer((prev: any) => ({ ...prev, ...patch }));
-      setServers(servers.map(s => s.id === selectedServer.id ? { ...s, ...patch } : s));
     } catch (err: any) {
       setError(err.message);
       setTimeout(() => setError(null), 3000);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-      router.refresh();
-    } catch (err) {
-      console.error("Logout failed:", err);
     }
   };
 
@@ -416,7 +393,11 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                 <span className="text-xs font-bold text-mutedText uppercase tracking-wider">Select Server</span>
               </div>
               <div className="p-2 space-y-1 max-h-[500px] overflow-y-auto">
-                {servers.length === 0 ? (
+                {serversLoading ? (
+                  <div className="p-4 text-center">
+                    <span className="text-xs text-mutedText">Loading servers…</span>
+                  </div>
+                ) : servers.length === 0 ? (
                   <div className="p-4 text-center">
                     <span className="text-xs text-mutedText">No servers found. Create one first.</span>
                   </div>
@@ -424,7 +405,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                   servers.map((server) => (
                     <button
                       key={server.id}
-                      onClick={() => loadConfig(server)}
+                      onClick={() => setActiveServerId(server.id)}
                       className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-2.5 ${
                         selectedServer?.id === server.id
                           ? "bg-accentPurple/10 border border-accentPurple/20 text-white"
@@ -433,7 +414,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                     >
                       <div className="min-w-0 flex-1">
                         <span className="font-bold text-xs block truncate">{server.name}</span>
-                        <span className="text-[10px] text-mutedText block">{server.game}</span>
+                        <span className="text-[10px] text-mutedText block">{gameLabel(server.game)}</span>
                       </div>
                       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
                         server.status === "RUNNING" ? "bg-emerald-400" :

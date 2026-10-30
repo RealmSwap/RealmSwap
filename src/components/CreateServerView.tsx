@@ -27,7 +27,6 @@ import {
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";
-import { DASHBOARD_NAV_LINKS } from "@/components/dashboardNavLinks";
 import { evaluateNode, recommendNode, type SchedulingNode } from "@/lib/agents/scheduling";
 import DefinitionParamFields from "./DefinitionParamFields";
 
@@ -69,7 +68,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
       .then((res) => res.json())
       .then((data) => {
         if (data.error) {
-          setError(`Failed to load game definitions: ${data.error}. Please ensure your database is running and migrated.`);
+          setError("Couldn't load the game catalog. Try restarting RealmSwap — if it keeps happening, check the app logs.");
           return;
         }
         const list: any[] = data.definitions ?? [];
@@ -84,7 +83,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
       })
       .catch((err) => {
         console.error("Failed to load definitions:", err);
-        setError("Network error: Failed to connect to the server to load game definitions.");
+        setError("Couldn't reach RealmSwap to load the game catalog. Is the app still running?");
       });
   }, []);
 
@@ -110,16 +109,6 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
     setParamValues(init);
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-      router.refresh();
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -138,7 +127,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
 
     try {
       if (runtime === "AGENT" && !nodeId) {
-        setError("Choose a node to deploy to.");
+        setError("Choose a remote host to deploy to.");
         return;
       }
       const res = await fetch("/api/servers", {
@@ -191,8 +180,8 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
         headers: { "Content-Type": "application/octet-stream" }
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data || "Validation failed");
-      
+      if (!res.ok) throw new Error(data?.error || "This package couldn't be validated. Is it a valid .realm file?");
+
       setImportManifest(data.manifest);
       setImportUploadId(data.uploadId);
 
@@ -227,7 +216,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
         })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data || "Import failed");
+      if (!res.ok) throw new Error(data?.error || "Import failed. Check the app logs and try again.");
       router.push("/dashboard");
       router.refresh();
     } catch(e: any) {
@@ -514,7 +503,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                   <input
                     type="range"
                     min="2"
-                    max="16"
+                    max="32"
                     step="1"
                     value={ram}
                     onChange={(e) => setRam(parseInt(e.target.value))}
@@ -523,7 +512,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                   <div className="flex justify-between text-[10px] text-mutedText font-semibold">
                     <span>Min: 2 GB</span>
                     {selectedGame && <span>Recommended: {selectedGame.recommendedRamGB} GB</span>}
-                    <span>Max: 16 GB</span>
+                    <span>Max: 32 GB</span>
                   </div>
                   {selectedGame && (
                     <span className="text-[10px] text-mutedText block leading-normal pt-1.5 border-t border-white/5">
@@ -604,10 +593,10 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                       })), { requiredRamGB: ram, requiredDiskGB: selectedGame?.spec?.install?.requiredDiskGB });
                       if (!nodeId && rec) setNodeId(rec.node.id);
                     }}
-                    title={selectedHasContainer ? "Run this server on a remote agent node" : "This game does not support remote nodes yet"}
+                    title={selectedHasContainer ? "Run this server on a remote host" : "This game does not support remote hosts yet"}
                     className={`px-3 py-2 rounded-lg border text-sm ${runtime === "AGENT" ? "border-accent text-accent" : "border-white/10 text-mutedText"} ${!selectedHasContainer ? "opacity-40 cursor-not-allowed" : ""}`}
                   >
-                    Remote Node
+                    Remote Host
                   </button>
                 )}
               </div>
@@ -621,7 +610,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                     onChange={(e) => setNodeId(e.target.value)}
                     className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-accent"
                   >
-                    <option value="">Choose a node…</option>
+                    <option value="">Choose a host…</option>
                     {nodes.map((n) => {
                       const verdict = verdicts.get(n.id);
                       const suffix = recommendation?.node.id === n.id
@@ -643,11 +632,11 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                   )}
                   {!recommendation && nodes.some((n) => n.online) && (
                     <p className="text-xs text-amber-400 mt-2">
-                      No node fits this server&apos;s RAM and disk requirements right now — free up resources or lower the RAM allocation.
+                      No remote host fits this server&apos;s RAM and disk requirements right now — free up resources or lower the RAM allocation.
                     </p>
                   )}
                   <p className="text-xs text-mutedText mt-2">
-                    Runs in Docker on the agent machine. Backups work; mods, the config editor, and world import/export aren&apos;t available for remote nodes yet.
+                    Runs in Docker on the host machine. Backups work; mods, the config editor, and world import/export aren&apos;t available for remote hosts yet.
                   </p>
                 </div>
               )}
