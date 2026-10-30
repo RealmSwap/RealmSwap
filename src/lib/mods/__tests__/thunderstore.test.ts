@@ -9,6 +9,7 @@ import {
   pickVersionForSpec,
   findVersionEntry,
   isBepInExCore,
+  isBepInExCoreInstall,
   collectDependencies,
   extractThunderstorePackage,
   commonRootDir,
@@ -178,6 +179,15 @@ describe("collectDependencies", () => {
     expect(isBepInExCore("denikson-BepInExPack_Valheim")).toBe(true);
     expect(isBepInExCore("me-Root")).toBe(false);
   });
+
+  it("only routes the real core packs to server-root extraction", () => {
+    expect(isBepInExCoreInstall("denikson-BepInExPack_Valheim")).toBe(true);
+    expect(isBepInExCoreInstall("BepInEx-BepInExPack_V_Rising")).toBe(true);
+    // Content packages that merely contain "BepInExPack" extract to plugins/
+    // like any other package.
+    expect(isBepInExCoreInstall("someone-MyBepInExPackHelper")).toBe(false);
+    expect(isBepInExCoreInstall("denikson-SomethingElse")).toBe(false);
+  });
 });
 
 describe("extractThunderstorePackage", () => {
@@ -204,6 +214,22 @@ describe("extractThunderstorePackage", () => {
     } as unknown as AdmZip;
     expect(() => extractThunderstorePackage(hostileZip, path.join(dir, "victim"))).toThrow(/unsafe/i);
     expect(fs.existsSync(path.resolve(dir, "escaped.dll"))).toBe(false);
+  });
+
+  it("normalizes backslash zip separators instead of failing the safety check", () => {
+    // Some Windows-authored archives present entry names with '\' — a legal
+    // PKWARE form adm-zip preserves verbatim. These must extract, not trip
+    // "Unsafe path in modpack index".
+    const winZip = {
+      getEntries: () => [
+        { entryName: "plugins\\mod.dll", isDirectory: false, getData: () => Buffer.from("dll") },
+        { entryName: "sub\\dir\\deep.cfg", isDirectory: false, getData: () => Buffer.from("cfg") },
+      ],
+    } as unknown as AdmZip;
+    const count = extractThunderstorePackage(winZip, path.join(dir, "win-auth"));
+    expect(count).toBe(2);
+    expect(fs.readFileSync(path.join(dir, "win-auth", "plugins", "mod.dll"), "utf-8")).toBe("dll");
+    expect(fs.readFileSync(path.join(dir, "win-auth", "sub", "dir", "deep.cfg"), "utf-8")).toBe("cfg");
   });
 });
 

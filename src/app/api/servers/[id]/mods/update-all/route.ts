@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
-import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
+import { testServerBoot, SandboxBootError, hasRealBootTest } from "@/lib/runners/sandbox";
 import { resolveModUpdate } from "@/lib/mods/updateApply";
 import { packOwnedPackageIds } from "@/lib/mods/packInstall";
 import { requireLocalServer } from "@/lib/agents/perimeter";
@@ -55,8 +55,8 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       warnings?: string[];
     }[] = [];
     for (const installation of updatable) {
-      if (!["modrinth", "thunderstore", "workshop", "curseforge"].includes(installation.provider)) {
-        continue; // rows without an update path; the updates check already reports them
+      if (!["modrinth", "thunderstore", "workshop", "curseforge", "ficsit"].includes(installation.provider)) {
+        continue; // rows without an update path (umod is per-plugin on purpose); the updates check already reports them
       }
       try {
         const resolved = await resolveModUpdate(installation, game, serverId);
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         success: true,
         updated: planned.map(({ name, from, to }) => ({ name, from, to })),
         skipped,
-        message: `Updated ${planned.length} mod${planned.length === 1 ? "" : "s"} to the latest versions and passed sandbox testing.` +
+        message: `Updated ${planned.length} mod${planned.length === 1 ? "" : "s"} to the latest versions${hasRealBootTest(game) ? " and passed sandbox testing" : ""}.` +
           (packOwnedCount > 0 ? ` ${packOwnedCount} modpack-owned mod${packOwnedCount === 1 ? " was" : "s were"} left out — packs are updated as a unit via update-pack.` : "") +
           (() => {
             const notes = planned.flatMap((p) => p.warnings ?? []);

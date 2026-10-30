@@ -90,7 +90,7 @@ const GAME_THEMES: Record<
     border: "border-orange-500/30",
     text: "text-orange-400",
     icon: "🦊",
-    providerName: "—",
+    providerName: "Thunderstore",
   },
   VRISING: {
     gradient: "from-purple-500 to-red-800",
@@ -138,7 +138,7 @@ const GAME_THEMES: Record<
     border: "border-orange-500/30",
     text: "text-orange-400",
     icon: "🏭",
-    providerName: "—",
+    providerName: "ficsit.app",
   },
   WINDROSE: {
     gradient: "from-teal-500 to-cyan-700",
@@ -409,7 +409,7 @@ export default function ModsView({ user }: ModsViewProps) {
   const [packInfo, setPackInfo] = useState<any>(null);
   const [packUpdatable, setPackUpdatable] = useState(false);
   const [syncingDisk, setSyncingDisk] = useState(false);
-  const [updatesInfo, setUpdatesInfo] = useState<{ updates: any[]; unknown: any[] } | null>(null);
+  const [updatesInfo, setUpdatesInfo] = useState<{ updates: any[]; unknown: any[]; errors?: string[] } | null>(null);
   const [staleOnly, setStaleOnly] = useState(false);
 
   /** Surface a mod-flow failure; bootOutput carries the sandbox server's own
@@ -483,14 +483,18 @@ export default function ModsView({ user }: ModsViewProps) {
   );
   const isInstalled = (id: string) => installedIds.has(id);
 
-  /** Whether the game supports live mod browsing */
+  /** Whether the game supports live mod browsing — mirrors the search
+   *  route's per-game dispatch (curseforge/modrinth/thunderstore/workshop/umod/ficsit). */
   const supportsSearch =
     game === "VALHEIM" ||
     game === "MINECRAFT" ||
     game === "ZOMBOID" ||
     game === "TERRARIA" ||
     game === "VRISING" ||
-    game === "RUST";
+    game === "RUST" ||
+    game === "ARK" ||
+    game === "PALWORLD" ||
+    game === "SATISFACTORY";
 
   /** Dynamic category list from current results */
   const availableCategories = useMemo(() => {
@@ -1288,6 +1292,17 @@ export default function ModsView({ user }: ModsViewProps) {
           </div>
         ) : (
           <>
+            {/* Agent-hosted servers refuse mods for these games — say so up
+                front instead of letting every button fail on the round-trip. */}
+            {selectedServer?.runnerType === "AGENT" &&
+             (game === "TERRARIA" || game === "PALWORLD" || game === "SATISFACTORY") && (
+              <div className="flex items-center gap-2 px-4 py-3 mb-4 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span>
+                  Mods for {selectedServer.game} aren&apos;t supported on remote-node servers yet — this server is hosted on an agent node, so install/uninstall/update actions are disabled here.
+                </span>
+              </div>
+            )}
             {/* ─── Tab Bar ────────────────────────────────────── */}
             <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-900/50 border border-white/5 mb-6 w-fit">
               {(
@@ -1681,8 +1696,8 @@ export default function ModsView({ user }: ModsViewProps) {
                         )}
                       </div>
 
-                      {/* Zomboid / Terraria Workshop Form */}
-                      {(game === "ZOMBOID" || game === "TERRARIA") && (
+                      {/* Workshop ID form: Zomboid / Terraria / ARK */}
+                      {(game === "ZOMBOID" || game === "TERRARIA" || game === "ARK") && (
                         <div className="glass-panel rounded-xl border border-white/5 p-5 space-y-3">
                           <h4 className="font-extrabold text-sm text-white flex items-center gap-2">
                             <Plus className="w-4 h-4 text-emerald-400" />
@@ -1691,6 +1706,8 @@ export default function ModsView({ user }: ModsViewProps) {
                           <p className="text-[11px] text-mutedText">
                             {game === "TERRARIA"
                               ? "Don't see your mod above? Paste its Workshop ID — the mod name is detected from the downloaded .tmod (tModLoader must be installed first)."
+                              : game === "ARK"
+                              ? "Don't see your mod above? Paste its Workshop ID — the server downloads the mod itself at its next start (-automanagemods; big mods can take several minutes)."
                               : "Don't see your mod above? Enter a Workshop ID. The Mod ID is detected from the downloaded files when left blank."}
                           </p>
                           <form
@@ -1707,7 +1724,7 @@ export default function ModsView({ user }: ModsViewProps) {
                                 onChange={(e) =>
                                   setCustomWorkshopId(e.target.value)
                                 }
-                                placeholder={game === "TERRARIA" ? "e.g. 2563309347" : "e.g. 2875848298"}
+                                placeholder={game === "TERRARIA" ? "e.g. 2563309347" : game === "ARK" ? "e.g. 731604991" : "e.g. 2875848298"}
                                 className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors"
                                 required
                               />
@@ -1814,6 +1831,20 @@ export default function ModsView({ user }: ModsViewProps) {
             {/* ─── INSTALLED TAB ─────────────────────────────── */}
             {activeTab === "installed" && (
               <div className="space-y-4 animate-fade-in">
+                {updatesInfo && (updatesInfo.errors?.length ?? 0) > 0 && !staleOnly && (
+                  <div className="px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-xs text-amber-300">
+                    <span className="font-bold flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4" />
+                      {updatesInfo.errors!.length} update check{updatesInfo.errors!.length === 1 ? "" : "s"} failed
+                    </span>
+                    <ul className="mt-1.5 space-y-0.5 text-amber-200/80 list-disc list-inside">
+                      {updatesInfo.errors!.slice(0, 5).map((e, i) => (
+                        <li key={i}>{e}</li>
+                      ))}
+                      {(updatesInfo.errors!.length > 5) && <li>… and {updatesInfo.errors!.length - 5} more</li>}
+                    </ul>
+                  </div>
+                )}
                 {updatesInfo && (updatesInfo.updates.length > 0 || staleOnly) && (
                   <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-sky-500/10 border border-sky-500/25 text-xs text-sky-300">
                     <span className="font-bold flex items-center gap-2">
@@ -1953,20 +1984,22 @@ export default function ModsView({ user }: ModsViewProps) {
                       />
                     </label>
 
-                    <label className="px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 hover:bg-white/5 text-xs font-bold text-slate-300 transition-colors cursor-pointer flex items-center gap-1.5">
-                      <Package className="w-3.5 h-3.5 text-accentPurple" />
-                      <span>Import Modpack (.mrpack)</span>
-                      <input
-                        type="file"
-                        accept=".mrpack,.zip"
-                        className="hidden"
-                        onChange={handleImportModpack}
-                        disabled={
-                          loading ||
-                          selectedServer.status === "RUNNING"
-                        }
-                      />
-                    </label>
+                    {game === "MINECRAFT" && (
+                      <label className="px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 hover:bg-white/5 text-xs font-bold text-slate-300 transition-colors cursor-pointer flex items-center gap-1.5">
+                        <Package className="w-3.5 h-3.5 text-accentPurple" />
+                        <span>Import Modpack (.mrpack)</span>
+                        <input
+                          type="file"
+                          accept=".mrpack,.zip"
+                          className="hidden"
+                          onChange={handleImportModpack}
+                          disabled={
+                            loading ||
+                            selectedServer.status === "RUNNING"
+                          }
+                        />
+                      </label>
+                    )}
 
                     <button
                       onClick={handleExportCollection}
@@ -2081,7 +2114,7 @@ export default function ModsView({ user }: ModsViewProps) {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {mod.provider === "modrinth" || mod.provider === "thunderstore" || mod.provider === "curseforge" || mod.provider === "umod" || (mod.provider === "workshop" && game === "TERRARIA") ? (
+                            {mod.provider === "modrinth" || mod.provider === "thunderstore" || mod.provider === "curseforge" || mod.provider === "umod" || mod.provider === "ficsit" || (mod.provider === "workshop" && (game === "TERRARIA" || game === "ZOMBOID")) ? (
                               <button
                                 onClick={() => handleUpdateMod(mod)}
                                 disabled={loading || updatingModId === mod.id}

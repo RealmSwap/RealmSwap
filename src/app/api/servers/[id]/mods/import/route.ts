@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
-import { testServerBoot, SandboxBootError } from "@/lib/runners/sandbox";
+import { testServerBoot, SandboxBootError, hasRealBootTest } from "@/lib/runners/sandbox";
 import { dataRoot } from "@/lib/appPaths";
 import fs from "fs";
 import path from "path";
@@ -13,9 +13,11 @@ import {
   installFabricServer, installForgeServer, installNeoForgeServer, installQuiltServer,
 } from "@/lib/mods/mcLoaders";
 import {
-  installMinecraftMod, installValheimThunderstore, installZomboidWorkshopMod, installVRisingThunderstore,
-  installArkWorkshopMod, installFicsitMod, installTmlWorkshopMod, installTmlLoader,
+  installMinecraftMod, installMinecraftCurseforge, installValheimThunderstore, installZomboidWorkshopMod,
+  installVRisingThunderstore, installArkWorkshopMod, installFicsitMod, installTmlWorkshopMod, installTmlLoader,
+  installPalworldThunderstore, ensureShimloaderCore,
 } from "@/lib/mods/installers";
+import { SHIMLOADER_PACKAGE_ID } from "@/lib/mods/palworld";
 import { readTmlMarker, tmlInstallDir } from "@/lib/mods/tml";
 import { installOxideCore, installRustUmodPlugin, OXIDE_CORE_PACKAGE_ID } from "@/lib/mods/umod";
 import { requireLocalServer } from "@/lib/agents/perimeter";
@@ -73,7 +75,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         minecraftVersion: z.string().optional(),
       }).optional(),
       mods: z.array(z.object({
-        provider: z.enum(["workshop", "thunderstore", "modrinth", "umod", "ficsit"]),
+        provider: z.enum(["workshop", "thunderstore", "modrinth", "curseforge", "umod", "ficsit"]),
         packageId: z.string().min(1),
         name: z.string().optional(),
         version: z.string().optional(),
@@ -162,14 +164,22 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       let dependencyCount = 0;
       for (const mod of manifest.mods) {
         if (game === "MINECRAFT") {
-          if (mod.provider !== "modrinth") {
+          // Exports carry both jar providers — replay each through its own
+          // installer (CurseForge rows key by project id, Modrinth by project id too).
+          if (mod.provider === "curseforge") {
+            await installMinecraftCurseforge({
+              serverId, installDir: serverRoot, modId: mod.packageId,
+              version: mod.version, warnings,
+            });
+          } else if (mod.provider === "modrinth") {
+            const result = await installMinecraftMod({
+              serverId, installDir: serverRoot, projectId: mod.packageId,
+              versionNumber: mod.version, warnings,
+            });
+            dependencyCount += result.dependencyCount;
+          } else {
             throw new Error(`Collection entry '${mod.packageId}' uses provider '${mod.provider}', which Minecraft doesn't support.`);
           }
-          const result = await installMinecraftMod({
-            serverId, installDir: serverRoot, projectId: mod.packageId,
-            versionNumber: mod.version, warnings,
-          });
-          dependencyCount += result.dependencyCount;
         } else if (game === "VALHEIM") {
           if (mod.provider !== "thunderstore") {
             throw new Error(`Collection entry '${mod.packageId}' uses provider '${mod.provider}', which Valheim doesn't support.`);
@@ -244,6 +254,22 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
               exportedVersion: mod.version, warnings,
             });
           }
+        } else if (game === "PALWORLD") {
+          if (mod.provider !== "thunderstore") {
+            throw new Error(`Collection entry '${mod.packageId}' uses provider '${mod.provider}', which Palworld doesn't support.`);
+          }
+          const palworldDir = path.join(serverRoot, "palworld-server");
+          if (!fs.existsSync(palworldDir)) {
+            throw new Error("Palworld server is not installed yet — install the server before importing mods.");
+          }
+          if (mod.packageId === SHIMLOADER_PACKAGE_ID) {
+            // The framework row exports like any other — reinstall the core.
+            await ensureShimloaderCore(serverId, palworldDir);
+          } else {
+            await installPalworldThunderstore({
+              serverId, palworldDir, packageId: mod.packageId, name: mod.name, versionNumber: mod.version, warnings,
+            });
+          }
         } else if (game === "SATISFACTORY") {
           if (mod.provider !== "ficsit") {
             throw new Error(`Collection entry '${mod.packageId}' uses provider '${mod.provider}', which Satisfactory doesn't support.`);
@@ -279,7 +305,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
       return NextResponse.json({
         success: true,
-        message: `Imported and tested ${manifest.mods.length} mods${dependencyCount > 0 ? ` (+${dependencyCount} dependencies)` : ""}!${warnings.length ? ` ${warnings.length} warning${warnings.length === 1 ? "" : "s"}.` : ""}`,
+        message: `Imported ${manifest.mods.length} mods${dependencyCount > 0 ? ` (+${dependencyCount} dependencies)` : ""}${hasRealBootTest(game) ? " and boot-tested them" : ""}!${warnings.length ? ` ${warnings.length} warning${warnings.length === 1 ? "" : "s"}.` : ""}`,
         warnings,
       });
 

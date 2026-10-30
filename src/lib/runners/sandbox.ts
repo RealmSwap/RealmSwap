@@ -80,6 +80,17 @@ export function minecraftBootArgs(serverDir: string): string[] {
 }
 
 /**
+ * Games whose sandbox test actually boots the server (vanilla Minecraft only
+ * gets a vacuous pass when its exe is missing, and vanilla Terraria likewise).
+ * ARK, RUST, PALWORLD, SATISFACTORY and VRISING have no sandbox launcher —
+ * testServerBoot auto-passes them — so install/update messaging must not
+ * claim a boot test happened for those.
+ */
+export function hasRealBootTest(game: string): boolean {
+  return ["MINECRAFT", "VALHEIM", "ZOMBOID", "TERRARIA"].includes(game.toUpperCase());
+}
+
+/**
  * Tests if the game server can boot without crashing for 15 seconds.
  *
  * @param serverId The ID of the server to test
@@ -108,8 +119,18 @@ export async function testServerBoot(
     } else if (game === "ZOMBOID") {
       // Batch files must go through cmd.exe — a direct spawn of a .bat throws
       // EINVAL on Node >= 18.20 / Electron (CVE-2024-27980 hardening).
+      // Mirror the real launch args (builtins): without -cachedir the boot
+      // reads a default servertest.ini somewhere else and never exercises
+      // the mod list the installer actually edited.
       exePath = "cmd.exe";
-      args = ["/c", path.join(serverDir, "zomboid-server", "StartServer64.bat")];
+      args = [
+        "/c", path.join(serverDir, "zomboid-server", "StartServer64.bat"),
+        `-cachedir=${path.join(serverDir, "zomboid-server", "zomboid-data")}`,
+        "-servername", "servertest",
+      ];
+      // First boot generates the map and loads every listed mod — a modded
+      // boot routinely takes well over the default window.
+      sandboxMs = 60000;
     } else if (game === "TERRARIA") {
       // Only the tModLoader runtime gets a real boot test; vanilla stays
       // vacuous (its exe is a known-quantity Steam install). The directory
@@ -217,11 +238,12 @@ export async function testServerBoot(
 
       // Minecraft's loaders log stack traces for recoverable warnings on
       // stderr — only the exit code and the Done-line verdict are truth
-      // there. Unity/BepInEx games keep the string-based fatality check.
+      // there. Unity/BepInEx games are the same: their servers routinely
+      // print benign [Error]/exception lines during a healthy boot (mod
+      // load order, shader fallbacks), so a substring scan rolled back good
+      // installs. A genuinely broken mod kills the process — the non-zero
+      // exit check below is what catches it.
       if (isMinecraft) return;
-      if (errStr.includes("NullReferenceException") || errStr.includes("[Error]") || errStr.includes("Exception")) {
-        fail(`Sandbox Test Failed! Fatal Error detected in logs:\n${errStr.substring(0, 200)}...`);
-      }
     });
 
     proc.on("error", (err) => {

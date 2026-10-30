@@ -5,7 +5,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { dataRoot } from "@/lib/appPaths";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
-import { SandboxBootError } from "@/lib/runners/sandbox";
+import { SandboxBootError, hasRealBootTest } from "@/lib/runners/sandbox";
 import { testServerBootWithQuarantine } from "@/lib/mods/bootRetry";
 import { beginProgress, emitProgress, endProgress, createBootLogEmitter } from "@/lib/mods/progress";
 import { downloadFile } from "@/lib/download";
@@ -260,7 +260,8 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
       // 3. Sandbox Test
       console.log(`[Sandbox] Running boot test for ${serverId}`);
-      if (installId) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the install", current: 0, total: 1 });
+      const bootsForReal = hasRealBootTest(game);
+      if (installId && bootsForReal) emitProgress(installId, { stage: "boot", label: "Booting the server once to verify the install", current: 0, total: 1 });
       const bootLog = createBootLogEmitter(installId);
       const quarantined = await testServerBootWithQuarantine({
         serverId, serverRoot, game, warnings,
@@ -285,12 +286,14 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       });
 
       if (installId) endProgress(installId, "done");
+      // Only claim the boot test for games the sandbox actually boots.
+      const tested = bootsForReal ? " and passed sandbox testing" : "";
       return NextResponse.json({
         success: true,
         message:
           dependencyCount > 0
-            ? `Mod + ${dependencyCount} ${dependencyCount === 1 ? "dependency" : "dependencies"} installed successfully and passed sandbox testing.`
-            : "Mod installed successfully and passed sandbox testing.",
+            ? `Mod + ${dependencyCount} ${dependencyCount === 1 ? "dependency" : "dependencies"} installed successfully${tested}.`
+            : `Mod installed successfully${tested}.`,
         warnings,
         dependencyCount,
       });

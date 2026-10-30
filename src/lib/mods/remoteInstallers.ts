@@ -19,7 +19,7 @@ import {
 } from "@/lib/mods/curseforge";
 import {
   communityForGame, fetchCommunityIndex, findVersionEntry, newestVersion,
-  collectDependencies, extractThunderstorePackage, extractCorePack, isBepInExCore,
+  collectDependencies, extractThunderstorePackage, extractCorePack, isBepInExCoreInstall,
 } from "@/lib/mods/thunderstore";
 import {
   OXIDE_CORE_MARKER, OXIDE_CORE_PACKAGE_ID, OXIDE_CORE_DOWNLOAD_URL, fetchUmodPluginMeta,
@@ -569,7 +569,7 @@ async function installBepInExThunderstoreRemote(args: {
   try {
     const serverStage = mkdirp(path.join(staging, subDir));
     const needCore =
-      isBepInExCore(packageId) ||
+      isBepInExCoreInstall(packageId) ||
       !(await bepinexCorePresent(serverId, subDir)); // BepInEx core is a hard prerequisite for plugins.
 
     if (needCore) {
@@ -592,7 +592,7 @@ async function installBepInExThunderstoreRemote(args: {
     const pluginsStage = mkdirp(path.join(serverStage, "BepInEx", "plugins"));
     const stagedPackages: { packageId: string; name: string; version: string; url: string }[] = [];
 
-    if (!isBepInExCore(packageId)) {
+    if (!isBepInExCoreInstall(packageId)) {
       const installedIds = new Set(
         (await prisma.modInstallation.findMany({ where: { serverId }, select: { packageId: true } }))
           .map((m) => m.packageId)
@@ -614,7 +614,7 @@ async function installBepInExThunderstoreRemote(args: {
     }
 
     for (const p of stagedPackages) {
-      if (isBepInExCore(p.packageId)) continue; // core already staged above
+      if (isBepInExCoreInstall(p.packageId)) continue; // core already staged above
       const tempZip = path.join(pluginsStage, `.${p.packageId}.zip`);
       await downloadFile(p.url, tempZip);
       try {
@@ -625,7 +625,7 @@ async function installBepInExThunderstoreRemote(args: {
     }
 
     await ship(serverId, staging, {
-      deletes: stagedPackages.filter((p) => !isBepInExCore(p.packageId)).map((p) => `${subDir}/BepInEx/plugins/${p.packageId}`),
+      deletes: stagedPackages.filter((p) => !isBepInExCoreInstall(p.packageId)).map((p) => `${subDir}/BepInEx/plugins/${p.packageId}`),
       backupPaths: [`${subDir}/BepInEx`, `${subDir}/doorstop_config.ini`, `${subDir}/winhttp.dll`],
     });
   } finally {
@@ -633,7 +633,7 @@ async function installBepInExThunderstoreRemote(args: {
   }
 
   // Rows only after the ship landed.
-  if (isBepInExCore(packageId)) {
+  if (isBepInExCoreInstall(packageId)) {
     await prisma.modInstallation.upsert({
       where: { serverId_provider_packageId: { serverId, provider: "thunderstore", packageId } },
       update: { version: versionEntry.version_number, name: name || pkg.name },
@@ -699,12 +699,13 @@ export async function resolveRemoteModUpdate(
   game: string,
   serverId: string
 ): Promise<ResolvedRemoteUpdate> {
-  const marker = await readRemoteLoaderMarker(serverId);
-
+  // Only the Minecraft branches need the loader marker — one agent round-trip
+  // per update check, so don't pay it for every other game.
   if (installation.provider === "modrinth" || installation.provider === "curseforge") {
     if (game !== "MINECRAFT") {
       throw new UpdateResolutionError(`${installation.provider === "modrinth" ? "Modrinth" : "CurseForge"} mod updates are supported for Minecraft servers only.`);
     }
+    const marker = await readRemoteLoaderMarker(serverId);
     const gameVersion = await detectRemoteMinecraftVersion(serverId);
     const loader = marker?.type ?? null;
     const jarRel = `mods/${installation.packageId}.jar`;
@@ -768,6 +769,33 @@ export async function resolveRemoteModUpdate(
     const latest = pkg ? newestVersion(pkg) : null;
     if (!pkg || !latest) {
       throw new UpdateResolutionError(`Package '${installation.packageId}' not found on Thunderstore.`, 404);
+    }
+    if (isBepInExCoreInstall(installation.packageId)) {
+      // The core installs over the server root with its wrapper folder
+      // stripped — mirroring the local resolver and the remote installer.
+      // Into plugins/ BepInEx would never load it.
+      return {
+        newVersionNumber: latest.version_number,
+        applyUpdate: async () => {
+          const staging = await makeModStagingRoot(serverId);
+          try {
+            const serverStage = mkdirp(path.join(staging, subDir));
+            const tempZip = path.join(staging, ".core.zip");
+            await downloadFile(latest.download_url, tempZip);
+            try {
+              extractCorePack(new AdmZip(tempZip), serverStage);
+            } finally {
+              fs.unlinkSync(tempZip);
+            }
+            await ship(serverId, staging, {
+              deletes: [],
+              backupPaths: [`${subDir}/BepInEx`, `${subDir}/doorstop_config.ini`, `${subDir}/winhttp.dll`],
+            });
+          } finally {
+            fs.rmSync(staging, { recursive: true, force: true });
+          }
+        },
+      };
     }
     return {
       newVersionNumber: latest.version_number,

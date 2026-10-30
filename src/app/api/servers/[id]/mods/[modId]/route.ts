@@ -7,6 +7,8 @@ import path from "path";
 import { dataRoot } from "@/lib/appPaths";
 import { removeZomboidWorkshopMod, removeZomboidWorkshopModContent, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { removeArkActiveMod, removeArkActiveModContent, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
+import { deriveZomboidModIds } from "@/lib/mods/workshopDownload";
+import { WORKSHOP_APP_IDS } from "@/lib/mods/workshop";
 import { uninstallPalworldPackage } from "@/lib/mods/palworld";
 import { removeFicsitMod } from "@/lib/mods/installers";
 import { removeRustUmodPlugin } from "@/lib/mods/umod";
@@ -104,15 +106,38 @@ export async function DELETE(
       // packageId is the Workshop ID (WorkshopItems=); the ini mod IDs for
       // Mods= are stored ';'-joined on the row (one item can ship several
       // mod folders) — the two id spaces are unrelated.
-      removeZomboidWorkshopMod(
-        zomboidServerIniPath(path.join(dataRoot(), "local-servers", serverId)),
-        installation.packageId,
-        installation.workshopModId ? installation.workshopModId.split(";").filter(Boolean) : null
+      const serverRoot = path.join(dataRoot(), "local-servers", serverId);
+      const contentDir = path.join(
+        serverRoot, "zomboid-server", "steamapps", "workshop", "content",
+        String(WORKSHOP_APP_IDS.ZOMBOID), installation.packageId
       );
+      let modIds: string[] | null =
+        installation.workshopModId ? installation.workshopModId.split(";").filter(Boolean) : null;
+      if (!modIds || modIds.length === 0) {
+        // Reconcile-nulled or pre-derivation rows lost the Mod IDs — re-derive
+        // them from the downloaded item, or Mods= keeps a dangling entry that
+        // logs "mod not found" at every boot.
+        try {
+          modIds = deriveZomboidModIds(contentDir).map((m) => m.modId);
+        } catch {
+          modIds = null; // content gone too — nothing more to derive from
+        }
+      }
+      removeZomboidWorkshopMod(zomboidServerIniPath(serverRoot), installation.packageId, modIds);
+      // The SteamCMD pre-cache is useless without the ini entry (tML's delete
+      // already removes its content dir) — don't leak it on disk.
+      fs.rmSync(contentDir, { recursive: true, force: true });
     } else if (game === "ARK") {
       removeArkActiveMod(
         arkGameUserSettingsIniPath(path.join(dataRoot(), "local-servers", serverId)),
         installation.packageId
+      );
+      // -automanagemods leaves the engine-downloaded workshop content in
+      // ShooterGame/Content/Mods/<id> — multi-GB once delisted from
+      // ActiveMods, so remove it with the row.
+      fs.rmSync(
+        path.join(dataRoot(), "local-servers", serverId, "ark-server", "ShooterGame", "Content", "Mods", installation.packageId),
+        { recursive: true, force: true }
       );
     } else if (game === "TERRARIA") {
       // Drops the item's names from enabled.json and deletes its downloaded

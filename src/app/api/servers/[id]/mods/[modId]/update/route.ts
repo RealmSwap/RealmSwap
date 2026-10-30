@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { createSnapshot, restoreSnapshot, discardSnapshot } from "@/lib/snapshots";
-import { SandboxBootError } from "@/lib/runners/sandbox";
+import { SandboxBootError, hasRealBootTest } from "@/lib/runners/sandbox";
 import { testServerBootWithQuarantine } from "@/lib/mods/bootRetry";
 import { dataRoot } from "@/lib/appPaths";
 import path from "path";
@@ -146,7 +146,7 @@ export async function POST(
         updated: true,
         from: installation.version,
         to: newVersionNumber,
-        message: `${installation.name} updated to ${newVersionNumber} and passed sandbox testing.${warnings.length ? ` Warnings: ${warnings.join(" ")}` : ""}`,
+        message: `${installation.name} updated to ${newVersionNumber}${hasRealBootTest(game) ? " and passed sandbox testing" : ""}.${warnings.length ? ` Warnings: ${warnings.join(" ")}` : ""}`,
       });
     } catch (err: any) {
       await restoreSnapshot(snapshot.id);

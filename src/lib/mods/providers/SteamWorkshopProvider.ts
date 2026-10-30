@@ -76,6 +76,41 @@ const CURATED_MODS: Record<string, Omit<ModSearchResult, "provider">[]> = {
       categories: ["Admin"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=2297098490",
     },
   ],
+  // ARK: Survival Evolved (workshop app 346110) — ids verified via the live
+  // Workshop 2026-10-30. Without these the curated fallback (the only path
+  // when no STEAM_API_KEY is set) was an empty list for ARK.
+  ARK: [
+    {
+      packageId: "731604991", name: "Structures Plus (S+)", author: "orionsun",
+      description: "The classic building overhaul — stackable foundations, auto doors, pick-up structures, and crafting stations.",
+      version: "Workshop", downloadUrl: "",
+      categories: ["Structures"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=731604991",
+    },
+    {
+      packageId: "1999447172", name: "Super Structures", author: "iSPEZZ",
+      description: "Actively maintained S+ fork with even more building pieces, turrets, and QoL for servers.",
+      version: "Workshop", downloadUrl: "",
+      categories: ["Structures"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=1999447172",
+    },
+    {
+      packageId: "1404697612", name: "Awesome Spyglass!", author: "WJMorjan",
+      description: "Spyglass that shows dino/player/structure stats, loot and drop info, with cryo and healing queries.",
+      version: "Workshop", downloadUrl: "",
+      categories: ["Utilities"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=1404697612",
+    },
+    {
+      packageId: "1609138312", name: "Dino Storage v2", author: "Reaperr",
+      description: "Soul-trap tamed dinos into carryable storage balls — offline-feeding, breeding, and mass-release support.",
+      version: "Workshop", downloadUrl: "",
+      categories: ["Utilities"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=1609138312",
+    },
+    {
+      packageId: "895711211", name: "Classic Flyers", author: "Narcoleptic",
+      description: "Restores pre-nerf flyer stats and lets you level speed again. Alters core flyer files — conflicts with other flyer stat mods.",
+      version: "Workshop", downloadUrl: "",
+      categories: ["Creatures"], websiteUrl: "https://steamcommunity.com/sharedfiles/filedetails/?id=895711211",
+    },
+  ],
   // tModLoader items (workshop app 1281930) — ids + Both-tags verified via the
   // live Workshop API 2026-10-25.
   TERRARIA: [

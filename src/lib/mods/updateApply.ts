@@ -17,11 +17,12 @@ import {
 import {
   communityForGame,
   fetchCommunityIndex,
-  isBepInExCore,
+  isBepInExCoreInstall,
   newestVersion,
   extractThunderstorePackage,
   extractCorePack,
 } from "@/lib/mods/thunderstore";
+import { uninstallPalworldPackage } from "@/lib/mods/palworld";
 import { WORKSHOP_APP_IDS, getWorkshopDetails } from "@/lib/mods/workshop";
 import { downloadWorkshopItem, deriveZomboidModIds } from "@/lib/mods/workshopDownload";
 import {
@@ -253,6 +254,14 @@ export async function resolveModUpdate(
     return {
       newVersionNumber: latest.version_number,
       applyUpdate: async () => {
+        // Uninstall the old version's files FIRST (the manifest lists them):
+        // reinstalling over them would overwrite the manifest, so files the
+        // new version dropped would stay on disk forever — unreachable by
+        // any later uninstall.
+        uninstallPalworldPackage({
+          palworldDir: path.join(serverRoot, "palworld-server"),
+          fullName: installation.packageId,
+        });
         await installPalworldThunderstore({
           serverId, palworldDir: path.join(serverRoot, "palworld-server"),
           packageId: installation.packageId, name: installation.name, warnings: [],
@@ -285,7 +294,7 @@ export async function resolveModUpdate(
     const serverDir = path.join(serverRoot, serverDirName);
     const pluginsDir = path.join(serverDir, "BepInEx", "plugins");
     const modDir = safeJoin(pluginsDir, installation.packageId);
-    if (isBepInExCore(installation.packageId)) {
+    if (isBepInExCoreInstall(installation.packageId)) {
       // The core pack installs over the server root, not the plugins dir —
       // same as the install route's auto-provisioning. The wrapper folder is
       // stripped when the pack has one.
