@@ -431,18 +431,28 @@ export async function installValheimThunderstore(args: {
     serverDir: valheimDir,
     community: communityForGame("VALHEIM")!,
     ensureCore: async () => {
-      // Official BepInEx release zip (Valheim is Mono). The recorded row is
-      // keyed to the community core pack id that dependency strings
-      // reference, so the resolver's BepInExPack skip stays truthful.
-      const zipPath = uniqueStagingZip(path.dirname(valheimDir), "bepinex");
-      const defaultBepInExUrl = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
+      // The community core pack (BepInEx 5.4.22 + Valheim fixes), provisioned
+      // from the same index updates resolve against — the row's id AND version
+      // then describe exactly what is on disk, so the staleness banner tells
+      // the truth. (The official BepInEx zip used to be installed but recorded
+      // as a guessed denikson version.)
+      const index = await fetchCommunityIndex(communityForGame("VALHEIM")!);
+      const corePkg = index.find((p) => p.full_name === VALHEIM_CORE_PACKAGE_ID);
+      const coreVersion = corePkg ? newestVersion(corePkg) : null;
+      if (!corePkg || !coreVersion) {
+        throw new Error("BepInExPack_Valheim is no longer available on Thunderstore — it is required for Valheim plugins.");
+      }
 
-      await downloadFile(defaultBepInExUrl, zipPath);
+      const tempZip = uniqueStagingZip(valheimDir, "bepinex-core");
+      await downloadFile(coreVersion.download_url, tempZip);
       try {
-        new AdmZip(zipPath).extractAllTo(valheimDir, true);
-        try { fs.unlinkSync(zipPath); } catch (_) {}
+        // The pack wraps everything in BepInExPack_Valheim/ — stripped so
+        // doorstop_config.ini and BepInEx/ land at the server root.
+        extractCorePack(new AdmZip(tempZip), valheimDir);
       } catch (err: any) {
-        throw new Error(`Failed to extract BepInEx: ${err.message}`);
+        throw new Error(`Failed to extract BepInExPack_Valheim: ${err.message}`);
+      } finally {
+        try { fs.unlinkSync(tempZip); } catch (_) {}
       }
 
       await prisma.modInstallation.upsert({
@@ -453,12 +463,12 @@ export async function installValheimThunderstore(args: {
             packageId: VALHEIM_CORE_PACKAGE_ID
           }
         },
-        update: { version: "5.4.2202" },
+        update: { version: coreVersion.version_number },
         create: {
           serverId,
           provider: "thunderstore",
           packageId: VALHEIM_CORE_PACKAGE_ID,
-          version: "5.4.2202",
+          version: coreVersion.version_number,
           name: "BepInExPack Valheim"
         }
       });

@@ -89,6 +89,30 @@ describe("planPalworldPackage", () => {
     expect(plan.files.map((f) => f.destRel)).toEqual(["mods/Nested/enabled.txt"]);
   });
 
+  it("uninstall keeps files another manifest still claims", () => {
+    // Two packages shipping the same payload: last writer wins at install,
+    // and the file belongs to the survivor until its own uninstall.
+    const pal = path.join(dir, "pw");
+    fs.mkdirSync(path.join(pal, ".realmswap"), { recursive: true });
+    fs.mkdirSync(path.join(pal, "mods", "Shared"), { recursive: true });
+    fs.mkdirSync(path.join(pal, "mods", "A"), { recursive: true });
+    fs.writeFileSync(path.join(pal, "mods", "Shared", "lib.dll"), "shared");
+    fs.writeFileSync(path.join(pal, "mods", "A", "only.txt"), "a");
+    fs.writeFileSync(
+      path.join(pal, ".realmswap", "A-Pkg.json"),
+      JSON.stringify({ files: ["mods/Shared/lib.dll", "mods/A/only.txt"] })
+    );
+    fs.writeFileSync(path.join(pal, ".realmswap", "B-Pkg.json"), JSON.stringify({ files: ["mods/Shared/lib.dll"] }));
+
+    const res = uninstallPalworldPackage({ palworldDir: pal, fullName: "A-Pkg" });
+    expect(res.removedFiles).toBe(1); // only.txt — the shared file survives
+    expect(fs.existsSync(path.join(pal, "mods", "Shared", "lib.dll"))).toBe(true);
+    expect(fs.existsSync(path.join(pal, "mods", "A"))).toBe(false); // pruned
+
+    uninstallPalworldPackage({ palworldDir: pal, fullName: "B-Pkg" });
+    expect(fs.existsSync(path.join(pal, "mods", "Shared", "lib.dll"))).toBe(false);
+  });
+
   it("maps game-rooted package paths (BasesPlus layout) into the manager dirs", () => {
     const zip = zipFrom({
       "Pal/Binaries/Win64/Mods/BasesPlus/Enabled.txt": "",

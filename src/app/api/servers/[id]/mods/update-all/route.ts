@@ -38,10 +38,12 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
     // Pack-owned mods move as a unit via update-pack; bumping one to
     // provider-latest breaks the pins the rest of the pack was resolved
-    // against (live: kubejs .374 → .377 broke kubejstweaks' mixins).
+    // against (live: kubejs .374 → .377 broke kubejstweaks' mixins). Disabled
+    // mods aren't loaded, so there is nothing to update for them.
     const packOwned = await packOwnedPackageIds(serverId);
-    const updatable = installations.filter((i) => !packOwned.has(i.packageId));
-    const packOwnedCount = installations.length - updatable.length;
+    const notDisabled = installations.filter((i) => !i.disabled);
+    const updatable = notDisabled.filter((i) => !packOwned.has(i.packageId));
+    const packOwnedCount = notDisabled.length - updatable.length;
 
     // Resolution phase — network lookups happen before any snapshot so a
     // dead provider or up-to-date server never creates a rollback point.

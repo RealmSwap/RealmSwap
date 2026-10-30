@@ -37,6 +37,7 @@ import {
   Tag,
   Layers,
   Trash,
+  Power,
 } from "lucide-react";
 
 /* ─── Types ────────────────────────────────────────────────────── */
@@ -404,6 +405,7 @@ export default function ModsView({ user }: ModsViewProps) {
   const [loaderBusy, setLoaderBusy] = useState(false);
   const { event: installEvent, start: startInstallProgress, dismiss: dismissInstallProgress } = useModInstallProgress(selectedServer?.id);
   const [updatingModId, setUpdatingModId] = useState<string | null>(null);
+  const [togglingModId, setTogglingModId] = useState<string | null>(null);
   const [updateAllBusy, setUpdateAllBusy] = useState(false);
   const [updatePackBusy, setUpdatePackBusy] = useState(false);
   const [packInfo, setPackInfo] = useState<any>(null);
@@ -743,6 +745,29 @@ export default function ModsView({ user }: ModsViewProps) {
       else toast.error(err.message);
     } finally {
       setUpdatingModId(null);
+    }
+  };
+
+  /** Disable/enable an installed mod: files stay on disk, the game stops
+   *  (or resumes) loading it. Palworld packages can't be toggled. */
+  const handleToggleMod = async (mod: any) => {
+    if (!selectedServer) return;
+    setTogglingModId(mod.id);
+    try {
+      const res = await fetch(
+        `/api/servers/${selectedServer.id}/mods/${mod.packageId}/${mod.disabled ? "enable" : "disable"}`,
+        { method: "POST" }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Toggle failed");
+      toast.success(data.message);
+      const fresh = await fetch(`/api/servers/${selectedServer.id}/mods`).then((r) => r.json());
+      setInstalledMods(fresh.mods || fresh || []);
+      refreshUpdates();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setTogglingModId(null);
     }
   };
 
@@ -2104,6 +2129,11 @@ export default function ModsView({ user }: ModsViewProps) {
                             <span className="text-[9px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-extrabold uppercase tracking-wide">
                               {mod.provider}
                             </span>
+                            {mod.disabled && (
+                              <span className="text-[9px] bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded font-extrabold uppercase tracking-wide">
+                                Disabled
+                              </span>
+                            )}
                             {mod.installedAt && (
                               <span className="text-[9px] text-mutedText flex items-center gap-1">
                                 <Clock className="w-2.5 h-2.5" />
@@ -2113,7 +2143,7 @@ export default function ModsView({ user }: ModsViewProps) {
                           </div>
 
                           <div className="flex items-center gap-2">
-                            {mod.provider === "modrinth" || mod.provider === "thunderstore" || mod.provider === "curseforge" || mod.provider === "umod" || mod.provider === "ficsit" || (mod.provider === "workshop" && (game === "TERRARIA" || game === "ZOMBOID")) ? (
+                            {!mod.disabled && (mod.provider === "modrinth" || mod.provider === "thunderstore" || mod.provider === "curseforge" || mod.provider === "umod" || mod.provider === "ficsit" || (mod.provider === "workshop" && (game === "TERRARIA" || game === "ZOMBOID"))) ? (
                               <button
                                 onClick={() => handleUpdateMod(mod)}
                                 disabled={loading || updatingModId === mod.id}
@@ -2133,6 +2163,23 @@ export default function ModsView({ user }: ModsViewProps) {
                               >
                                 <Search className={`w-3 h-3 ${updatingModId === mod.id ? "animate-spin" : ""}`} />
                                 Check for updates
+                              </button>
+                            )}
+                            {game !== "PALWORLD" && (
+                              <button
+                                onClick={() => handleToggleMod(mod)}
+                                disabled={togglingModId === mod.id}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-50 ${
+                                  mod.disabled
+                                    ? "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
+                                    : "bg-amber-500/10 hover:bg-amber-500/20 text-amber-400"
+                                }`}
+                                title={mod.disabled
+                                  ? "Load this mod again — its files were kept on disk"
+                                  : "Keep the files on disk, but stop the game from loading this mod"}
+                              >
+                                <Power className={`w-3 h-3 ${togglingModId === mod.id ? "animate-pulse" : ""}`} />
+                                {togglingModId === mod.id ? "…" : mod.disabled ? "Enable" : "Disable"}
                               </button>
                             )}
                             <button

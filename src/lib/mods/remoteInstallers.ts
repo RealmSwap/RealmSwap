@@ -20,6 +20,7 @@ import {
 import {
   communityForGame, fetchCommunityIndex, findVersionEntry, newestVersion,
   collectDependencies, extractThunderstorePackage, extractCorePack, isBepInExCoreInstall,
+  VALHEIM_CORE_PACKAGE_ID, VRISING_CORE_PACKAGE_ID,
 } from "@/lib/mods/thunderstore";
 import {
   OXIDE_CORE_MARKER, OXIDE_CORE_PACKAGE_ID, OXIDE_CORE_DOWNLOAD_URL, fetchUmodPluginMeta,
@@ -535,9 +536,6 @@ export async function installZomboidWorkshopModRemote(args: {
 
 // ─── Valheim / V Rising (Thunderstore over BepInEx) ─────────────────────────
 
-const VALHEIM_BEPINEX_URL = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.22/BepInEx_x64_5.4.22.0.zip";
-export const VALHEIM_CORE_ROW_ID = "denikson-BepInExPack_Valheim";
-
 async function bepinexCorePresent(serverId: string, subDir: string): Promise<boolean> {
   const entries = await agentListServerDir(serverId, subDir).catch(() => []);
   return entries.some((e) => e.name === "doorstop_config.ini");
@@ -583,18 +581,17 @@ async function installBepInExThunderstoreRemote(args: {
 
     if (needCore) {
       const tempZip = path.join(staging, ".core.zip");
-      if (game === "VALHEIM") {
-        await downloadFile(VALHEIM_BEPINEX_URL, tempZip);
-        new AdmZip(tempZip).extractAllTo(serverStage, true);
-      } else {
-        const corePkg = index.find((p) => p.full_name === "BepInEx-BepInExPack_V_Rising");
-        const coreVersion = corePkg ? newestVersion(corePkg) : null;
-        if (!corePkg || !coreVersion) {
-          throw new Error("BepInExPack_V_Rising is no longer available on Thunderstore — it is required for V Rising plugins.");
-        }
-        await downloadFile(coreVersion.download_url, tempZip);
-        extractCorePack(new AdmZip(tempZip), serverStage);
+      // Both games provision their community core pack from the index updates
+      // resolve against — same distribution channel as the local flow, and
+      // the recorded row version describes exactly what shipped.
+      const coreId = game === "VALHEIM" ? VALHEIM_CORE_PACKAGE_ID : VRISING_CORE_PACKAGE_ID;
+      const corePkg = index.find((p) => p.full_name === coreId);
+      const coreVersion = corePkg ? newestVersion(corePkg) : null;
+      if (!corePkg || !coreVersion) {
+        throw new Error(`${coreId} is no longer available on Thunderstore — it is required for ${game === "VALHEIM" ? "Valheim" : "V Rising"} plugins.`);
       }
+      await downloadFile(coreVersion.download_url, tempZip);
+      extractCorePack(new AdmZip(tempZip), serverStage);
       fs.unlinkSync(tempZip);
     }
 

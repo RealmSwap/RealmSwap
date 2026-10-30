@@ -192,6 +192,16 @@ describe("reconcileInstalledMods", () => {
       expect(result.removed).toBe(1);
       expect(bag.deletes).toEqual(["r1"]);
     });
+
+    it("keeps disabled rows whose plugins are parked outside plugins/", async () => {
+      bag.server = { id: "s1", game: "VALHEIM" };
+      bag.rows = [{ id: "r1", packageId: "owner-pkgA", disabled: true }];
+
+      const result = await reconcileInstalledMods("s1");
+
+      expect(result.removed).toBe(0);
+      expect(bag.deletes).toEqual([]);
+    });
   });
 
   describe("Zomboid", () => {

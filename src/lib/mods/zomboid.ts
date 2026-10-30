@@ -76,6 +76,16 @@ export function removeZomboidWorkshopModContent(content: string, workshopId: str
 }
 
 /**
+ * Content-based disable: strip ONLY the Mods= entries. WorkshopItems= keeps
+ * the item, so the SteamCMD download stays and enable re-appends the ids.
+ */
+export function disableZomboidWorkshopModContent(content: string, modIds: string[]): string {
+  if (modIds.length === 0) return content;
+  const remove = new Set(modIds);
+  return upsertList(content, "Mods", readList(content, "Mods").filter((x) => !remove.has(x)));
+}
+
+/**
  * Register a workshop mod on both keys. Idempotent per id; safe on a missing
  * ini. One workshop item can ship several mod folders — pass every mod ID.
  */
