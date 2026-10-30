@@ -33,7 +33,13 @@ export async function register() {
     const remoteServers = await prisma.server.findMany({
       where: { runnerType: "AGENT", status: { in: ["RUNNING", "STARTING"] } },
     }).catch(() => []);
-    for (const server of remoteServers) startMonitoring(server);
+    for (const server of remoteServers) startMonitoring(server, getRunner(server.runnerType));
+
+    // Player sampling + auto-stop evaluation subscribe to the monitor tick
+    // via the event bus; wiring it here keeps processMonitor from importing
+    // autoStop (which would close an import cycle through the runners).
+    const { attachAutoStopSampler } = await import("@/lib/autoStop");
+    attachAutoStopSampler();
 
     // Local Windows servers outlive this process too (Windows does not kill
     // child processes on quit/crash): mark dead ones stopped, reattach

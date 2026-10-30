@@ -1,16 +1,12 @@
 import { prisma } from "./db";
-import { getRunner } from "./runners";
+import type { ServerRunner } from "./runners/types";
 import { Server } from "@/generated/client";
 import { serverEventBus } from "./eventBus";
 import { maybePruneTelemetry } from "./telemetryRetention";
 import { getServerDiskBytes, bytesToMB } from "./diskUsage";
 import { cachedAgentStorageBreakdown } from "./agents/agentDisk";
 import { forgetTreeStats } from "./runners/winProcessStats";
-import {
-  maybeSamplePlayers,
-  takePendingPlayerSample,
-  resetAutoStopState,
-} from "./autoStop";
+import { resetAutoStopState, takePendingPlayerSample } from "./autoStopState";
 
 // Global store for process monitoring intervals and history
 const globalForMonitor = globalThis as unknown as {
@@ -32,8 +28,10 @@ const errorCounts = new Map<string, number>();
 const MAX_HISTORY = 30; // ~5 minutes at 10s intervals
 const SAMPLE_INTERVAL_MS = 10000;
 
-// Start monitoring a server process
-export function startMonitoring(server: Server): void {
+// Start monitoring a server process. The runner is injected by the caller:
+// importing the factory here would close an import cycle (every runner
+// imports this module to start/stop its own monitoring).
+export function startMonitoring(server: Server, runner: ServerRunner): void {
   const serverId = server.id;
   // Don't duplicate monitors
   if (monitorIntervals.has(serverId)) {
@@ -48,8 +46,6 @@ export function startMonitoring(server: Server): void {
   if (!statsHistory.has(serverId)) {
     statsHistory.set(serverId, { cpu: [], memory: [] });
   }
-
-  const runner = getRunner(server.runnerType);
 
   const interval = setInterval(async () => {
     try {
@@ -121,10 +117,11 @@ export function startMonitoring(server: Server): void {
         }
       }).catch(() => {});
 
-      // Background player sample + auto-stop evaluation — never blocks the tick.
-      maybeSamplePlayers(server).catch((e) =>
-        console.error(`[Player Sampler] Server ${serverId}:`, e?.message)
-      );
+      // Background player sample + auto-stop evaluation — never blocks the
+      // tick. The sampler subscribes to this event (attachAutoStopSampler,
+      // wired at boot in instrumentation.ts); importing autoStop here would
+      // close an import cycle through the runners.
+      serverEventBus.emit("monitor_tick", { serverId });
 
       // Rows past the 7-day retention window are deleted here (throttled to
       // at most one prune per hour) so the table can't grow forever.

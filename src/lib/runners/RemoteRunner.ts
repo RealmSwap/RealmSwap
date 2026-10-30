@@ -84,7 +84,7 @@ export class RemoteRunner implements ServerRunner {
     }
     // The agent reports STARTING/RUNNING via sync; the monitor reads
     // agent-reported stats from the row.
-    startMonitoring(record);
+    startMonitoring(record, this);
   }
 
   async stop(server: Server): Promise<void> {

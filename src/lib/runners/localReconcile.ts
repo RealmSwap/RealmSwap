@@ -3,6 +3,7 @@ import { Server } from "@/generated/client";
 import { prisma } from "../db";
 import { unmapPort } from "../upnp";
 import { startMonitoring } from "../processMonitor";
+import { getRunner } from "./factory";
 import { appendLog } from "../serverLogs";
 import { readProcessSnapshot, isPidAliveTasklist, type ProcessRow } from "./winProcessStats";
 
@@ -94,7 +95,7 @@ async function reconcileOne(
       where: { id: server.id },
       data: { status: "RUNNING" },
     });
-    startMonitoring(server);
+    startMonitoring(server, getRunner(server.runnerType));
     appendLog(
       server.id,
       "[Boot] App restarted while this server was still running — monitoring reattached. Console input needs a restart to come back."

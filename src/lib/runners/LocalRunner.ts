@@ -408,7 +408,7 @@ function waitForReadiness(
 }
 
 // Main: Start a local game server
-async function startLocalServer(serverId: string, game: string, ramAllocation: number): Promise<any> {
+async function startLocalServer(serverId: string, game: string, ramAllocation: number, runner: LocalRunner): Promise<any> {
   const baseDir = getLocalServerDir(serverId);
   clearLogs(serverId);
 
@@ -746,7 +746,7 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
   });
   serverEventBus.emit("status_update", { serverId, status: "STARTING" });
 
-  startMonitoring(server);
+  startMonitoring(server, runner);
 
   // Wait for readiness
   const tcpPorts = planPorts(spec, ctx).filter(p => p.protocol === "TCP").map(p => p.port);
@@ -757,7 +757,7 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     watchInviteCodeFile(serverId, installDir, launch.inviteCodeFile, child as any, logWriter);
   }
 
-  child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir));
+  child.on("exit", (code, signal) => handleProcessExit(serverId, code, signal, baseDir, runner));
 }
 
 // Some servers (Windrose) expose no join code on stdout — they write a server-generated
@@ -797,7 +797,7 @@ function watchInviteCodeFile(
 }
 
 // Clean up database on process exit — with crash detection & auto-restart
-async function handleProcessExit(serverId: string, code: number | null, signal: string | null, baseDir: string) {
+async function handleProcessExit(serverId: string, code: number | null, signal: string | null, baseDir: string, runner: LocalRunner) {
   localProcesses.delete(serverId);
   stopMonitoring(serverId);
   clearProgress(serverId);
@@ -825,7 +825,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
         }).catch((e: any) => appendLog(serverId, `[Java] DB status update failed: ${e.message}`));
         serverEventBus.emit("status_update", { serverId, status: "STARTING" });
         clearStatsHistory(serverId);
-        startLocalServer(serverId, serverRec.game, serverRec.ramAllocation).catch((e: any) =>
+        startLocalServer(serverId, serverRec.game, serverRec.ramAllocation, runner).catch((e: any) =>
           appendLog(serverId, `[Java] Retry after version detection failed: ${e.message}`)
         );
         return;
@@ -870,7 +870,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
         }).catch((e: any) => appendLog(serverId, `[Mod Quarantine] DB status update failed: ${e.message}`));
         serverEventBus.emit("status_update", { serverId, status: "STARTING" });
         clearStatsHistory(serverId);
-        startLocalServer(serverId, serverRec.game, serverRec.ramAllocation).catch((e: any) =>
+        startLocalServer(serverId, serverRec.game, serverRec.ramAllocation, runner).catch((e: any) =>
           appendLog(serverId, `[Mod Quarantine] Relaunch failed: ${e.message}`)
         );
         return;
@@ -923,7 +923,7 @@ async function handleProcessExit(serverId: string, code: number | null, signal: 
         setTimeout(async () => {
           try {
             clearStatsHistory(serverId);
-            await startLocalServer(serverId, serverRec.game, serverRec.ramAllocation);
+            await startLocalServer(serverId, serverRec.game, serverRec.ramAllocation, runner);
           } catch (restartErr: any) {
             appendLog(serverId, `[Crash Detection] Auto-restart failed: ${restartErr.message}`);
             await prisma.server.update({
@@ -1181,7 +1181,7 @@ export class LocalRunner implements ServerRunner {
   }
 
   async start(server: Server, definition: GameDefinition | null): Promise<void> {
-    await startLocalServer(server.id, server.game, server.ramAllocation);
+    await startLocalServer(server.id, server.game, server.ramAllocation, this);
   }
 
   async stop(server: Server): Promise<void> {

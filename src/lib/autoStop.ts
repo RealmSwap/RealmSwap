@@ -6,6 +6,7 @@ import { resolveGameHost } from "./gameHost";
 import { parseSpec } from "./definitions/serialize";
 import { sendNotification } from "./notifications";
 import { evaluateAutoStop, AutoStopKind, PLAYER_SAMPLE_INTERVAL_MS } from "./autoStopRules";
+import { stateFor } from "./autoStopState";
 
 /**
  * Player-count sampling + the auto-stop engine that consumes it.
@@ -28,50 +29,24 @@ const PLAYER_QUERY_TIMEOUT_MS = 8_000;
 export const IDLE_AUTO_STOP_ACTION = "IDLE_AUTO_STOP";
 export const SESSION_AUTO_STOP_ACTION = "SESSION_AUTO_STOP";
 
-interface PlayerSample {
-  playerCount: number;
-  maxPlayers: number | null;
-}
-
-interface AutoStopState {
-  lastSampleAt: number;
-  inFlight: boolean;
-  stopping: boolean;
-  emptyStreak: number;
-  pending: PlayerSample | null; // completed sample not yet attached to a telemetry row
-}
-
 const globalForAutoStop = globalThis as unknown as {
-  __autoStopState: Map<string, AutoStopState> | undefined;
+  __autoStopSamplerAttached: boolean | undefined;
 };
 
-function stateMap(): Map<string, AutoStopState> {
-  if (!globalForAutoStop.__autoStopState) globalForAutoStop.__autoStopState = new Map();
-  return globalForAutoStop.__autoStopState;
-}
-
-function stateFor(serverId: string): AutoStopState {
-  const map = stateMap();
-  let state = map.get(serverId);
-  if (!state) {
-    state = { lastSampleAt: 0, inFlight: false, stopping: false, emptyStreak: 0, pending: null };
-    map.set(serverId, state);
-  }
-  return state;
-}
-
-/** A fresh run starts with a clean slate — the streak must span one continuous uptime. */
-export function resetAutoStopState(serverId: string): void {
-  stateMap().delete(serverId);
-}
-
-/** The sample completed since the last tick, if any — consumed by the telemetry stamp. */
-export function takePendingPlayerSample(serverId: string): PlayerSample | null {
-  const state = stateMap().get(serverId);
-  if (!state?.pending) return null;
-  const sample = state.pending;
-  state.pending = null;
-  return sample;
+/**
+ * Subscribe the sampler to the monitor's tick event. Called once at boot from
+ * instrumentation.ts — processMonitor can't import this module directly,
+ * because the runners import the monitor and autoStopServer needs the runner,
+ * which would close an import cycle.
+ */
+export function attachAutoStopSampler(): void {
+  if (globalForAutoStop.__autoStopSamplerAttached) return;
+  globalForAutoStop.__autoStopSamplerAttached = true;
+  serverEventBus.on("monitor_tick", ({ serverId }: { serverId: string }) => {
+    maybeSamplePlayers({ id: serverId }).catch((e) =>
+      console.error(`[Player Sampler] Server ${serverId}:`, e?.message)
+    );
+  });
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
