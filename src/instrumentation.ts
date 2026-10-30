@@ -34,6 +34,21 @@ export async function register() {
       where: { runnerType: "AGENT", status: { in: ["RUNNING", "STARTING"] } },
     }).catch(() => []);
     for (const server of remoteServers) startMonitoring(server);
+
+    // Local Windows servers outlive this process too (Windows does not kill
+    // child processes on quit/crash): mark dead ones stopped, reattach
+    // monitoring to live ones, and clean up interrupted updates.
+    const { reconcileLocalServersOnBoot } = await import("@/lib/runners/localReconcile");
+    await reconcileLocalServersOnBoot().catch((err: any) =>
+      console.error("[LocalRunner] boot reconcile failed:", err?.message)
+    );
+
+    // The dashboard hosts game processes — an unhandled stream error (EPIPE
+    // from writing stdin to a just-died server) must not take the whole
+    // process down and orphan every running server with it. Log loudly and
+    // keep serving.
+    process.on("uncaughtException", (err) => console.error("[Uncaught exception, keeping dashboard alive]", err));
+    process.on("unhandledRejection", (reason) => console.error("[Unhandled rejection, keeping dashboard alive]", reason));
   }
   if (!process.env.SENTRY_DSN) return;
   const Sentry = await import("@sentry/nextjs");

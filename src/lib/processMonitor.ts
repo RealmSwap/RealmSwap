@@ -5,6 +5,7 @@ import { serverEventBus } from "./eventBus";
 import { maybePruneTelemetry } from "./telemetryRetention";
 import { getServerDiskBytes, bytesToMB } from "./diskUsage";
 import { cachedAgentStorageBreakdown } from "./agents/agentDisk";
+import { forgetTreeStats } from "./runners/winProcessStats";
 import {
   maybeSamplePlayers,
   takePendingPlayerSample,
@@ -135,7 +136,43 @@ export function startMonitoring(server: Server): void {
 
       if (fails === 3) { // After 3 consecutive failures (~30s), mark degraded and alert
         console.error(`[Process Monitor Error] Server ${serverId}:`, e.message);
-        
+
+        // A LOCAL server whose process tree vanished without an exit event is
+        // a server the dashboard adopted after an app restart (monitor-only,
+        // no exit watcher) that has now actually died. That's a crash, not a
+        // stats glitch — say so instead of leaving it RUNNING/DEGRADED.
+        if (server.runnerType === "LOCAL" && /No matching pid/i.test(e?.message ?? "")) {
+          clearInterval(interval);
+          monitorIntervals.delete(serverId);
+          errorCounts.delete(serverId);
+
+          await prisma.server.update({
+            where: { id: serverId },
+            data: { status: "CRASHED", pid: null, cpuUsage: 0, memoryUsage: 0 },
+          }).catch(() => {});
+          serverEventBus.emit("status_update", { serverId, status: "CRASHED" });
+
+          const fresh = await prisma.server.findUnique({ where: { id: serverId } }).catch(() => null);
+          if (fresh) {
+            await prisma.activityLog.create({
+              data: {
+                userId: fresh.userId,
+                action: "SERVER_CRASH",
+                details: `Server '${fresh.name}' (${fresh.game}) stopped unexpectedly — the dashboard was restarted since it launched, so no exit event was captured.`,
+              },
+            }).catch(() => {});
+            import("./notifications").then(({ sendNotification }) => {
+              sendNotification(
+                fresh.userId,
+                "⚠️ Server stopped unexpectedly",
+                `Your server '${fresh.name}' is no longer running. It was started in a previous app session; start it again from the dashboard.`,
+                { serverId }
+              );
+            }).catch(() => {});
+          }
+          return;
+        }
+
         await prisma.server.update({
           where: { id: serverId },
           data: { healthStatus: "DEGRADED" }
@@ -146,13 +183,13 @@ export function startMonitoring(server: Server): void {
           healthStatus: "DEGRADED"
         });
 
-        const server = await prisma.server.findUnique({ where: { id: serverId } }).catch(() => null);
-        if (server) {
+        const degradedServer = await prisma.server.findUnique({ where: { id: serverId } }).catch(() => null);
+        if (degradedServer) {
           await prisma.activityLog.create({
             data: {
-              userId: server.userId,
+              userId: degradedServer.userId,
               action: "SYSTEM_ERROR",
-              details: `Process monitoring failed for ${server.name} (DEGRADED). Error: ${e.message}`
+              details: `Process monitoring failed for ${degradedServer.name} (DEGRADED). Error: ${e.message}`
             }
           }).catch(() => {});
         }
@@ -181,4 +218,7 @@ export function getStatsHistory(serverId: string): { cpu: number[]; memory: numb
 // Clear stats history (called on fresh start)
 export function clearStatsHistory(serverId: string): void {
   statsHistory.delete(serverId);
+  // Drop the CPU baseline too — the next sample starts a fresh delta window
+  // instead of computing against a dead process tree.
+  forgetTreeStats(serverId);
 }
