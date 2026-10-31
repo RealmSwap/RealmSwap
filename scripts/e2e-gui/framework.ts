@@ -5,7 +5,7 @@
  * from either harness.
  */
 
-import type { ElectronApplication, Page } from "playwright";
+import type { ElectronApplication, Page, Response } from "playwright";
 import type { FakeSupabase } from "../e2e-api/fakeSupabase";
 
 export interface GuiContext {
@@ -67,6 +67,30 @@ export async function waitForCardStatus(
   throw new Error(
     `server card "${serverName}" never showed ${want.join(" | ")} within ${timeoutMs}ms — last card text: ${last.slice(0, 300)}`
   );
+}
+
+/**
+ * Run `action` and capture the first matching request/response it fires.
+ * Promise.all attaches the rejection handler immediately, so a response that
+ * never arrives surfaces as a scenario failure instead of an unhandled
+ * rejection that crashes the whole harness run.
+ */
+export async function captureResponseOn(
+  page: Page,
+  predicate: (url: string, method: string) => boolean,
+  action: () => Promise<void>,
+  timeoutMs = 30_000
+): Promise<Response> {
+  const [captured] = await Promise.all([
+    page
+      .waitForResponse((r) => predicate(r.url(), r.request().method()), { timeout: timeoutMs })
+      .catch((err: Error) => err),
+    action(),
+  ]);
+  if (captured instanceof Error) {
+    throw new Error(`expected request never fired: ${captured.message}`);
+  }
+  return captured as Response;
 }
 
 /**

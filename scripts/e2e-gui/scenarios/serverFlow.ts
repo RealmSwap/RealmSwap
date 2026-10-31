@@ -8,7 +8,7 @@
  */
 
 import { MC_BOOT_TIMEOUT_MS } from "../config";
-import { STATUS_LABELS, dismissCelebrationIfPresent, scenario, waitForCardStatus } from "../framework";
+import { STATUS_LABELS, captureResponseOn, dismissCelebrationIfPresent, scenario, waitForCardStatus } from "../framework";
 
 const SERVER_NAME = process.env.E2E_GUI_SERVER_NAME || "GUI Smoke Server";
 
@@ -64,14 +64,18 @@ export const serverLifecycleScenarios = [
     const before = await page.locator("div.font-mono > div").count();
     // Capture the POST itself: a non-2xx here means the route refused (server
     // state), silence means the click never fired it — the line-count wait
-    // below can't tell those apart.
-    const cmdResponse = page.waitForResponse(
-      (res) => res.url().includes("/console") && res.request().method() === "POST",
-      { timeout: 20_000 }
+    // below can't tell those apart. Promise.all attaches handlers immediately
+    // so a timeout can never become an unhandled rejection that crashes the
+    // whole harness run.
+    const cmdRes = await captureResponseOn(
+      page,
+      (u, m) => u.includes("/console") && m === "POST",
+      async () => {
+        await commandInput.fill("list");
+        await page.getByRole("button", { name: "Send", exact: true }).click();
+      },
+      20_000
     );
-    await commandInput.fill("list");
-    await page.getByRole("button", { name: "Send", exact: true }).click();
-    const cmdRes = await cmdResponse;
     if (!cmdRes.ok()) {
       throw new Error(`console POST answered ${cmdRes.status()}: ${(await cmdRes.text()).slice(0, 300)}`);
     }
@@ -110,12 +114,12 @@ export const serverLifecycleScenarios = [
     // --- Files button drives POST /api/system/open-folder (ledger: the one
     // route-method the API harness leaves to the GUI layer). The folder
     // exists after the first boot, so the route must answer ok:true. ---
-    const openFolderResponse = page.waitForResponse(
-      (res) => res.url().includes("/api/system/open-folder") && res.request().method() === "POST"
+    const openFolderRes = await captureResponseOn(
+      page,
+      (u, m) => u.includes("/api/system/open-folder") && m === "POST",
+      () => card.getByRole("button", { name: "Files" }).click()
     );
-    await card.getByRole("button", { name: "Files" }).click();
-    const res = await openFolderResponse;
-    const body = await res.json();
+    const body = await openFolderRes.json();
     if (!body.ok) {
       throw new Error(`/api/system/open-folder answered ok:false: ${JSON.stringify(body)}`);
     }
