@@ -89,10 +89,13 @@ export async function POST(req: NextRequest) {
       serverEventBus.emit("status_update", { serverId: server.id, status });
     };
 
+    // The RUNNING transition belongs to the runner's readiness evidence
+    // (LOCAL: port accepts / log pattern; AGENT: agent-reported state). A
+    // blind RUNNING here reported Discord-started servers online while they
+    // were still provisioning — or after the boot had already crashed.
     if (action === "start") {
       await updateStatus("STARTING");
       await runner.start(server, null as any);
-      await updateStatus("RUNNING");
       await syncTunnel("start", server);
     } else if (action === "stop") {
       await runner.stop(server);
@@ -102,7 +105,6 @@ export async function POST(req: NextRequest) {
       await runner.stop(server);
       await updateStatus("STARTING");
       await runner.start(server, null as any);
-      await updateStatus("RUNNING");
       await syncTunnel("restart", server);
     } else {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });

@@ -54,7 +54,67 @@ npm run e2e:api:heavy    # + @heavy scenarios (real installs) — nightly
   pack upload dies in the preflight with a 400; every STOPPED-only mutation
   400s while the server is RUNNING; a non-member gets 403.
 
+- **surface/server-surface** — config round-trip (file written under the
+  server dir), settings render-now while stopped + validation + POST actions,
+  the honest "blocked" connectivity report for a stopped server, status-share
+  enable/rotate/disable with the **unauthenticated public `/s/<code>` page**
+  (no player/address leaks, `no-store`), the Minecraft SteamCMD update
+  refusal, atomic world import, log-archive list/read with a seeded rotated
+  zip, the offline cloud advisor (score 40 / STAY_LOCAL for vanilla MC), and
+  the `servers/stream` SSE heartbeat.
+- **surface/membership-players** — collaborator CRUD with the ADMIN/MODERATOR/
+  VIEWER ladder (owner-only management, role changes, revoke), host-link
+  shape-only validation + encrypted secret + honest dead-endpoint test,
+  transfer PUSH/PULL failing against a closed local port (lastError
+  persisted), the global players book (cross-user 404s, global ban + audit
+  row, `banned-players.json` written by sync), custom definition lifecycle
+  (admin-only custom scripts, slug collisions, 409 while referenced), and the
+  RCON routes (stopped refusal, RUNNING-without-credentials null contract).
+- **backups/s3-lifecycle** — snapshot create refuses a worldless server,
+  creates a verified zip under `local-backups/<serverId>/`, verify catches
+  corrupted bytes and enforces the Minecraft `level.dat` sentinel, restore
+  refuses corrupt zips and RUNNING servers but atomically swaps a good one,
+  retention pruning deletes rows + zips, backup/archive deletes, the two
+  storage surfaces (per-server analytics + system location map), and S3
+  settings (hint-only reads, honest dead-endpoint test).
+- **realmsync/host-client-sync** — the invite route starts the real host
+  listener on :3001 (public IP + UPnP attempt), the harness then acts as the
+  client: verifies the HMAC-signed manifest directly against the listener,
+  joins through `/api/client/sync` with a non-loopback host (the SSRF guard
+  refuses loopback), streams the SSE progress to `done`, receives the config
+  payload on disk, and revokes the invite (listener closes, re-join fails).
+- **marketplace/realms-roundtrip** — export streams a real `.realm` tar
+  (validated to contain `realm.json` with no secrets), `realms/validate`
+  consumes the exact bytes, `realms/import` creates the "(Imported)" server
+  with extracted files; over the fake Supabase's PostgREST surface the full
+  marketplace chain runs for real: publish (with secret scrubbing) → list →
+  mine → versions → favorite toggle → deploy (creates a local server and
+  writes the payload's config overrides) → version history.
+- **agents/nodes-lifecycle** — the harness plays the node over the real HMAC
+  protocol: admin mints an enrollment token, register is single-use, every
+  sync auth failure mode is explicit (bad headers/signature/timestamp,
+  protocol mismatch), the node claims **BACKUP_CREATE** and **BACKUP_RESTORE**
+  commands from the real dashboard flows, uploads a tar through the
+  path-signed upload endpoint, downloads through a one-shot token (pinning
+  the route's sign-without-query contract), reports results that complete the
+  dashboard's blocked request, drives agent-reported server status, and
+  revocation kills the handshake. Server assignment is a documented DB
+  fixture (no builtin definition ships a container plan).
+- **ops/user-system** — admin egg import (role gate, parse errors, real
+  import, slug collision), automations CRUD + validation + manual execute
+  (fire-and-forget with observable SUCCESS/FAILED executions), user
+  preferences (persisted) vs settings (guarded no-op), Discord link codes
+  seeded directly (single use, expiry, collision, 15-min rate limit),
+  web-push vapid provisioning + subscription dedupe, the billing kill-switch
+  (flat 404 even unauthenticated), system metrics/docker-status, and the
+  internal-token shutdown (stops services, not the app — asserted).
+
 ## What the heavy scenarios prove (nightly / `npm run e2e:api:heavy`)
+
+- **ops/bot-actions** — the Discord bot's action route with `BOT_API_SECRET`
+  set: wrong-bearer 401, unsupported action 400, unknown server 404, then the
+  real thing — bot `start` boots Minecraft to RUNNING and bot `stop` shuts it
+  down, both through the same path the bot uses.
 
 - **mods/loader-matrix** — fabric, quilt, and forge each install on their own
   fresh server and pass the post-install boot test (the launch path is
@@ -89,8 +149,11 @@ machine and in CI at all).
 `src/app/api/__tests__/routeLedger.test.ts` fails CI when a route ships
 without an entry, an entry goes stale, or a `covered` entry claims a scenario
 the harness doesn't define — so "every functionality is covered" can't rot as
-the app grows. Current baseline: 48 covered (auth, MC lifecycle, the full
-mods pipeline), 86 planned (PR-C full sweep), 1 manual.
+the app grows. Current baseline: **134 covered / 1 manual** (the one manual
+route spawns the OS file manager and belongs to the GUI layer). The only
+deliberately uncovered surfaces: real SteamCMD installs (Windows/CI-only —
+Layer 3), live UPnP/tunnels on real hardware (Layer 4), and real Discord /
+Stripe / S3 traffic (residual human list in the zero-human test plan).
 
 ## Environment knobs
 

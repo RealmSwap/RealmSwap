@@ -1,23 +1,33 @@
 {
   "POST /api/admin/import-egg": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "GET /api/agents/download/[token]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "agents/nodes-lifecycle"
+    ]
   },
   "POST /api/agents/register": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "agents/nodes-lifecycle"
+    ]
   },
   "POST /api/agents/sync": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "agents/nodes-lifecycle"
+    ]
   },
   "POST /api/agents/upload": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "agents/nodes-lifecycle"
+    ]
   },
   "POST /api/archives/[id]/restore": {
     "status": "covered",
@@ -26,8 +36,10 @@
     ]
   },
   "DELETE /api/archives/[id]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "POST /api/auth/login": {
     "status": "covered",
@@ -60,48 +72,70 @@
     ]
   },
   "POST /api/backups/[id]/restore": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "DELETE /api/backups/[id]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "POST /api/billing/checkout": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "POST /api/billing/portal": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "POST /api/billing/refresh": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "POST /api/bot/action": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/bot-actions"
+    ]
   },
   "GET /api/client/sync/progress": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "realmsync/host-client-sync"
+    ]
   },
   "POST /api/client/sync": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "realmsync/host-client-sync"
+    ]
   },
   "GET /api/definitions/[id]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "PUT /api/definitions/[id]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "DELETE /api/definitions/[id]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "GET /api/definitions": {
     "status": "covered",
@@ -110,80 +144,118 @@
     ]
   },
   "POST /api/definitions": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "POST /api/marketplace/[id]/favorite": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   },
   "GET /api/marketplace/[id]/versions": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   },
   "POST /api/marketplace/deploy": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   },
   "GET /api/marketplace/mine": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   },
   "POST /api/marketplace/publish": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   },
   "GET /api/marketplace": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   },
   "DELETE /api/nodes/[id]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "agents/nodes-lifecycle"
+    ]
   },
   "GET /api/nodes": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "agents/nodes-lifecycle"
+    ]
   },
   "POST /api/nodes": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "agents/nodes-lifecycle"
+    ]
   },
   "PATCH /api/players/[id]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "DELETE /api/players/[id]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "POST /api/players/[id]/sync": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "GET /api/players": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "POST /api/players": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "POST /api/realms/import": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   },
   "POST /api/realms/validate": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   },
   "GET /api/s/[code]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "POST /api/servers/[id]/advisor/analyze": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "POST /api/servers/[id]/archive": {
     "status": "covered",
@@ -192,72 +264,106 @@
     ]
   },
   "POST /api/servers/[id]/automations/[automationId]/execute": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "GET /api/servers/[id]/automations/[automationId]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "PUT /api/servers/[id]/automations/[automationId]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "DELETE /api/servers/[id]/automations/[automationId]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "GET /api/servers/[id]/automations": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "POST /api/servers/[id]/automations": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "POST /api/servers/[id]/backups/[backupId]/verify": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "GET /api/servers/[id]/backups": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "POST /api/servers/[id]/backups": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "POST /api/servers/[id]/backups/settings": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "GET /api/servers/[id]/collaborators": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "POST /api/servers/[id]/collaborators": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "DELETE /api/servers/[id]/collaborators": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "PUT /api/servers/[id]/collaborators": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "GET /api/servers/[id]/config": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "PUT /api/servers/[id]/config": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "GET /api/servers/[id]/connectivity": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "POST /api/servers/[id]/console": {
     "status": "covered",
@@ -278,44 +384,64 @@
     ]
   },
   "GET /api/servers/[id]/export": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   },
   "GET /api/servers/[id]/host-link": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "PUT /api/servers/[id]/host-link": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "DELETE /api/servers/[id]/host-link": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "POST /api/servers/[id]/host-link/test": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "POST /api/servers/[id]/import-world": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "POST /api/servers/[id]/invite": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "realmsync/host-client-sync"
+    ]
   },
   "DELETE /api/servers/[id]/invite": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "realmsync/host-client-sync"
+    ]
   },
   "GET /api/servers/[id]/logs/archives/[name]": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "GET /api/servers/[id]/logs/archives": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "GET /api/servers/[id]/logs": {
     "status": "covered",
@@ -497,12 +623,16 @@
     ]
   },
   "POST /api/servers/[id]/rcon/execute": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "GET /api/servers/[id]/rcon/players": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "POST /api/servers/[id]/restart": {
     "status": "covered",
@@ -523,16 +653,22 @@
     ]
   },
   "GET /api/servers/[id]/settings": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "PUT /api/servers/[id]/settings": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "POST /api/servers/[id]/settings": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "POST /api/servers/[id]/start": {
     "status": "covered",
@@ -547,8 +683,10 @@
     ]
   },
   "POST /api/servers/[id]/status-share": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "POST /api/servers/[id]/stop": {
     "status": "covered",
@@ -563,16 +701,22 @@
     ]
   },
   "POST /api/servers/[id]/transfer": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "GET /api/servers/[id]/transfer/tree": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/membership-players"
+    ]
   },
   "POST /api/servers/[id]/update": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "GET /api/servers": {
     "status": "covered",
@@ -588,63 +732,91 @@
     ]
   },
   "GET /api/servers/stream": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "surface/server-surface"
+    ]
   },
   "GET /api/storage": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "GET /api/system/docker-status": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "GET /api/system/metrics": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "POST /api/system/open-folder": {
     "status": "manual",
-    "note": "spawns the OS file manager \u2014 covered by GUI layer instead"
+    "note": "spawns the OS file manager — covered by GUI layer instead"
   },
   "POST /api/system/shutdown": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "GET /api/system/storage": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "POST /api/user/discord-link": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "POST /api/user/preferences": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "GET /api/user/s3-settings": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "PUT /api/user/s3-settings": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "POST /api/user/s3-settings/test": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "backups/s3-lifecycle"
+    ]
   },
   "PUT /api/user/settings": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "POST /api/web-push/subscribe": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   },
   "GET /api/web-push/vapid": {
-    "status": "planned",
-    "note": "PR-C sweep"
+    "status": "covered",
+    "scenarios": [
+      "ops/user-system"
+    ]
   }
 }

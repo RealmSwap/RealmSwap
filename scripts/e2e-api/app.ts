@@ -165,6 +165,7 @@ export async function startApp(): Promise<AppHandle> {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: FAKE_SUPABASE_ANON_KEY,
     SUPABASE_JWT_SECRET,
     GAMEVAULT_INTERNAL_TOKEN: INTERNAL_TOKEN,
+    BOT_API_SECRET: "e2e-api-harness-bot-secret",
     NEXT_TELEMETRY_DISABLED: "1",
     SENTRY_DSN: "",
     NEXT_PUBLIC_SENTRY_DSN: "",

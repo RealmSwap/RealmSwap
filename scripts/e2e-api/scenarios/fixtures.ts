@@ -138,6 +138,38 @@ export async function postMultipart(
   return { status: res.status, body, text };
 }
 
+/** POST a raw binary body (the JSON client can't send non-JSON payloads). */
+export async function postRaw(
+  client: ApiClient,
+  path: string,
+  body: Buffer,
+  contentType = "application/octet-stream"
+): Promise<{ status: number; headers: Headers; body: any; text: string }> {
+  const res = await fetch(`${client.baseUrl}${path}`, {
+    method: "POST",
+    headers: { cookie: client.cookie(), "content-type": contentType },
+    body: new Uint8Array(body),
+  });
+  const text = await res.text();
+  let parsed: any = null;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    parsed = null;
+  }
+  return { status: res.status, headers: res.headers, body: parsed, text };
+}
+
+/** GET a raw binary response (export streams a .realm tar, not JSON). */
+export async function getBinary(
+  client: ApiClient,
+  path: string
+): Promise<{ status: number; headers: Headers; bytes: Buffer }> {
+  const res = await fetch(`${client.baseUrl}${path}`, { headers: { cookie: client.cookie() } });
+  const bytes = Buffer.from(await res.arrayBuffer());
+  return { status: res.status, headers: res.headers, bytes };
+}
+
 /** Minimal config file the config route can parse, round-trip, and rewrite. */
 export const E2E_CONFIG_TOML = [
   "# RealmSwap e2e fixture config",
