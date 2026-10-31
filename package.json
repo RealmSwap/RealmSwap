@@ -9,6 +9,8 @@
     "start": "next start",
     "test": "vitest run",
     "e2e": "playwright test",
+    "e2e:api": "tsx scripts/e2e-api/run.ts --tag smoke",
+    "e2e:api:heavy": "tsx scripts/e2e-api/run.ts --tag all",
     "test:watch": "vitest",
     "postinstall": "prisma generate",
     "db:push": "cross-env DATABASE_URL=\"file:./dev.db\" prisma db push",

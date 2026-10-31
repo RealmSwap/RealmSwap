@@ -19,6 +19,10 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       },
       requiresJava: true,
       javaMajor: 25,
+      // gamedig's minecraft type is the vanilla server-list status ping
+      // (handshake + status request) — no enable-query needed, works on any
+      // vanilla/loader server. Feeds /query, the Players panel, and /s/<code>.
+      queryType: "minecraft",
       launch: {
         executable: "java",
         executableOnPath: true,

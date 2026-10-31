@@ -15,6 +15,7 @@
       },
       "requiresJava": true,
       "javaMajor": 25,
+      "queryType": "minecraft",
       "launch": {
         "executable": "java",
         "executableOnPath": true,

@@ -7,13 +7,36 @@
 import fs from "fs";
 import path from "path";
 import https from "https";
+import { execFile } from "child_process";
 import AdmZip from "adm-zip";
 import { computePercent } from "@/lib/downloadProgress";
 
-/** Adoptium Temurin "latest GA JRE" binary endpoint for a Windows x64 major version.
- *  This URL 302-redirects to the actual .zip asset. */
-export function adoptiumUrl(major: number): string {
-  return `https://api.adoptium.net/v3/binary/latest/${major}/ga/windows/x64/jre/hotspot/normal/eclipse`;
+export type JavaPlatform = "windows" | "mac" | "linux";
+
+/** Map a Node platform string to the runtime family the provisioner lays out on disk. */
+export function javaPlatformFor(platform: string = process.platform): JavaPlatform {
+  if (platform === "win32") return "windows";
+  if (platform === "darwin") return "mac";
+  return "linux";
+}
+
+/** Relative path of the java launcher inside a provisioned runtime dir. */
+export function javaExeRelPath(platform: string = process.platform): string {
+  return javaPlatformFor(platform) === "windows" ? "bin/java.exe" : "bin/java";
+}
+
+/** Adoptium Temurin "latest GA JRE" binary endpoint for a major version on the
+ *  given platform. Windows assets are .zip; mac/linux assets are .tar.gz.
+ *  This URL 302-redirects to the actual asset. */
+export function adoptiumUrl(
+  major: number,
+  platform: string = process.platform,
+  arch: string = process.arch
+): string {
+  const family = javaPlatformFor(platform);
+  const os = family === "windows" ? "windows" : family === "mac" ? "mac" : "linux";
+  const cpu = arch === "arm64" && family !== "windows" ? "aarch64" : "x64";
+  return `https://api.adoptium.net/v3/binary/latest/${major}/ga/${os}/${cpu}/jre/hotspot/normal/eclipse`;
 }
 
 /** Parse a JVM `UnsupportedClassVersionError` and return the Java *major* version the jar needs.
@@ -30,21 +53,27 @@ export function parseRequiredJavaMajor(text: string): number | null {
 }
 
 /** Given the top-level entries of an extracted Temurin archive and an existence check (both
- *  relative to the extract root), return the sub-directory that contains "bin/java.exe" so the
- *  caller can flatten it. Temurin zips contain a single top dir like "jdk-21.0.5+11-jre/".
- *  Returns "" when bin/java.exe is already at the root, or null when not found. */
+ *  relative to the extract root), return the sub-directory that contains the java launcher so the
+ *  caller can flatten it. Windows zips contain a single top dir with bin/java.exe; mac tarballs
+ *  nest it under <top>/Contents/Home/bin/java (the .app bundle layout); linux tarballs use
+ *  <top>/bin/java. Returns "" when the launcher is already at the root, or null when not found. */
 export function findArchiveJavaRoot(
   entries: string[],
-  exists: (relPath: string) => boolean
+  exists: (relPath: string) => boolean,
+  platform: string = process.platform
 ): string | null {
-  if (exists("bin/java.exe")) return "";
+  const exe = javaExeRelPath(platform);
+  if (exists(exe)) return "";
+  const macHome = javaPlatformFor(platform) === "mac" ? "Contents/Home" : null;
+  if (macHome && exists(`${macHome}/${exe}`)) return macHome;
   const topDirs = new Set<string>();
   for (const e of entries) {
     const seg = e.replace(/\\/g, "/").split("/")[0];
     if (seg) topDirs.add(seg);
   }
   for (const dir of Array.from(topDirs)) {
-    if (exists(`${dir}/bin/java.exe`)) return dir;
+    if (exists(`${dir}/${exe}`)) return dir;
+    if (macHome && exists(`${dir}/${macHome}/${exe}`)) return `${dir}/${macHome}`;
   }
   return null;
 }
@@ -53,6 +82,8 @@ export interface EnsureJavaOpts {
   dataRoot: string;
   onLog?: (msg: string) => void;
   onProgress?: (percent: number | null, label: string) => void;
+  /** Host platform override (tests). Defaults to the process platform. */
+  platform?: string;
 }
 
 export interface EnsureJavaDeps {
@@ -60,7 +91,7 @@ export interface EnsureJavaDeps {
   provision?: (major: number, cacheDir: string, opts: EnsureJavaOpts) => Promise<void>;
 }
 
-/** Absolute path to the cached bundled JRE's java.exe for a major version, or
+/** Absolute path to the cached bundled JRE's java launcher for a major version, or
  *  null when that runtime has not been provisioned yet. Existence check ONLY —
  *  never downloads. Shared by ensureJava (which may provision) and read-only
  *  callers (the install-time boot test) so both resolve the same layout and a
@@ -68,15 +99,18 @@ export interface EnsureJavaDeps {
 export function cachedJavaExe(
   major: number,
   dataRoot: string,
-  exists: (p: string) => boolean = fs.existsSync
+  exists: (p: string) => boolean = fs.existsSync,
+  platform: string = process.platform
 ): string | null {
-  const javaExe = path.join(dataRoot, "runtimes", `jdk-${major}`, "bin", "java.exe");
+  const javaExe = path.join(dataRoot, "runtimes", `jdk-${major}`, javaExeRelPath(platform));
   return exists(javaExe) ? javaExe : null;
 }
 
 /** Ensure a Temurin JRE of the given major version is available and return the absolute path to
- *  its java.exe. Downloads + extracts into a shared cache (dataRoot/runtimes/jdk-<major>) on first
- *  use; subsequent calls short-circuit. `deps` is injected in tests; defaults hit the real network. */
+ *  its java launcher. Downloads + extracts into a shared cache (dataRoot/runtimes/jdk-<major>) on
+ *  first use; subsequent calls short-circuit. `deps` is injected in tests; defaults hit the real
+ *  network. Provisioned layout matches the host platform (bin/java.exe on Windows, bin/java on
+ *  mac/linux) so the same cache dir serves whichever OS the app runs on. */
 export async function ensureJava(
   major: number,
   opts: EnsureJavaOpts,
@@ -85,7 +119,7 @@ export async function ensureJava(
   const exists = deps.exists ?? fs.existsSync;
   const provision = deps.provision ?? defaultProvision;
   const cacheDir = path.join(opts.dataRoot, "runtimes", `jdk-${major}`);
-  const cached = cachedJavaExe(major, opts.dataRoot, exists);
+  const cached = cachedJavaExe(major, opts.dataRoot, exists, opts.platform);
 
   if (cached) {
     opts.onLog?.(`Using cached Java ${major} runtime.`);
@@ -95,9 +129,9 @@ export async function ensureJava(
   opts.onLog?.(`Java ${major} runtime not found. Downloading…`);
   await provision(major, cacheDir, opts);
 
-  const provisioned = cachedJavaExe(major, opts.dataRoot, exists);
+  const provisioned = cachedJavaExe(major, opts.dataRoot, exists, opts.platform);
   if (!provisioned) {
-    throw new Error(`Java ${major} runtime did not contain bin/java.exe after extraction.`);
+    throw new Error(`Java ${major} runtime did not contain ${javaExeRelPath(opts.platform)} after extraction.`);
   }
   return provisioned;
 }
@@ -108,16 +142,23 @@ async function defaultProvision(major: number, cacheDir: string, opts: EnsureJav
   const runtimesDir = path.dirname(cacheDir);
   fs.mkdirSync(runtimesDir, { recursive: true });
 
-  const zipPath = `${cacheDir}.download.zip`;
+  // Windows assets are .zip; mac/linux assets are .tar.gz (system tar extracts
+  // those — bsdtar ships with macOS and most linux distros).
+  const family = javaPlatformFor();
+  const isZip = family === "windows";
+  const suffix = isZip ? ".zip" : ".tar.gz";
+  const exe = javaExeRelPath();
+
+  const archivePath = `${cacheDir}.download${suffix}`;
   const tmpDir = `${cacheDir}.extract`;
   // Clear leftovers from any prior failed attempt so we start clean.
-  try { fs.rmSync(zipPath, { force: true }); } catch (_) {}
+  try { fs.rmSync(archivePath, { force: true }); } catch (_) {}
   try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
 
   let tmpDirConsumed = false;
   try {
     opts.onProgress?.(null, `Downloading Java ${major}…`);
-    await downloadFollowingRedirects(adoptiumUrl(major), zipPath, (p) =>
+    await downloadFollowingRedirects(adoptiumUrl(major), archivePath, (p) =>
       opts.onProgress?.(
         p,
         p === null ? `Downloading Java ${major}…` : `Downloading Java ${major} ${Math.round(p)}%`
@@ -125,24 +166,39 @@ async function defaultProvision(major: number, cacheDir: string, opts: EnsureJav
     );
 
     opts.onProgress?.(null, `Extracting Java ${major}…`);
-    await extractZip(zipPath, tmpDir);
+    if (isZip) {
+      await extractZip(archivePath, tmpDir);
+    } else {
+      await extractTarGz(archivePath, tmpDir);
+    }
 
     const root = findArchiveJavaRoot(fs.readdirSync(tmpDir), (rel) =>
       fs.existsSync(path.join(tmpDir, rel))
     );
     if (root === null) {
-      throw new Error("extracted Java archive did not contain bin/java.exe");
+      throw new Error(`extracted Java archive did not contain ${exe}`);
     }
     const src = root === "" ? tmpDir : path.join(tmpDir, root);
     fs.rmSync(cacheDir, { recursive: true, force: true });
     fs.renameSync(src, cacheDir);
     tmpDirConsumed = src === tmpDir;   // rename moved tmpDir itself into place
   } finally {
-    try { fs.rmSync(zipPath, { force: true }); } catch (_) {}
+    try { fs.rmSync(archivePath, { force: true }); } catch (_) {}
     if (!tmpDirConsumed) {
       try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
     }
   }
+}
+
+async function extractTarGz(tarPath: string, destDir: string): Promise<void> {
+  // tar won't create the destination (adm-zip does) — make it first.
+  fs.mkdirSync(destDir, { recursive: true });
+  await new Promise<void>((resolve, reject) => {
+    execFile("tar", ["-xzf", tarPath, "-C", destDir], (err) => {
+      if (err) reject(new Error(`Failed to extract Java archive: ${err.message}`));
+      else resolve();
+    });
+  });
 }
 
 async function extractZip(zipPath: string, destDir: string): Promise<void> {

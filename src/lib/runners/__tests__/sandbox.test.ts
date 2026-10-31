@@ -70,8 +70,16 @@ describe("minecraftBootArgs", () => {
  * start (seen live: ATM10's Dark Mode Everywhere crashed it 2026-10-27).
  */
 describe("resolveSandboxJava", () => {
+  // Match the host layout: bundled JREs use bin/java.exe on Windows,
+  // bin/java elsewhere (see javaRuntime.javaExeRelPath).
   const bundled = (root: string, major: number) =>
-    path.join(root, "runtimes", `jdk-${major}`, "bin", "java.exe");
+    path.join(
+      root,
+      "runtimes",
+      `jdk-${major}`,
+      "bin",
+      process.platform === "win32" ? "java.exe" : "java"
+    );
 
   it("prefers the bundled JRE matching the loader marker's MC version", () => {
     const picked = resolveSandboxJava("/srv", {
