@@ -111,20 +111,49 @@ export const serverLifecycleScenarios = [
     await page.keyboard.press("Escape");
     await dialog.waitFor({ state: "detached", timeout: 10_000 });
 
-    // --- Files button drives POST /api/system/open-folder (ledger: the one
-    // route-method the API harness leaves to the GUI layer). The folder
-    // exists after the first boot, so the route must answer ok:true. ---
-    const openFolderRes = await captureResponseOn(
-      page,
-      (u, m) => u.includes("/api/system/open-folder") && m === "POST",
-      () => card.getByRole("button", { name: "Files" }).click()
-    );
-    const body = await openFolderRes.json();
-    if (!body.ok) {
-      throw new Error(`/api/system/open-folder answered ok:false: ${JSON.stringify(body)}`);
+    // --- open-folder drives POST /api/system/open-folder (ledger: the one
+    // route-method the API harness leaves to the GUI layer). LOCAL servers
+    // expose it via the card's Files button; Docker servers don't render that
+    // button, so the Storage page's per-location "Open" button covers it
+    // there (the route is runtime-independent). E2E_GUI_FORCE_STORAGE=1
+    // exercises the Storage branch locally too. ---
+    const filesButton = card.getByRole("button", { name: "Files" });
+    const hasFilesButton =
+      process.env.E2E_GUI_FORCE_STORAGE === "1"
+        ? false
+        : await filesButton.waitFor({ state: "visible", timeout: 5000 }).then(() => true).catch(() => false);
+    if (hasFilesButton) {
+      const res = await captureResponseOn(
+        page,
+        (u, m) => u.includes("/api/system/open-folder") && m === "POST",
+        () => filesButton.click()
+      );
+      const body = await res.json();
+      if (!body.ok) {
+        throw new Error(`/api/system/open-folder answered ok:false: ${JSON.stringify(body)}`);
+      }
+    } else {
+      await page.getByRole("link", { name: "Storage", exact: true }).click();
+      await page.getByRole("heading", { name: "Storage", exact: true }).waitFor({ timeout: 20_000 });
+      // Only folders that already exist open for real; missing ones are titled
+      // "Created the first time it's used" and the route would answer ok:false.
+      const openButton = page.locator('button[title="Open in file manager"]').first();
+      await openButton.waitFor({ timeout: 20_000 });
+      const res = await captureResponseOn(
+        page,
+        (u, m) => u.includes("/api/system/open-folder") && m === "POST",
+        () => openButton.click()
+      );
+      const body = await res.json();
+      if (!body.ok) {
+        throw new Error(`/api/system/open-folder (storage) answered ok:false: ${JSON.stringify(body)}`);
+      }
     }
 
-    // --- Clean stop: back to Offline. ---
+    // --- Clean stop: back to Offline. (The Storage branch of the open-folder
+    // step navigates away; return to the dashboard first.) ---
+    await page.getByRole("link", { name: "Servers", exact: true }).click();
+    await card.waitFor({ timeout: 20_000 });
     await card.getByRole("button", { name: "Stop", exact: true }).click();
     await waitForCardStatus(page, SERVER_NAME, [STATUS_LABELS.STOPPED], 60_000);
   }),
