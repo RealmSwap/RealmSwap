@@ -109,6 +109,7 @@ model Server {
   inviteCode       String?             @unique // For RealmSync
   statusShareCode  String?             @unique // Public no-login status page (/s/<code>); null = disabled
   autoStartLeadMinutes Int             @default(15) // Minutes before a planned Discord session to auto-boot (0 = at start time)
+  autoStartOnLaunch Boolean            @default(false) // Dedicated-box mode: start with the app (after boot reconcile, production only)
   idleStopEnabled  Boolean             @default(false) // Auto-stop once the server has been empty for idleStopMinutes
   idleStopMinutes  Int                 @default(30) // Empty streak (5-min player samples) that triggers the idle stop
   sessionAutoStopHours Int             @default(0) // Hours after a planned session's start to stop it if still empty; 0 = off

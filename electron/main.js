@@ -1,5 +1,5 @@
 "use strict";
-const { app, BrowserWindow, Tray, Menu, nativeImage, shell } = require("electron");
+const { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const net = require("net");
@@ -270,8 +270,26 @@ function logStartup(msg) {
   }
 }
 
+// Dedicated-box launch-at-login: the OS-level half of "the old laptop
+// server". setLoginItemSettings registers a per-user Run entry (Windows) /
+// login item (macOS) — the standard launcher mechanism (Discord, Steam),
+// not a system service. Dev builds report supported:false: registering the
+// electron dev binary as a login item would be a lie about what boots.
+function registerDesktopBridge() {
+  ipcMain.handle("launch-on-boot:get", () => ({
+    supported: !isDev,
+    openAtLogin: isDev ? false : app.getLoginItemSettings().openAtLogin,
+  }));
+  ipcMain.handle("launch-on-boot:set", (_event, enable) => {
+    if (isDev) return { supported: false, openAtLogin: false };
+    app.setLoginItemSettings({ openAtLogin: !!enable });
+    return { supported: true, openAtLogin: app.getLoginItemSettings().openAtLogin };
+  });
+}
+
 app.whenReady().then(async () => {
   try {
+    registerDesktopBridge();
     if (isDev) {
       // next dev is started separately by the npm script; just open the window.
       await createWindow();

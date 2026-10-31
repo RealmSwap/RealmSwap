@@ -192,6 +192,7 @@ exports.Prisma.ServerScalarFieldEnum = {
   inviteCode: 'inviteCode',
   statusShareCode: 'statusShareCode',
   autoStartLeadMinutes: 'autoStartLeadMinutes',
+  autoStartOnLaunch: 'autoStartOnLaunch',
   idleStopEnabled: 'idleStopEnabled',
   idleStopMinutes: 'idleStopMinutes',
   sessionAutoStopHours: 'sessionAutoStopHours',

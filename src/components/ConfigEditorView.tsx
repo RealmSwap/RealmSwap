@@ -249,6 +249,7 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
         if (action === "TOGGLE_TUNNEL") return { ...prev, tunnelEnabled: enable };
         if (action === "TOGGLE_AUTO_UPDATE") return { ...prev, autoUpdate: enable };
         if (action === "TOGGLE_IDLE_STOP") return { ...prev, idleStopEnabled: enable };
+        if (action === "TOGGLE_AUTO_START_ON_LAUNCH") return { ...prev, autoStartOnLaunch: enable };
         return prev;
       });
     } catch (err: any) {
@@ -689,6 +690,17 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                               <option key={h} value={h}>{h === 0 ? "Off" : `After ${h}h empty`}</option>
                             ))}
                           </select>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4 p-4 bg-slate-900 border border-white/5 rounded-lg">
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-200">Start with RealmSwap</h4>
+                            <p className="text-xs text-slate-500 mt-1 max-w-md">Dedicated-box mode: boot this server automatically whenever RealmSwap launches. Pair it with &ldquo;start RealmSwap when this PC signs in&rdquo; in App Settings to bring an old laptop or mini-PC up as a server box with zero clicks.</p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                            <input type="checkbox" className="sr-only peer" checked={selectedServer.autoStartOnLaunch || false} onChange={(e) => toggleSetting("TOGGLE_AUTO_START_ON_LAUNCH", e.target.checked)} />
+                            <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
+                          </label>
                         </div>
                       </div>
                     </div>

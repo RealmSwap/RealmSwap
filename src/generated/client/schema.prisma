@@ -109,6 +109,7 @@ model Server {
   inviteCode           String?              @unique // For RealmSync
   statusShareCode      String?              @unique // Public no-login status page (/s/<code>); null = disabled
   autoStartLeadMinutes Int                  @default(15) // Minutes before a planned Discord session to auto-boot (0 = at start time)
+  autoStartOnLaunch    Boolean              @default(false) // Dedicated-box mode: start with the app (after boot reconcile, production only)
   idleStopEnabled      Boolean              @default(false) // Auto-stop once the server has been empty for idleStopMinutes
   idleStopMinutes      Int                  @default(30) // Empty streak (5-min player samples) that triggers the idle stop
   sessionAutoStopHours Int                  @default(0) // Hours after a planned session's start to stop it if still empty; 0 = off
@@ -286,6 +287,7 @@ model ModInstallation {
   name          String
   dependencies  String? // JSON array of required packageIds
   workshopModId String? // Zomboid: the mod ID written to Mods= in servertest.ini (packageId is the Workshop ID)
+  disabled      Boolean  @default(false) // files kept on disk but delisted from the game's mod list (see lifecycle.ts)
   installedAt   DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -483,7 +485,7 @@ model AgentCommand {
   id          String    @id @default(cuid())
   nodeId      String
   serverId    String
-  type        String // "START" | "STOP" | "UPDATE" | "SEND_COMMAND"
+  type        String // "START" | "STOP" | "UPDATE" | "SEND_COMMAND" | "BACKUP_CREATE" | "BACKUP_RESTORE" | "FILE_READ" | "FILE_WRITE" | "FILE_LIST" | "CONFIG_APPLY"
   payload     String // JSON — fully-resolved launch plan (dashboard owns all game knowledge)
   status      String    @default("PENDING") // "PENDING" | "SENT" | "DONE" | "FAILED"
   result      String? // JSON — { ok, error?, exitCode? }
