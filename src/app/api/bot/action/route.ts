@@ -11,6 +11,32 @@ const botActionSchema = z.object({
   serverId: z.string(),
 });
 
+// Tunnel parity with the dashboard start/stop/restart routes: a
+// Discord-started server on a tunnel-only setup must come up reachable,
+// and a Discord stop must tear the tunnel down like the dashboard does.
+// A tunnel failure never fails the action — the process state is already
+// what the user asked for.
+async function syncTunnel(
+  action: "start" | "stop" | "restart",
+  server: { id: string; port: number; tunnelEnabled: boolean }
+) {
+  try {
+    if (action === "stop") {
+      const { stopTunnel } = await import("@/lib/tunnels");
+      await stopTunnel(server.id);
+      return;
+    }
+    if (!server.tunnelEnabled) return;
+    const { startTunnel } = await import("@/lib/tunnels");
+    const result = await startTunnel(server.id, server.port);
+    if (!result.ok) {
+      console.error(`[Tunnel] Bot ${action} failed to start tunnel for ${server.id}: ${result.error}`);
+    }
+  } catch (err) {
+    console.error(`[Tunnel] Bot ${action} tunnel sync failed for ${server.id}:`, err);
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Rate limit (e.g. 10 requests per minute per IP/source)
@@ -67,14 +93,17 @@ export async function POST(req: NextRequest) {
       await updateStatus("STARTING");
       await runner.start(server, null as any);
       await updateStatus("RUNNING");
+      await syncTunnel("start", server);
     } else if (action === "stop") {
       await runner.stop(server);
       await updateStatus("STOPPED");
+      await syncTunnel("stop", server);
     } else if (action === "restart") {
       await runner.stop(server);
       await updateStatus("STARTING");
       await runner.start(server, null as any);
       await updateStatus("RUNNING");
+      await syncTunnel("restart", server);
     } else {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
