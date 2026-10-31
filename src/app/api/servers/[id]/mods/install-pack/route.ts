@@ -13,6 +13,9 @@ import {
   pickCompatibleCfFile, type CurseForgeFile,
 } from "@/lib/mods/curseforge";
 import {
+  fetchVersions, pickCompatibleVersion, primaryFile,
+} from "@/lib/mods/modrinth";
+import {
   planModpackFromZip, applyModpackPlan, packResultMessage, auditPackInstall, recordInstalledModpack,
   detectPackServerMcVersion, retireReplacedPackMods, PackPreflightError,
 } from "@/lib/mods/packInstall";
@@ -23,13 +26,18 @@ import path from "path";
 import { requireLocalServer } from "@/lib/agents/perimeter";
 
 // POST /api/servers/[id]/mods/install-pack
-// Body: { projectId: string, fileId?: number }
+// Body: { provider: "curseforge" | "modrinth", projectId: string, fileId?: number, versionId?: string }
 //
-// One-click install of a CurseForge modpack from the in-app pack browser:
-// the pack zip is resolved (pinned fileId or the newest downloadable file)
-// and downloaded server-side, then it rides the exact plan → apply pipeline
-// as manual imports. Resolution + download + pre-flight all happen BEFORE
-// the snapshot, so network/distribution failures cost nothing.
+// One-click install of a modpack from the in-app pack gallery: the pack file
+// is resolved (pinned file/version or the newest downloadable one) and
+// downloaded server-side, then it rides the exact plan → apply pipeline as
+// manual imports — planModpackFromZip dispatches CurseForge manifests and
+// .mrpack archives onto the same verified path. Resolution + download +
+// pre-flight all happen BEFORE the snapshot, so network/distribution
+// failures cost nothing.
+const CURSEFORGE_PROJECT_ID = /^\d+$/;
+const MODRINTH_PROJECT_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
@@ -41,8 +49,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     const serverId = params.id;
 
     const packInstallSchema = z.object({
-      projectId: z.string().regex(/^\d+$/, "A numeric CurseForge modpack id is required"),
+      provider: z.enum(["curseforge", "modrinth"]).default("curseforge"),
+      projectId: z.string().min(1, "A modpack id is required"),
       fileId: z.number().int().positive().optional(),
+      versionId: z.string().min(1).optional(),
       installId: z.string().regex(/^[\w-]{6,64}$/).optional(),
     });
     const parsed = packInstallSchema.safeParse(await req.json());
@@ -52,7 +62,14 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         { status: 400 }
       );
     }
-    const projectId = Number(parsed.data.projectId);
+    const provider = parsed.data.provider;
+    const projectId = parsed.data.projectId;
+    if (provider === "curseforge" && !CURSEFORGE_PROJECT_ID.test(projectId)) {
+      return NextResponse.json({ error: "A numeric CurseForge modpack id is required" }, { status: 400 });
+    }
+    if (provider === "modrinth" && !MODRINTH_PROJECT_ID.test(projectId)) {
+      return NextResponse.json({ error: "A Modrinth project id (UUID) is required" }, { status: 400 });
+    }
 
     const access = await verifyServerAccess(serverId, user.id, "ADMIN");
     if (!access) {
@@ -78,40 +95,68 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     const installId = parsed.data.installId;
     if (installId) beginProgress(installId);
 
-    // Resolve the pack file: a pinned fileId wins, else the newest
-    // downloadable file of the project. 400-class failures here cost
+    // Resolve the pack file: a pinned file/version wins, else the newest
+    // downloadable one of the project. 400-class failures here cost
     // nothing — no snapshot exists yet.
-    let packFile: CurseForgeFile;
+    let packFileId: number | null = null;
+    let packFileName: string | null = null;
+    let packDownloadUrl: string;
     let serverMcVersion: string;
     let loaderType: string | null;
     const tempPack = path.join(serverRoot, ".pack-download.zip");
     try {
-      if (parsed.data.fileId) {
-        const files = await getCurseForgeFiles([parsed.data.fileId]);
-        const match = files.find((f) => f.modId === projectId);
-        if (!match) {
+      if (provider === "modrinth") {
+        const versions = await fetchVersions(projectId);
+        const version = parsed.data.versionId
+          ? versions.find((v) => v.version_number === parsed.data.versionId) ?? null
+          : pickCompatibleVersion(versions, {});
+        const file = version ? primaryFile(version) : null;
+        if (!version || !file) {
           return NextResponse.json(
-            { error: `CurseForge file ${parsed.data.fileId} does not belong to modpack ${projectId}.` },
-            { status: 400 }
-          );
-        }
-        packFile = match;
-      } else {
-        const files = await getCurseForgeModFiles(projectId);
-        const picked = pickCompatibleCfFile(files, {});
-        if (!picked) {
-          return NextResponse.json(
-            { error: "This modpack has no downloadable files (the author may have disabled third-party distribution)." },
+            { error: "This Modrinth modpack has no downloadable versions." },
             { status: 404 }
           );
         }
-        packFile = picked;
+        if (!file.filename.endsWith(".mrpack") || !file.url) {
+          return NextResponse.json(
+            { error: "This Modrinth project's newest file is not an installable .mrpack pack." },
+            { status: 400 }
+          );
+        }
+        packFileName = file.filename;
+        packDownloadUrl = file.url;
+      } else {
+        let packFile: CurseForgeFile;
+        if (parsed.data.fileId) {
+          const files = await getCurseForgeFiles([parsed.data.fileId]);
+          const match = files.find((f) => f.modId === Number(projectId));
+          if (!match) {
+            return NextResponse.json(
+              { error: `CurseForge file ${parsed.data.fileId} does not belong to modpack ${projectId}.` },
+              { status: 400 }
+            );
+          }
+          packFile = match;
+        } else {
+          const files = await getCurseForgeModFiles(Number(projectId));
+          const picked = pickCompatibleCfFile(files, {});
+          if (!picked) {
+            return NextResponse.json(
+              { error: "This modpack has no downloadable files (the author may have disabled third-party distribution)." },
+              { status: 404 }
+            );
+          }
+          packFile = picked;
+        }
+        packFileId = packFile.id;
+        packFileName = packFile.fileName;
+        packDownloadUrl = curseForgeDownloadUrl(packFile);
       }
 
       serverMcVersion = detectPackServerMcVersion(serverId);
       loaderType = readLoaderMarker(serverRoot)?.type ?? null;
 
-      await downloadFile(curseForgeDownloadUrl(packFile), tempPack);
+      await downloadFile(packDownloadUrl, tempPack);
     } catch (resolveError: any) {
       try { fs.unlinkSync(tempPack); } catch (_) {}
       return NextResponse.json({ error: resolveError.message }, { status: 400 });
@@ -167,9 +212,9 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       await auditPackInstall({ userId: user.id, serverName: server.name, plan, result, warnings });
       await recordInstalledModpack({
         serverId, plan, result,
-        projectId: String(projectId),
-        fileId: packFile.id,
-        fileName: packFile.fileName,
+        projectId,
+        fileId: packFileId,
+        fileName: packFileName,
       });
 
       if (installId) endProgress(installId, "done");
