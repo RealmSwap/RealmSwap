@@ -756,8 +756,11 @@
     ]
   },
   "POST /api/system/open-folder": {
-    "status": "manual",
-    "note": "spawns the OS file manager — covered by GUI layer instead"
+    "status": "covered",
+    "scenarios": [
+      "gui/server-lifecycle"
+    ],
+    "note": "driven through the dashboard Files button by the e2e-gui harness (GUI layer per the zero-human plan)"
   },
   "POST /api/system/shutdown": {
     "status": "covered",

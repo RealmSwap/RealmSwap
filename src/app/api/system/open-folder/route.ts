@@ -47,6 +47,9 @@ export async function POST(req: Request) {
 
     const { cmd, args } = openFolderCommand(process.platform, target);
     const child = spawn(cmd, args, { detached: true, stdio: "ignore" });
+    // Headless hosts may have no file manager at all; an unhandled "error"
+    // event here would crash the whole server process for a cosmetic action.
+    child.on("error", () => {});
     child.unref();
 
     return NextResponse.json({ ok: true });
