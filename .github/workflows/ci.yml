@@ -85,3 +85,42 @@ jobs:
           name: e2e-api-report
           path: /tmp/realmswap-e2e-api-data/e2e-api-report.json
           retention-days: 7
+
+  gui-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Boots the real Electron window against the same throwaway app the
+      # api-e2e job builds (fake Supabase, :3100) via GAMEVAULT_DEV_URL and
+      # drives the actual UI: login, first-server wizard, a REAL Minecraft
+      # boot watched through the live SSE console, join-info, open-folder,
+      # close-to-tray, quit. E2E_GUI_NO_SANDBOX=1 disables the Chromium
+      # user-namespace sandbox, which CI runners can't use.
+      - name: Install GUI test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          npx playwright install-deps chromium
+
+      - name: Run GUI e2e harness (dev pass under Xvfb)
+        run: xvfb-run --auto-servernum npm run e2e:gui
+        env:
+          E2E_GUI_NO_SANDBOX: "1"
+
+      - name: Upload harness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-gui-report
+          path: /tmp/realmswap-e2e-api-data/e2e-gui-report.json
+          retention-days: 7

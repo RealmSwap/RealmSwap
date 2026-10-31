@@ -22,12 +22,22 @@ const internalToken = crypto.randomBytes(16).toString("hex");
 // the data directory resolves to %APPDATA%/RealmSwap.
 app.setName("RealmSwap");
 
-if (process.defaultApp) {
-  if (process.argv.length >= 2) {
-    app.setAsDefaultProtocolClient("realmsync", process.execPath, [path.resolve(process.argv[1])]);
+// Test harnesses relocate all app data (DB, startup.log, backups) to a
+// throwaway directory so packaged-boot checks never touch a real install's data.
+if (process.env.GAMEVAULT_USER_DATA_DIR) {
+  app.setPath("userData", process.env.GAMEVAULT_USER_DATA_DIR);
+}
+
+// Harness launches must not steal the OS-level realmsync:// handler from the
+// installed app (or re-point it at a throwaway build that later gets deleted).
+if (!process.env.GAMEVAULT_TEST_HARNESS) {
+  if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+      app.setAsDefaultProtocolClient("realmsync", process.execPath, [path.resolve(process.argv[1])]);
+    }
+  } else {
+    app.setAsDefaultProtocolClient("realmsync");
   }
-} else {
-  app.setAsDefaultProtocolClient("realmsync");
 }
 
 let mainWindow = null;
@@ -47,6 +57,9 @@ function showMainWindow() {
 }
 
 function appBaseUrl() {
+  // Harness override: the dev window can point at any app server (e.g. the
+  // e2e harness's :3100) instead of the npm-script dev server on :3000.
+  if (isDev && process.env.GAMEVAULT_DEV_URL) return process.env.GAMEVAULT_DEV_URL;
   return isDev ? "http://localhost:3000" : `http://127.0.0.1:${serverPort}`;
 }
 
@@ -99,29 +112,39 @@ function ensureDataDir() {
   return dir;
 }
 
-function startNextServer(port, dataDir) {
-  process.env.PORT = String(port);
-  process.env.HOSTNAME = "127.0.0.1";
-  process.env.NODE_ENV = "production";
-  process.env.GAMEVAULT_DATA_DIR = dataDir;
-  process.env.DATABASE_URL =
-    "file:" + path.join(dataDir, "realmswap.db").replace(/\\/g, "/");
-  process.env.GAMEVAULT_INTERNAL_TOKEN = internalToken;
   // Prisma's generated client embeds the generation-time absolute path to the
   // query engine, which won't exist on the user's machine. Point it at the
-  // engine that Task 6 bundles alongside standalone/.
-  process.env.PRISMA_QUERY_ENGINE_BINARY = path.join(
-    process.resourcesPath, "standalone", "src", "generated", "client", "query-engine-windows.exe"
-  );
-  // Standalone server.js starts listening on PORT/HOSTNAME when required.
-  require(path.join(process.resourcesPath, "standalone", "server.js"));
-}
+  // engine bundled alongside standalone/ for the build's platform; when the
+  // expected file is absent, leave the variable unset so Prisma's own
+  // resolution finds the adjacent engine.
+  function bundledQueryEnginePath() {
+    const clientDir = path.join(
+      process.resourcesPath, "standalone", "src", "generated", "client"
+    );
+    const engineName = process.platform === "win32"
+      ? "query-engine-windows.exe"
+      : `query-engine-${process.platform}-${process.arch}`;
+    const enginePath = path.join(clientDir, engineName);
+    return fs.existsSync(enginePath) ? enginePath : null;
+  }
 
-function makeMigrationClient(dbUrl) {
-  const enginePath = path.join(
-    process.resourcesPath, "standalone", "src", "generated", "client", "query-engine-windows.exe"
-  );
-  process.env.PRISMA_QUERY_ENGINE_BINARY = enginePath;
+  function startNextServer(port, dataDir) {
+    process.env.PORT = String(port);
+    process.env.HOSTNAME = "127.0.0.1";
+    process.env.NODE_ENV = "production";
+    process.env.GAMEVAULT_DATA_DIR = dataDir;
+    process.env.DATABASE_URL =
+      "file:" + path.join(dataDir, "realmswap.db").replace(/\\/g, "/");
+    process.env.GAMEVAULT_INTERNAL_TOKEN = internalToken;
+    const queryEngine = bundledQueryEnginePath();
+    if (queryEngine) process.env.PRISMA_QUERY_ENGINE_BINARY = queryEngine;
+    // Standalone server.js starts listening on PORT/HOSTNAME when required.
+    require(path.join(process.resourcesPath, "standalone", "server.js"));
+  }
+
+  function makeMigrationClient(dbUrl) {
+    const queryEngine = bundledQueryEnginePath();
+    if (queryEngine) process.env.PRISMA_QUERY_ENGINE_BINARY = queryEngine;
   const { PrismaClient } = require(
     path.join(process.resourcesPath, "standalone", "src", "generated", "client")
   );
