@@ -19,6 +19,14 @@ import { mcLifecycleScenarios } from "./scenarios/mcLifecycle";
 import { modsScenarios } from "./scenarios/mods";
 import { loaderScenarios } from "./scenarios/loaders";
 import { packScenarios } from "./scenarios/packs";
+import { surfaceScenarios } from "./scenarios/surface";
+import { membershipScenarios } from "./scenarios/membership";
+import { backupScenarios } from "./scenarios/backups";
+import { realmsyncScenarios } from "./scenarios/realmsync";
+import { marketplaceScenarios } from "./scenarios/marketplace";
+import { agentScenarios } from "./scenarios/agents";
+import { opsScenarios } from "./scenarios/ops";
+import { botScenarios } from "./scenarios/bots";
 import type { Scenario, ScenarioContext } from "./scenarios/framework";
 
 const ALL_SCENARIOS: Scenario[] = [
@@ -27,6 +35,14 @@ const ALL_SCENARIOS: Scenario[] = [
   ...modsScenarios,
   ...loaderScenarios,
   ...packScenarios,
+  ...surfaceScenarios,
+  ...membershipScenarios,
+  ...backupScenarios,
+  ...realmsyncScenarios,
+  ...marketplaceScenarios,
+  ...agentScenarios,
+  ...opsScenarios,
+  ...botScenarios,
 ];
 
 function parseTag(): string {

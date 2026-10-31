@@ -83,6 +83,9 @@ export class ApiClient {
   put(path: string, body?: unknown, opts?: { headers?: Record<string, string> }) {
     return this.request("PUT", path, body, opts);
   }
+  patch(path: string, body?: unknown, opts?: { headers?: Record<string, string> }) {
+    return this.request("PATCH", path, body, opts);
+  }
   delete(path: string, body?: unknown, opts?: { headers?: Record<string, string> }) {
     return this.request("DELETE", path, body, opts);
   }

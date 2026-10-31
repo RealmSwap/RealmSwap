@@ -23,8 +23,51 @@ interface FakeUser {
   name: string;
 }
 
+// --- In-memory marketplace tables (PostgREST surface used by /api/marketplace/*) ---
+// The marketplace routes talk to cloud Supabase through supabase-js (PostgREST
+// shape: table selects with eq/contains/or filters, inserts, rpc calls). The
+// fake implements just enough of that wire format for the marketplace/realms
+// scenario to drive a real publish → favorite → deploy round-trip.
+
+interface FakeRealm {
+  id: string;
+  seller_id: string;
+  name: string;
+  description: string;
+  game_slug: string;
+  tags: string[];
+  payload: unknown;
+  custom_def_spec: unknown;
+  version: string;
+  status: string;
+  visibility: string;
+  verified_level: string;
+  download_count: number;
+  like_count: number;
+  created_at: string;
+}
+
+interface FakeRealmVersion {
+  id: string;
+  realm_id: string;
+  version: string;
+  payload: unknown;
+  custom_def_spec: unknown;
+  changelog: string | null;
+  created_at: string;
+}
+
+interface FakeRealmVote {
+  realm_id: string;
+  user_id: string;
+  value: number;
+}
+
 export class FakeSupabase {
   private users = new Map<string, FakeUser>(); // by email
+  private realms: FakeRealm[] = [];
+  private realmVersions: FakeRealmVersion[] = [];
+  private realmVotes: FakeRealmVote[] = [];
   private server: http.Server | null = null;
 
   addUser(user: FakeUser) {
@@ -133,10 +176,128 @@ export class FakeSupabase {
       const url = new URL(req.url || "/", FAKE_SUPABASE_URL);
       const p = url.pathname;
 
-      // PostgREST: entitlement mirror reads resolve to "no rows" (free plan).
+      // PostgREST: entitlement mirror reads resolve to "no rows" (free plan);
+      // the marketplace tables get a real in-memory implementation so the
+      // publish → favorite → deploy round-trip can be driven for real.
       if (p.startsWith("/rest/v1/")) {
-        this.send(res, 200, []);
-        return;
+        const restPath = p.slice("/rest/v1/".length);
+        const callerId = this.callerId(req);
+        if (restPath === "realms") {
+          if (req.method === "GET") return this.send(res, 200, this.queryRealms(url.searchParams, callerId));
+          if (req.method === "POST") {
+            const body = await this.readBody(req);
+            const row: FakeRealm = {
+              id: randomId(),
+              seller_id: callerId ?? "",
+              name: String(body.name ?? ""),
+              description: String(body.description ?? ""),
+              game_slug: String(body.game_slug ?? ""),
+              tags: Array.isArray(body.tags) ? body.tags.map(String) : [],
+              payload: body.payload ?? {},
+              custom_def_spec: body.custom_def_spec ?? null,
+              version: String(body.version ?? "1.0.0"),
+              status: String(body.status ?? "PUBLISHED"),
+              visibility: String(body.visibility ?? "PUBLIC"),
+              verified_level: String(body.verified_level ?? "UNVERIFIED"),
+              download_count: 0,
+              like_count: 0,
+              created_at: new Date().toISOString(),
+            };
+            this.realms.push(row);
+            const prefer = String(req.headers.prefer || "");
+            if (prefer.includes("return=representation")) {
+              const projected = this.selectRealmFields(row, String(url.searchParams.get("select") || ""), callerId);
+              // .single() asks for the object media type; PostgREST answers with
+              // the row itself, not an array.
+              if (String(req.headers.accept || "").includes("vnd.pgrst.object")) {
+                return this.send(res, 201, projected);
+              }
+              return this.send(res, 201, [projected]);
+            }
+            return this.send(res, 201, []);
+          }
+        }
+        if (restPath === "realm_versions" && req.method === "GET") {
+          const realmId = this.eqParam(url.searchParams, "realm_id");
+          const rows = this.realmVersions
+            .filter((v) => !realmId || v.realm_id === realmId)
+            .sort((a, b) => b.created_at.localeCompare(a.created_at))
+            .map((v) => this.selectFields(v as unknown as Record<string, unknown>, String(url.searchParams.get("select") || "")));
+          return this.send(res, 200, rows);
+        }
+        if (restPath === "realm_versions" && req.method === "POST") {
+          const body = await this.readBody(req);
+          this.realmVersions.push({
+            id: randomId(),
+            realm_id: String(body.realm_id ?? ""),
+            version: String(body.version ?? "1.0.0"),
+            payload: body.payload ?? {},
+            custom_def_spec: body.custom_def_spec ?? null,
+            changelog: body.changelog ?? null,
+            created_at: new Date().toISOString(),
+          });
+          return this.send(res, 201, []);
+        }
+        if (restPath === "realm_votes") {
+          if (req.method === "POST") {
+            const body = await this.readBody(req);
+            const existing = this.realmVotes.find(
+              (v) => v.realm_id === body.realm_id && v.user_id === body.user_id
+            );
+            if (existing) existing.value = Number(body.value ?? 1);
+            else this.realmVotes.push({ realm_id: String(body.realm_id), user_id: String(body.user_id), value: Number(body.value ?? 1) });
+            const realm = this.realms.find((r) => r.id === body.realm_id);
+            if (realm) realm.like_count = this.realmVotes.filter((v) => v.realm_id === realm.id).length;
+            return this.send(res, 201, []);
+          }
+          if (req.method === "DELETE") {
+            const realmId = this.eqParam(url.searchParams, "realm_id");
+            const userId = this.eqParam(url.searchParams, "user_id");
+            this.realmVotes = this.realmVotes.filter((v) => !(v.realm_id === realmId && v.user_id === userId));
+            const realm = this.realms.find((r) => r.id === realmId);
+            if (realm) realm.like_count = this.realmVotes.filter((v) => v.realm_id === realm.id).length;
+            res.writeHead(204);
+            res.end();
+            return;
+          }
+        }
+        if (restPath.startsWith("rpc/")) {
+          const fn = restPath.slice("rpc/".length);
+          const body = await this.readBody(req);
+          if (fn === "publish_realm_version") {
+            const realm = this.realms.find((r) => r.id === body.p_realm_id);
+            if (!realm) return this.send(res, 400, { message: "Realm not found", details: null, hint: null, code: "PGRST" });
+            if (realm.seller_id !== callerId) {
+              return this.send(res, 400, { message: "Only the realm owner can publish versions", details: null, hint: null, code: "PGRST" });
+            }
+            realm.version = String(body.p_version ?? realm.version);
+            realm.payload = body.p_payload ?? realm.payload;
+            realm.custom_def_spec = body.p_custom_def_spec ?? realm.custom_def_spec;
+            this.realmVersions.push({
+              id: randomId(),
+              realm_id: realm.id,
+              version: realm.version,
+              payload: realm.payload,
+              custom_def_spec: realm.custom_def_spec,
+              changelog: body.p_changelog ?? null,
+              created_at: new Date().toISOString(),
+            });
+            return this.send(res, 200, { version: realm.version });
+          }
+          if (fn === "acquire_realm") {
+            const realm = this.realms.find((r) => r.id === body.p_realm_id);
+            if (!realm || realm.status !== "PUBLISHED" || realm.visibility !== "PUBLIC") {
+              return this.send(res, 400, { message: "Realm is not available for acquisition", details: null, hint: null, code: "PGRST" });
+            }
+            realm.download_count += 1;
+            res.writeHead(204);
+            res.end();
+            return;
+          }
+          return this.send(res, 404, { message: `Unknown rpc ${fn}` });
+        }
+        // Every other PostgREST read (entitlement mirrors etc.) stays empty.
+        return this.send(res, 200, []);
       }
 
       if (p === "/auth/v1/token" && req.method === "POST") {
@@ -197,6 +358,87 @@ export class FakeSupabase {
     } catch (err: any) {
       this.send(res, 500, { error: "fake_supabase_error", message: err.message });
     }
+  }
+
+  /** Decode the caller's JWT (supabase-js always sends it on PostgREST calls). */
+  private callerId(req: http.IncomingMessage): string | null {
+    const payload = this.verify(this.bearer(req));
+    return payload ? String(payload.sub) : null;
+  }
+
+  /** First `col=eq.value` filter for a column, or null. */
+  private eqParam(params: URLSearchParams, column: string): string | null {
+    const raw = params.get(column);
+    if (raw === null) return null;
+    return raw.startsWith("eq.") ? raw.slice(3) : raw;
+  }
+
+  /** Minimal select projection: unknown selects return the row unchanged. */
+  private selectFields(row: Record<string, unknown>, select: string): Record<string, unknown> {
+    if (!select) return row;
+    const cols = select.split(",").map((c) => c.trim().split(":")[0]).filter(Boolean);
+    const out: Record<string, unknown> = {};
+    for (const col of cols) if (col in row) out[col] = row[col];
+    return Object.keys(out).length ? out : row;
+  }
+
+  /** realms select with the embeds the marketplace list route asks for. */
+  private selectRealmFields(row: FakeRealm, select: string, callerId: string | null): Record<string, unknown> {
+    const base = this.selectFields(row as unknown as Record<string, unknown>, select);
+    return {
+      ...base,
+      seller: row.seller_id ? { display_name: "E2E Seller" } : null,
+      realm_votes: this.realmVotes.filter((v) => v.realm_id === row.id && v.user_id === callerId),
+    };
+  }
+
+  /** PostgREST subset used by GET /rest/v1/realms: eq filters, tags contains,
+   *  or=(…ilike…) search, order, and limit/offset via the range param. */
+  private queryRealms(params: URLSearchParams, callerId: string | null): Record<string, unknown>[] {
+    let rows = this.realms.slice();
+    params.forEach((value: string, key: string) => {
+      if (["select", "order", "limit", "offset"].includes(key)) return;
+      if (key === "or") {
+        const parts: string[] = value.slice(2, -1).split(",").map((p: string) => p.trim());
+        const terms = parts
+          .map((p: string) => /(\w+)\.ilike\.\*(.*)\*/.exec(p)?.[2])
+          .filter((t): t is string => !!t);
+        if (terms.length) {
+          rows = rows.filter((r) =>
+            terms.some(
+              (t: string) =>
+                r.name.toLowerCase().includes(t.toLowerCase()) ||
+                r.description.toLowerCase().includes(t.toLowerCase()) ||
+                r.game_slug.toLowerCase().includes(t.toLowerCase())
+            )
+          );
+        }
+        return;
+      }
+      const dot = value.indexOf(".");
+      if (dot < 0) return;
+      const op = value.slice(0, dot);
+      const literal = value.slice(dot + 1);
+      if (op === "eq") {
+        rows = rows.filter((r) => String((r as any)[key]) === literal);
+      } else if (op === "cs") {
+        // tags=cs.{tag} — PostgREST array-contains, used for the tag filter.
+        const tag = literal.replace(/^\{|\}$/g, "");
+        rows = rows.filter((r) => (r.tags as string[]).includes(tag));
+      }
+    });
+    const order = params.get("order");
+    if (order) {
+      const [col, dir] = order.split(".");
+      rows.sort((a, b) => String((a as any)[col]).localeCompare(String((b as any)[col])));
+      if (dir === "desc") rows.reverse();
+    }
+    const offset = Number(params.get("offset") || 0);
+    const limit = Number(params.get("limit") || 0);
+    let slice = offset > 0 ? rows.slice(offset) : rows;
+    if (limit > 0) slice = slice.slice(0, limit);
+    const select = params.get("select") || "";
+    return slice.map((r) => this.selectRealmFields(r, select, callerId));
   }
 
   private verify(token: string | null): Record<string, unknown> | null {
