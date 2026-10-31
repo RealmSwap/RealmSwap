@@ -52,3 +52,32 @@ jobs:
           name: playwright-report
           path: test-results/
           retention-days: 7
+
+  api-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Boots the production server against a throwaway DB + local fake
+      # Supabase and drives real flows — including a REAL Minecraft server
+      # boot (the runtimes provisioner downloads a Linux JRE). No secrets
+      # needed; see scripts/e2e-api/config.ts.
+      - name: Run API e2e harness
+        run: npm run e2e:api
+
+      - name: Upload harness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-api-report
+          path: /tmp/realmswap-e2e-api-data/e2e-api-report.json
+          retention-days: 7

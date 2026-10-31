@@ -74,6 +74,8 @@ dist/
 /test-results/
 /playwright-report/
 prisma/e2e.db
+prisma/e2e-api.db
+/.next-e2e/
 # Auto-provisioned web-push keys
 push-vapid-keys.json
 src/generated/client/query-engine-darwin-arm64
