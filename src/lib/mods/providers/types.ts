@@ -18,6 +18,7 @@ export interface ModSearchResult {
   categories?: string[];   // e.g. ["optimization", "utility", "gameplay"]
   updatedAt?: string;      // ISO date of last update
   websiteUrl?: string;     // link to mod page for "View Details"
+  kind?: "mod" | "modpack"; // pack cards route to the install-pack flow
 }
 
 export interface ModProvider {

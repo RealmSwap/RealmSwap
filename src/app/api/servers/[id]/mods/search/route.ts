@@ -39,8 +39,16 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
 
     // Route to the appropriate provider based on game
     if (game === "MINECRAFT" && kind === "modpacks") {
-      // CurseForge's browsable modpack catalog (classId 4471)
-      results = await curseforge.searchModpacks(query, game, options);
+      // Browsable pack catalogs: CurseForge's modpack tree (classId 4471) +
+      // Modrinth's project_type:modpack, merged and ranked by downloads so
+      // the gallery's default (empty-query) view is "the packs people run".
+      // Modrinth packs install through the same install-pack pipeline as
+      // CurseForge ones (the .mrpack rides planModpackFromZip).
+      const [curseforgeResults, modrinthResults] = await Promise.all([
+        curseforge.searchModpacks(query, game, options),
+        modrinth.searchModpacks(query, game, options),
+      ]);
+      results = [...curseforgeResults, ...modrinthResults].sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
     } else if (ThunderstoreProvider.supportsGame(game)) {
       results = await thunderstore.search(query, game, options);
     } else if (game === "MINECRAFT") {

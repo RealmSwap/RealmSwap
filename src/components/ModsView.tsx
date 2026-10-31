@@ -455,6 +455,14 @@ export default function ModsView({ user }: ModsViewProps) {
   /* Minecraft pack browsing: CurseForge modpacks instead of mods */
   const [packMode, setPackMode] = useState(false);
 
+  /* The pack gallery is the front door for Minecraft servers: modpacks
+     default on so Discover opens on the packs people actually run. The
+     user's Mods/Modpacks toggle still wins until the server changes. */
+  React.useEffect(() => {
+    if (game === "MINECRAFT") setPackMode(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedServer?.id]);
+
   /* Detail modal */
   const [detailMod, setDetailMod] = useState<any | null>(null);
 
@@ -497,6 +505,36 @@ export default function ModsView({ user }: ModsViewProps) {
     game === "ARK" ||
     game === "PALWORLD" ||
     game === "SATISFACTORY";
+
+  /* Shared Mods | Modpacks switch (Discover's Trending row + Browse search) */
+  const packModeSwitch = game === "MINECRAFT" && (
+    <>
+      <span className="text-[10px] text-mutedText font-bold uppercase tracking-wider mr-1">
+        Browse:
+      </span>
+      {[
+        { id: false, label: "Mods" },
+        { id: true, label: "Modpacks" },
+      ].map((opt) => (
+        <button
+          key={opt.label}
+          onClick={() => setPackMode(opt.id)}
+          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+            packMode === opt.id
+              ? "bg-accentPurple/25 text-accentPurple border border-accentPurple/40"
+              : "bg-white/5 text-slate-400 border border-transparent hover:bg-white/10"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+      {packMode && (
+        <span className="text-[10px] text-mutedText ml-1">
+          One-click full pack installs — snapshot + boot-tested, rolled back on failure.
+        </span>
+      )}
+    </>
+  );
 
   /** Dynamic category list from current results */
   const availableCategories = useMemo(() => {
@@ -594,14 +632,19 @@ export default function ModsView({ user }: ModsViewProps) {
     if (!selectedServer || !supportsSearch) return;
 
     setIsSearching(true);
-    fetch(`/api/servers/${selectedServer.id}/mods/search?q=&sort=rating`)
+    const params = new URLSearchParams({
+      q: "",
+      sort: "rating",
+      ...(packMode && game === "MINECRAFT" && { type: "modpacks" }),
+    });
+    fetch(`/api/servers/${selectedServer.id}/mods/search?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.results) setPopularMods(data.results);
       })
       .catch((err) => console.error("Popular mods fetch failed:", err))
       .finally(() => setIsSearching(false));
-  }, [selectedServer]);
+  }, [selectedServer, packMode, game]);
 
   /** Debounced search (Browse tab) */
   React.useEffect(() => {    if (!selectedServer) {
@@ -653,7 +696,7 @@ export default function ModsView({ user }: ModsViewProps) {
     return "THUNDERSTORE";
   };
 
-  const handleInstallPack = async (mod: { modId?: string; packageId?: string; name: string }) => {
+  const handleInstallPack = async (mod: { modId?: string; packageId?: string; name: string; provider?: string }) => {
     if (!selectedServer) return;
     setLoading(true);
     showError(null);
@@ -667,7 +710,11 @@ export default function ModsView({ user }: ModsViewProps) {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ projectId: mod.modId || mod.packageId, installId }),
+          body: JSON.stringify({
+            projectId: mod.modId || mod.packageId,
+            provider: mod.provider === "modrinth" ? "modrinth" : "curseforge",
+            installId,
+          }),
         }
       );
       const data = await res.json();
@@ -925,8 +972,11 @@ export default function ModsView({ user }: ModsViewProps) {
     modType?: string;
     provider?: string;
     workshopId?: string;
+    kind?: string;
   }) => {
     if (!selectedServer) return;
+    // Pack cards (gallery/search) ride the dedicated install-pack flow.
+    if (mod.kind === "modpack") return handleInstallPack(mod);
     setLoading(true);
     showError(null);
     setSuccess(null);
@@ -1440,18 +1490,21 @@ export default function ModsView({ user }: ModsViewProps) {
                   </section>
                 )}
 
-                {/* Trending mods */}
+                {/* Trending mods / popular packs */}
                 <section>
-                  <div className="flex items-center gap-2 mb-4">
+                  <div className="flex items-center gap-2 mb-4 flex-wrap">
                     <TrendingUp className="w-5 h-5 text-accentPurple" />
                     <h3 className="font-extrabold text-lg text-white">
-                      Trending
+                      {packMode && game === "MINECRAFT" ? "Popular packs" : "Trending"}
                     </h3>
                     {theme?.providerName && theme.providerName !== "—" && (
                       <span className="text-xs text-mutedText">
                         on {theme.providerName}
                       </span>
                     )}
+                    <div className="flex items-center gap-1.5 ml-auto">
+                      {packModeSwitch}
+                    </div>
                   </div>
 
                   {!supportsSearch ? (
@@ -1692,30 +1745,7 @@ export default function ModsView({ user }: ModsViewProps) {
                         {/* Minecraft: browse CurseForge modpacks instead of mods */}
                         {game === "MINECRAFT" && (
                           <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-white/5">
-                            <span className="text-[10px] text-mutedText font-bold uppercase tracking-wider mr-1">
-                              Browse:
-                            </span>
-                            {[
-                              { id: false, label: "Mods" },
-                              { id: true, label: "Modpacks" },
-                            ].map((opt) => (
-                              <button
-                                key={opt.label}
-                                onClick={() => setPackMode(opt.id)}
-                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors ${
-                                  packMode === opt.id
-                                    ? "bg-accentPurple/25 text-accentPurple border border-accentPurple/40"
-                                    : "bg-white/5 text-slate-400 border border-transparent hover:bg-white/10"
-                                }`}
-                              >
-                                {opt.label}
-                              </button>
-                            ))}
-                            {packMode && (
-                              <span className="text-[10px] text-mutedText ml-1">
-                                One-click full pack installs — snapshot + boot-tested, rolled back on failure.
-                              </span>
-                            )}
+                            {packModeSwitch}
                           </div>
                         )}
                       </div>

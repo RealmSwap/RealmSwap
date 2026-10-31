@@ -6,6 +6,24 @@ export class ModrinthProvider implements ModProvider {
   id = "modrinth";
 
   async search(query: string, game: string, options?: SearchOptions): Promise<ModSearchResult[]> {
+    return this.searchProjects(query, game, options, "mod");
+  }
+
+  /**
+   * Modpack search (project_type:modpack): gallery cards for the one-click
+   * install-pack flow, which downloads the pack's .mrpack and rides the same
+   * plan → apply pipeline as manual imports. The card carries no version pin.
+   */
+  async searchModpacks(query: string, game: string, options?: SearchOptions): Promise<ModSearchResult[]> {
+    return this.searchProjects(query, game, options, "modpack");
+  }
+
+  private async searchProjects(
+    query: string,
+    game: string,
+    options: SearchOptions | undefined,
+    projectType: "mod" | "modpack"
+  ): Promise<ModSearchResult[]> {
     if (game.toUpperCase() !== "MINECRAFT") return [];
 
     const offset = options?.offset || 0;
@@ -35,7 +53,7 @@ export class ModrinthProvider implements ModProvider {
       }
 
       // Build facets — filter to server-side compatible mods
-      const facets: string[][] = [['project_type:mod']];
+      const facets: string[][] = [[`project_type:${projectType}`]];
       if (categoryFilter) {
         facets.push([`categories:${categoryFilter}`]);
       }
@@ -61,6 +79,7 @@ export class ModrinthProvider implements ModProvider {
         categories: hit.categories || [],
         updatedAt: hit.date_modified,
         websiteUrl: `https://modrinth.com/mod/${hit.slug}`,
+        kind: projectType,
       }));
     } catch (err) {
       console.error("[Modrinth] Search failed", err);
