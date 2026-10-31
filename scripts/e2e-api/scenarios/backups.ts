@@ -212,6 +212,8 @@ export const backupScenarios = [
 
         const saved = await admin.put("/api/user/s3-settings", {
           bucket: "e2e-bucket", accessKey: "AKIAE2E00000", secretKey: "e2e-secret", region: "us-east-1",
+          // Keep every background offsite upload on loopback — no real S3 calls.
+          endpoint: "http://127.0.0.1:9",
         });
         expect(saved.status === 200, `PUT s3 → ${saved.status}: ${saved.text.slice(0, 200)}`);
         const reread = await admin.get("/api/user/s3-settings");

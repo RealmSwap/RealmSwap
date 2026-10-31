@@ -248,7 +248,9 @@ export const opsScenarios = [
 
         const docker = await admin.get("/api/system/docker-status");
         expect(docker.status === 200, `docker-status → ${docker.status}`);
-        expect(docker.body?.available === false, `docker on this host → ${docker.body?.available}`);
+        // The contract is an honest availability probe, not a value: ubuntu CI
+        // runners have Docker, the mac harness host does not.
+        expect(typeof docker.body?.available === "boolean", `docker availability → ${docker.body?.available}`);
       });
 
       await step("shutdown: internal-token gated, app survives (called LAST)", async () => {
