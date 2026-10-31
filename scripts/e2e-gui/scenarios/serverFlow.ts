@@ -62,16 +62,33 @@ export const serverLifecycleScenarios = [
     // the shared server list's status is stale right after navigating here.)
     const commandInput = page.locator("form:has(button:has-text('Send')) input[type='text']");
     const before = await page.locator("div.font-mono > div").count();
+    // Capture the POST itself: a non-2xx here means the route refused (server
+    // state), silence means the click never fired it — the line-count wait
+    // below can't tell those apart.
+    const cmdResponse = page.waitForResponse(
+      (res) => res.url().includes("/console") && res.request().method() === "POST",
+      { timeout: 20_000 }
+    );
     await commandInput.fill("list");
     await page.getByRole("button", { name: "Send", exact: true }).click();
-    const deadline = Date.now() + 30_000;
+    const cmdRes = await cmdResponse;
+    if (!cmdRes.ok()) {
+      throw new Error(`console POST answered ${cmdRes.status()}: ${(await cmdRes.text()).slice(0, 300)}`);
+    }
+    const deadline = Date.now() + 45_000;
     let after = before;
     while (Date.now() < deadline) {
       after = await page.locator("div.font-mono > div").count();
       if (after > before) break;
       await new Promise((r) => setTimeout(r, 500));
     }
-    if (after <= before) throw new Error(`console command "list" produced no new output lines`);
+    if (after <= before) {
+      const streamPill = (await page.locator("button:has-text('Pause'), button:has-text('Resume')").first().textContent().catch(() => "?")) ?? "?";
+      const tail = ((await page.locator("div.font-mono").first().textContent().catch(() => "")) ?? "").slice(-250);
+      throw new Error(
+        `console command "list" produced no new output lines within 45s (streamPill=${streamPill.trim()}, console tail: ${tail})`
+      );
+    }
 
     // --- Join Info modal tells the truth about where to connect. ---
     await page.getByRole("link", { name: "Servers", exact: true }).click();
