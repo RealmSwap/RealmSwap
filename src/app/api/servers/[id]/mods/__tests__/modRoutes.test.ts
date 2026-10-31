@@ -646,6 +646,32 @@ describe("RUST install + uninstall route", () => {
   });
 });
 
+describe("collection manifest schema", () => {
+  it("accepts the app's own export shape (workshopModId: null on non-workshop rows)", async () => {
+    bag.access = { server: { id: "s1", name: "MC", game: "MINECRAFT", status: "STOPPED" } };
+    // Exactly what GET .../mods/export emits for a Modrinth/CurseForge row.
+    const collection = {
+      name: "MC pack", game: "MINECRAFT",
+      loader: { type: "fabric", loaderVersion: "0.19.5", minecraftVersion: "26.2" },
+      mods: [
+        { provider: "modrinth", packageId: "lhGA9TYQ", name: "Architectury API", version: "21.1.12+fabric", workshopModId: null },
+        { provider: "curseforge", packageId: "123456", name: "CF mod", version: "1.0", workshopModId: null },
+      ],
+    };
+    const form = new FormData();
+    form.append("collection", new Blob([JSON.stringify(collection)], { type: "application/json" }), "c.json");
+    const res = await importCollection(
+      new NextRequest("http://localhost/api/servers/s1/mods/import", { method: "POST", body: form }),
+      { params: Promise.resolve({ id: "s1" }) }
+    );
+    // The manifest must clear the schema — any failure comes from the replay
+    // itself (no server.jar here), never "Not a valid RealmSwap mod collection."
+    expect(res.status).not.toBe(400);
+    const data = await res.json().catch(() => ({}));
+    expect(String(data.error ?? "")).not.toContain("Not a valid RealmSwap mod collection");
+  });
+});
+
 describe("ARK collection import", () => {
   it("replays ActiveMods entries and records rows (engine re-downloads at boot)", async () => {
     bag.access = { server: { id: "s1", name: "ARK", game: "ARK", status: "STOPPED" } };

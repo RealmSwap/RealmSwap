@@ -42,6 +42,39 @@ npm run e2e:api:heavy    # + @heavy scenarios (real installs) — nightly
   closes) → SIGKILL mid-boot lands CRASHED, never RUNNING → archive moves the
   dir into the vault → restore brings it back → a non-member gets 403 on the
   owner's secrets.
+- **mods/search-install-lifecycle** — live Modrinth search; a loader-dependent
+  mod on vanilla and a client-only mod are both refused with the app's real
+  messages; the fabric loader installs and passes its boot test; a pinned
+  Modrinth mod installs with the **required-dependency BFS** (fabric-api row +
+  jar alongside) while install progress streams over the real SSE endpoint;
+  config get/put round-trips a real TOML (with `.bak`); enable/disable renames
+  the jar on disk; `updates` sees the pinned-old build and `update-all` applies
+  the newer one through a boot test; export → import round-trips a collection;
+  uninstall removes row + jar; reconcile syncs disk↔rows both ways; a broken
+  pack upload dies in the preflight with a 400; every STOPPED-only mutation
+  400s while the server is RUNNING; a non-member gets 403.
+
+## What the heavy scenarios prove (nightly / `npm run e2e:api:heavy`)
+
+- **mods/loader-matrix** — fabric, quilt, and forge each install on their own
+  fresh server and pass the post-install boot test (the launch path is
+  exactly what real Start runs). NeoForge is asserted as the honest refusal
+  it currently is: every NeoForge build for this Minecraft (26.2) is a beta,
+  so the route answers "No NeoForge build is available…"; this flips to a
+  real install once a stable build ships.
+- **mods/pack-pipeline** — the crown jewel: install-pack with a **pinned
+  Adrenaline .mrpack** (live Modrinth resolution → download → preflight →
+  pack-pinned fabric loader → ~20 server files installed → 11 client-only
+  files skipped → boot test), then re-importing the **previous pack version**
+  proves `retireReplacedPackMods` removes the mods that left the manifest,
+  update-pack's imported-pack refusal is asserted, and a crafted crash-jar
+  dropped into `mods/` is **blamed and quarantined** by the boot test while a
+  real mod installs. The packed server then boots to RUNNING and answers the
+  live status ping.
+- **mods/curseforge-pack** — CurseForge install-pack (numeric project id,
+  newest-compatible file resolution) + update-pack's "already on the newest
+  pack file" path. Self-skips when the app has no `CURSEFORGE_API_KEY`, so CI
+  without the secret stays green; local runs with `.env` exercise it.
 
 The first run downloads the Minecraft `server.jar` (~55 MB) and provisions a
 Temurin JRE for the host platform (a side effect of the platform-aware
@@ -56,8 +89,8 @@ machine and in CI at all).
 `src/app/api/__tests__/routeLedger.test.ts` fails CI when a route ships
 without an entry, an entry goes stale, or a `covered` entry claims a scenario
 the harness doesn't define — so "every functionality is covered" can't rot as
-the app grows. Current baseline: 26 covered, 108 planned (PR-B mods pipeline,
-PR-C full sweep), 1 manual.
+the app grows. Current baseline: 48 covered (auth, MC lifecycle, the full
+mods pipeline), 86 planned (PR-C full sweep), 1 manual.
 
 ## Environment knobs
 

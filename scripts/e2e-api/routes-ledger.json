@@ -330,92 +330,147 @@
     ]
   },
   "GET /api/servers/[id]/mods/[modId]/check-update": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "GET /api/servers/[id]/mods/[modId]/config": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "POST /api/servers/[id]/mods/[modId]/config": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "POST /api/servers/[id]/mods/[modId]/disable": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "POST /api/servers/[id]/mods/[modId]/enable": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "DELETE /api/servers/[id]/mods/[modId]": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "POST /api/servers/[id]/mods/[modId]/update": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "GET /api/servers/[id]/mods/export": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "POST /api/servers/[id]/mods/import": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "POST /api/servers/[id]/mods/import-modpack": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle",
+      "mods/pack-pipeline"
+    ]
   },
   "POST /api/servers/[id]/mods/install": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle",
+      "mods/pack-pipeline"
+    ]
   },
   "POST /api/servers/[id]/mods/install-pack": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/pack-pipeline",
+      "mods/curseforge-pack"
+    ]
   },
   "GET /api/servers/[id]/mods/install-progress": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle",
+      "mods/pack-pipeline"
+    ]
   },
   "GET /api/servers/[id]/mods/loader": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle",
+      "mods/pack-pipeline"
+    ]
   },
   "POST /api/servers/[id]/mods/loader": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle",
+      "mods/loader-matrix"
+    ]
   },
   "POST /api/servers/[id]/mods/reconcile": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "GET /api/servers/[id]/mods": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle",
+      "mods/loader-matrix",
+      "mods/pack-pipeline"
+    ]
   },
   "GET /api/servers/[id]/mods/search": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle",
+      "mods/curseforge-pack"
+    ]
   },
   "POST /api/servers/[id]/mods/update-all": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "GET /api/servers/[id]/mods/update-pack": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/pack-pipeline",
+      "mods/curseforge-pack"
+    ]
   },
   "POST /api/servers/[id]/mods/update-pack": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/pack-pipeline",
+      "mods/curseforge-pack"
+    ]
   },
   "GET /api/servers/[id]/mods/updates": {
-    "status": "planned",
-    "note": "PR-B mods/loaders/packs"
+    "status": "covered",
+    "scenarios": [
+      "mods/search-install-lifecycle"
+    ]
   },
   "GET /api/servers/[id]/network-status": {
     "status": "covered",
@@ -550,7 +605,7 @@
   },
   "POST /api/system/open-folder": {
     "status": "manual",
-    "note": "spawns the OS file manager — covered by GUI layer instead"
+    "note": "spawns the OS file manager \u2014 covered by GUI layer instead"
   },
   "POST /api/system/shutdown": {
     "status": "planned",

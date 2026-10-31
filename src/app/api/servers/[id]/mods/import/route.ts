@@ -79,7 +79,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         packageId: z.string().min(1),
         name: z.string().optional(),
         version: z.string().optional(),
-        workshopModId: z.string().optional(),
+        // The app's own export route emits workshopModId: null for every
+        // non-workshop row — a null-intolerant schema here broke the
+        // export→import round trip for all of those collections.
+        workshopModId: z.string().nullish(),
       })).min(1).max(200),
     });
     const parsed = manifestSchema.safeParse(manifestRaw);

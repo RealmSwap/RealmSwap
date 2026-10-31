@@ -284,6 +284,30 @@ describe("install-pack route", () => {
     expect(res.status).toBe(400);
   });
 
+  it("accepts modern 8-char Modrinth ids (ULID era) alongside legacy UUIDs", async () => {
+    // The search/gallery routes return these shapes as packageId — a
+    // UUID-only check 400s every modern Modrinth pack from the UI.
+    bag.fetchRoutes = modrinthFetchStub([
+      {
+        version_number: "1.0.0",
+        game_versions: ["1.20.1"],
+        loaders: [],
+        files: [{ url: MRPACK_URL, filename: "Gallery-Pack-1.0.0.mrpack", primary: true, hashes: {} }],
+      },
+    ]);
+    const routes = bag.fetchRoutes!;
+    bag.fetchRoutes = async (url: string, init?: RequestInit) => {
+      if (url === "https://api.modrinth.com/v2/project/BYN9yKrV/version") {
+        return routes("https://api.modrinth.com/v2/project/a1b2c3d4-1111-2222-3333-444455556666/version", init);
+      }
+      return routes(url, init);
+    };
+    vi.stubGlobal("fetch", (url: string, init?: RequestInit) => bag.fetchRoutes!(url, init));
+    const res = await post({ provider: "modrinth", projectId: "BYN9yKrV" });
+    expect(res.status).toBe(200);
+    expect(bag.modpackUpserts[0].create).toMatchObject({ kind: "mrpack", projectId: "BYN9yKrV" });
+  });
+
   it("still installs CurseForge packs when provider is omitted (back-compat)", async () => {
     bag.fetchRoutes = cfFetchStub();
     const res = await post({ projectId: "900" });

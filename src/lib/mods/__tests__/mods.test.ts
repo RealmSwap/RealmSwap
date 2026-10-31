@@ -7,7 +7,7 @@ import {
   detectModLoader, detectMinecraftVersion, readLoaderMarker, writeLoaderMarker,
   javaMajorForMinecraft, minecraftStartJavaMajor, pickForgeVersion, forgeArtifact, forgeInstallerUrl,
   neoforgeStreamFor, pickNeoforgeVersion, neoforgeInstallerUrl,
-  applyLoaderLaunch, findLoaderLaunch, installForgeServer, installNeoForgeServer,
+  applyLoaderLaunch, findLoaderLaunch, installFabricServer, installForgeServer, installNeoForgeServer,
   installQuiltServer,
 } from "../mcLoaders";
 import {
@@ -80,9 +80,61 @@ describe("javaMajorForMinecraft", () => {
     expect(javaMajorForMinecraft("1.21.4")).toBe(21);
   });
 
+  it("maps year-based releases (Minecraft 26.x) to the Java LTS the definition pins", () => {
+    expect(javaMajorForMinecraft("26.1")).toBe(25);
+    expect(javaMajorForMinecraft("26.2")).toBe(25);
+    expect(javaMajorForMinecraft("26.1.2")).toBe(25);
+  });
+
   it("fails open to a modern Java on unparseable versions", () => {
     expect(javaMajorForMinecraft("latest")).toBe(21);
     expect(javaMajorForMinecraft("")).toBe(21);
+  });
+
+  it("fabric installer honors a pack-pinned loader build", async () => {
+    const meta = [
+      { loader: { version: "0.19.5", stable: false } },
+      { loader: { version: "0.20.1", stable: true } },
+    ];
+    let downloadedUrl = "";
+    const marker = await installFabricServer(
+      dir,
+      "26.2",
+      { pinnedVersion: "0.19.5" },
+      {
+        fetchJson: async (url: string) =>
+          url.includes("/versions/installer") ? [{ version: "1.0.3" }] : meta,
+        download: async (url: string) => {
+          downloadedUrl = url;
+        },
+      }
+    );
+    expect(marker.loaderVersion).toBe("0.19.5");
+    expect(downloadedUrl).toContain("/0.19.5/");
+  });
+
+  it("fabric installer falls back to newest stable without a pin", async () => {
+    const meta = [
+      { loader: { version: "0.20.1-beta.3", stable: false } },
+      { loader: { version: "0.20.1", stable: true } },
+    ];
+    const marker = await installFabricServer(dir, "26.2", {}, {
+      fetchJson: async (url: string) =>
+        url.includes("/versions/installer") ? [{ version: "1.0.3" }] : meta,
+      download: async () => {},
+    });
+    expect(marker.loaderVersion).toBe("0.20.1");
+  });
+
+  it("fabric installer rejects a pin the meta doesn't carry", async () => {
+    await expect(
+      installFabricServer(
+        dir,
+        "26.2",
+        { pinnedVersion: "0.0.1" },
+        { fetchJson: async () => [{ loader: { version: "0.20.1", stable: true } }], download: async () => {} }
+      )
+    ).rejects.toThrow(/not available/);
   });
 });
 
@@ -90,6 +142,7 @@ describe("minecraftStartJavaMajor", () => {
   it("follows the loader marker's Minecraft version so Start matches the boot test", () => {
     expect(minecraftStartJavaMajor({ markerMinecraftVersion: "1.21.1", specMajor: 25 })).toBe(21);
     expect(minecraftStartJavaMajor({ markerMinecraftVersion: "1.20.1", specMajor: 25 })).toBe(17);
+    expect(minecraftStartJavaMajor({ markerMinecraftVersion: "26.2", specMajor: 25 })).toBe(25);
   });
 
   it("falls back to the definition's spec (then 25) without a marker", () => {

@@ -276,7 +276,7 @@ export async function applyModpackPlan(args: {
       p({ stage: "loader", label: `Installing the ${LOADER_LABELS[plan.packLoader.type]} loader`, current: 0, total: 1 });
       const onLog = (msg: string) => console.log(`[Modpack] ${msg}`);
       if (plan.packLoader.type === "fabric") {
-        await installFabricServer(serverRoot, effectiveMcVersion, onLog);
+        await installFabricServer(serverRoot, effectiveMcVersion, { pinnedVersion: plan.packLoader.version, onLog });
       } else if (plan.packLoader.type === "forge") {
         await installForgeServer(serverRoot, effectiveMcVersion, { pinnedVersion: plan.packLoader.version, onLog });
       } else if (plan.packLoader.type === "quilt") {

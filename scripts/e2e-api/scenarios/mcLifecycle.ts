@@ -268,6 +268,9 @@ export const mcLifecycleScenarios = [
           fs.existsSync(path.join(DATA_DIR, "local-servers", restoredId)),
           "restored server dir is back in local-servers"
         );
+        // The restored vanilla server (installed once, stopped) is the base
+        // the mods smoke scenario reuses so it doesn't pay another install.
+        ctx.state.modsBaseServerId = restoredId;
       });
 
       await step("a non-member cannot touch the owner's server", async () => {
