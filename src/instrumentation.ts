@@ -49,6 +49,24 @@ export async function register() {
       console.error("[LocalRunner] boot reconcile failed:", err?.message)
     );
 
+    // Dedicated-box mode: servers marked "start with RealmSwap" boot with
+    // the app — strictly after the reconcile above, so only genuinely
+    // stopped servers are started. Production only: `npm run dev` must not
+    // drag game servers up with it.
+    if (process.env.NODE_ENV === "production") {
+      const { autoStartServersOnLaunch } = await import("@/lib/autoStartOnLaunch");
+      autoStartServersOnLaunch()
+        .then((result) => {
+          if (result.started.length) {
+            console.log(`[AutoStart] started ${result.started.length} server(s) marked for launch`);
+          }
+          for (const f of result.failed) {
+            console.error(`[AutoStart] ${f.serverId}: ${f.error}`);
+          }
+        })
+        .catch((err: any) => console.error("[AutoStart] launch pass failed:", err?.message));
+    }
+
     // The dashboard hosts game processes — an unhandled stream error (EPIPE
     // from writing stdin to a just-died server) must not take the whole
     // process down and orphan every running server with it. Log loudly and

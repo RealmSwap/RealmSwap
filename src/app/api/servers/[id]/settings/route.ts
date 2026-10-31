@@ -240,6 +240,15 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       return NextResponse.json({ success: true, autoStartLeadMinutes: minutes });
     }
 
+    if (body.action === "TOGGLE_AUTO_START_ON_LAUNCH") {
+      const enable = !!body.enable;
+      await prisma.server.update({
+        where: { id: server.id },
+        data: { autoStartOnLaunch: enable }
+      });
+      return NextResponse.json({ success: true, autoStartOnLaunch: enable });
+    }
+
     if (body.action === "TOGGLE_IDLE_STOP") {
       const enable = !!body.enable;
       const minutes = Number(body.minutes ?? server.idleStopMinutes ?? 30);

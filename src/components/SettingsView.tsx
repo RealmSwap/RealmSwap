@@ -50,6 +50,33 @@ export function SettingsView({ user }: { user: any }) {
   useEffect(() => {
     setCrashOn(window.localStorage.getItem("rs.crashReports") === "on");
   }, []);
+
+  /* Dedicated box: launch-at-login lives in the Electron main process. The
+     bridge is absent in the browser — the card explains that honestly. */
+  const [launchOnBoot, setLaunchOnBoot] = useState<boolean | null>(null);
+  const [launchOnBootSupported, setLaunchOnBootSupported] = useState(false);
+  useEffect(() => {
+    const bridge = (window as any).realmswapDesktop;
+    if (!bridge?.getLaunchOnBoot) return;
+    bridge.getLaunchOnBoot().then((state: { supported: boolean; openAtLogin: boolean }) => {
+      setLaunchOnBootSupported(!!state?.supported);
+      setLaunchOnBoot(!!state?.openAtLogin);
+    }).catch(() => {});
+  }, []);
+  const toggleLaunchOnBoot = async () => {
+    const bridge = (window as any).realmswapDesktop;
+    if (!bridge?.setLaunchOnBoot) return;
+    try {
+      const next = !(launchOnBoot ?? false);
+      const state = await bridge.setLaunchOnBoot(next);
+      setLaunchOnBoot(!!state?.openAtLogin);
+      toast.success(state?.openAtLogin
+        ? "RealmSwap will start when this PC signs in."
+        : "RealmSwap will no longer start at sign-in.");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not update the sign-in setting.");
+    }
+  };
   const [pushSupported, setPushSupported] = useState(false);
 
   // Check if push is supported on mount
@@ -313,6 +340,42 @@ export function SettingsView({ user }: { user: any }) {
               <p className="text-[10px] text-slate-500 text-right">Preferences save the moment you flip a toggle.</p>
             </div>
           </form>
+
+          {user?.role === "ADMIN" && (
+            <div className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5 mt-8">
+              <div>
+                <h2 className="text-xl font-bold text-white mb-1">Dedicated Box</h2>
+                <p className="text-xs text-slate-400 mb-6">
+                  Turn this PC into an always-ready server box: it signs in, RealmSwap starts, and servers marked
+                  &ldquo;Start with RealmSwap&rdquo; (Game Settings &rarr; Power &amp; Automation) boot on their own.
+                  Discord game nights take it from there.
+                </p>
+
+                <div className="flex items-center justify-between gap-4 p-4 bg-slate-900 border border-white/5 rounded-lg">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-200">Start RealmSwap when this PC signs in</h3>
+                    <p className="text-xs text-slate-500 mt-1 max-w-md">
+                      {launchOnBootSupported
+                        ? "RealmSwap launches automatically at sign-in and keeps running in the tray when the window is closed."
+                        : "Available in the RealmSwap desktop app. Running from a browser? Keep RealmSwap running by hand."}
+                    </p>
+                  </div>
+                  {launchOnBootSupported && (
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={launchOnBoot ?? false}
+                        disabled={launchOnBoot === null}
+                        onChange={toggleLaunchOnBoot}
+                      />
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {user?.role === "ADMIN" && (
             <div className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5 mt-8">

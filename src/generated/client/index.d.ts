@@ -6768,6 +6768,7 @@ export namespace Prisma {
     inviteCode: string | null
     statusShareCode: string | null
     autoStartLeadMinutes: number | null
+    autoStartOnLaunch: boolean | null
     idleStopEnabled: boolean | null
     idleStopMinutes: number | null
     sessionAutoStopHours: number | null
@@ -6815,6 +6816,7 @@ export namespace Prisma {
     inviteCode: string | null
     statusShareCode: string | null
     autoStartLeadMinutes: number | null
+    autoStartOnLaunch: boolean | null
     idleStopEnabled: boolean | null
     idleStopMinutes: number | null
     sessionAutoStopHours: number | null
@@ -6862,6 +6864,7 @@ export namespace Prisma {
     inviteCode: number
     statusShareCode: number
     autoStartLeadMinutes: number
+    autoStartOnLaunch: number
     idleStopEnabled: number
     idleStopMinutes: number
     sessionAutoStopHours: number
@@ -6945,6 +6948,7 @@ export namespace Prisma {
     inviteCode?: true
     statusShareCode?: true
     autoStartLeadMinutes?: true
+    autoStartOnLaunch?: true
     idleStopEnabled?: true
     idleStopMinutes?: true
     sessionAutoStopHours?: true
@@ -6992,6 +6996,7 @@ export namespace Prisma {
     inviteCode?: true
     statusShareCode?: true
     autoStartLeadMinutes?: true
+    autoStartOnLaunch?: true
     idleStopEnabled?: true
     idleStopMinutes?: true
     sessionAutoStopHours?: true
@@ -7039,6 +7044,7 @@ export namespace Prisma {
     inviteCode?: true
     statusShareCode?: true
     autoStartLeadMinutes?: true
+    autoStartOnLaunch?: true
     idleStopEnabled?: true
     idleStopMinutes?: true
     sessionAutoStopHours?: true
@@ -7173,6 +7179,7 @@ export namespace Prisma {
     inviteCode: string | null
     statusShareCode: string | null
     autoStartLeadMinutes: number
+    autoStartOnLaunch: boolean
     idleStopEnabled: boolean
     idleStopMinutes: number
     sessionAutoStopHours: number
@@ -7239,6 +7246,7 @@ export namespace Prisma {
     inviteCode?: boolean
     statusShareCode?: boolean
     autoStartLeadMinutes?: boolean
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: boolean
     sessionAutoStopHours?: boolean
@@ -7300,6 +7308,7 @@ export namespace Prisma {
     inviteCode?: boolean
     statusShareCode?: boolean
     autoStartLeadMinutes?: boolean
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: boolean
     sessionAutoStopHours?: boolean
@@ -7349,6 +7358,7 @@ export namespace Prisma {
     inviteCode?: boolean
     statusShareCode?: boolean
     autoStartLeadMinutes?: boolean
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: boolean
     sessionAutoStopHours?: boolean
@@ -7434,6 +7444,7 @@ export namespace Prisma {
       inviteCode: string | null
       statusShareCode: string | null
       autoStartLeadMinutes: number
+      autoStartOnLaunch: boolean
       idleStopEnabled: boolean
       idleStopMinutes: number
       sessionAutoStopHours: number
@@ -7884,6 +7895,7 @@ export namespace Prisma {
     readonly inviteCode: FieldRef<"Server", 'String'>
     readonly statusShareCode: FieldRef<"Server", 'String'>
     readonly autoStartLeadMinutes: FieldRef<"Server", 'Int'>
+    readonly autoStartOnLaunch: FieldRef<"Server", 'Boolean'>
     readonly idleStopEnabled: FieldRef<"Server", 'Boolean'>
     readonly idleStopMinutes: FieldRef<"Server", 'Int'>
     readonly sessionAutoStopHours: FieldRef<"Server", 'Int'>
@@ -33432,6 +33444,7 @@ export namespace Prisma {
     inviteCode: 'inviteCode',
     statusShareCode: 'statusShareCode',
     autoStartLeadMinutes: 'autoStartLeadMinutes',
+    autoStartOnLaunch: 'autoStartOnLaunch',
     idleStopEnabled: 'idleStopEnabled',
     idleStopMinutes: 'idleStopMinutes',
     sessionAutoStopHours: 'sessionAutoStopHours',
@@ -34153,6 +34166,7 @@ export namespace Prisma {
     inviteCode?: StringNullableFilter<"Server"> | string | null
     statusShareCode?: StringNullableFilter<"Server"> | string | null
     autoStartLeadMinutes?: IntFilter<"Server"> | number
+    autoStartOnLaunch?: BoolFilter<"Server"> | boolean
     idleStopEnabled?: BoolFilter<"Server"> | boolean
     idleStopMinutes?: IntFilter<"Server"> | number
     sessionAutoStopHours?: IntFilter<"Server"> | number
@@ -34213,6 +34227,7 @@ export namespace Prisma {
     inviteCode?: SortOrderInput | SortOrder
     statusShareCode?: SortOrderInput | SortOrder
     autoStartLeadMinutes?: SortOrder
+    autoStartOnLaunch?: SortOrder
     idleStopEnabled?: SortOrder
     idleStopMinutes?: SortOrder
     sessionAutoStopHours?: SortOrder
@@ -34276,6 +34291,7 @@ export namespace Prisma {
     lastSnapshotAt?: DateTimeNullableFilter<"Server"> | Date | string | null
     backupRetention?: IntFilter<"Server"> | number
     autoStartLeadMinutes?: IntFilter<"Server"> | number
+    autoStartOnLaunch?: BoolFilter<"Server"> | boolean
     idleStopEnabled?: BoolFilter<"Server"> | boolean
     idleStopMinutes?: IntFilter<"Server"> | number
     sessionAutoStopHours?: IntFilter<"Server"> | number
@@ -34336,6 +34352,7 @@ export namespace Prisma {
     inviteCode?: SortOrderInput | SortOrder
     statusShareCode?: SortOrderInput | SortOrder
     autoStartLeadMinutes?: SortOrder
+    autoStartOnLaunch?: SortOrder
     idleStopEnabled?: SortOrder
     idleStopMinutes?: SortOrder
     sessionAutoStopHours?: SortOrder
@@ -34391,6 +34408,7 @@ export namespace Prisma {
     inviteCode?: StringNullableWithAggregatesFilter<"Server"> | string | null
     statusShareCode?: StringNullableWithAggregatesFilter<"Server"> | string | null
     autoStartLeadMinutes?: IntWithAggregatesFilter<"Server"> | number
+    autoStartOnLaunch?: BoolWithAggregatesFilter<"Server"> | boolean
     idleStopEnabled?: BoolWithAggregatesFilter<"Server"> | boolean
     idleStopMinutes?: IntWithAggregatesFilter<"Server"> | number
     sessionAutoStopHours?: IntWithAggregatesFilter<"Server"> | number
@@ -36630,6 +36648,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -36690,6 +36709,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -36746,6 +36766,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -36806,6 +36827,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -36864,6 +36886,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -36909,6 +36932,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -36956,6 +36980,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -39583,6 +39608,7 @@ export namespace Prisma {
     inviteCode?: SortOrder
     statusShareCode?: SortOrder
     autoStartLeadMinutes?: SortOrder
+    autoStartOnLaunch?: SortOrder
     idleStopEnabled?: SortOrder
     idleStopMinutes?: SortOrder
     sessionAutoStopHours?: SortOrder
@@ -39647,6 +39673,7 @@ export namespace Prisma {
     inviteCode?: SortOrder
     statusShareCode?: SortOrder
     autoStartLeadMinutes?: SortOrder
+    autoStartOnLaunch?: SortOrder
     idleStopEnabled?: SortOrder
     idleStopMinutes?: SortOrder
     sessionAutoStopHours?: SortOrder
@@ -39694,6 +39721,7 @@ export namespace Prisma {
     inviteCode?: SortOrder
     statusShareCode?: SortOrder
     autoStartLeadMinutes?: SortOrder
+    autoStartOnLaunch?: SortOrder
     idleStopEnabled?: SortOrder
     idleStopMinutes?: SortOrder
     sessionAutoStopHours?: SortOrder
@@ -42747,6 +42775,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -42805,6 +42834,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -43151,6 +43181,7 @@ export namespace Prisma {
     inviteCode?: StringNullableFilter<"Server"> | string | null
     statusShareCode?: StringNullableFilter<"Server"> | string | null
     autoStartLeadMinutes?: IntFilter<"Server"> | number
+    autoStartOnLaunch?: BoolFilter<"Server"> | boolean
     idleStopEnabled?: BoolFilter<"Server"> | boolean
     idleStopMinutes?: IntFilter<"Server"> | number
     sessionAutoStopHours?: IntFilter<"Server"> | number
@@ -44401,6 +44432,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -44460,6 +44492,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -44531,6 +44564,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -44590,6 +44624,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -44645,6 +44680,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -44704,6 +44740,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -44775,6 +44812,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -44834,6 +44872,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -44889,6 +44928,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -44948,6 +44988,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -45019,6 +45060,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -45078,6 +45120,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -45349,6 +45392,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -45408,6 +45452,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -45479,6 +45524,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -45538,6 +45584,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -45701,6 +45748,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -45760,6 +45808,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -45882,6 +45931,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -45941,6 +45991,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -46104,6 +46155,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -46162,6 +46214,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -46300,6 +46353,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -46359,6 +46413,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -46430,6 +46485,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -46489,6 +46545,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -46544,6 +46601,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -46603,6 +46661,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -46674,6 +46733,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -46733,6 +46793,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -46788,6 +46849,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -46847,6 +46909,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -46918,6 +46981,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -46977,6 +47041,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -47032,6 +47097,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -47091,6 +47157,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -47162,6 +47229,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -47221,6 +47289,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -47276,6 +47345,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -47335,6 +47405,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -47477,6 +47548,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -47536,6 +47608,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -48422,6 +48495,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -48481,6 +48555,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -48595,6 +48670,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -48654,6 +48730,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -48726,6 +48803,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -48876,6 +48954,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -48934,6 +49013,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -48991,6 +49071,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -49582,6 +49663,7 @@ export namespace Prisma {
     inviteCode?: string | null
     statusShareCode?: string | null
     autoStartLeadMinutes?: number
+    autoStartOnLaunch?: boolean
     idleStopEnabled?: boolean
     idleStopMinutes?: number
     sessionAutoStopHours?: number
@@ -49627,6 +49709,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -49685,6 +49768,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
@@ -49742,6 +49826,7 @@ export namespace Prisma {
     inviteCode?: NullableStringFieldUpdateOperationsInput | string | null
     statusShareCode?: NullableStringFieldUpdateOperationsInput | string | null
     autoStartLeadMinutes?: IntFieldUpdateOperationsInput | number
+    autoStartOnLaunch?: BoolFieldUpdateOperationsInput | boolean
     idleStopEnabled?: BoolFieldUpdateOperationsInput | boolean
     idleStopMinutes?: IntFieldUpdateOperationsInput | number
     sessionAutoStopHours?: IntFieldUpdateOperationsInput | number
