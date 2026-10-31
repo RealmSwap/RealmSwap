@@ -70,9 +70,13 @@ jobs:
       # Boots the production server against a throwaway DB + local fake
       # Supabase and drives real flows — including a REAL Minecraft server
       # boot (the runtimes provisioner downloads a Linux JRE). No secrets
-      # needed; see scripts/e2e-api/config.ts.
+      # needed; see scripts/e2e-api/config.ts. The CurseForge key is optional
+      # and only unlocks the CF pack search/install paths (heavy scenarios
+      # self-skip without it; smoke never needs it).
       - name: Run API e2e harness
         run: npm run e2e:api
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
 
       - name: Upload harness report
         if: always()

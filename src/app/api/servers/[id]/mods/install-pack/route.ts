@@ -36,7 +36,11 @@ import { requireLocalServer } from "@/lib/agents/perimeter";
 // pre-flight all happen BEFORE the snapshot, so network/distribution
 // failures cost nothing.
 const CURSEFORGE_PROJECT_ID = /^\d+$/;
-const MODRINTH_PROJECT_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+// Modrinth migrated project ids from UUIDs to 8-char base62 ids (every
+// search/gallery result carries one), so both shapes must be accepted here —
+// a UUID-only check 400s every modern Modrinth pack before it can resolve.
+const MODRINTH_PROJECT_ID =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$|^[A-Za-z0-9]{8}$/;
 
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -68,7 +72,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: "A numeric CurseForge modpack id is required" }, { status: 400 });
     }
     if (provider === "modrinth" && !MODRINTH_PROJECT_ID.test(projectId)) {
-      return NextResponse.json({ error: "A Modrinth project id (UUID) is required" }, { status: 400 });
+      return NextResponse.json({ error: "A Modrinth project id is required" }, { status: 400 });
     }
 
     const access = await verifyServerAccess(serverId, user.id, "ADMIN");
@@ -107,8 +111,12 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     try {
       if (provider === "modrinth") {
         const versions = await fetchVersions(projectId);
+        // A pinned "versionId" may be the version's actual id (ULID) or its
+        // version_number — both identify the version callers hold from search.
         const version = parsed.data.versionId
-          ? versions.find((v) => v.version_number === parsed.data.versionId) ?? null
+          ? versions.find(
+              (v) => v.version_number === parsed.data.versionId || v.id === parsed.data.versionId
+            ) ?? null
           : pickCompatibleVersion(versions, {});
         const file = version ? primaryFile(version) : null;
         if (!version || !file) {

@@ -27,8 +27,17 @@ export function downloadFile(url: string, dest: string, opts: DownloadOpts = {})
     https.get(url, (response) => {
       if (response.statusCode === 301 || response.statusCode === 302) {
         const redirectUrl = response.headers.location;
+        // The empty stream's own 'close' event must not resolve this promise
+        // — the redirected download owns the outcome now. Without this,
+        // close() fires 'finish'/'close' before the recursion has written
+        // anything and the caller races ahead to read a file that isn't
+        // there (ENOENT on fast machines; every CurseForge download rides
+        // an edge.forgecdn.net 302).
+        settled = true;
         file.close();
-        fs.unlink(dest, () => {});
+        // No unlink here: the recursion opens dest with 'w' (truncate), and
+        // an async unlink can land AFTER that open — the child then writes
+        // to an unlinked inode and the caller reads ENOENT.
         if (redirectUrl) {
           downloadFile(redirectUrl, dest, { ...opts, maxRedirects: maxRedirects - 1 }).then(resolve).catch(reject);
           return;
@@ -37,6 +46,7 @@ export function downloadFile(url: string, dest: string, opts: DownloadOpts = {})
         return;
       }
       if (response.statusCode !== 200) {
+        settled = true;
         file.close();
         fs.unlink(dest, () => {});
         reject(new Error(`Failed to download ${url}: status ${response.statusCode}`));

@@ -16,9 +16,18 @@ import { ADMIN_USER, APP_BASE_URL, DATA_DIR } from "./config";
 import { startApp } from "./app";
 import { authScenarios } from "./scenarios/auth";
 import { mcLifecycleScenarios } from "./scenarios/mcLifecycle";
+import { modsScenarios } from "./scenarios/mods";
+import { loaderScenarios } from "./scenarios/loaders";
+import { packScenarios } from "./scenarios/packs";
 import type { Scenario, ScenarioContext } from "./scenarios/framework";
 
-const ALL_SCENARIOS: Scenario[] = [...authScenarios, ...mcLifecycleScenarios];
+const ALL_SCENARIOS: Scenario[] = [
+  ...authScenarios,
+  ...mcLifecycleScenarios,
+  ...modsScenarios,
+  ...loaderScenarios,
+  ...packScenarios,
+];
 
 function parseTag(): string {
   const idx = process.argv.indexOf("--tag");

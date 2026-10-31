@@ -158,7 +158,11 @@ export function javaMajorForMinecraft(mcVersion: string): number {
   if (!m) return 21;
   const minor = parseInt(m[2], 10);
   const patch = m[3] ? parseInt(m[3], 10) : 0;
-  if (m[1] !== "1") return 21;
+  // Year-based releases (Minecraft 26.x, Mojang's 2026 scheme) run on the
+  // Java LTS the built-in definition pins for them (25). The pre-2026 rule
+  // below returned 21 for these, sending every modded 26.x boot test and
+  // Start to a JDK that was never provisioned.
+  if (m[1] !== "1") return 25;
   if (minor <= 16) return 8; // 1.16.5 and older
   if (minor <= 20 && !(minor === 20 && patch >= 5)) return 17; // 1.17 – 1.20.4
   return 21; // 1.20.5+
@@ -410,26 +414,49 @@ async function runLoaderInstaller(
  * writes the loader marker. The vanilla server.jar is left in place — the
  * launcher downloads/provisions what it needs on first boot.
  */
+export interface InstallFabricOpts {
+  /** Pack-pinned Fabric loader build; when omitted the newest stable is used. */
+  pinnedVersion?: string | null;
+  onLog?: (msg: string) => void;
+}
+
 export async function installFabricServer(
   installDir: string,
   minecraftVersion: string,
-  onLog: (msg: string) => void = () => {}
+  optsOrLog: InstallFabricOpts | ((msg: string) => void) = {},
+  deps: InstallerDeps = {}
 ): Promise<LoaderMarker> {
-  onLog(`Resolving latest Fabric loader for Minecraft ${minecraftVersion}…`);
-  const loaders: any[] = await fetchJson(`${FABRIC_META}/versions/loader/${encodeURIComponent(minecraftVersion)}`);
-  const stable = loaders.find((l) => l?.loader?.stable) ?? loaders[0];
-  const loaderVersion: string | undefined = stable?.loader?.version;
+  const opts: InstallFabricOpts = typeof optsOrLog === "function" ? { onLog: optsOrLog } : optsOrLog;
+  const onLog = opts.onLog ?? (() => {});
+  const fetchJsonDep = deps.fetchJson ?? fetchJson;
+  const download = deps.download ?? ((url: string, dest: string) => downloadFile(url, dest));
+
+  onLog(`Resolving Fabric loader for Minecraft ${minecraftVersion}…`);
+  const loaders: any[] = await fetchJsonDep(`${FABRIC_META}/versions/loader/${encodeURIComponent(minecraftVersion)}`);
+  // Packs pin the exact loader build they were authored against (the same
+  // way forge/quilt/neoforge pins are honored) — latest-stable only when
+  // nothing is pinned.
+  let loaderVersion: string | undefined;
+  if (opts.pinnedVersion) {
+    if (!loaders.some((l) => l?.loader?.version === opts.pinnedVersion)) {
+      throw new Error(`Fabric loader ${opts.pinnedVersion} is not available for Minecraft ${minecraftVersion}.`);
+    }
+    loaderVersion = opts.pinnedVersion;
+  } else {
+    const stable = loaders.find((l) => l?.loader?.stable) ?? loaders[0];
+    loaderVersion = stable?.loader?.version;
+  }
   if (!loaderVersion) throw new Error(`No Fabric loader available for Minecraft ${minecraftVersion}`);
 
   onLog("Resolving Fabric installer version…");
-  const installers: any[] = await fetchJson(`${FABRIC_META}/versions/installer`);
+  const installers: any[] = await fetchJsonDep(`${FABRIC_META}/versions/installer`);
   const installerVersion: string | undefined = installers[0]?.version;
   if (!installerVersion) throw new Error("No Fabric installer version available");
 
   const jarUrl = `${FABRIC_META}/versions/loader/${encodeURIComponent(minecraftVersion)}/${encodeURIComponent(loaderVersion)}/${encodeURIComponent(installerVersion)}/server/jar`;
   const dest = path.join(installDir, "fabric-server-launch.jar");
   onLog(`Downloading Fabric server launcher…`);
-  await downloadFile(jarUrl, dest);
+  await download(jarUrl, dest);
 
   const marker: LoaderMarker = {
     type: "fabric",
