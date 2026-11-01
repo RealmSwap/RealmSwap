@@ -13,6 +13,8 @@
     "e2e:api:heavy": "tsx scripts/e2e-api/run.ts --tag all",
     "e2e:win": "tsx scripts/e2e-win/smoke.ts --mode build-smoke",
     "e2e:win:selftest": "tsx scripts/e2e-win/smoke.ts --mode selftest",
+    "e2e:win:pc": "node scripts/win-smoke.mjs",
+    "e2e:win:pc:selftest": "node scripts/win-smoke.mjs --selftest",
     "test:watch": "vitest",
     "postinstall": "prisma generate",
     "db:push": "cross-env DATABASE_URL=\"file:./dev.db\" prisma db push",

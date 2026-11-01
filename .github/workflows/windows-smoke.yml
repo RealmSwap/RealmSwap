@@ -42,6 +42,8 @@ on:
     paths:
       - ".github/workflows/windows-smoke.yml"
       - "scripts/e2e-win/**"
+      - "scripts/win-smoke.mjs"
+      - "scripts/win-smoke.README.md"
 
 permissions:
   contents: read
@@ -62,6 +64,12 @@ jobs:
         with:
           node-version: 20
           cache: npm
+
+      # The PC harness (Layer 4) is zero-dependency — its pure logic (session
+      # minting, zip builder, multipart, UPnP arg XML) self-tests before the
+      # expensive build, so a regression fails in seconds.
+      - name: Selftest the PC smoke harness (pure logic)
+        run: node scripts/win-smoke.mjs --selftest
 
       # GitHub's Windows runners check out on D: but the home dir is on C:.
       # With output:standalone, @vercel/nft globs C:\Users\runneradmin during the
