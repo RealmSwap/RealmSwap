@@ -121,6 +121,7 @@ interface LaunchedApp {
   startupLogCandidates: LogCandidate[];
   winningLogPath: string | null;
   electronLogPath: string;
+  electronLogFd: number;
   port: number | null;
 }
 
@@ -170,7 +171,12 @@ function launchApp(exePath: string, userDataDir: string): LaunchedApp {
   // %APPDATA%\RealmSwap — watched as a fallback candidate with a size
   // baseline so earlier launches' lines never count.
   const primaryLog = path.join(userDataDir, "startup.log");
-  if (fs.existsSync(primaryLog)) fs.rmSync(primaryLog);
+  try {
+    if (fs.existsSync(primaryLog)) fs.rmSync(primaryLog);
+  } catch {
+    /* still held by the previous launch on Windows — the size baseline
+     * below makes stale lines harmless */
+  }
   const candidates: LogCandidate[] = [{ path: primaryLog, baseline: 0 }];
   const defaultLog = path.join(defaultUserDataDir(), "startup.log");
   if (path.resolve(defaultLog) !== path.resolve(primaryLog)) {
@@ -191,13 +197,25 @@ function launchApp(exePath: string, userDataDir: string): LaunchedApp {
     stdio: ["ignore", "pipe", "pipe"],
   });
   const electronLogPath = path.join(userDataDir, "electron-output.log");
-  if (fs.existsSync(electronLogPath)) fs.rmSync(electronLogPath);
-  const electronLog = fs.openSync(electronLogPath, "a");
-  child.stdout?.on("data", (d) => fs.writeSync(electronLog, d));
-  child.stderr?.on("data", (d) => fs.writeSync(electronLog, d));
-  child.on("error", (err) => fs.writeSync(electronLog, `[driver] spawn error: ${err}\n`));
+  try {
+    if (fs.existsSync(electronLogPath)) fs.rmSync(electronLogPath);
+  } catch {
+    /* held by the previous launch's fd — stopApp closes it; appending is fine */
+  }
+  const electronLogFd = fs.openSync(electronLogPath, "a");
+  child.stdout?.on("data", (d) => fs.writeSync(electronLogFd, d));
+  child.stderr?.on("data", (d) => fs.writeSync(electronLogFd, d));
+  child.on("error", (err) => fs.writeSync(electronLogFd, `[driver] spawn error: ${err}\n`));
 
-  return { child, userDataDir, startupLogCandidates: candidates, winningLogPath: null, electronLogPath, port: null };
+  return {
+    child,
+    userDataDir,
+    startupLogCandidates: candidates,
+    winningLogPath: null,
+    electronLogPath,
+    electronLogFd,
+    port: null,
+  };
 }
 
 async function waitServerReady(app: LaunchedApp): Promise<number> {
@@ -282,11 +300,27 @@ function readStartupLog(app: LaunchedApp): string {
   return "";
 }
 
-function stopApp(app: LaunchedApp): void {
+async function stopApp(app: LaunchedApp): Promise<void> {
   try {
     if (app.child.pid) spawnSyncChecked("taskkill", ["/F", "/T", "/PID", String(app.child.pid)], { allowFailure: true });
   } catch {
     /* already gone */
+  }
+  // Windows: file handles (including this driver's own electron-output fd)
+  // outlive taskkill for a moment — wait the process out before closing.
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline && app.child.pid) {
+    try {
+      process.kill(app.child.pid, 0);
+      await sleep(250);
+    } catch {
+      break; // gone
+    }
+  }
+  try {
+    fs.closeSync(app.electronLogFd);
+  } catch {
+    /* already closed */
   }
 }
 
@@ -576,7 +610,7 @@ async function runBuildSmoke(): Promise<number> {
       return `port ${serverPort} closed`;
     });
   } finally {
-    if (app) stopApp(app);
+    if (app) await stopApp(app);
     await fake.stop().catch(() => {});
   }
 
@@ -706,7 +740,7 @@ async function runReleaseUpdate(): Promise<number> {
     });
 
     await timed("autoupdate/apply-and-relaunch-at-latest", async () => {
-      if (app) stopApp(app);
+      if (app) await stopApp(app);
       app = null;
       // The user path applies the staged installer on quit (autoInstallOnAppQuit,
       // covered by electron/__tests__/autoUpdate.test.js + the GUI pass); here we
@@ -736,7 +770,7 @@ async function runReleaseUpdate(): Promise<number> {
       return "updated app serves the minted-session API";
     });
   } finally {
-    if (app) stopApp(app);
+    if (app) await stopApp(app);
     await fake.stop().catch(() => {});
   }
 
