@@ -128,6 +128,15 @@ jobs:
           PLAYIT_AGENT_SECRET: ${{ secrets.PLAYIT_AGENT_SECRET }}
         run: npx tsx scripts/e2e-win/smoke.ts --mode build-smoke
 
+      # upload-artifact v4 only accepts paths under the workspace root, so the
+      # build log (written to C:\rsbuild) gets copied in first.
+      - name: Collect build log into artifacts
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p smoke-artifacts
+          cp C:/rsbuild/build.log smoke-artifacts/ 2>/dev/null || true
+
       - name: Upload smoke artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -136,7 +145,6 @@ jobs:
           path: |
             smoke-artifacts/**
             smoke-userdata/**
-            C:\rsbuild\build.log
           retention-days: 7
 
   auto-update-proof:

@@ -108,12 +108,27 @@ function writeReport(extra: Record<string, unknown>): number {
 // App launch + startup.log
 // ---------------------------------------------------------------------------
 
+interface LogCandidate {
+  path: string;
+  /** Only content appended after the launch counts — the default
+   *  %APPDATA%\RealmSwap log carries previous launches' lines. */
+  baseline: number;
+}
+
 interface LaunchedApp {
   child: ChildProcess;
   userDataDir: string;
-  startupLogPath: string;
+  startupLogCandidates: LogCandidate[];
+  winningLogPath: string | null;
   electronLogPath: string;
   port: number | null;
+}
+
+function defaultUserDataDir(): string {
+  return path.join(
+    process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"),
+    "RealmSwap"
+  );
 }
 
 function killRunningApp(): void {
@@ -149,11 +164,18 @@ function spawnSyncChecked(
 function launchApp(exePath: string, userDataDir: string): LaunchedApp {
   killRunningApp();
   fs.mkdirSync(userDataDir, { recursive: true });
-  // Fresh boot per launch: the startup.log assertions below must describe THIS
-  // launch, not a previous one. (release-update keeps the DB by copying it out
-  // and back, not by reusing the log.)
-  const logPath = path.join(userDataDir, "startup.log");
-  if (fs.existsSync(logPath)) fs.rmSync(logPath);
+  // Fresh boot per launch in the throwaway dir; the assertions below must
+  // describe THIS launch. Releases older than PR-D (#202) ignore
+  // GAMEVAULT_USER_DATA_DIR, so their startup.log lands in the default
+  // %APPDATA%\RealmSwap — watched as a fallback candidate with a size
+  // baseline so earlier launches' lines never count.
+  const primaryLog = path.join(userDataDir, "startup.log");
+  if (fs.existsSync(primaryLog)) fs.rmSync(primaryLog);
+  const candidates: LogCandidate[] = [{ path: primaryLog, baseline: 0 }];
+  const defaultLog = path.join(defaultUserDataDir(), "startup.log");
+  if (path.resolve(defaultLog) !== path.resolve(primaryLog)) {
+    candidates.push({ path: defaultLog, baseline: fs.existsSync(defaultLog) ? fs.statSync(defaultLog).size : 0 });
+  }
 
   const child = spawn(exePath, [], {
     env: {
@@ -169,55 +191,76 @@ function launchApp(exePath: string, userDataDir: string): LaunchedApp {
     stdio: ["ignore", "pipe", "pipe"],
   });
   const electronLogPath = path.join(userDataDir, "electron-output.log");
+  if (fs.existsSync(electronLogPath)) fs.rmSync(electronLogPath);
   const electronLog = fs.openSync(electronLogPath, "a");
   child.stdout?.on("data", (d) => fs.writeSync(electronLog, d));
   child.stderr?.on("data", (d) => fs.writeSync(electronLog, d));
   child.on("error", (err) => fs.writeSync(electronLog, `[driver] spawn error: ${err}\n`));
 
-  return { child, userDataDir, startupLogPath: logPath, electronLogPath, port: null };
+  return { child, userDataDir, startupLogCandidates: candidates, winningLogPath: null, electronLogPath, port: null };
 }
 
 async function waitServerReady(app: LaunchedApp): Promise<number> {
   const deadline = Date.now() + BOOT_TIMEOUT_MS;
-  let lastSize = 0;
-  let content = "";
   while (Date.now() < deadline) {
     if (app.child.exitCode !== null && app.child.exitCode !== 0) {
       throw new Error(
-        `app exited early (code ${app.child.exitCode}) — see ${app.electronLogPath}`
+        `app exited early (code ${app.child.exitCode}) — see ${app.electronLogPath}:\n${tail(readFileOrEmpty(app.electronLogPath), 2000)}`
       );
     }
-    try {
-      const stat = fs.statSync(app.startupLogPath);
-      if (stat.size > lastSize) {
-        content = fs.readFileSync(app.startupLogPath, "utf8");
-        lastSize = stat.size;
-        const m = /server ready on port (\d+)/.exec(content);
-        if (m) {
-          if (/STARTUP ERROR/.test(content)) {
-            throw new Error(`startup.log contains STARTUP ERROR:\n${tail(content, 2000)}`);
-          }
-          app.port = Number(m[1]);
-          return app.port;
-        }
+    for (const cand of app.startupLogCandidates) {
+      try {
+        if (fs.statSync(cand.path).size <= cand.baseline) continue;
+      } catch {
+        continue; // not written yet
       }
-    } catch (err: any) {
-      if (err?.message?.includes("STARTUP ERROR") || err?.message?.includes("exited early")) throw err;
-      /* log not written yet */
+      const fresh = readFileOrEmpty(cand.path).slice(cand.baseline);
+      if (/STARTUP ERROR/.test(fresh)) {
+        throw new Error(`startup.log contains STARTUP ERROR:\n${tail(fresh, 2000)}`);
+      }
+      const m = /server ready on port (\d+)/.exec(fresh);
+      if (m) {
+        app.winningLogPath = cand.path;
+        app.port = Number(m[1]);
+        return app.port;
+      }
+    }
+    // Fallback while startup.log candidates are pending: the standalone
+    // server prints its bind line to the (piped) electron stdout.
+    const m = /Local:\s+http:\/\/127\.0\.0\.1:(\d+)/.exec(readFileOrEmpty(app.electronLogPath));
+    if (m) {
+      app.port = Number(m[1]);
+      return app.port;
     }
     await sleep(500);
   }
+  const diag = app.startupLogCandidates
+    .map((c) => {
+      const size = fs.existsSync(c.path) ? fs.statSync(c.path).size : -1;
+      return `${c.path} (exists=${size >= 0}, size=${size}, baseline=${c.baseline})`;
+    })
+    .join("; ");
   throw new Error(
-    `startup.log never reported 'server ready on port N' within ${BOOT_TIMEOUT_MS}ms — last content:\n${tail(content, 2000)}`
+    `no 'server ready on port N' within ${BOOT_TIMEOUT_MS}ms — watched: ${diag}` +
+      ` — electron output tail:\n${tail(readFileOrEmpty(app.electronLogPath), 2000)}`
   );
 }
 
-function readStartupLog(app: LaunchedApp): string {
+function readFileOrEmpty(p: string): string {
   try {
-    return fs.readFileSync(app.startupLogPath, "utf8");
+    return fs.readFileSync(p, "utf8");
   } catch {
     return "";
   }
+}
+
+/** THIS launch's startup.log content (post-baseline) from the winning candidate. */
+function readStartupLog(app: LaunchedApp): string {
+  const cand =
+    app.startupLogCandidates.find((c) => c.path === app.winningLogPath) ??
+    app.startupLogCandidates[0];
+  if (!cand) return "";
+  return readFileOrEmpty(cand.path).slice(cand.baseline);
 }
 
 function stopApp(app: LaunchedApp): void {
@@ -352,6 +395,12 @@ function exeProductVersion(exePath: string): string | null {
   );
   const version = res.stdout.trim();
   return version || null;
+}
+
+/** ProductVersion is 4-part on installed exes ("0.5.20.0") but the release
+ *  tag is 3-part — compare on major.minor.patch. */
+function normVersion(v: string | null): string {
+  return (v || "").trim().replace(/^v/, "").split(".").slice(0, 3).join(".");
 }
 
 // ---------------------------------------------------------------------------
@@ -543,7 +592,10 @@ async function runReleaseUpdate(): Promise<number> {
 
   const workDir = reportDir();
   fs.mkdirSync(workDir, { recursive: true });
-  const installerPath = path.join(workDir, "prev-RealmSwap-Setup.exe");
+  // Keep the 541MB installer OUT of the artifact dir — only reports + logs land there.
+  const installerDir = path.join(os.tmpdir(), "realmswap-win-smoke-installer");
+  fs.mkdirSync(installerDir, { recursive: true });
+  const installerPath = path.join(installerDir, "prev-RealmSwap-Setup.exe");
   const userDataDir = process.env.SMOKE_USER_DATA_DIR || path.join(os.tmpdir(), "realmswap-win-smoke-upgrade-userdata");
   let bakedSupabaseUrl = process.env.SMOKE_BAKED_SUPABASE_URL || "";
   let app: LaunchedApp | null = null;
@@ -568,7 +620,7 @@ async function runReleaseUpdate(): Promise<number> {
           return null;
         }
       });
-      return exeProductVersion(exe) ?? exe;
+      return normVersion(exeProductVersion(exe)) || exe;
     });
 
     let prevExe = "";
@@ -601,9 +653,9 @@ async function runReleaseUpdate(): Promise<number> {
         }
         return null;
       });
-      const stagedVersion = exeProductVersion(stagedInstaller);
-      expect(stagedVersion === latestVersion,
-        `staged installer version ${stagedVersion} ≠ latest ${latestVersion}`);
+      const stagedVersion = normVersion(exeProductVersion(stagedInstaller));
+      expect(stagedVersion === normVersion(latestVersion),
+        `staged installer version ${stagedVersion} ≠ latest ${normVersion(latestVersion)}`);
       return `${path.basename(stagedInstaller)} (${stagedVersion})`;
     });
 
@@ -617,8 +669,8 @@ async function runReleaseUpdate(): Promise<number> {
       const res = spawnSyncChecked(stagedInstaller, ["/S"]);
       if (res.status !== 0) throw new Error(`staged installer exited ${res.status}`);
       const exe = locateInstalledExe();
-      const version = exeProductVersion(exe);
-      expect(version === latestVersion, `installed version after update ${version} ≠ latest ${latestVersion}`);
+      const version = normVersion(exeProductVersion(exe));
+      expect(version === normVersion(latestVersion), `installed version after update ${version} ≠ latest ${normVersion(latestVersion)}`);
       // Same userData dir → the relaunch exercises the real upgrade migration
       // path against the DB the previous release created.
       app = launchApp(exe, userDataDir);
