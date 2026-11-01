@@ -1,0 +1,777 @@
+/**
+ * Windows CI smoke driver (Layer 3 of the zero-human test plan).
+ *
+ *   npx tsx scripts/e2e-win/smoke.ts --mode build-smoke     # installed-from-branch installer:
+ *                                                           # boot markers, auth, real MC boot,
+ *                                                           # playit tunnel (when PLAYIT_AGENT_SECRET
+ *                                                           # is set), stop + cleanup
+ *   npx tsx scripts/e2e-win/smoke.ts --mode release-update  # release artifacts: install the
+ *                                                           # previous release, let electron-updater
+ *                                                           # stage the update, apply it, relaunch at
+ *                                                           # Latest and re-verify (incl. migrations)
+ *   npx tsx scripts/e2e-win/smoke.ts --mode selftest        # no app needed — fake Supabase +
+ *                                                           # cookie minting sanity (any platform)
+ *
+ * Auth is hermetic in both modes: the launched app receives SUPABASE_JWT_SECRET
+ * in its environment, so the app's documented offline verification path
+ * (src/lib/supabase/verifyLocal.ts) accepts HS256 tokens minted by the local
+ * fake Supabase — no real Supabase project, no e2e account, no email caps. The
+ * session cookie is minted directly (name `sb-<host-first-label>-auth-token`,
+ * value = the raw auth-js session JSON that @supabase/ssr reads back), because
+ * POST /api/auth/login talks to whichever Supabase URL was baked at build time.
+ *
+ * Every check lands in a machine-readable report (SMOKE_REPORT_DIR/windows-smoke-
+ * report.json) plus copies of the app's startup.log and the Electron process
+ * output for the workflow artifacts. Exit code is non-zero when any check failed;
+ * skipped checks (e.g. tunnel without PLAYIT_AGENT_SECRET) do not fail the run.
+ */
+
+import { spawn, spawnSync, ChildProcess } from "child_process";
+import fs from "fs";
+import net from "net";
+import os from "os";
+import path from "path";
+import { ApiClient, expect } from "../e2e-api/client";
+import { FakeSupabase } from "../e2e-api/fakeSupabase";
+import {
+  SUPABASE_JWT_SECRET,
+  FAKE_SUPABASE_URL,
+  FAKE_SUPABASE_PORT,
+} from "../e2e-api/config";
+
+const SMOKE_USER = {
+  id: "e2ew0000-0000-4000-8000-0000000000e1",
+  email: "win-smoke@realmswap.test",
+  password: "win-smoke-password",
+  name: "Windows Smoke",
+};
+
+const BOOT_TIMEOUT_MS = Number(process.env.SMOKE_BOOT_TIMEOUT_MS || 120_000);
+const MC_BOOT_TIMEOUT_MS = Number(process.env.SMOKE_MC_BOOT_TIMEOUT_MS || 480_000);
+const UPDATE_STAGE_TIMEOUT_MS = Number(process.env.SMOKE_UPDATE_STAGE_TIMEOUT_MS || 15 * 60_000);
+const TUNNEL_TIMEOUT_MS = Number(process.env.SMOKE_TUNNEL_TIMEOUT_MS || 240_000);
+
+type CheckStatus = "pass" | "fail" | "skip";
+interface Check {
+  id: string;
+  status: CheckStatus;
+  detail?: string;
+  ms?: number;
+}
+
+const checks: Check[] = [];
+function check(id: string, status: CheckStatus, detail?: string): void {
+  checks.push({ id, status, detail });
+  const icon = status === "pass" ? "✓" : status === "skip" ? "○" : "✗";
+  console.log(`  ${icon} ${id}${detail ? ` — ${detail}` : ""}`);
+}
+async function timed(id: string, fn: () => Promise<string | void>): Promise<void> {
+  const t0 = Date.now();
+  try {
+    const detail = await fn();
+    check(id, "pass", detail || undefined);
+  } catch (err: any) {
+    check(id, "fail", err?.message ?? String(err));
+  }
+  const c = checks[checks.length - 1];
+  c.ms = Date.now() - t0;
+}
+
+function log(msg: string): void {
+  console.log(`[e2e-win] ${msg}`);
+}
+
+function reportDir(): string {
+  return process.env.SMOKE_REPORT_DIR || path.join(os.tmpdir(), "realmswap-win-smoke");
+}
+
+function writeReport(extra: Record<string, unknown>): number {
+  const dir = reportDir();
+  fs.mkdirSync(dir, { recursive: true });
+  const report = {
+    runAt: new Date().toISOString(),
+    mode: process.env.SMOKE_MODE || "unknown",
+    platform: `${os.platform()}/${os.arch()}`,
+    ...extra,
+    checks,
+    passed: checks.filter((c) => c.status === "pass").length,
+    failed: checks.filter((c) => c.status === "fail").length,
+    skipped: checks.filter((c) => c.status === "skip").length,
+  };
+  const reportPath = path.join(dir, "windows-smoke-report.json");
+  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  log(`report written: ${reportPath}`);
+  return report.failed;
+}
+
+// ---------------------------------------------------------------------------
+// App launch + startup.log
+// ---------------------------------------------------------------------------
+
+interface LaunchedApp {
+  child: ChildProcess;
+  userDataDir: string;
+  startupLogPath: string;
+  electronLogPath: string;
+  port: number | null;
+}
+
+function killRunningApp(): void {
+  try {
+    spawnSyncChecked("taskkill", ["/F", "/T", "/IM", "RealmSwap.exe"], { allowFailure: true });
+  } catch {
+    /* not running */
+  }
+}
+
+interface SpawnResult {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+}
+
+function spawnSyncChecked(
+  cmd: string,
+  args: string[],
+  opts: { allowFailure?: boolean } = {}
+): SpawnResult {
+  const res = spawnSync(cmd, args, { encoding: "utf8", windowsHide: true });
+  if (res.error) throw new Error(`${cmd} failed to spawn: ${res.error.message}`);
+  if (res.status !== 0 && !opts.allowFailure) {
+    throw new Error(
+      `${cmd} ${args.join(" ")} exited ${res.status}` +
+        (res.stderr ? `: ${res.stderr.trim().slice(0, 400)}` : "")
+    );
+  }
+  return { status: res.status, stdout: res.stdout ?? "", stderr: res.stderr ?? "" };
+}
+
+function launchApp(exePath: string, userDataDir: string): LaunchedApp {
+  killRunningApp();
+  fs.mkdirSync(userDataDir, { recursive: true });
+  // Fresh boot per launch: the startup.log assertions below must describe THIS
+  // launch, not a previous one. (release-update keeps the DB by copying it out
+  // and back, not by reusing the log.)
+  const logPath = path.join(userDataDir, "startup.log");
+  if (fs.existsSync(logPath)) fs.rmSync(logPath);
+
+  const child = spawn(exePath, [], {
+    env: {
+      ...process.env,
+      GAMEVAULT_TEST_HARNESS: "1",
+      GAMEVAULT_USER_DATA_DIR: userDataDir,
+      SUPABASE_JWT_SECRET,
+      BILLING_ENABLED: "0",
+      SENTRY_DSN: "",
+      NEXT_PUBLIC_SENTRY_DSN: "",
+      NEXT_TELEMETRY_DISABLED: "1",
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  const electronLogPath = path.join(userDataDir, "electron-output.log");
+  const electronLog = fs.openSync(electronLogPath, "a");
+  child.stdout?.on("data", (d) => fs.writeSync(electronLog, d));
+  child.stderr?.on("data", (d) => fs.writeSync(electronLog, d));
+  child.on("error", (err) => fs.writeSync(electronLog, `[driver] spawn error: ${err}\n`));
+
+  return { child, userDataDir, startupLogPath: logPath, electronLogPath, port: null };
+}
+
+async function waitServerReady(app: LaunchedApp): Promise<number> {
+  const deadline = Date.now() + BOOT_TIMEOUT_MS;
+  let lastSize = 0;
+  let content = "";
+  while (Date.now() < deadline) {
+    if (app.child.exitCode !== null && app.child.exitCode !== 0) {
+      throw new Error(
+        `app exited early (code ${app.child.exitCode}) — see ${app.electronLogPath}`
+      );
+    }
+    try {
+      const stat = fs.statSync(app.startupLogPath);
+      if (stat.size > lastSize) {
+        content = fs.readFileSync(app.startupLogPath, "utf8");
+        lastSize = stat.size;
+        const m = /server ready on port (\d+)/.exec(content);
+        if (m) {
+          if (/STARTUP ERROR/.test(content)) {
+            throw new Error(`startup.log contains STARTUP ERROR:\n${tail(content, 2000)}`);
+          }
+          app.port = Number(m[1]);
+          return app.port;
+        }
+      }
+    } catch (err: any) {
+      if (err?.message?.includes("STARTUP ERROR") || err?.message?.includes("exited early")) throw err;
+      /* log not written yet */
+    }
+    await sleep(500);
+  }
+  throw new Error(
+    `startup.log never reported 'server ready on port N' within ${BOOT_TIMEOUT_MS}ms — last content:\n${tail(content, 2000)}`
+  );
+}
+
+function readStartupLog(app: LaunchedApp): string {
+  try {
+    return fs.readFileSync(app.startupLogPath, "utf8");
+  } catch {
+    return "";
+  }
+}
+
+function stopApp(app: LaunchedApp): void {
+  try {
+    if (app.child.pid) spawnSyncChecked("taskkill", ["/F", "/T", "/PID", String(app.child.pid)], { allowFailure: true });
+  } catch {
+    /* already gone */
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Auth minting (offline HS256 path)
+// ---------------------------------------------------------------------------
+
+function sbCookieName(bakedSupabaseUrl: string): string {
+  const ref = new URL(bakedSupabaseUrl).hostname.split(".")[0];
+  return `sb-${ref}-auth-token`;
+}
+
+async function mintAuth(
+  fake: FakeSupabase,
+  client: ApiClient,
+  bakedSupabaseUrl: string
+): Promise<string> {
+  const err = fake.signUp(SMOKE_USER.email, SMOKE_USER.password, SMOKE_USER.name);
+  if (err && !err.includes("already")) throw new Error(`fake signup failed: ${err}`);
+  const user = fake.signIn(SMOKE_USER.email, SMOKE_USER.password);
+  if (!user) throw new Error("fake signIn returned null");
+  const session = fake.sessionFor(user);
+  const name = sbCookieName(bakedSupabaseUrl);
+  const value = JSON.stringify(session);
+  client.clearCookies();
+  return `${name}=${value}`;
+}
+
+// ---------------------------------------------------------------------------
+// HTTP helpers
+// ---------------------------------------------------------------------------
+
+async function apiRequest(
+  client: ApiClient,
+  cookie: string,
+  method: string,
+  route: string,
+  body?: unknown
+): Promise<{ status: number; body: any; text: string }> {
+  const res = await client.request(method, route, body, {
+    headers: { cookie },
+  });
+  return { status: res.status, body: res.body, text: res.text };
+}
+
+async function poll<T>(
+  what: string,
+  timeoutMs: number,
+  attempt: () => Promise<T | null>
+): Promise<T> {
+  const deadline = Date.now() + timeoutMs;
+  let lastErr = "";
+  while (Date.now() < deadline) {
+    try {
+      const value = await attempt();
+      if (value !== null) return value;
+    } catch (err: any) {
+      if (err?.fatal) throw err;
+      lastErr = err?.message ?? String(err);
+    }
+    await sleep(2000);
+  }
+  throw new Error(`timed out after ${Math.round(timeoutMs / 1000)}s waiting for ${what}${lastErr ? ` (last: ${lastErr})` : ""}`);
+}
+
+function fatal(message: string): Error {
+  const err = new Error(message);
+  (err as any).fatal = true;
+  return err;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function tail(text: string, max: number): string {
+  return text.length <= max ? text : `…${text.slice(-max)}`;
+}
+
+function tcpAccepts(host: string, port: number, timeoutMs = 5000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    socket.setTimeout(timeoutMs);
+    socket.once("connect", () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once("error", () => {
+      socket.destroy();
+      resolve(false);
+    });
+    socket.once("timeout", () => {
+      socket.destroy();
+      resolve(false);
+    });
+    socket.connect(port, host);
+  });
+}
+
+/** "tunnel.host.playit.gg:12345" → { host, port } (port after the LAST colon). */
+function parseHostPort(address: string): { host: string; port: number } | null {
+  const idx = address.lastIndexOf(":");
+  if (idx <= 0) return null;
+  const port = Number(address.slice(idx + 1));
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) return null;
+  return { host: address.slice(0, idx), port };
+}
+
+function locateInstalledExe(explicit?: string): string {
+  if (explicit && fs.existsSync(explicit)) return explicit;
+  const candidates = [
+    path.join(process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local"), "Programs", "RealmSwap", "RealmSwap.exe"),
+    path.join(process.env["ProgramFiles"] || "C:\\Program Files", "RealmSwap", "RealmSwap.exe"),
+    path.join(process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)", "RealmSwap", "RealmSwap.exe"),
+  ];
+  for (const c of candidates) if (fs.existsSync(c)) return c;
+  throw new Error(`RealmSwap.exe not found — tried:\n${candidates.join("\n")}`);
+}
+
+function exeProductVersion(exePath: string): string | null {
+  const res = spawnSyncChecked(
+    "powershell",
+    ["-NoProfile", "-Command", `(Get-Item -LiteralPath '${exePath.replace(/'/g, "''")}').VersionInfo.ProductVersion`],
+    { allowFailure: true }
+  );
+  const version = res.stdout.trim();
+  return version || null;
+}
+
+// ---------------------------------------------------------------------------
+// Mode: build-smoke
+// ---------------------------------------------------------------------------
+
+async function runBuildSmoke(): Promise<number> {
+  const exePath = locateInstalledExe(process.env.SMOKE_EXE);
+  const bakedSupabaseUrl = process.env.SMOKE_BAKED_SUPABASE_URL || FAKE_SUPABASE_URL;
+  const userDataDir = process.env.SMOKE_USER_DATA_DIR || path.join(os.tmpdir(), "realmswap-win-smoke-userdata");
+  const playitSecret = process.env.PLAYIT_AGENT_SECRET || "";
+
+  log(`mode=build-smoke exe=${exePath}`);
+  log(`userData=${userDataDir} bakedSupabase=${bakedSupabaseUrl} playitSecret=${playitSecret ? "provided" : "absent (tunnel checks will skip)"}`);
+
+  const fake = new FakeSupabase();
+  await fake.start();
+
+  let app: LaunchedApp | null = null;
+  let cookie = "";
+  let serverId = "";
+  let serverPort = 0;
+  let tunnelAddress = "";
+
+  try {
+    await timed("boot/startup-log-markers", async () => {
+      app = launchApp(exePath, userDataDir);
+      await waitServerReady(app);
+      const content = readStartupLog(app);
+      expect(content.includes("startup: packaged launch"), "startup.log missing 'startup: packaged launch'");
+      expect(content.includes("migrations applied:"), "startup.log missing 'migrations applied:'");
+      expect(content.includes("provider keys from package:"), "startup.log missing 'provider keys from package:'");
+      const keysLine = /provider keys from package: (.+)/.exec(content)?.[1] ?? "";
+      expect(keysLine.includes("CURSEFORGE_API_KEY") && keysLine.includes("STEAM_API_KEY"),
+        `provider keys line should carry both dummy keys, got: "${keysLine}"`);
+      // /start must answer on the logged port — the same health probe main.js used.
+      const health = await fetch(`http://127.0.0.1:${app!.port}/start`, { signal: AbortSignal.timeout(5000) });
+      expect(health.status < 500, `GET /start on ${app!.port} → ${health.status}`);
+      return `port ${app!.port}, provider keys: ${keysLine}`;
+    });
+
+    await timed("auth/minted-session-accepted", async () => {
+      const client = new ApiClient(`http://127.0.0.1:${app!.port}`);
+      cookie = await mintAuth(fake, client, bakedSupabaseUrl);
+      const res = await apiRequest(client, cookie, "GET", "/api/servers");
+      expect(res.status === 200, `GET /api/servers with minted session → ${res.status}: ${res.text.slice(0, 200)}`);
+      return `cookie ${cookie.split("=")[0]} accepted`;
+    });
+
+    const client = new ApiClient(`http://127.0.0.1:${app!.port}`);
+
+    await timed("mc/create-and-boot", async () => {
+      const defs = await apiRequest(client, cookie, "GET", "/api/definitions");
+      expect(defs.status === 200, `GET /api/definitions → ${defs.status}`);
+      const mc = (defs.body?.definitions ?? defs.body ?? []).find?.((d: any) => d.slug === "MINECRAFT");
+      expect(!!mc, "Minecraft definition must be seeded");
+      const created = await apiRequest(client, cookie, "POST", "/api/servers", {
+        name: "Win Smoke Vanilla MC",
+        definitionId: mc.id,
+        ramAllocation: 2,
+      });
+      expect(created.status === 201, `create → ${created.status}: ${created.text.slice(0, 300)}`);
+      serverId = created.body.id;
+      serverPort = created.body.port;
+      expect(serverPort === 25565, `new server port → ${serverPort}, want 25565`);
+
+      const start = await apiRequest(client, cookie, "POST", `/api/servers/${serverId}/start`);
+      expect(start.status === 200, `start → ${start.status}: ${start.text.slice(0, 300)}`);
+      const row = await poll("server RUNNING", MC_BOOT_TIMEOUT_MS, async () => {
+        const list = await apiRequest(client, cookie, "GET", "/api/servers");
+        const s = (list.body?.servers ?? []).find((x: any) => x.id === serverId);
+        if (s?.status === "CRASHED") {
+          throw fatal(`server CRASHED during boot — not retrying (honest readiness)`);
+        }
+        return s?.status === "RUNNING" ? s : null;
+      });
+      expect(await tcpAccepts("127.0.0.1", serverPort), `port ${serverPort} must accept after RUNNING`);
+      return `${row?.name ?? serverId} RUNNING on ${serverPort}`;
+    });
+
+    await timed("mc/query-ping", async () => {
+      const res = await apiRequest(client, cookie, "GET", `/api/servers/${serverId}/query`);
+      expect(res.status === 200, `query → ${res.status}: ${res.text.slice(0, 200)}`);
+      expect(res.body?.maxplayers >= 1, `query maxplayers → ${res.body?.maxplayers}`);
+      return `max ${res.body?.maxplayers}, online ${res.body?.players}`;
+    });
+
+    await timed("mc/console-and-logs", async () => {
+      const cmd = await apiRequest(client, cookie, "POST", `/api/servers/${serverId}/console`, { command: "list" });
+      expect(cmd.status === 200 && cmd.body?.success === true, `console list → ${cmd.status}: ${cmd.text.slice(0, 200)}`);
+      const logs = await apiRequest(client, cookie, "GET", `/api/servers/${serverId}/logs`);
+      expect(logs.status === 200, `logs → ${logs.status}`);
+      expect(/Done \(\d/.test(String(logs.body?.logs ?? logs.text ?? "")), "server.log tail must contain the boot Done line");
+      return undefined;
+    });
+
+    if (playitSecret) {
+      await timed("tunnel/start-through-relay", async () => {
+        // Pre-write the agent secret so the app skips the human claim flow
+        // (readPlayitSecret short-circuits claimServerTunnel) and spawns
+        // playitd directly against the pre-provisioned agent.
+        fs.mkdirSync(path.join(userDataDir, "playit", serverId), { recursive: true });
+        fs.writeFileSync(
+          path.join(userDataDir, "playit", serverId, "playit.toml"),
+          `secret_key = "${playitSecret}"\n`,
+          { mode: 0o600 }
+        );
+        const toggle = await apiRequest(client, cookie, "POST", `/api/servers/${serverId}/settings`, {
+          action: "TOGGLE_TUNNEL",
+          enable: true,
+        });
+        expect(toggle.status === 200 && toggle.body?.success === true,
+          `TOGGLE_TUNNEL → ${toggle.status}: ${toggle.text.slice(0, 300)}`);
+        const url = await poll("tunnel displayAddress", TUNNEL_TIMEOUT_MS, async () => {
+          const conn = await apiRequest(client, cookie, "GET", `/api/servers/${serverId}/connectivity`);
+          const u: string | null = conn.body?.url ?? null;
+          return u || null;
+        });
+        tunnelAddress = String(url);
+        const parsed = parseHostPort(tunnelAddress);
+        expect(!!parsed, `tunnel address not host:port — "${tunnelAddress}"`);
+        expect(await tcpAccepts(parsed!.host, parsed!.port, 8000),
+          `relay address ${tunnelAddress} refused TCP`);
+        return `${tunnelAddress} accepts TCP through the relay`;
+      });
+
+      await timed("tunnel/cleanup-on-disable", async () => {
+        const toggle = await apiRequest(client, cookie, "POST", `/api/servers/${serverId}/settings`, {
+          action: "TOGGLE_TUNNEL",
+          enable: false,
+        });
+        expect(toggle.status === 200, `TOGGLE_TUNNEL off → ${toggle.status}`);
+        await poll("tunnelUrl cleared", 30_000, async () => {
+          const conn = await apiRequest(client, cookie, "GET", `/api/servers/${serverId}/connectivity`);
+          return conn.body?.url ? null : true;
+        });
+        return "connectivity url cleared";
+      });
+    } else {
+      check("tunnel/start-through-relay", "skip",
+        "PLAYIT_AGENT_SECRET not set — add the repo secret (one-time; see scripts/e2e-win/README.md) to enable the tunnel proof");
+      check("tunnel/cleanup-on-disable", "skip", "depends on tunnel start");
+    }
+
+    await timed("mc/stop-and-port-closed", async () => {
+      const stop = await apiRequest(client, cookie, "POST", `/api/servers/${serverId}/stop`);
+      expect(stop.status === 200, `stop → ${stop.status}: ${stop.text.slice(0, 300)}`);
+      await poll("server STOPPED", 60_000, async () => {
+        const list = await apiRequest(client, cookie, "GET", "/api/servers");
+        const s = (list.body?.servers ?? []).find((x: any) => x.id === serverId);
+        return s?.status === "STOPPED" ? true : null;
+      });
+      expect(!(await tcpAccepts("127.0.0.1", serverPort)), `port ${serverPort} still accepts after stop`);
+      return `port ${serverPort} closed`;
+    });
+  } finally {
+    if (app) stopApp(app);
+    await fake.stop().catch(() => {});
+  }
+
+  log(`build-smoke done — ${checks.filter((c) => c.status === "pass").length} passed, ` +
+      `${checks.filter((c) => c.status === "fail").length} failed, ` +
+      `${checks.filter((c) => c.status === "skip").length} skipped`);
+  return writeReport({ exe: exePath, userDataDir, serverId, serverPort, tunnelAddress: tunnelAddress || null });
+}
+
+// ---------------------------------------------------------------------------
+// Mode: release-update
+// ---------------------------------------------------------------------------
+
+async function downloadFile(url: string, dest: string): Promise<void> {
+  log(`downloading ${url}`);
+  const res = spawnSyncChecked("curl", ["-fL", "--retry", "3", "--retry-delay", "5", "-o", dest, url]);
+  if (!fs.existsSync(dest) || fs.statSync(dest).size < 1000) {
+    throw new Error(`download produced no usable file (curl status ${res.status})`);
+  }
+  log(`downloaded ${Math.round(fs.statSync(dest).size / 1024 / 1024)}MB → ${dest}`);
+}
+
+async function runReleaseUpdate(): Promise<number> {
+  const prevUrl = process.env.SMOKE_PREV_URL || "";
+  const latestVersion = (process.env.SMOKE_LATEST_VERSION || "").replace(/^v/, "");
+
+  if (!prevUrl || !latestVersion || prevUrl === "none") {
+    check("autoupdate/prereqs", "skip",
+      `need SMOKE_PREV_URL + SMOKE_LATEST_VERSION (got prev=${prevUrl || "unset"}, latest=${latestVersion || "unset"})`);
+    return writeReport({});
+  }
+
+  const workDir = reportDir();
+  fs.mkdirSync(workDir, { recursive: true });
+  const installerPath = path.join(workDir, "prev-RealmSwap-Setup.exe");
+  const userDataDir = process.env.SMOKE_USER_DATA_DIR || path.join(os.tmpdir(), "realmswap-win-smoke-upgrade-userdata");
+  let bakedSupabaseUrl = process.env.SMOKE_BAKED_SUPABASE_URL || "";
+  let app: LaunchedApp | null = null;
+
+  const fake = new FakeSupabase();
+  await fake.start();
+
+  try {
+    await timed("autoupdate/download-previous-release", async () => {
+      await downloadFile(prevUrl, installerPath);
+      return `${Math.round(fs.statSync(installerPath).size / 1024 / 1024)}MB`;
+    });
+
+    await timed("autoupdate/install-previous-release", async () => {
+      const res = spawnSyncChecked(installerPath, ["/S"]);
+      if (res.status !== 0) throw new Error(`installer exited ${res.status}`);
+      const exe = await poll("installed RealmSwap.exe", 60_000, async () => {
+        try {
+          const p = locateInstalledExe();
+          return p;
+        } catch {
+          return null;
+        }
+      });
+      return exeProductVersion(exe) ?? exe;
+    });
+
+    let prevExe = "";
+    await timed("autoupdate/previous-release-boots", async () => {
+      const exe = locateInstalledExe();
+      prevExe = exe;
+      app = launchApp(exe, userDataDir);
+      const port = await waitServerReady(app);
+      // The released app has the REAL Supabase URL baked; derive the cookie
+      // name from the bundle (fallback env) since the anon URL is public.
+      if (!bakedSupabaseUrl) bakedSupabaseUrl = findBakedSupabaseUrl(exe) || "";
+      expect(!!bakedSupabaseUrl, "could not determine the baked Supabase URL (set SMOKE_BAKED_SUPABASE_URL)");
+      const client = new ApiClient(`http://127.0.0.1:${port}`);
+      const cookie = await mintAuth(fake, client, bakedSupabaseUrl!);
+      const res = await apiRequest(client, cookie, "GET", "/api/servers");
+      expect(res.status === 200, `GET /api/servers on released app → ${res.status}: ${res.text.slice(0, 200)}`);
+      return `prev ${exeProductVersion(exe)} boots and serves auth'd API on ${port}`;
+    });
+
+    let stagedInstaller = "";
+    await timed("autoupdate/electron-updater-stages-latest", async () => {
+      const pendingDir = await findUpdaterPendingDir(prevExe);
+      stagedInstaller = await poll("staged update installer in pending dir", UPDATE_STAGE_TIMEOUT_MS, async () => {
+        if (!fs.existsSync(pendingDir)) return null;
+        for (const f of fs.readdirSync(pendingDir)) {
+          const p = path.join(pendingDir, f);
+          try {
+            if (f.toLowerCase().endsWith(".exe") && fs.statSync(p).size > 50 * 1024 * 1024) return p;
+          } catch { /* file still being written */ }
+        }
+        return null;
+      });
+      const stagedVersion = exeProductVersion(stagedInstaller);
+      expect(stagedVersion === latestVersion,
+        `staged installer version ${stagedVersion} ≠ latest ${latestVersion}`);
+      return `${path.basename(stagedInstaller)} (${stagedVersion})`;
+    });
+
+    await timed("autoupdate/apply-and-relaunch-at-latest", async () => {
+      if (app) stopApp(app);
+      app = null;
+      // The user path applies the staged installer on quit (autoInstallOnAppQuit,
+      // covered by electron/__tests__/autoUpdate.test.js + the GUI pass); here we
+      // run the very installer electron-updater staged, silently, over the old
+      // install — same NSIS payload the on-quit path would execute.
+      const res = spawnSyncChecked(stagedInstaller, ["/S"]);
+      if (res.status !== 0) throw new Error(`staged installer exited ${res.status}`);
+      const exe = locateInstalledExe();
+      const version = exeProductVersion(exe);
+      expect(version === latestVersion, `installed version after update ${version} ≠ latest ${latestVersion}`);
+      // Same userData dir → the relaunch exercises the real upgrade migration
+      // path against the DB the previous release created.
+      app = launchApp(exe, userDataDir);
+      const port = await waitServerReady(app);
+      const content = readStartupLog(app);
+      expect(content.includes("migrations applied:"), "updated app startup.log missing 'migrations applied:'");
+      return `now ${version}; booting on ${port} with the carried-over DB`;
+    });
+
+    await timed("autoupdate/updated-app-serves", async () => {
+      expect(!!app, "updated app was not relaunched (previous step failed)");
+      if (!bakedSupabaseUrl) bakedSupabaseUrl = findBakedSupabaseUrl(locateInstalledExe()) || "";
+      const client = new ApiClient(`http://127.0.0.1:${app!.port}`);
+      const cookie = await mintAuth(fake, client, bakedSupabaseUrl!);
+      const res = await apiRequest(client, cookie, "GET", "/api/servers");
+      expect(res.status === 200, `GET /api/servers on updated app → ${res.status}: ${res.text.slice(0, 200)}`);
+      return "updated app serves the minted-session API";
+    });
+  } finally {
+    if (app) stopApp(app);
+    await fake.stop().catch(() => {});
+  }
+
+  log(`release-update done — ${checks.filter((c) => c.status === "pass").length} passed, ` +
+      `${checks.filter((c) => c.status === "fail").length} failed`);
+  return writeReport({ prevUrl, latestVersion, userDataDir });
+}
+
+/** The inlined NEXT_PUBLIC_* value lives in the standalone bundle; the anon URL
+ *  is public by design, so reading it out of the install is fine. */
+function findBakedSupabaseUrl(exePath: string): string | null {
+  try {
+    const standaloneDir = path.join(path.dirname(exePath), "resources", "standalone");
+    for (const file of walkJsFiles(standaloneDir, 4)) {
+      try {
+        const m = /https:\/\/[a-z0-9][a-z0-9-]*\.supabase\.co/.exec(fs.readFileSync(file, "utf8"));
+        if (m) return m[0];
+      } catch { /* unreadable chunk */ }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function walkJsFiles(dir: string, maxDepth: number, depth = 0): string[] {
+  if (depth > maxDepth) return [];
+  let out: string[] = [];
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) out = out.concat(walkJsFiles(full, maxDepth, depth + 1));
+    else if (entry.isFile() && entry.name.endsWith(".js")) out.push(full);
+  }
+  return out;
+}
+
+/** electron-updater's cache dir comes from app-update.yml (updaterCacheDirName). */
+async function findUpdaterPendingDir(installedExe: string): Promise<string> {
+  const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local");
+  try {
+    const yml = fs.readFileSync(
+      path.join(path.dirname(installedExe), "resources", "app-update.yml"),
+      "utf8"
+    );
+    const m = /updaterCacheDirName:\s*(\S+)/.exec(yml);
+    if (m) return path.join(localAppData, m[1], "pending");
+  } catch { /* fall through to glob */ }
+  // Glob fallback: <name>-updater
+  for (const entry of fs.readdirSync(localAppData)) {
+    if (entry.toLowerCase().includes("realmswap") && entry.endsWith("-updater")) {
+      return path.join(localAppData, entry, "pending");
+    }
+  }
+  return path.join(localAppData, "realmswap-updater", "pending");
+}
+
+// ---------------------------------------------------------------------------
+// Mode: selftest (any platform — CI for this file's pure logic)
+// ---------------------------------------------------------------------------
+
+async function runSelftest(): Promise<number> {
+  await timed("selftest/fake-supabase-mints-verifiable-token", async () => {
+    const fake = new FakeSupabase();
+    await fake.start();
+    try {
+      const client = new ApiClient(`http://127.0.0.1:${FAKE_SUPABASE_PORT}`);
+      // The fake's HTTP surface answers (signup → session JSON).
+      const res = await client.post("/auth/v1/signup", {
+        email: SMOKE_USER.email,
+        password: SMOKE_USER.password,
+        data: { full_name: SMOKE_USER.name },
+      });
+      expect(res.status === 200, `signup → ${res.status}: ${res.text.slice(0, 200)}`);
+      expect(typeof res.body?.access_token === "string", "session carries an access_token");
+      // The app-side offline verify accepts it with the same secret.
+      const jwt = require("jsonwebtoken") as typeof import("jsonwebtoken");
+      const payload = jwt.verify(res.body.access_token, SUPABASE_JWT_SECRET, {
+        algorithms: ["HS256"],
+      }) as { sub?: string };
+      expect(typeof payload.sub === "string", "token payload has a sub claim");
+      // The cookie we'd mint for the app round-trips through the ssr name rule.
+      const cookie = await mintAuth(fake, client, FAKE_SUPABASE_URL);
+      expect(cookie.startsWith("sb-127-auth-token="), `cookie name/form unexpected: ${cookie.slice(0, 40)}…`);
+      const parsedBack = JSON.parse(cookie.split("=").slice(1).join("="));
+      expect(typeof parsedBack.access_token === "string", "cookie value is the raw session JSON");
+      return `cookie ${cookie.split("=")[0]}, token sub ${String(payload.sub).slice(0, 8)}…`;
+    } finally {
+      await fake.stop();
+    }
+  });
+
+  return writeReport({});
+}
+
+// ---------------------------------------------------------------------------
+
+function parseMode(): string {
+  const idx = process.argv.indexOf("--mode");
+  return idx >= 0 ? process.argv[idx + 1] || "" : "";
+}
+
+async function main(): Promise<number> {
+  const mode = parseMode();
+  process.env.SMOKE_MODE = mode;
+
+  let failed: number;
+  switch (mode) {
+    case "build-smoke":
+      failed = await runBuildSmoke();
+      break;
+    case "release-update":
+      failed = await runReleaseUpdate();
+      break;
+    case "selftest":
+      failed = await runSelftest();
+      break;
+    default:
+      console.error(`[e2e-win] unknown or missing --mode (got "${mode}"). Use build-smoke | release-update | selftest.`);
+      return 2;
+  }
+
+  return failed > 0 ? 1 : 0;
+}
+
+main()
+  .then((code) => process.exit(code))
+  .catch((err) => {
+    console.error(`[e2e-win] fatal: ${err?.stack || err}`);
+    process.exit(1);
+  });

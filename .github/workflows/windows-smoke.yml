@@ -1,0 +1,186 @@
+# Windows CI smoke — Layer 3 of the zero-human test plan (no-human-test-plan-2026-10-30.md).
+#
+# Two independent windows-latest jobs, both zero-human:
+#
+#   build-and-smoke — builds the real NSIS installer from this ref (fake Supabase
+#   baked at build time, dummy provider keys — the exact pipeline release.yml
+#   uses, minus secrets), silent-installs it, then drives the installed app over
+#   its API: startup.log boot markers, a minted offline session (the app's
+#   documented SUPABASE_JWT_SECRET local-verify path), a REAL Minecraft boot
+#   with the bundled-JRE provisioner, query/console/logs, and — when the
+#   PLAYIT_AGENT_SECRET repo secret exists — a playit tunnel created through
+#   the real relay (the agent secret is pre-seeded so the human claim flow is
+#   skipped) with TCP reachability asserted through the tunnel address.
+#
+#   auto-update-proof — release artifacts only: silent-installs the previous
+#   release, lets electron-updater stage the update to Latest, applies the
+#   staged installer, relaunches, and asserts the new version boots with the
+#   carried-over DB (real upgrade migration path) and still serves the API.
+#
+# Triggers: manual dispatch (from any branch — this is how PRs validate the
+# workflow) and automatically after each successful Release run, which is the
+# case that exercises real published artifacts.
+#
+# See scripts/e2e-win/README.md for the report format and the one-time
+# PLAYIT_AGENT_SECRET provisioning step.
+
+name: Windows Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_auto_update:
+        description: "Also run the release-artifact auto-update proof"
+        type: boolean
+        default: true
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      # GitHub's Windows runners check out on D: but the home dir is on C:.
+      # With output:standalone, @vercel/nft globs C:\Users\runneradmin during the
+      # trace and hits the deny-ACL "Application Data" junction -> EPERM. Same
+      # workaround as release.yml: build on the same drive as home.
+      - name: Copy workspace to C drive (same drive as home)
+        shell: pwsh
+        run: |
+          robocopy $env:GITHUB_WORKSPACE C:\rsbuild /E /XD .git node_modules .next dist /NFL /NDL /NJH /NJS /NP
+          if ($LASTEXITCODE -ge 8) { exit 1 } else { exit 0 }
+
+      - name: Install dependencies
+        working-directory: C:\rsbuild
+        shell: bash
+        run: npm ci
+
+      # Smoke builds carry dummy provider keys so the startup.log
+      # "provider keys from package:" marker is assertable without secrets.
+      # (Release builds write the real keys via scripts/write-packaged-env.js.)
+      - name: Write smoke packaged-env (dummy provider keys)
+        working-directory: C:\rsbuild
+        shell: bash
+        run: |
+          node -e "require('fs').writeFileSync('packaged-env.json', JSON.stringify({ CURSEFORGE_API_KEY: 'win-smoke-dummy-curseforge-key', STEAM_API_KEY: 'win-smoke-dummy-steam-key' }, null, 2))"
+
+      - name: Build Windows installer (fake Supabase baked)
+        working-directory: C:\rsbuild
+        shell: bash
+        env:
+          DATABASE_URL: file:./prisma/packaged-build.db
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:3199
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: e2e-anon-key-not-a-real-jwt
+          NEXT_PUBLIC_SITE_URL: http://127.0.0.1:0
+          NEXT_TELEMETRY_DISABLED: "1"
+          SENTRY_DSN: ""
+          NEXT_PUBLIC_SENTRY_DSN: ""
+          BILLING_ENABLED: "0"
+        run: |
+          npm run electron:build > build.log 2>&1 || { tail -300 build.log; exit 1; }
+          ls -la dist/
+          tail -30 build.log
+
+      - name: Silent-install the freshly built installer
+        shell: pwsh
+        run: |
+          Start-Process -FilePath "C:\rsbuild\dist\RealmSwap-Setup.exe" -ArgumentList "/S" -Wait
+          $candidates = @(
+            "$env:LOCALAPPDATA\Programs\RealmSwap\RealmSwap.exe",
+            "$env:ProgramFiles\RealmSwap\RealmSwap.exe",
+            "${env:ProgramFiles(x86)}\RealmSwap\RealmSwap.exe"
+          )
+          $exe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $exe) { throw "RealmSwap.exe not found after silent install (tried: $($candidates -join ', '))" }
+          "SMOKE_EXE=$exe" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "Installed at $exe (version $((Get-Item $exe).VersionInfo.ProductVersion))"
+
+      - name: Drive the installed app (boot markers, auth, MC boot, tunnel)
+        working-directory: C:\rsbuild
+        shell: bash
+        env:
+          SMOKE_BAKED_SUPABASE_URL: http://127.0.0.1:3199
+          SMOKE_REPORT_DIR: ${{ github.workspace }}\smoke-artifacts
+          SMOKE_USER_DATA_DIR: ${{ github.workspace }}\smoke-userdata
+          PLAYIT_AGENT_SECRET: ${{ secrets.PLAYIT_AGENT_SECRET }}
+        run: npx tsx scripts/e2e-win/smoke.ts --mode build-smoke
+
+      - name: Upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-smoke-build
+          path: |
+            smoke-artifacts/**
+            smoke-userdata/**
+            C:\rsbuild\build.log
+          retention-days: 7
+
+  auto-update-proof:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.run_auto_update == true) ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci
+
+      - name: Resolve latest + previous release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          latest=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq '.tag_name')
+          prev=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=10" \
+            --jq '[.[] | select(.draft == false and .prerelease == false)][1].tag_name')
+          echo "latest=$latest prev=$prev"
+          if [ -z "$latest" ] || [ -z "$prev" ] || [ "$prev" = "null" ]; then
+            echo "SMOKE_PREV_URL=none" >> "$GITHUB_ENV"
+          else
+            echo "SMOKE_LATEST_VERSION=${latest#v}" >> "$GITHUB_ENV"
+            echo "SMOKE_PREV_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$prev/RealmSwap-Setup.exe" >> "$GITHUB_ENV"
+          fi
+
+      - name: Run the auto-update proof
+        shell: bash
+        env:
+          SMOKE_REPORT_DIR: ${{ github.workspace }}\smoke-artifacts
+          SMOKE_USER_DATA_DIR: ${{ github.workspace }}\smoke-upgrade-userdata
+          SMOKE_BAKED_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        run: npx tsx scripts/e2e-win/smoke.ts --mode release-update
+
+      - name: Upload auto-update artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-smoke-autoupdate
+          path: |
+            smoke-artifacts/**
+            smoke-upgrade-userdata/**
+          retention-days: 7
