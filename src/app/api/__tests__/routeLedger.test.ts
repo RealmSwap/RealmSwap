@@ -20,7 +20,13 @@ import { describe, expect, it } from "vitest";
 const REPO_ROOT = path.resolve(__dirname, "..", "..", "..", "..");
 const API_DIR = path.join(REPO_ROOT, "src", "app", "api");
 const LEDGER_PATH = path.join(REPO_ROOT, "scripts", "e2e-api", "routes-ledger.json");
-const SCENARIOS_DIR = path.join(REPO_ROOT, "scripts", "e2e-api", "scenarios");
+const SCENARIOS_DIRS = [
+  path.join(REPO_ROOT, "scripts", "e2e-api", "scenarios"),
+  // The GUI harness (scripts/e2e-gui) owns routes whose coverage IS the UI —
+  // e.g. POST /api/system/open-folder, driven through the dashboard Files
+  // button. Covered entries may reference scenario ids from either harness.
+  path.join(REPO_ROOT, "scripts", "e2e-gui", "scenarios"),
+];
 const KNOWN_STATUSES = ["covered", "planned", "manual"];
 
 interface LedgerEntry {
@@ -52,10 +58,13 @@ function routesOnDisk(): Map<string, string> {
 
 function scenarioIds(): Set<string> {
   const ids = new Set<string>();
-  for (const file of fs.readdirSync(SCENARIOS_DIR)) {
-    if (!file.endsWith(".ts")) continue;
-    const src = fs.readFileSync(path.join(SCENARIOS_DIR, file), "utf8");
-    for (const match of Array.from(src.matchAll(/\bscenario\(\s*"([^"]+)"/g))) ids.add(match[1]);
+  for (const dir of SCENARIOS_DIRS) {
+    if (!fs.existsSync(dir)) continue;
+    for (const file of fs.readdirSync(dir)) {
+      if (!file.endsWith(".ts")) continue;
+      const src = fs.readFileSync(path.join(dir, file), "utf8");
+      for (const match of Array.from(src.matchAll(/\bscenario\(\s*"([^"]+)"/g))) ids.add(match[1]);
+    }
   }
   return ids;
 }
@@ -109,11 +118,13 @@ describe("route ledger ↔ API surface parity", () => {
     expect(problems, problems.join("\n")).toEqual([]);
   });
 
-  it("the harness has not regressed below the PR-A coverage baseline", () => {
+  it("the harnesses have not regressed below the full-coverage baseline", () => {
     const ledger: Record<string, LedgerEntry> = JSON.parse(fs.readFileSync(LEDGER_PATH, "utf8"));
     const covered = Object.values(ledger).filter((e) => e.status === "covered").length;
-    // The e2e:api harness must never silently shrink; raising this floor is the
-    // direction of travel (PR-B mods pipeline, PR-C full sweep).
-    expect(covered).toBeGreaterThanOrEqual(26);
+    // Since PR-D every route-method is covered by the API or GUI harness; the
+    // floor keeps a silent shrink impossible. New routes raise the count or
+    // ship as "planned" with a note (which lowers this floor's meaning — keep
+    // the floor at the last all-covered count).
+    expect(covered).toBeGreaterThanOrEqual(135);
   });
 });

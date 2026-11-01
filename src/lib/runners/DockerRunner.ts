@@ -1,4 +1,5 @@
 import path from "path";
+import net from "net";
 import { Server } from "@/generated/client";
 import { ServerRunner, ProcessStats } from "./types";
 import { docker, dockerSpawn, buildRunArgs, buildContainerStartEntrypoint, parseDockerStats } from "./docker/dockerCli";
@@ -133,14 +134,15 @@ export class DockerRunner implements ServerRunner {
     }
 
     appendLog(serverId, `[Docker] Container ${containerName(serverId)} started. Pulling/validating game files via SteamCMD…`);
-    this.attachFollower(serverId, spec);
+    this.attachFollower(serverId, spec, ports.filter((p) => p.protocol === "TCP").map((p) => p.port));
     this.attachExitWatcher(serverId, record.game, record.ramAllocation);
     startMonitoring(record, this);
   }
 
   // Follow container stdout: persist to server.log, drive the download-progress
-  // bar (SteamCMD output), and detect readiness via the spec's readyPattern.
-  private attachFollower(serverId: string, spec: GameDefinitionSpec) {
+  // bar (SteamCMD output), and detect readiness via the spec's readyPattern or
+  // its declared TCP ports — same evidence contract as LocalRunner.
+  private attachFollower(serverId: string, spec: GameDefinitionSpec, tcpPorts: number[] = []) {
     const follower = dockerSpawn(["logs", "-f", "--tail", "0", containerName(serverId)]);
     followers.set(serverId, follower);
 
@@ -151,10 +153,15 @@ export class DockerRunner implements ServerRunner {
       if (ready) return;
       ready = true;
       clearProgress(serverId);
+      if (portPoll) clearInterval(portPoll);
       appendLog(serverId, `[Readiness Check] Server is ready (${reason})`);
       setStatus(serverId, "RUNNING");
     };
 
+    // Split lines across chunk boundaries must still match — a fragmented
+    // "Done (…)"/ready line tested per-chunk silently never matches and costs
+    // the blind fallback (found by the GUI e2e on CI). Buffer like LocalRunner.
+    let outputBuffer = "";
     const onChunk = (buf: Buffer) => {
       const s = buf.toString();
       appendLog(serverId, s);
@@ -162,14 +169,41 @@ export class DockerRunner implements ServerRunner {
       if (pct !== null && !ready) {
         setProgress(serverId, { phase: "steam", percent: pct, label: `Downloading ${Math.round(pct)}%` });
       }
-      if (readyPattern && readyPattern.test(s)) markReady(`Matched log pattern: ${spec.launch.readyPattern}`);
+      if (readyPattern && !ready) {
+        outputBuffer += s;
+        if (outputBuffer.length > 8192) outputBuffer = outputBuffer.slice(-8192);
+        if (readyPattern.test(outputBuffer)) markReady(`Matched log pattern: ${spec.launch.readyPattern}`);
+      }
     };
     follower.stdout?.on("data", onChunk);
     follower.stderr?.on("data", onChunk);
 
-    // Fallback: mark ready after 5 minutes even without a pattern match.
+    // Games that declare a TCP port get honest port-based readiness: MC has no
+    // readyPattern, so without this its only evidence under Docker was the
+    // 5-minute blind flip below (users saw "Starting…" for 5 minutes).
+    let portPoll: NodeJS.Timeout | undefined;
+    if (tcpPorts.length > 0) {
+      portPoll = setInterval(() => {
+        if (ready) return;
+        const socket = net.connect({ port: tcpPorts[0], host: "127.0.0.1" });
+        socket.setTimeout(2000);
+        socket.on("connect", () => {
+          socket.destroy();
+          markReady(`TCP Port ${tcpPorts[0]} is accepting connections`);
+        }).on("error", () => {
+          socket.destroy();
+        }).on("timeout", () => {
+          socket.destroy();
+        });
+      }, 5000);
+    }
+
+    // Fallback: mark ready after 5 minutes even without any evidence match.
     const timeout = setTimeout(() => markReady("5-minute fallback timeout reached"), 5 * 60 * 1000);
-    follower.on("close", () => clearTimeout(timeout));
+    follower.on("close", () => {
+      clearTimeout(timeout);
+      if (portPoll) clearInterval(portPoll);
+    });
   }
 
   // Watch for container exit and route it through the shared crash policy.
@@ -367,7 +401,15 @@ export class DockerRunner implements ServerRunner {
           if (!record) continue;
           const { spec } = await resolveDefinition(record);
           appendLog(server.id, "[Docker] Reattached to running container after app restart.");
-          this.attachFollower(server.id, spec);
+          const reattachCtx = buildContext({
+            name: record.name, password: record.password, port: record.port,
+            ram: record.ramAllocation, paramValuesJson: record.paramValues, spec,
+          });
+          this.attachFollower(
+            server.id,
+            spec,
+            planPorts(spec, reattachCtx).filter((p) => p.protocol === "TCP").map((p) => p.port)
+          );
           this.attachExitWatcher(server.id, record.game, record.ramAllocation);
           startMonitoring(record, this);
         } else {

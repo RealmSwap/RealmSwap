@@ -95,7 +95,10 @@ export function SidebarNavigation({ user }: { user: any }) {
         {/* Sidebar Logo */}
         <div className="pt-8 pb-6 h-24 flex items-center justify-center">
           <Link href="/" className="flex items-center justify-center transition-transform hover:scale-105">
-            <img src="/logo.png" alt="RealmSwap" className="w-[120px] h-auto scale-[2.5]" />
+            {/* pointer-events-none: the scale-[2.5] visual overflows this
+                header and its hit box would swallow clicks meant for the nav
+                links below (found by the GUI e2e harness). */}
+            <img src="/logo.png" alt="RealmSwap" className="w-[120px] h-auto scale-[2.5] pointer-events-none" />
           </Link>
         </div>
 
