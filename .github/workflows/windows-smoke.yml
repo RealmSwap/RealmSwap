@@ -17,9 +17,11 @@
 #   staged installer, relaunches, and asserts the new version boots with the
 #   carried-over DB (real upgrade migration path) and still serves the API.
 #
-# Triggers: manual dispatch (from any branch — this is how PRs validate the
-# workflow) and automatically after each successful Release run, which is the
-# case that exercises real published artifacts.
+# Triggers: manual dispatch, automatically after each successful Release run
+# (the case that exercises real published artifacts), and on pull_request —
+# path-filtered to this workflow + the driver so the smoke machinery
+# self-validates on windows-latest whenever it changes, while normal PRs pay
+# nothing.
 #
 # See scripts/e2e-win/README.md for the report format and the one-time
 # PLAYIT_AGENT_SECRET provisioning step.
@@ -36,6 +38,10 @@ on:
   workflow_run:
     workflows: ["Release"]
     types: [completed]
+  pull_request:
+    paths:
+      - ".github/workflows/windows-smoke.yml"
+      - "scripts/e2e-win/**"
 
 permissions:
   contents: read
@@ -44,6 +50,7 @@ jobs:
   build-and-smoke:
     if: >-
       github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'pull_request' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: windows-latest
     timeout-minutes: 45
@@ -135,6 +142,7 @@ jobs:
   auto-update-proof:
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.run_auto_update == true) ||
+      github.event_name == 'pull_request' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: windows-latest
     timeout-minutes: 40
