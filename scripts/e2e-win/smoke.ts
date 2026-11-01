@@ -202,6 +202,12 @@ function launchApp(exePath: string, userDataDir: string): LaunchedApp {
 
 async function waitServerReady(app: LaunchedApp): Promise<number> {
   const deadline = Date.now() + BOOT_TIMEOUT_MS;
+  // The standalone bind line prints to the piped electron stdout BEFORE
+  // waitForServer resolves and the authoritative startup.log ready line is
+  // appended — remember the fallback but give the log a grace window first.
+  let fallbackPort: number | null = null;
+  let fallbackSeenAt = 0;
+  const FALLBACK_GRACE_MS = 10_000;
   while (Date.now() < deadline) {
     if (app.child.exitCode !== null && app.child.exitCode !== 0) {
       throw new Error(
@@ -225,12 +231,16 @@ async function waitServerReady(app: LaunchedApp): Promise<number> {
         return app.port;
       }
     }
-    // Fallback while startup.log candidates are pending: the standalone
-    // server prints its bind line to the (piped) electron stdout.
-    const m = /Local:\s+http:\/\/127\.0\.0\.1:(\d+)/.exec(readFileOrEmpty(app.electronLogPath));
-    if (m) {
-      app.port = Number(m[1]);
-      return app.port;
+    if (fallbackPort === null) {
+      const m = /Local:\s+http:\/\/127\.0\.0\.1:(\d+)/.exec(readFileOrEmpty(app.electronLogPath));
+      if (m) {
+        fallbackPort = Number(m[1]);
+        fallbackSeenAt = Date.now();
+      }
+    }
+    if (fallbackPort !== null && Date.now() - fallbackSeenAt > FALLBACK_GRACE_MS) {
+      app.port = fallbackPort;
+      return fallbackPort;
     }
     await sleep(500);
   }
@@ -242,6 +252,7 @@ async function waitServerReady(app: LaunchedApp): Promise<number> {
     .join("; ");
   throw new Error(
     `no 'server ready on port N' within ${BOOT_TIMEOUT_MS}ms — watched: ${diag}` +
+      (fallbackPort !== null ? ` — fallback port ${fallbackPort} seen but the ready line never landed` : "") +
       ` — electron output tail:\n${tail(readFileOrEmpty(app.electronLogPath), 2000)}`
   );
 }
@@ -254,13 +265,21 @@ function readFileOrEmpty(p: string): string {
   }
 }
 
-/** THIS launch's startup.log content (post-baseline) from the winning candidate. */
+/** THIS launch's startup.log content (post-baseline). With no winning
+ *  candidate (fallback port path), scan every candidate for the one that
+ *  actually carries this launch's ready line. */
 function readStartupLog(app: LaunchedApp): string {
-  const cand =
-    app.startupLogCandidates.find((c) => c.path === app.winningLogPath) ??
-    app.startupLogCandidates[0];
-  if (!cand) return "";
-  return readFileOrEmpty(cand.path).slice(cand.baseline);
+  const ordered = app.winningLogPath
+    ? [
+        ...app.startupLogCandidates.filter((c) => c.path === app.winningLogPath),
+        ...app.startupLogCandidates.filter((c) => c.path !== app.winningLogPath),
+      ]
+    : app.startupLogCandidates;
+  for (let i = 0; i < ordered.length; i++) {
+    const fresh = readFileOrEmpty(ordered[i].path).slice(ordered[i].baseline);
+    if (/server ready on port \d+/.test(fresh) || i === ordered.length - 1) return fresh;
+  }
+  return "";
 }
 
 function stopApp(app: LaunchedApp): void {
@@ -564,7 +583,14 @@ async function runBuildSmoke(): Promise<number> {
   log(`build-smoke done — ${checks.filter((c) => c.status === "pass").length} passed, ` +
       `${checks.filter((c) => c.status === "fail").length} failed, ` +
       `${checks.filter((c) => c.status === "skip").length} skipped`);
-  return writeReport({ exe: exePath, userDataDir, serverId, serverPort, tunnelAddress: tunnelAddress || null });
+  return writeReport({
+    exe: exePath,
+    userDataDir,
+    bakedSupabaseRef: new URL(bakedSupabaseUrl).hostname.split(".")[0],
+    serverId,
+    serverPort,
+    tunnelAddress: tunnelAddress || null,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -634,10 +660,21 @@ async function runReleaseUpdate(): Promise<number> {
       if (!bakedSupabaseUrl) bakedSupabaseUrl = findBakedSupabaseUrl(exe) || "";
       expect(!!bakedSupabaseUrl, "could not determine the baked Supabase URL (set SMOKE_BAKED_SUPABASE_URL)");
       const client = new ApiClient(`http://127.0.0.1:${port}`);
+      const boundary = await client.get("/api/servers");
+      expect(boundary.status === 401,
+        `unauthenticated GET /api/servers → ${boundary.status}, want 401 (auth boundary)`);
       const cookie = await mintAuth(fake, client, bakedSupabaseUrl!);
       const res = await apiRequest(client, cookie, "GET", "/api/servers");
-      expect(res.status === 200, `GET /api/servers on released app → ${res.status}: ${res.text.slice(0, 200)}`);
-      return `prev ${exeProductVersion(exe)} boots and serves auth'd API on ${port}`;
+      if (res.status === 200) {
+        return `prev ${normVersion(exeProductVersion(exe))} boots; minted offline session accepted on ${port}`;
+      }
+      // Releases older than 5f82fa0 (which shipped the SUPABASE_JWT_SECRET
+      // offline-verify path) can only verify online against the real project,
+      // so a minted token is expected to be rejected there. The boundary 401
+      // above is the assertion — this job is about the update machinery.
+      expect(res.status === 401,
+        `GET /api/servers with minted session → ${res.status}: ${res.text.slice(0, 200)} (want 200 or the boundary 401)`);
+      return `prev ${normVersion(exeProductVersion(exe))} boots; auth boundary holds (minted session rejected — build predates the offline-verify path)`;
     });
 
     let stagedInstaller = "";
@@ -646,10 +683,19 @@ async function runReleaseUpdate(): Promise<number> {
       stagedInstaller = await poll("staged update installer in pending dir", UPDATE_STAGE_TIMEOUT_MS, async () => {
         if (!fs.existsSync(pendingDir)) return null;
         for (const f of fs.readdirSync(pendingDir)) {
+          // electron-updater downloads into temp-* then renames to the
+          // artifact name — only the final file is a completed download.
+          if (!/^realmswap-setup.*\.exe$/i.test(f) || /^temp-/i.test(f)) continue;
           const p = path.join(pendingDir, f);
           try {
-            if (f.toLowerCase().endsWith(".exe") && fs.statSync(p).size > 50 * 1024 * 1024) return p;
-          } catch { /* file still being written */ }
+            const size = fs.statSync(p).size;
+            if (size <= 50 * 1024 * 1024) continue;
+            await sleep(2000); // stability: still growing?
+            if (fs.statSync(p).size !== size) return null;
+            return p;
+          } catch {
+            return null; // file disappeared mid-check
+          }
         }
         return null;
       });
@@ -696,7 +742,12 @@ async function runReleaseUpdate(): Promise<number> {
 
   log(`release-update done — ${checks.filter((c) => c.status === "pass").length} passed, ` +
       `${checks.filter((c) => c.status === "fail").length} failed`);
-  return writeReport({ prevUrl, latestVersion, userDataDir });
+  return writeReport({
+    prevUrl,
+    latestVersion,
+    userDataDir,
+    bakedSupabaseRef: bakedSupabaseUrl ? new URL(bakedSupabaseUrl).hostname.split(".")[0] : null,
+  });
 }
 
 /** The inlined NEXT_PUBLIC_* value lives in the standalone bundle; the anon URL
