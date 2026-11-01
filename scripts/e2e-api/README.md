@@ -8,6 +8,7 @@ cookies, game-server processes, filesystem moves, and ports.
 ```bash
 npm run e2e:api          # @smoke — every PR (~5-10 min; CI runs this on ubuntu)
 npm run e2e:api:heavy    # + @heavy scenarios (real installs) — nightly
+npx tsx scripts/e2e-api/run.ts --tag all --only <scenarioId>   # one scenario (debugging)
 ```
 
 ## Why this is zero-human and CI-safe
@@ -111,6 +112,15 @@ npm run e2e:api:heavy    # + @heavy scenarios (real installs) — nightly
 
 ## What the heavy scenarios prove (nightly / `npm run e2e:api:heavy`)
 
+- **games/all-games-crud** — every built-in definition (all 11 games) gets a
+  real create through POST /api/servers, asserted against its own spec from
+  GET /api/definitions: game slug, spec default port, the config surface
+  implied by `editableConfigPath` (file round-trip on disk for the editable
+  games, the honest "command-line arguments" contract for Valheim/ARK/
+  Terraria/Satisfactory), then a clean archive. Also pins that two stopped
+  servers can share a spec port (the create-time check is bind-based, not
+  ownership-based). No game processes boot here — Steam installs are the
+  Windows harnesses' job.
 - **ops/bot-actions** — the Discord bot's action route with `BOT_API_SECRET`
   set: wrong-bearer 401, unsupported action 400, unknown server 404, then the
   real thing — bot `start` boots Minecraft to RUNNING and bot `stop` shuts it

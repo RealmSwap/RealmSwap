@@ -18,10 +18,11 @@
 #   carried-over DB (real upgrade migration path) and still serves the API.
 #
 # Triggers: manual dispatch, automatically after each successful Release run
-# (the case that exercises real published artifacts), and on pull_request —
+# (the case that exercises real published artifacts), on pull_request —
 # path-filtered to this workflow + the driver so the smoke machinery
 # self-validates on windows-latest whenever it changes, while normal PRs pay
-# nothing.
+# nothing — and callable in place from the Nightly Heavy workflow, which runs
+# the full Windows leg every night.
 #
 # See scripts/e2e-win/README.md for the report format and the one-time
 # PLAYIT_AGENT_SECRET provisioning step.
@@ -30,6 +31,12 @@ name: Windows Smoke
 
 on:
   workflow_dispatch:
+    inputs:
+      run_auto_update:
+        description: "Also run the release-artifact auto-update proof"
+        type: boolean
+        default: true
+  workflow_call:
     inputs:
       run_auto_update:
         description: "Also run the release-artifact auto-update proof"
@@ -50,9 +57,14 @@ permissions:
 
 jobs:
   build-and-smoke:
+    # Inside a reusable workflow github.event_name mirrors the CALLER's event
+    # (never the literal "workflow_call"), so 'schedule' here can only mean
+    # "called by the Nightly Heavy workflow" — this workflow has no schedule
+    # trigger of its own.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event_name == 'pull_request' ||
+      github.event_name == 'schedule' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: windows-latest
     timeout-minutes: 45
@@ -159,6 +171,7 @@ jobs:
     if: >-
       (github.event_name == 'workflow_dispatch' && inputs.run_auto_update == true) ||
       github.event_name == 'pull_request' ||
+      (github.event_name == 'schedule' && inputs.run_auto_update == true) ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: windows-latest
     timeout-minutes: 40

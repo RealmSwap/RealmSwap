@@ -1,0 +1,124 @@
+# Nightly heavy matrix — the "G" step of the zero-human test plan
+# (no-human-test-plan-2026-10-30.md): full functional verification =
+# `npm run verify` locally + a green nightly + one `win-smoke` run on a
+# Windows PC after each release.
+#
+# Every night the default branch runs the heavy tier the every-PR CI skips:
+#
+#   api-heavy      — the API e2e harness with ALL scenarios, not just @smoke:
+#                    the loader matrix (fabric+forge real boots, quilt's
+#                    honest 500, neoforge's honest refusal), the full
+#                    ATM10/Adrenaline pack pipeline, the CurseForge pack path,
+#                    the real bot boot, and the all-games CRUD sweep across
+#                    every built-in definition.
+#   gui-heavy      — the GUI harness dev pass plus the live Modrinth install
+#                    driven through the real UI.
+#   windows-smoke  — the Layer 3 workflow, called in place: installer build +
+#                    silent install + a real MC boot on NTFS + playit tunnel
+#                    (when PLAYIT_AGENT_SECRET is set) + the release-artifact
+#                    auto-update proof.
+#
+# SteamCMD game boots (Valheim/Terraria) intentionally stay on the PC harness
+# (scripts/win-smoke.mjs) — real Steam installs are the one matrix leg a CI
+# VM proves worse than the machine the product actually serves from.
+#
+# Triggers: the nightly schedule, manual dispatch, and pull_request —
+# path-filtered to this workflow and the harness entry points so the nightly
+# machinery self-validates on windows-latest/ubuntu whenever it changes,
+# while normal PRs pay nothing.
+
+name: Nightly Heavy
+
+on:
+  schedule:
+    # 08:30 UTC = 00:30 Pacific. Off the top of the hour per GitHub's cron
+    # congestion guidance.
+    - cron: "30 8 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/nightly.yml"
+      - "scripts/e2e-api/**"
+      - "scripts/e2e-gui/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-heavy
+  cancel-in-progress: false
+
+jobs:
+  api-heavy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Same harness as the every-PR api-e2e job, but --tag all: every @heavy
+      # scenario joins (real loader installs + boots, the pack pipeline, the
+      # bot boot, the all-games sweep). CF scenarios self-skip without the
+      # secret; smoke never needs it.
+      - name: Run API e2e harness (all scenarios)
+        run: npm run e2e:api:heavy
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+
+      - name: Upload harness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-api-heavy-report
+          path: /tmp/realmswap-e2e-api-data/e2e-api-report.json
+          retention-days: 7
+
+  gui-heavy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install GUI test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          npx playwright install-deps chromium
+
+      # Dev pass + the @heavy scenarios (a real Modrinth mod installed
+      # through the actual UI, watched over the SSE progress bar).
+      - name: Run GUI e2e harness (all scenarios, under Xvfb)
+        run: xvfb-run --auto-servernum npm run e2e:gui:heavy
+        env:
+          E2E_GUI_NO_SANDBOX: "1"
+
+      - name: Upload harness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-gui-heavy-report
+          path: /tmp/realmswap-e2e-api-data/e2e-gui-report.json
+          retention-days: 7
+
+  windows-smoke:
+    uses: ./.github/workflows/windows-smoke.yml
+    secrets: inherit
+    with:
+      run_auto_update: true
