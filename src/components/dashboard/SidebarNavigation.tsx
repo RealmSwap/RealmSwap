@@ -17,7 +17,6 @@ import {
   Network,
   HardDrive,
   LogOut,
-  CreditCard,
   ChevronRight,
   Menu,
   X
@@ -55,7 +54,6 @@ export function SidebarNavigation({ user }: { user: any }) {
       links: [
         { label: "Servers", icon: ServerIcon, href: "/dashboard" },
         { label: "Marketplace", icon: Store, href: "/dashboard/marketplace" },
-        { label: "Billing", icon: CreditCard, href: "/dashboard/billing" },
       ]
     },
     {

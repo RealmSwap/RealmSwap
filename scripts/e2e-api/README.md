@@ -106,7 +106,7 @@ npx tsx scripts/e2e-api/run.ts --tag all --only <scenarioId>   # one scenario (d
   (fire-and-forget with observable SUCCESS/FAILED executions), user
   preferences (persisted) vs settings (guarded no-op), Discord link codes
   seeded directly (single use, expiry, collision, 15-min rate limit),
-  web-push vapid provisioning + subscription dedupe, the billing kill-switch
+  web-push vapid provisioning + subscription dedupe
   (flat 404 even unauthenticated), system metrics/docker-status, and the
   internal-token shutdown (stops services, not the app — asserted).
 

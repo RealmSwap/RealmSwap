@@ -16,7 +16,7 @@ touched. Scenarios (`--tag smoke`):
 
 | Scenario | Proves |
 |---|---|
-| `gui/auth-and-shell` | login form (bad creds → exact inline error; good → dashboard), every sidebar page renders its heading, billing-disabled redirect |
+| `gui/auth-and-shell` | login form (bad creds → exact inline error; good → dashboard), every sidebar page renders its heading |
 | `gui/server-lifecycle` | first-server wizard → **real Minecraft boot to Online** → live SSE console + a real `list` command → Join Info modal → `POST /api/system/open-folder` via the card's **Files** button (the ledger's GUI-owned route) → clean stop to Offline |
 | `gui/settings-and-ipc` | settings sections render; the ONLY preload bridge (`window.realmswapDesktop` launch-on-boot pair) round-trips through IPC; dev builds honestly report `supported:false` and the card says so |
 | `gui/close-to-tray-and-quit` (last) | sign out through the UI; window close **hides to tray** (app keeps running); File → Quit (the tray's own code path: `beginQuit` → `before-quit` → stopAllServers) exits cleanly |

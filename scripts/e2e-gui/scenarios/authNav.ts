@@ -1,15 +1,14 @@
 /**
  * gui/auth-and-shell — the real login form against the real /api/auth/login
  * route (fake Supabase behind it), then the dashboard shell + every sidebar
- * page renders its heading. Billing is disabled in the harness env, so its
- * nav link must bounce back to the dashboard.
+ * page renders its heading.
  */
 
 import { navigateAndExpect, scenario } from "../framework";
 import { ADMIN_USER } from "../../e2e-api/config";
 
 export const authAndShellScenarios = [
-  scenario("gui/auth-and-shell", "login form, dashboard shell, sidebar sweep, billing gate", ["smoke"], async (ctx) => {
+  scenario("gui/auth-and-shell", "login form, dashboard shell, sidebar sweep", ["smoke"], async (ctx) => {
     const { page } = ctx;
 
     // Fresh DB → /start redirects to /login.
@@ -42,11 +41,5 @@ export const authAndShellScenarios = [
     await navigateAndExpect(page, "Team", "Team");
     await navigateAndExpect(page, "Storage", "Storage");
 
-    // Billing disabled (BILLING_ENABLED=0) → the page hard-redirects home.
-    await page.getByRole("link", { name: "Billing", exact: true }).click();
-    await page.getByRole("heading", { name: "Active Servers" }).waitFor({ timeout: 20_000 });
-    if (page.url().includes("/dashboard/billing")) {
-      throw new Error(`billing page should redirect home when disabled, still at ${page.url()}`);
-    }
   }),
 ];

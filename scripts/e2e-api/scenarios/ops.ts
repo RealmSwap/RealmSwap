@@ -2,7 +2,7 @@
  * Operations sweep (PR-C): automations (CRUD + manual execute against safe
  * actions), admin egg import, user preferences/settings, the Discord link
  * codes (seeded directly — the bot that normally mints them needs Discord
- * credentials), web-push provisioning, the billing kill-switch, system
+ * credentials), web-push provisioning, system
  * metrics/docker-status, and the internal-token shutdown (last — it stops
  * tunnels and any running servers).
  */
@@ -24,7 +24,7 @@ async function latestExecution(ctx: ScenarioContext, serverId: string, automatio
 export const opsScenarios = [
   scenario(
     "ops/user-system",
-    "automations/execute, egg import, user prefs/settings, discord-link, web-push, billing gate, metrics/docker/shutdown",
+    "automations/execute, egg import, user prefs/settings, discord-link, web-push, metrics/docker/shutdown",
     ["smoke"],
     async (ctx: ScenarioContext) => {
       const { admin } = ctx;
@@ -227,15 +227,6 @@ export const opsScenarios = [
         expect(first.status === 200 && first.body?.success === true, `subscribe → ${first.status}`);
         const again = await admin.post("/api/web-push/subscribe", sub);
         expect(again.status === 200 && String(again.body?.message || "").includes("already exists"), "duplicate subscription deduped");
-      });
-
-      await step("billing: disabled builds answer a flat 404, even unauthenticated", async () => {
-        for (const route of ["checkout", "portal", "refresh"]) {
-          const res = await admin.post(`/api/billing/${route}`, { priceId: "e2e" });
-          expect(res.status === 404 && res.body?.error === "Not found", `billing/${route} → ${res.status}`);
-          const unauth = await fetch(`${admin.baseUrl}/api/billing/${route}`, { method: "POST" });
-          expect(unauth.status === 404, `unauth billing/${route} → ${unauth.status} (flag check precedes auth)`);
-        }
       });
 
       await step("system surfaces: metrics, docker status", async () => {

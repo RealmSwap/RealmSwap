@@ -118,7 +118,6 @@ jobs:
           NEXT_TELEMETRY_DISABLED: "1"
           SENTRY_DSN: ""
           NEXT_PUBLIC_SENTRY_DSN: ""
-          BILLING_ENABLED: "0"
         run: |
           npm run electron:build > build.log 2>&1 || { tail -300 build.log; exit 1; }
           ls -la dist/
