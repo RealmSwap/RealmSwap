@@ -114,7 +114,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-gui-heavy-report
-          path: /tmp/realmswap-e2e-api-data/e2e-gui-report.json
+          path: |
+            /tmp/realmswap-e2e-api-data/e2e-gui-report.json
+            /tmp/realmswap-e2e-api-data/gui_*-failure.png
+          if-no-files-found: ignore
           retention-days: 7
 
   windows-smoke:

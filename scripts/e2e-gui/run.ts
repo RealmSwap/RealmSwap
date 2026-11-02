@@ -64,6 +64,8 @@ async function runDevPass(tag: string): Promise<number> {
       page,
       fakeSupabase: app.fakeSupabase,
       reportDir: DATA_DIR,
+      appBaseUrl: APP_BASE_URL,
+      appOutputTail: app.outputTail,
     };
 
     for (const scenarioDef of selected) {

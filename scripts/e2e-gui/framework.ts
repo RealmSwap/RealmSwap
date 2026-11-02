@@ -16,6 +16,9 @@ export interface GuiContext {
   fakeSupabase: FakeSupabase;
   /** Where reports/screenshots land. */
   reportDir: string;
+  /** The app server under test (dev pass): base URL + captured output tail. */
+  appBaseUrl?: string;
+  appOutputTail?: () => string;
 }
 
 export interface GuiScenario {

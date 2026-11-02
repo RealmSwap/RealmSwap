@@ -30,7 +30,7 @@ export const modsInstallScenarios = [
     const banner = page.getByText("This is a vanilla server — mods won't load until you install a mod loader.");
     await banner.waitFor({ timeout: 30_000 });
     await page.getByRole("button", { name: "Install Fabric", exact: true }).click();
-    await waitForInstallDone(page, "Fabric loader install");
+    await waitForInstallDone(page, "Fabric loader install", ctx);
 
     // 2. A real mod install through Browse — in Mods mode, not Modpacks.
     //    .first(): the tab bar's Browse renders before any inline "Browse"
@@ -53,7 +53,7 @@ export const modsInstallScenarios = [
     await installButton.waitFor({ timeout: 30_000 });
     await installButton.click();
 
-    await waitForInstallDone(page, "Carpet install");
+    await waitForInstallDone(page, "Carpet install", ctx);
 
     // Installed tab reflects the new mod.
     await page.getByRole("button", { name: /^Installed/ }).click();
@@ -72,11 +72,22 @@ export const modsInstallScenarios = [
  * Mac). The stage strip keeps earlier stages visible, so Done only counts
  * when "Boot test" is no longer in the strip.
  */
-async function waitForInstallDone(page: import("playwright").Page, what: string) {
+/**
+ * The InstallProgressPanel is SSE-driven: poll its title until the install
+ * resolves. 660s: the install's own boot test is allowed 600s, so the watcher
+ * must out-wait the product's ceiling (CI runners are far slower than a dev
+ * Mac). While stalled, sample the app's own API through the page's session
+ * (server status/runner, loader state, in-flight backups) — a 660s stall
+ * inside one stage is exactly what we can't diagnose from a CI log alone.
+ */
+async function waitForInstallDone(page: import("playwright").Page, what: string, ctx?: import("../framework").GuiContext) {
   const panel = page.locator('[role="status"][aria-live="polite"]');
   await panel.waitFor({ timeout: 30_000 });
+  const titleSel = "div.text-sm.font-medium";
   const deadline = Date.now() + 660_000;
   let lastTitle = "";
+  let lastChange = Date.now();
+  const timeline: string[] = [];
   // Discriminate on the panel's TITLE element ("Resolving"/"Boot test"/…,
   // "Done"/"Failed" when terminal) — never on whole-panel text: the stage
   // strip always renders (even terminal) and live boot output can contain
@@ -85,8 +96,12 @@ async function waitForInstallDone(page: import("playwright").Page, what: string)
   // only accept a verdict after this install was seen mid-flight.
   let sawProgress = false;
   while (Date.now() < deadline) {
-    lastTitle = ((await panel.locator("div.text-sm.font-medium").first().textContent().catch(() => "")) ?? "").trim();
-    if (lastTitle && lastTitle !== "Done" && lastTitle !== "Failed") sawProgress = true;
+    lastTitle = ((await panel.locator(titleSel).first().textContent().catch(() => "")) ?? "").trim();
+    if (lastTitle && lastTitle !== "Done" && lastTitle !== "Failed") {
+      if (lastTitle !== timeline[timeline.length - 1]) timeline.push(`${Math.round((Date.now() - deadline + 660_000) / 1000)}s:${lastTitle}`);
+      sawProgress = true;
+      lastChange = Date.now();
+    }
     if (sawProgress && lastTitle === "Done") {
       return;
     }
@@ -94,7 +109,38 @@ async function waitForInstallDone(page: import("playwright").Page, what: string)
       const panelText = ((await panel.textContent().catch(() => "")) ?? "").slice(0, 300);
       throw new Error(`${what} reports Failed: ${panelText}`);
     }
+    // Stalled ≥120s on one stage: pull the app's server-side view through the
+    // browser session so the failure carries evidence, not just a timeout.
+    if (Date.now() - lastChange > 120_000 && ctx?.appBaseUrl) {
+      const note = await sampleAppState(page, ctx.appBaseUrl);
+      if (note && !timeline[timeline.length - 1]?.includes(note)) timeline.push(`${Math.round((Date.now() - deadline + 660_000) / 1000)}s:APP>${note}`);
+      lastChange = Date.now();
+    }
     await sleep(2000);
   }
-  throw new Error(`${what} never reached Done — panel title: ${lastTitle}`);
+  const tail = timeline.slice(-12).join(" | ");
+  const appTail = ctx?.appOutputTail ? `\n--- app output tail ---\n${ctx.appOutputTail().slice(-2500)}` : "";
+  throw new Error(`${what} never reached Done — panel title: ${lastTitle}\nstage timeline: ${tail}${appTail}`);
+}
+
+/** One app-state sample for stall diagnostics; never throws. */
+async function sampleAppState(page: import("playwright").Page, baseUrl: string): Promise<string> {
+  try {
+    const servers = await page.request.get(`${baseUrl}/api/servers`);
+    const list = (await servers.json())?.servers ?? [];
+    const s = list[0];
+    if (!s) return "no servers";
+    let note = `server status=${s.status} runner=${s.runnerType ?? "LOCAL"}`;
+    const loader = await page.request.get(`${baseUrl}/api/servers/${s.id}/mods/loader`);
+    if (loader.ok()) note += ` loader=${JSON.stringify((await loader.json())?.loader?.type ?? null)}`;
+    const backups = await page.request.get(`${baseUrl}/api/servers/${s.id}/backups`);
+    if (backups.ok()) {
+      const rows = (await backups.json())?.backups ?? [];
+      const inFlight = rows.find((b: any) => b.status === "IN_PROGRESS" || b.status === "PENDING");
+      note += ` backups=${rows.length}${inFlight ? ` STUCK:${inFlight.status}:${inFlight.backupType}` : ""}`;
+    }
+    return note;
+  } catch (err: any) {
+    return `sample failed: ${err.message?.slice(0, 80)}`;
+  }
 }
