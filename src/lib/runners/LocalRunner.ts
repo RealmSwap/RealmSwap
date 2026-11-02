@@ -8,7 +8,7 @@ import net from "net";
 import { prisma } from "../db";
 import { mapPort, unmapPort, getPublicIP, getLanIP } from "../upnp";
 import { startMonitoring, stopMonitoring, clearStatsHistory } from "../processMonitor";
-import { getTreeStats } from "./winProcessStats";
+import { getTreeStats } from "./processTreeStats";
 import { claimStart, releaseStart } from "./startClaims";
 import { serverEventBus } from "../eventBus";
 import { markFirstOnline } from "../firstOnline";
