@@ -4,6 +4,7 @@ import {
   PlayitApiFailure,
   findTunnelForPort,
   isPlayitFailure,
+  playitTypeForGame,
   tunnelPortTypeFor,
   tunnelProtocolCovers,
   AgentRunData,
@@ -86,16 +87,21 @@ describe("PlayitApi request shapes", () => {
     expect(JSON.parse(init.body)).toEqual({});
   });
 
-  it("creates a tunnel bound to 127.0.0.1:<port> via agent config fields, with the game's protocol", async () => {
+  it("creates a game-type tunnel bound to 127.0.0.1:<port> via agent config fields", async () => {
     const fetchImpl = fetchJson({ status: "success", data: { id: "tunnel-1" } });
     const api = new PlayitApi(fetchImpl);
-    const id = await api.createTunnel("agentsecret", "agent-1", 15637, "udp");
+    const id = await api.createTunnel("agentsecret", "agent-1", {
+      localPort: 15637,
+      portType: "udp",
+      playitType: "palworld",
+      softwareDescription: "Palworld server",
+    });
 
     expect(id).toBe("tunnel-1");
     const [url, init] = fetchImpl.mock.calls[0];
     expect(url).toBe("https://api.playit.gg/v1/tunnels/create");
     const body = JSON.parse(init.body);
-    expect(body.ports).toEqual({ type: "custom-udp", details: 1 });
+    expect(body.protocol).toEqual({ type: "tunnel-type", details: "palworld" });
     expect(body.origin).toEqual({
       type: "agent",
       data: {
@@ -108,15 +114,34 @@ describe("PlayitApi request shapes", () => {
         },
       },
     });
+    expect(body.endpoint).toEqual({ type: "region", details: { region: "global", port: null } });
     expect(body.enabled).toBe(true);
   });
 
-  it("maps each port type onto playit's custom-* tunnel types", async () => {
-    for (const portType of ["tcp", "udp", "both"] as const) {
-      const fetchImpl = fetchJson({ status: "success", data: { id: "t" } });
-      await new PlayitApi(fetchImpl).createTunnel("k", "a", 1, portType);
-      expect(JSON.parse(fetchImpl.mock.calls[0][1].body).ports).toEqual({ type: `custom-${portType}`, details: 1 });
-    }
+  it("falls back to a raw-ports protocol carrying the software description when no game type matches", async () => {
+    const fetchImpl = fetchJson({ status: "success", data: { id: "t" } });
+    await new PlayitApi(fetchImpl).createTunnel("k", "a", {
+      localPort: 8211,
+      portType: "both",
+      playitType: null,
+      softwareDescription: "Enshrouded server",
+    });
+    const body = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(body.protocol).toEqual({
+      type: "raw-ports",
+      details: { port_type: "both", port_count: 1, software_description: "Enshrouded server" },
+    });
+  });
+
+  it("maps MINECRAFT onto java or bedrock by the port's protocol, and unmapped games to null", () => {
+    expect(playitTypeForGame("MINECRAFT", "tcp")).toBe("minecraft-java");
+    expect(playitTypeForGame("MINECRAFT", "udp")).toBe("minecraft-bedrock");
+    expect(playitTypeForGame("PALWORLD", "udp")).toBe("palworld");
+    expect(playitTypeForGame("VALHEIM", "udp")).toBe("valheim");
+    // protocol the playit type doesn't forward → no match
+    expect(playitTypeForGame("PALWORLD", "tcp")).toBeNull();
+    // no free-tier game type exists
+    expect(playitTypeForGame("ENSHROUDED", "udp")).toBeNull();
   });
 
   it("deletes a tunnel by id with the agent key", async () => {
