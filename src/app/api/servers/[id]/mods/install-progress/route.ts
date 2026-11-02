@@ -35,7 +35,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({
-    start(controller) {
+    async start(controller) {
       let closed = false;
       let heartbeat: ReturnType<typeof setInterval>;
       let unsubscribe: (() => void) | null = null;
@@ -72,10 +72,19 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
         }
       };
 
+      // The panel mounts and opens this stream the moment the client mints
+      // the installId — the POST that registers the session is often still
+      // in flight. "Unknown id" is therefore usually a subscribe race, not a
+      // typo: wait out a short grace window for the session to appear before
+      // declaring it dead (once subscribed, every later frame arrives here).
       unsubscribe = subscribeProgress(installId, onEvent);
+      for (let waited = 0; !unsubscribe && waited < 5000; waited += 250) {
+        await new Promise((r) => setTimeout(r, 250));
+        unsubscribe = subscribeProgress(installId, onEvent);
+      }
       if (!unsubscribe) {
-        // Unknown id: either a typo or the operation already finished and
-        // aged out. Tell the client rather than hanging silently.
+        // Genuinely unknown: a typo or an operation long finished and aged
+        // out. Tell the client rather than hanging silently.
         send(formatSseEvent(JSON.stringify({ stage: "error", error: "No active install with that id." }), { event: "progress" }));
         setTimeout(close, 100);
         return;

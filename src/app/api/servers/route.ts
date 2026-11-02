@@ -160,7 +160,10 @@ export async function POST(req: NextRequest) {
       name: z.string().min(1, "Server name is required").max(100),
       definitionId: z.string().min(1, "Game definition is required"),
       ramAllocation: z.number().positive("RAM allocation must be positive"),
-      password: z.string().optional(),
+      // null is a legitimate "no password" from clients (the create-server
+      // page sends password || null); rejecting it 400'd every empty-password
+      // deploy through that page while the first-run wizard (undefined) worked.
+      password: z.string().nullable().optional(),
       enableUpnp: z.boolean().optional(),
       paramValues: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
       runnerType: z.string().optional(),
