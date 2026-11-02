@@ -5,7 +5,7 @@ import { unmapPort } from "../upnp";
 import { startMonitoring } from "../processMonitor";
 import { getRunner } from "./factory";
 import { appendLog } from "../serverLogs";
-import { readProcessSnapshot, isPidAliveTasklist, type ProcessRow } from "./winProcessStats";
+import { readProcessSnapshot, isPidAliveQuick, type ProcessRow } from "./processTreeStats";
 
 /**
  * Boot reconciliation for LOCAL servers — the counterpart of
@@ -39,7 +39,7 @@ export async function reconcileLocalServersOnBoot(): Promise<void> {
   try {
     snapshot = (await readProcessSnapshot()).byPid;
   } catch (err: any) {
-    console.error("[LocalRunner] boot process snapshot failed, using tasklist:", err?.message);
+    console.error("[LocalRunner] boot process snapshot failed, using quick liveness checks:", err?.message);
   }
 
   for (const server of servers) {
@@ -71,7 +71,7 @@ async function reconcileOne(
   const alive = pid > 0
     ? snapshot
       ? snapshot.has(pid)
-      : await isPidAliveTasklist(pid)
+      : await isPidAliveQuick(pid)
     : false;
 
   if (server.status === "UPDATING") {

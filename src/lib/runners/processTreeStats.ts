@@ -1,16 +1,24 @@
 import { execFile } from "child_process";
 
 /**
- * Process-tree stats for local Windows servers, without `wmic`.
+ * Process-tree stats for LOCAL servers, per platform.
  *
- * pidusage/pidtree both shell out to `wmic`, which Microsoft removed on
+ * Windows: pidusage/pidtree shell out to `wmic`, which Microsoft removed on
  * Windows 11 24H2+ — on current Windows every stats call failed and the
  * monitor flipped healthy servers to DEGRADED. This module queries
- * Win32_Process through PowerShell (present on every Windows install),
- * caches the snapshot briefly so N servers share one query per tick, walks
- * the process tree locally, and derives CPU% from 100-ns kernel+user time
- * deltas between samples (same semantics pidusage had: 100% = one full
- * core, can exceed 100 on multi-core trees).
+ * Win32_Process through PowerShell (present on every Windows install).
+ *
+ * macOS/Linux: the same PowerShell path used to run unconditionally, so every
+ * local server flipped DEGRADED ~seconds after boot ("spawn powershell.exe
+ * ENOENT"). Non-Windows platforms query `ps` instead — present on every
+ * install, and unlike Windows the dashboard's child_process PATH can reach it
+ * from a packaged GUI app (/bin/ps is in Electron's minimal PATH).
+ *
+ * Both paths produce the same ProcessRow snapshot; the snapshot is cached
+ * briefly so N servers share one query per tick, the process tree is walked
+ * locally, and CPU% derives from CPU-time deltas between samples (same
+ * semantics pidusage had: 100% = one full core, can exceed 100 on multi-core
+ * trees).
  */
 
 export interface ProcessRow {
@@ -40,11 +48,13 @@ const globalForCpu = globalThis as unknown as {
 if (!globalForCpu.winProcPrevCpu) globalForCpu.winProcPrevCpu = new Map();
 const prevCpu = globalForCpu.winProcPrevCpu;
 
-const QUERY =
+const PS_QUERY = "pid=,ppid=,rss=,time=";
+
+const WIN_QUERY =
   "Get-CimInstance Win32_Process | " +
   "ForEach-Object { '{0},{1},{2},{3},{4}' -f $_.ProcessId,$_.ParentProcessId,$_.WorkingSetSize,$_.KernelModeTime,$_.UserModeTime }";
 
-/** Parse the one-line-per-process output of the snapshot query. */
+/** Parse the one-line-per-process output of the Windows snapshot query. */
 export function parseProcessLines(text: string): ProcessRow[] {
   const rows: ProcessRow[] = [];
   for (const line of text.split(/\r?\n/)) {
@@ -63,6 +73,49 @@ export function parseProcessLines(text: string): ProcessRow[] {
   return rows;
 }
 
+/**
+ * Parse `ps -axo pid=,ppid=,rss=,time=` output. TIME renders differently per
+ * platform — macOS BSD "[D-]H:MM:SS.cc" / "M:SS.cc", Linux procps
+ * "[D-]HH:MM:SS" / "MM:SS" — so the parser accepts both shapes. RSS is KB on
+ * both.
+ */
+export function parsePsLines(text: string): ProcessRow[] {
+  const rows: ProcessRow[] = [];
+  for (const line of text.split("\n")) {
+    const parts = line.trim().split(/\s+/);
+    if (parts.length < 4) continue;
+    const pid = Number(parts[0]);
+    if (!Number.isFinite(pid) || pid <= 0) continue;
+    rows.push({
+      pid,
+      ppid: Number(parts[1]) || 0,
+      workingSetBytes: (Number(parts[2]) || 0) * 1024,
+      cpuTimeSec: parsePsTimeSec(parts[3]),
+    });
+  }
+  return rows;
+}
+
+/** "[D-]HH:MM:SS" / "M:SS.cc" / "MM:SS" -> seconds. Garbage -> 0. */
+export function parsePsTimeSec(raw: string): number {
+  let t = raw.trim();
+  const dayMatch = t.match(/^(\d+)-/);
+  let days = 0;
+  if (dayMatch) {
+    days = Number(dayMatch[1]) || 0;
+    t = t.slice(dayMatch[0].length);
+  }
+  const parts = t.split(":");
+  let sec = 0;
+  if (parts.length >= 3) {
+    sec = (Number(parts[0]) || 0) * 3600 + (Number(parts[1]) || 0) * 60 + (Number(parts[2]) || 0);
+  } else if (parts.length === 2) {
+    sec = (Number(parts[0]) || 0) * 60 + (Number(parts[1]) || 0);
+  }
+  if (!Number.isFinite(sec)) return 0;
+  return days * 86400 + sec;
+}
+
 function indexRows(rows: ProcessRow[], at: number): Snapshot {
   const byPid = new Map<number, ProcessRow>();
   const children = new Map<number, number[]>();
@@ -75,24 +128,57 @@ function indexRows(rows: ProcessRow[], at: number): Snapshot {
   return { at, byPid, children };
 }
 
+function runWindowsQuery(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    execFile(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-Command", WIN_QUERY],
+      { timeout: QUERY_TIMEOUT_MS, windowsHide: true, maxBuffer: 8 * 1024 * 1024 },
+      (err, stdout) => {
+        if (err) {
+          reject(new Error(`Process snapshot failed: ${err.message}`));
+          return;
+        }
+        resolve(stdout);
+      }
+    );
+  });
+}
+
+function runPosixQuery(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    execFile(
+      "ps",
+      ["-axo", PS_QUERY],
+      { timeout: QUERY_TIMEOUT_MS, maxBuffer: 8 * 1024 * 1024 },
+      (err, stdout) => {
+        if (err) {
+          reject(new Error(`Process snapshot failed: ${err.message}`));
+          return;
+        }
+        resolve(stdout);
+      }
+    );
+  });
+}
+
 function runQuery(): Promise<Snapshot> {
   const inflight = globalForStats.winProcInflight;
   if (inflight) return inflight;
 
   const promise = new Promise<Snapshot>((resolve, reject) => {
-    execFile(
-      "powershell.exe",
-      ["-NoProfile", "-NonInteractive", "-Command", QUERY],
-      { timeout: QUERY_TIMEOUT_MS, windowsHide: true, maxBuffer: 8 * 1024 * 1024 },
-      (err, stdout) => {
+    const query = process.platform === "win32" ? runWindowsQuery() : runPosixQuery();
+    query.then(
+      (stdout) => {
         globalForStats.winProcInflight = undefined;
-        if (err) {
-          reject(new Error(`Process snapshot failed: ${err.message}`));
-          return;
-        }
-        const snapshot = indexRows(parseProcessLines(stdout), Date.now());
+        const rows = process.platform === "win32" ? parseProcessLines(stdout) : parsePsLines(stdout);
+        const snapshot = indexRows(rows, Date.now());
         globalForStats.winProcSnapshot = snapshot;
         resolve(snapshot);
+      },
+      (err) => {
+        globalForStats.winProcInflight = undefined;
+        reject(err);
       }
     );
   });
@@ -192,17 +278,32 @@ export function setProcessSnapshotForTests(rows: ProcessRow[], atMs: number): vo
   globalForStats.winProcSnapshot = indexRows(rows, atMs);
 }
 
-/** tasklist fallback for callers that can't afford/await a snapshot. */
-export function isPidAliveTasklist(pid: number): Promise<boolean> {
+/**
+ * Quick liveness probe for callers that can't afford/await a snapshot.
+ * Windows asks tasklist (no signal-permission assumptions); elsewhere
+ * signal-0 is the cheap, honest check — EPERM means the process exists but
+ * belongs to someone else, which still counts as alive.
+ */
+export function isPidAliveQuick(pid: number): Promise<boolean> {
+  if (process.platform === "win32") {
+    return new Promise((resolve) => {
+      execFile(
+        "tasklist",
+        ["/FI", `PID eq ${pid}`, "/FO", "CSV", "/NH"],
+        { timeout: 5000, windowsHide: true },
+        (err, stdout) => {
+          if (err) resolve(false);
+          else resolve(!stdout.toLowerCase().includes("info:"));
+        }
+      );
+    });
+  }
   return new Promise((resolve) => {
-    execFile(
-      "tasklist",
-      ["/FI", `PID eq ${pid}`, "/FO", "CSV", "/NH"],
-      { timeout: 5000, windowsHide: true },
-      (err, stdout) => {
-        if (err) resolve(false);
-        else resolve(!stdout.toLowerCase().includes("info:"));
-      }
-    );
+    try {
+      process.kill(pid, 0);
+      resolve(true);
+    } catch (err: any) {
+      resolve(err?.code === "EPERM");
+    }
   });
 }

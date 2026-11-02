@@ -7,9 +7,10 @@ vi.mock("child_process", () => ({
 import { execFile } from "child_process";
 import {
   parseProcessLines,
+  parsePsLines,
   getTreeStats,
   setProcessSnapshotForTests,
-} from "../runners/winProcessStats";
+} from "../runners/processTreeStats";
 
 // One server tree: pid 100 (root) with child 200; pid 300 belongs to someone
 // else. CPU times are 100-ns filetime ticks, as Win32_Process reports them.
@@ -39,6 +40,48 @@ describe("parseProcessLines", () => {
   it("computes cpu seconds from kernel+user ticks", () => {
     const child = parseProcessLines(SNAPSHOT_1).find((r) => r.pid === 200)!;
     expect(child.cpuTimeSec).toBeCloseTo(5, 5);
+  });
+});
+
+describe("parsePsLines", () => {
+  // Mixed shapes the two ps families actually emit.
+  const PS_MIXED = [
+    "  4210     1   102400   0:12.34", // macOS minutes:centiseconds
+    " 4211  4210    51200   1:02:03.04", // macOS hours:minutes:seconds.cc
+    " 4212     1 2048000    2-03:04:05", // days prefix (either platform)
+    "  123     1    4096   00:05", // Linux MM:SS
+    "  124   123    8192   01:02:03", // Linux HH:MM:SS
+    "  125     1    1024   3-00:00:00", // Linux days
+    "junk",
+  ].join("\n");
+
+  it("parses rows, scales RSS KB to bytes, skips garbage", () => {
+    const rows = parsePsLines(PS_MIXED);
+    expect(rows).toHaveLength(6);
+    const root = rows.find((r) => r.pid === 4210)!;
+    expect(root.ppid).toBe(1);
+    expect(root.workingSetBytes).toBe(102400 * 1024);
+  });
+
+  it("parses macOS BSD cpu-time shapes", () => {
+    const rows = parsePsLines(PS_MIXED);
+    expect(rows.find((r) => r.pid === 4210)!.cpuTimeSec).toBeCloseTo(12.34, 2);
+    expect(rows.find((r) => r.pid === 4211)!.cpuTimeSec).toBeCloseTo(3723.04, 2);
+  });
+
+  it("parses Linux procps cpu-time shapes, including day prefixes", () => {
+    const rows = parsePsLines(PS_MIXED);
+    expect(rows.find((r) => r.pid === 123)!.cpuTimeSec).toBe(5);
+    expect(rows.find((r) => r.pid === 124)!.cpuTimeSec).toBe(3723);
+    expect(rows.find((r) => r.pid === 4212)!.cpuTimeSec).toBe(2 * 86400 + 3 * 3600 + 4 * 60 + 5);
+    expect(rows.find((r) => r.pid === 125)!.cpuTimeSec).toBe(3 * 86400);
+  });
+
+  it("feeds getTreeStats on non-Windows platforms", async () => {
+    setProcessSnapshotForTests(parsePsLines(PS_MIXED), Date.now());
+    const stats = await getTreeStats("srv-ps", 4210);
+    // Tree = 4210 (100MB) + child 4211 (50MB); everything else excluded.
+    expect(stats.memoryMB).toBeCloseTo((153600 * 1024) / (1024 * 1024), 1);
   });
 });
 

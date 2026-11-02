@@ -5,7 +5,7 @@ import { serverEventBus } from "./eventBus";
 import { maybePruneTelemetry } from "./telemetryRetention";
 import { getServerDiskBytes, bytesToMB } from "./diskUsage";
 import { cachedAgentStorageBreakdown } from "./agents/agentDisk";
-import { forgetTreeStats } from "./runners/winProcessStats";
+import { forgetTreeStats } from "./runners/processTreeStats";
 import { resetAutoStopState, takePendingPlayerSample } from "./autoStopState";
 
 // Global store for process monitoring intervals and history
