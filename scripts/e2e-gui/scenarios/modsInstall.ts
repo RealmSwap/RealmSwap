@@ -26,9 +26,12 @@ export const modsInstallScenarios = [
     await installButton.click();
 
     // SSE-driven progress panel: role=status, stage strip must reach Done.
+    // 660s: the install's own boot test is allowed 600s, so the watcher must
+    // out-wait the product's ceiling — CI's Docker boots are much slower than
+    // a dev Mac (first nightly run hit the old 300s window mid Boot test).
     const panel = page.locator('[role="status"][aria-live="polite"]');
     await panel.waitFor({ timeout: 30_000 });
-    const deadline = Date.now() + 300_000;
+    const deadline = Date.now() + 660_000;
     let done = false;
     let lastText = "";
     while (Date.now() < deadline) {
