@@ -185,10 +185,25 @@ export default function LandingPage() {
         </div>
         <a
           href={RELEASES_URL}
-          className="text-xs text-mutedText hover:text-white transition-colors mb-16"
+          className="text-xs text-mutedText hover:text-white transition-colors mb-8"
         >
           All versions &amp; release notes
         </a>
+
+        {/* Demo Video */}
+        <div className="w-full max-w-4xl mx-auto mb-10">
+          <video
+            controls
+            preload="none"
+            poster="/demo-poster.jpg"
+            className="w-full rounded-2xl border border-white/10 shadow-[0_0_60px_-15px_rgba(167,139,250,0.35)]"
+          >
+            <source src="/realmswap-demo.mp4" type="video/mp4" />
+          </video>
+          <p className="text-xs text-mutedText text-center mt-3">
+            The real app, 2 minutes: deploy a server, watch the boot test verify the modpack, invite friends with one link.
+          </p>
+        </div>
 
         {/* Demo Interactive Widget */}
         <div id="demo" className="w-full max-w-4xl mx-auto mt-10">

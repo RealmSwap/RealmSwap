@@ -6,6 +6,14 @@ RealmSwap is a free, locally-hosted game server manager for your gaming PC or ho
 
 **Every mod install is boot-tested before you see "success."** RealmSwap installs the modpack into a sandbox, actually boots the server, and only then calls it done — a bad mod, missing dependency, or wrong loader rolls the server back automatically instead of leaving you with a world that won't start.
 
+<p align="center">
+  <a href="docs/demo/realmswap-demo.mp4">
+    <img src="docs/demo/demo-poster.jpg" alt="RealmSwap demo — deploying a Minecraft server with a boot-tested mod install" width="840">
+  </a>
+  <br>
+  <a href="docs/demo/realmswap-demo.mp4">▶ Watch the 2-minute demo</a> — deploy a server, watch the boot test verify the install, then invite friends with one link.
+</p>
+
 ## Supported Games
 
 One-click deployment out of the box:
