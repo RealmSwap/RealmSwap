@@ -121,6 +121,11 @@ jobs:
           name: ${{ steps.ver.outputs.tag }}
           draft: false
           prerelease: false
+          generate_release_notes: true
+          body: |
+            Download **RealmSwap-Setup.exe** below and run it — the app updates itself from here on.
+
+            ▶ **[Watch the 2-minute demo](https://github.com/RealmSwap/RealmSwap/blob/main/docs/demo/realmswap-demo.mp4)** — deploy a server, watch the boot test verify the install, then invite friends with one link.
           files: |
             C:\rsbuild\dist\RealmSwap-Setup.exe
             C:\rsbuild\dist\RealmSwap-Setup.exe.blockmap
