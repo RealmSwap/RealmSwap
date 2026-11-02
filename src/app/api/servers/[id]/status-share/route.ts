@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
+import { clearStatusCache } from "@/lib/statusShare";
 import crypto from "crypto";
 
 async function generateCode(): Promise<string> {
@@ -43,10 +44,15 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: "Unknown action — expected enable, rotate or disable" }, { status: 400 });
     }
 
+    const previousCode = access.server.statusShareCode;
     await prisma.server.update({
       where: { id: params.id },
       data: { statusShareCode: code },
     });
+
+    // The public page caches per code for 20s; a rotated-out or disabled
+    // code must stop answering immediately, not for one more TTL window.
+    if (previousCode && previousCode !== code) clearStatusCache(previousCode);
 
     await prisma.activityLog.create({
       data: {

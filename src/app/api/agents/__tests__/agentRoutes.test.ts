@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
-import { signSync, mintNodeSecret, sha256Hex } from "@/lib/agents/auth";
+import { signSync, signPath, mintNodeSecret, sha256Hex } from "@/lib/agents/auth";
 
 // /api/agents/register + /api/agents/sync route guards: one-time enrollment,
 // HMAC-rejected syncs, command result closure, claim→SENT handoff, and the
@@ -61,6 +61,7 @@ vi.mock("@/lib/agents/syncState", () => ({
 
 import { POST as registerRoute } from "@/app/api/agents/register/route";
 import { POST as syncRoute } from "@/app/api/agents/sync/route";
+import { GET as downloadGET } from "@/app/api/agents/download/[token]/route";
 
 const secret = mintNodeSecret();
 
@@ -190,5 +191,39 @@ describe("POST /api/agents/sync", () => {
     const body = await res.json();
     expect(body.commands).toHaveLength(0);
     expect(bag.completed).toEqual([{ id: "cmd-x", ok: false, error: expect.stringContaining("JSON") }]);
+  });
+});
+
+describe("GET /api/agents/download/[token]", () => {
+  function downloadRequest(pathWithQuery: string, signedPath: string) {
+    const ts = Date.now().toString();
+    return new NextRequest(`http://localhost${pathWithQuery}`, {
+      headers: {
+        "x-node-id": "node-1",
+        "x-node-timestamp": ts,
+        "x-node-signature": signPath(secret, "node-1", ts, "GET", signedPath),
+      },
+    });
+  }
+  const props = { params: Promise.resolve({ token: "tok1" }) };
+
+  it("verifies the signature over path + query — exactly what the real agent signs — then falls through to the token lookup", async () => {
+    bag.nodes["node-1"] = nodeRow();
+    const res = await downloadGET(
+      downloadRequest("/api/agents/download/tok1?serverId=srv1", "/api/agents/download/tok1?serverId=srv1"),
+      props
+    );
+    expect(res.status).toBe(404); // auth passed; nothing staged under this token
+    expect((await res.json()).error).toContain("Unknown, used, or expired");
+  });
+
+  it("rejects a signature over the bare path (the pre-fix contract) with bad_signature", async () => {
+    bag.nodes["node-1"] = nodeRow();
+    const res = await downloadGET(
+      downloadRequest("/api/agents/download/tok1?serverId=srv1", "/api/agents/download/tok1"),
+      props
+    );
+    expect(res.status).toBe(401);
+    expect((await res.json()).error).toContain("bad_signature");
   });
 });

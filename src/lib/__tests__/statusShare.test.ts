@@ -250,4 +250,22 @@ describe("getPublicStatus", () => {
     await getPublicStatus("abc12345", { now: NOW, dig });
     expect(bag.serverQueries).toBe(2);
   });
+
+  it("clearStatusCache(code) drops just that code's entry", async () => {
+    bag.server = {
+      id: "s1", name: "My Server", game: "MINECRAFT", status: "STOPPED",
+      port: 25565, ramAllocation: 4, definitionId: "def1", statusShareCode: "codeA",
+      plannedSessions: [],
+    };
+    await getPublicStatus("codeA", { now: NOW, dig });
+    bag.server = { ...bag.server, id: "s2", statusShareCode: "codeB" };
+    await getPublicStatus("codeB", { now: NOW, dig });
+    expect(bag.serverQueries).toBe(2);
+
+    clearStatusCache("codeA");
+    await getPublicStatus("codeA", { now: NOW, dig });
+    expect(bag.serverQueries).toBe(3); // codeA re-queried
+    await getPublicStatus("codeB", { now: NOW, dig });
+    expect(bag.serverQueries).toBe(3); // codeB's entry survived
+  });
 });

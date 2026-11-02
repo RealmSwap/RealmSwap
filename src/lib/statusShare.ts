@@ -119,9 +119,15 @@ function statusCache(): Map<string, { status: PublicServerStatus; at: number }> 
   return globalForStatus.statusShareCache;
 }
 
-/** Test seam — the TTL cache would otherwise bleed between tests. */
-export function clearStatusCache(): void {
-  statusCache().clear();
+/**
+ * No args: test seam — the TTL cache would otherwise bleed between tests.
+ * With a code: drop just that entry, so a rotated-out or disabled share code
+ * stops answering the public page immediately instead of for one more TTL
+ * window (the status-share route calls this on rotate/disable).
+ */
+export function clearStatusCache(code?: string): void {
+  if (code) statusCache().delete(code);
+  else statusCache().clear();
 }
 
 // Same pick the dashboard makes: earliest session that hasn't started yet.

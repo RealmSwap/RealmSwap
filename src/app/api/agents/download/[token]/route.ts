@@ -10,9 +10,11 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/agents/download/[token] — one-shot pull of a staged restore tar.
- * HMAC path-auth binds the request to the node; the token is single-use and
- * bound to the node+server (issued by the restore orchestrator). The token
- * itself is opaque and 15-min TTL — possession of the URL alone proves
+ * HMAC path-auth binds the request to the node; the signature covers
+ * method + path + query — exactly the downloadPath string the restore
+ * orchestrator issued, which the node signs verbatim (same contract as the
+ * upload route). The token is single-use and bound to the node+server. The
+ * token itself is opaque and 15-min TTL — possession of the URL alone proves
  * nothing without the node's HMAC headers.
  */
 export async function GET(req: NextRequest, props: { params: Promise<{ token: string }> }) {
@@ -24,7 +26,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ token: st
   const auth = verifyPathAuth(
     { nodeId, timestamp: req.headers.get("x-node-timestamp"), signature: req.headers.get("x-node-signature") },
     "GET",
-    `/api/agents/download/${params.token}`,
+    `/api/agents/download/${params.token}${req.nextUrl.search}`,
     node,
   );
   if (!auth.ok) {
