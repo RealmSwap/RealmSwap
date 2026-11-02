@@ -101,7 +101,6 @@ async function buildMacApp(): Promise<void> {
       NEXT_TELEMETRY_DISABLED: "1",
       SENTRY_DSN: "",
       NEXT_PUBLIC_SENTRY_DSN: "",
-      BILLING_ENABLED: "0",
     });
     log("electron-builder --dir (mac, unsigned)…");
     npx(["npx", "electron-builder", "--dir", "--publish", "never"], {
@@ -177,7 +176,6 @@ export async function runPackagedPass(): Promise<number> {
 
     electronApp = await launchPackagedElectron(PACKAGED_EXECUTABLE, PACKAGED_USER_DATA_DIR, {
       SUPABASE_JWT_SECRET,
-      BILLING_ENABLED: "0",
       SENTRY_DSN: "",
       NEXT_PUBLIC_SENTRY_DSN: "",
       NEXT_TELEMETRY_DISABLED: "1",

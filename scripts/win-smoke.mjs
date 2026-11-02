@@ -769,7 +769,6 @@ function launchApp(exePath, userDataDir, jwtSecret) {
       GAMEVAULT_TEST_HARNESS: "1",
       GAMEVAULT_USER_DATA_DIR: userDataDir,
       SUPABASE_JWT_SECRET: jwtSecret,
-      BILLING_ENABLED: "0",
       SENTRY_DSN: "",
       NEXT_PUBLIC_SENTRY_DSN: "",
       NEXT_TELEMETRY_DISABLED: "1",

@@ -169,7 +169,6 @@ export async function startApp(): Promise<AppHandle> {
     NEXT_TELEMETRY_DISABLED: "1",
     SENTRY_DSN: "",
     NEXT_PUBLIC_SENTRY_DSN: "",
-    BILLING_ENABLED: "0",
   };
   const child = spawn(
     process.platform === "win32" ? "npx.cmd" : "npx",

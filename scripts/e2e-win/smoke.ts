@@ -189,7 +189,6 @@ function launchApp(exePath: string, userDataDir: string): LaunchedApp {
       GAMEVAULT_TEST_HARNESS: "1",
       GAMEVAULT_USER_DATA_DIR: userDataDir,
       SUPABASE_JWT_SECRET,
-      BILLING_ENABLED: "0",
       SENTRY_DSN: "",
       NEXT_PUBLIC_SENTRY_DSN: "",
       NEXT_TELEMETRY_DISABLED: "1",

@@ -83,24 +83,6 @@
       "backups/s3-lifecycle"
     ]
   },
-  "POST /api/billing/checkout": {
-    "status": "covered",
-    "scenarios": [
-      "ops/user-system"
-    ]
-  },
-  "POST /api/billing/portal": {
-    "status": "covered",
-    "scenarios": [
-      "ops/user-system"
-    ]
-  },
-  "POST /api/billing/refresh": {
-    "status": "covered",
-    "scenarios": [
-      "ops/user-system"
-    ]
-  },
   "POST /api/bot/action": {
     "status": "covered",
     "scenarios": [
