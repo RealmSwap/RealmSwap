@@ -803,5 +803,19 @@
     "scenarios": [
       "ops/user-system"
     ]
+  },
+  "POST /api/marketplace/[id]/report": {
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
+  },
+  "GET /api/admin/realm-reports": {
+    "status": "manual",
+    "scenarios": []
+  },
+  "PATCH /api/admin/realm-reports/[id]": {
+    "status": "manual",
+    "scenarios": []
   }
 }
