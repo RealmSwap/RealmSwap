@@ -1,6 +1,8 @@
 "use client";
 
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
+import { RealmDeployProgress } from "@/components/marketplace/RealmDeployProgress";
+import { newInstallId } from "@/components/mods/InstallProgress";
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -174,6 +176,15 @@ function timeAgo(dateStr: string): string {
   return `${months}mo ago`;
 }
 
+/** Template payloads are JSON strings; older realms predate the v2 fields. */
+function parseTemplatePayload(raw: string): any {
+  try {
+    return JSON.parse(raw) || {};
+  } catch {
+    return {};
+  }
+}
+
 /* ─── Component ───────────────────────────────────────────────── */
 
 export default function MarketplaceView({ user }: MarketplaceViewProps) {
@@ -205,6 +216,9 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<MarketplaceTemplate | null>(null);
   const [showSecurityReport, setShowSecurityReport] = useState(false);
   const [deploying, setDeploying] = useState(false);
+  // Phase 2 of a v2 realm deploy: set once phase 1 returns the server shell,
+  // then the modal body swaps to the live install progress.
+  const [deployProgress, setDeployProgress] = useState<{ serverId: string; installId: string; templateId: string } | null>(null);
   const [systemMemoryGB, setSystemMemoryGB] = useState<number | null>(null);
   const [versions, setVersions] = useState<{ id: string; version: string; changelog: string | null; created_at: string }[]>([]);
 
@@ -365,19 +379,27 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
   // version through the security-report flow).
   const deployVersion = async (template: MarketplaceTemplate, versionId: string) => {
     setDeploying(true);
+    // The installId is minted before phase 1 so the progress child can
+    // subscribe before phase 2 starts streaming.
+    const installId = newInstallId();
     try {
       const res = await fetch("/api/marketplace/deploy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ templateId: template.id, versionId }),
+        body: JSON.stringify({ templateId: template.id, versionId, installId }),
       });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+      if (!res.ok) {
+        addToast("error", "Failed to deploy version: " + (data.error || "Unknown error"));
+        setDeploying(false);
+        return;
+      }
+      if (data.done) {
+        // Legacy payload — deployment already finished server-side.
         router.push(`/dashboard/config?server=${data.serverId}`);
       } else {
-        const err = await res.json();
-        addToast("error", "Failed to deploy version: " + (err.error || "Unknown error"));
-        setDeploying(false);
+        // v2 payload — run the verified install inside the open modal.
+        setDeployProgress({ serverId: data.serverId, installId, templateId: template.id });
       }
     } catch (e) {
       console.error(e);
@@ -393,23 +415,43 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
     }
 
     setDeploying(true);
+    // Same two-phase flow as deployVersion above.
+    const installId = newInstallId();
     try {
       const res = await fetch("/api/marketplace/deploy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ templateId: template.id })
+        body: JSON.stringify({ templateId: template.id, installId })
       });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+      if (!res.ok) {
+        addToast("error", "Failed to deploy template: " + (data.error || "Unknown error"));
+        setDeploying(false);
+        return;
+      }
+      if (data.done) {
         router.push(`/dashboard/config?server=${data.serverId}`);
       } else {
-        const err = await res.json();
-        addToast("error", "Failed to deploy template: " + (err.error || "Unknown error"));
-        setDeploying(false);
+        setDeployProgress({ serverId: data.serverId, installId, templateId: template.id });
       }
     } catch (e) {
       console.error(e);
       addToast("error", "Error deploying template");
+      setDeploying(false);
+    }
+  };
+
+  // Phase-2 (realm materialize) result, relayed by the progress child.
+  const handleDeployFinished = (ok: boolean) => {
+    if (ok) {
+      setSelectedTemplate(null);
+      setShowSecurityReport(false);
+      setDeployProgress(null);
+      setDeploying(false);
+      addToast("success", "Realm deployed and verified — server is ready");
+    } else {
+      // The install failed and the server was deleted server-side; keep the
+      // modal on the error panel (with boot output) and re-enable Cancel.
       setDeploying(false);
     }
   };
@@ -897,7 +939,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
 
       {/* ─── Detail Modal ─────────────────────────────────────── */}
       {selectedTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); setDeployProgress(null); }}>
           <div className="bg-[#0f111a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-slide-down overflow-hidden" onClick={e => e.stopPropagation()}>
             
             {/* Modal Header */}
@@ -924,14 +966,24 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                   </p>
                 </div>
               </div>
-              <button onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); }} className="relative z-10 text-slate-400 hover:text-white transition-all p-2 bg-black/40 hover:bg-black/60 rounded-xl backdrop-blur-md border border-white/10">
+              <button onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); setDeployProgress(null); }} className="relative z-10 text-slate-400 hover:text-white transition-all p-2 bg-black/40 hover:bg-black/60 rounded-xl backdrop-blur-md border border-white/10">
                 <X className="w-5 h-5" />
               </button>
             </div>
             
             {/* Security Report View */}
-            {showSecurityReport ? (() => {
-              const payload = JSON.parse(selectedTemplate.payload);
+            {deployProgress ? (
+              /* v2 install in flight — the modal body becomes live progress. */
+              <div className="p-6 overflow-y-auto flex-1 flex items-start">
+                <RealmDeployProgress
+                  serverId={deployProgress.serverId}
+                  installId={deployProgress.installId}
+                  templateId={deployProgress.templateId}
+                  onFinished={handleDeployFinished}
+                />
+              </div>
+            ) : showSecurityReport ? (() => {
+              const payload = parseTemplatePayload(selectedTemplate.payload);
               const customDef = selectedTemplate.customDefSpec ? JSON.parse(selectedTemplate.customDefSpec) : null;
               const requestedRam = customDef?.recommendedRamGB || 4;
               const ramWarning = systemMemoryGB && requestedRam > systemMemoryGB;
@@ -951,10 +1003,16 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                   <div className="grid gap-4">
                     <div className="p-4 rounded-xl bg-slate-950/50 border border-white/5 flex items-start gap-4">
                       <div className="p-2.5 bg-blue-500/10 rounded-lg border border-blue-500/20"><Wrench className="w-5 h-5 text-blue-400" /></div>
-                      <div>
-                        <div className="font-bold text-sm text-white mb-0.5">Mods & Plugins</div>
-                        <div className="text-xs text-mutedText leading-relaxed">{payload.mods?.length || 0} packages. Handled natively via trusted providers (Thunderstore, Modrinth, Steam).</div>
-                      </div>
+                    <div>
+                      <div className="font-bold text-sm text-white mb-0.5">Mods & Plugins</div>
+                      <div className="text-xs text-mutedText leading-relaxed">{payload.mods?.length || 0} packages. Handled natively via trusted providers (Thunderstore, Modrinth, Steam).</div>
+                      {payload.modpack && (
+                        <div className="text-xs text-mutedText leading-relaxed">Provider modpack: {payload.modpack.kind === "curseforge" ? "CurseForge" : "Modrinth"} project {payload.modpack.projectId}.</div>
+                      )}
+                      {payload.loader && (
+                        <div className="text-xs text-mutedText leading-relaxed">Loader: {payload.loader.type} {payload.loader.loaderVersion}.</div>
+                      )}
+                    </div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-950/50 border border-white/5 flex items-start gap-4">
@@ -1046,7 +1104,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {(() => {
-                      const payload = JSON.parse(selectedTemplate.payload);
+                      const payload = parseTemplatePayload(selectedTemplate.payload);
                       return (
                         <>
                           <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 shadow-lg backdrop-blur-sm relative overflow-hidden group">
@@ -1076,7 +1134,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
             )}
 
             {/* Version history */}
-            {!showSecurityReport && versions.length > 0 && (
+            {!showSecurityReport && !deployProgress && versions.length > 0 && (
               <div className="px-6 py-3 border-t border-white/10 bg-slate-900/40 max-h-44 overflow-y-auto flex-shrink-0">
                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Version history</div>
                 <div className="space-y-1.5">
@@ -1106,15 +1164,15 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
             {/* Modal Footer */}
             <div className="p-6 border-t border-white/10 bg-slate-900 flex justify-end gap-3 rounded-b-2xl mt-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-20">
               <button 
-                onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); }}
+                onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); setDeployProgress(null); }}
                 className="px-6 py-3 rounded-xl font-bold text-sm text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
                 disabled={deploying}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={() => handleDeploy(selectedTemplate)}
-                disabled={deploying}
+                disabled={deploying || Boolean(deployProgress)}
                 className="relative overflow-hidden group flex items-center gap-2 px-8 py-3 rounded-xl font-extrabold text-sm bg-accentPurple hover:bg-accentPurpleHover text-white shadow-lg shadow-accentPurple/25 transition-all disabled:opacity-50"
               >
                 <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
