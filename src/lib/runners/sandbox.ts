@@ -205,19 +205,33 @@ export async function testServerBoot(
     let lastOutputAt = Date.now();
     let stallTimer: ReturnType<typeof setInterval> | null = null;
 
+    // A settled test must not return while the sandboxed process still holds
+    // the game port: SIGKILL alone races process reaping, and the next
+    // create on the same port then 400s on "Port currently in use" (caught
+    // by the first nightly heavy run — back-to-back loader boot tests).
+    // Wait for exit, not close: children of the killed process (sh wrappers,
+    // bat files) can hold stdio long after the killed PID itself is reaped,
+    // and the port belongs to the killed PID, not its orphans.
+    const settleAfterKill = async () => {
+      try { proc.kill("SIGKILL"); } catch (_) {}
+      await new Promise<void>((done) => {
+        if (proc.exitCode !== null || proc.signalCode) return done();
+        const cap = setTimeout(done, 5000);
+        proc.once("exit", () => { clearTimeout(cap); done(); });
+      });
+    };
+
     const succeed = () => {
       if (settled) return;
       settled = true;
       if (stallTimer) clearInterval(stallTimer);
-      try { proc.kill("SIGKILL"); } catch (_) {}
-      resolve(true);
+      settleAfterKill().then(() => resolve(true));
     };
     const fail = (message: string) => {
       if (settled) return;
       settled = true;
       if (stallTimer) clearInterval(stallTimer);
-      try { proc.kill("SIGKILL"); } catch (_) {}
-      reject(new SandboxBootError(message, capturedOutput(stdoutData, stderrData)));
+      settleAfterKill().then(() => reject(new SandboxBootError(message, capturedOutput(stdoutData, stderrData))));
     };
 
     proc.stdout.on("data", (data) => {
@@ -295,6 +309,8 @@ export async function testServerBoot(
     // Done-line is a failure — a server that can't boot in time is exactly
     // the kind of install this test exists to catch.
     if (isMinecraft) {
+      // Poll at min(5s, stallMs) so the detection latency is bounded by the
+      // configured threshold itself (a 1s stall must not wait for a 5s tick).
       stallTimer = setInterval(() => {
         if (settled) {
           if (stallTimer) clearInterval(stallTimer);
@@ -306,9 +322,9 @@ export async function testServerBoot(
               "The captured output shows how far it got."
           );
         }
-      }, 5000);
+      }, Math.min(5000, stallMs));
     }
-    setTimeout(() => {
+    setTimeout(async () => {
       if (settled) return;
       if (isMinecraft) {
         fail(
@@ -317,7 +333,7 @@ export async function testServerBoot(
         );
       } else {
         settled = true;
-        try { proc.kill("SIGKILL"); } catch (e) {}
+        await settleAfterKill();
         resolve(true);
       }
     }, sandboxMs);

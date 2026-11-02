@@ -26,7 +26,9 @@
     "agent": "tsx agent/agent.ts",
     "e2e:gui": "tsx scripts/e2e-gui/run.ts --tag smoke",
     "e2e:gui:heavy": "tsx scripts/e2e-gui/run.ts --tag all",
-    "e2e:gui:packaged": "tsx scripts/e2e-gui/run.ts --packaged"
+    "e2e:gui:packaged": "tsx scripts/e2e-gui/run.ts --packaged",
+    "verify": "node scripts/verify.mjs",
+    "verify:heavy": "node scripts/verify.mjs --heavy"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1080.0",

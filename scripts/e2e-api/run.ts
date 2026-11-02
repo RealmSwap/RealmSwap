@@ -3,6 +3,7 @@
  *
  *   npm run e2e:api            # @smoke scenarios — every PR
  *   npm run e2e:api:heavy      # + @heavy scenarios (real installs) — nightly
+ *   npx tsx scripts/e2e-api/run.ts --tag all --only <scenarioId>   # one scenario (debugging)
  *
  * Boots the production server on :3100 against a throwaway DB + data dir with
  * a local fake Supabase, then drives real flows in dependency order. Exits
@@ -20,6 +21,7 @@ import { modsScenarios } from "./scenarios/mods";
 import { loaderScenarios } from "./scenarios/loaders";
 import { packScenarios } from "./scenarios/packs";
 import { surfaceScenarios } from "./scenarios/surface";
+import { gamesScenarios } from "./scenarios/games";
 import { membershipScenarios } from "./scenarios/membership";
 import { backupScenarios } from "./scenarios/backups";
 import { realmsyncScenarios } from "./scenarios/realmsync";
@@ -36,6 +38,7 @@ const ALL_SCENARIOS: Scenario[] = [
   ...loaderScenarios,
   ...packScenarios,
   ...surfaceScenarios,
+  ...gamesScenarios,
   ...membershipScenarios,
   ...backupScenarios,
   ...realmsyncScenarios,
@@ -51,13 +54,21 @@ function parseTag(): string {
   return value || "smoke";
 }
 
+/** --only <scenarioId> runs exactly one scenario regardless of tag (debugging). */
+function parseOnly(): string | undefined {
+  const idx = process.argv.indexOf("--only");
+  return idx >= 0 ? process.argv[idx + 1] : undefined;
+}
+
 async function main(): Promise<number> {
   const tag = parseTag();
-  const selected =
+  const only = parseOnly();
+  const tagSelected =
     tag === "all" ? ALL_SCENARIOS : ALL_SCENARIOS.filter((s) => s.tags.includes(tag));
+  const selected = only ? tagSelected.filter((s) => s.id === only) : tagSelected;
 
   if (!selected.length) {
-    console.error(`[e2e-api] no scenarios tagged @${tag}`);
+    console.error(only ? `[e2e-api] no scenario id "${only}" tagged @${tag}` : `[e2e-api] no scenarios tagged @${tag}`);
     return 2;
   }
 
@@ -78,6 +89,15 @@ async function main(): Promise<number> {
   };
 
   try {
+    // --only skips the auth scenario, so mint the admin session directly —
+    // single-scenario runs still get a logged-in client.
+    if (only) {
+      const login = await ctx.admin.post("/api/auth/login", ADMIN_USER);
+      if (login.status !== 200) {
+        console.error(`[e2e-api] --only admin login → ${login.status}: ${login.text.slice(0, 200)}`);
+        return 1;
+      }
+    }
     for (const scenarioDef of selected) {
       console.log(`\n  ▸ ${scenarioDef.id} — ${scenarioDef.description}`);
       const t0 = Date.now();

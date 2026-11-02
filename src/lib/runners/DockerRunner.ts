@@ -319,6 +319,16 @@ export class DockerRunner implements ServerRunner {
     if (res.code !== 0 && !/no such container/i.test(res.stderr)) {
       throw new Error(`Failed to stop Docker container: ${res.stderr || res.stdout}`);
     }
+    // Remove the stopped container before returning: the published host port
+    // only becomes reliably free once the container's network sandbox (and
+    // its userland proxy) is torn down, and start rm -f's the container
+    // anyway, so the stopped container holds nothing of value. Without this,
+    // a create right after a stop races the proxy teardown and can 400 on
+    // "Port currently in use" (caught by the first nightly heavy run).
+    const rm = await docker(["rm", containerName(serverId)]);
+    if (rm.code !== 0 && !/no such container/i.test(rm.stderr)) {
+      console.error(`Docker stop: container cleanup failed for ${serverId}: ${rm.stderr || rm.stdout}`);
+    }
     // The exit watcher updates status/DB on container exit. If the container was
     // already gone, ensure the DB reflects STOPPED.
     if (!followers.has(serverId)) {
