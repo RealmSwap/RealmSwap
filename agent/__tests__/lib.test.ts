@@ -311,7 +311,7 @@ describe("agent tunnel paths", () => {
     expect(tunnelPidPath(stateDir, "srv1")).toBe(path.join(stateDir, "playit-srv1.pid"));
     expect(tunnelSocketPath(stateDir, "srv1")).toBe(
       process.platform === "win32"
-        ? "\\\\.\\pipe\\realmswap-agent-playitd-srv1"
+        ? null // playitd 1.x rejects every pipe form for --socket-path; omit it
         : path.join(stateDir, "playitd-srv1.sock")
     );
     expect(() => tunnelSecretPath(stateDir, "../../etc")).toThrow();

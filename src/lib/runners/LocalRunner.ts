@@ -519,6 +519,9 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
       status: "STARTING",
       pid: child.pid,
       ipAddress: currentIp ?? "127.0.0.1",
+      // What the router actually said when we asked — Join Info reads this
+      // instead of inferring "UPnP works" from a public-IP lookup.
+      upnpMapped: server.enableUpnp ? upnpMapped : false,
       cpuUsage: 0,
       memoryUsage: 0,
     },

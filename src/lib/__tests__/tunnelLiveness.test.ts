@@ -17,8 +17,8 @@ import { playitReleaseFor, noteAgentTunnels, isTunnelAlive } from "@/lib/tunnels
 describe("playitReleaseFor", () => {
   it("maps the node platforms playit publishes", () => {
     expect(playitReleaseFor("linux", "x64")?.url).toContain("playit-linux-amd64");
-    expect(playitReleaseFor("win32", "x64")?.url).toContain("playit-windows-x86_64.exe");
-    expect(playitReleaseFor("win32", "arm64")?.binName).toBe("playit.exe");
+    expect(playitReleaseFor("win32", "x64")?.url).toContain("playitd-windows-x86_64.exe");
+    expect(playitReleaseFor("win32", "arm64")?.binName).toBe("playitd.exe");
   });
 
   it("returns null where no build exists (macOS) instead of a 404 URL", () => {

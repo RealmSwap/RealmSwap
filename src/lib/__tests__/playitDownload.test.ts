@@ -53,10 +53,10 @@ function response(statusCode: number, headers: Record<string, string> = {}, body
 }
 
 const RELEASE_URL = playitReleaseFor("win32", "x64")!.url;
-const VERSIONED_URL = "https://github.com/playit-cloud/playit-agent/releases/download/v1.0.10/playit-windows-x86_64.exe";
+const VERSIONED_URL = "https://github.com/playit-cloud/playit-agent/releases/download/v1.2.0/playitd-windows-x86_64.exe";
 const CDN_URL = "https://release-assets.githubusercontent.com/github-production-release-asset/445695426/signed?sig=abc";
 const BIN_DIR = path.join(hoisted.tmpDir, "bin");
-const BIN_PATH = path.join(BIN_DIR, "playit.exe");
+const BIN_PATH = path.join(BIN_DIR, "playitd.exe");
 
 describe("downloadPlayitBinary", () => {
   beforeEach(() => {
@@ -81,7 +81,7 @@ describe("downloadPlayitBinary", () => {
 
   it("resolves a relative Location against the URL that issued it", async () => {
     hoisted.scripted.push(
-      response(302, { location: "/playit-cloud/playit-agent/releases/download/v1.0.10/playit-windows-x86_64.exe" }),
+      response(302, { location: "/playit-cloud/playit-agent/releases/download/v1.2.0/playitd-windows-x86_64.exe" }),
       response(200, {}, "bin"),
     );
 

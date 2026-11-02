@@ -70,14 +70,21 @@ export function isTunnelAlive(serverId: string): boolean {
 export function playitReleaseFor(platform: string, arch: string): { url: string; binName: string } | null {
   if (platform === "win32" && (arch === "x64" || arch === "arm64")) {
     return {
-      url: "https://github.com/playit-cloud/playit-agent/releases/latest/download/playit-windows-x86_64.exe",
-      binName: "playit.exe",
+      // The daemon binary, not the controller: upstream repurposed
+      // `playit-windows-x86_64.exe` into a service-control CLI in
+      // playit-agent 1.x — spawning it with daemon flags dies instantly with
+      // exit code 2 ("unexpected argument"), which surfaced only as an
+      // unexplained TUNNEL_CRASH. playitd accepts the flags we spawn.
+      url: "https://github.com/playit-cloud/playit-agent/releases/latest/download/playitd-windows-x86_64.exe",
+      binName: "playitd.exe",
     };
   }
   if (platform === "linux" && arch === "x64") {
     return {
+      // On Linux the daemon is still the bare `playit-*` asset (the CLI is
+      // `playit-cli-*` there), so the long-standing URL remains correct.
       url: "https://github.com/playit-cloud/playit-agent/releases/latest/download/playit-linux-amd64",
-      binName: "playit",
+      binName: "playitd",
     };
   }
   return null;
@@ -170,11 +177,15 @@ function secretPath(serverId: string): string {
   return path.join(tunnelDir(serverId), "playit.toml");
 }
 
-/** The daemon defaults to a system-wide named pipe / /run socket that would
- *  collide with any independently installed playit — isolate per server. */
-function agentSocketPath(serverId: string): string {
+/** Linux: a per-server unix socket, so the default /run path can't collide
+ *  with an independently installed playit. Windows: null — playitd 1.x's
+ *  --socket-path rejects every documented pipe form ("not a named pipe
+ *  path": `\\.\pipe\<name>` and bare names both fail) while its built-in
+ *  default binds fine, so we let it use the default rather than die at
+ *  startup. */
+function agentSocketPath(serverId: string): string | null {
   return os.platform() === "win32"
-    ? `\\\\.\\pipe\\realmswap-playitd-${serverId}`
+    ? null
     : path.join(tunnelDir(serverId), "playitd.sock");
 }
 
@@ -478,10 +489,12 @@ async function runTunnelLifecycle(serverId: string, port: number, binPath: strin
     // ---- Phase 2: spawn the daemon with the secret ----
     const dir = tunnelDir(serverId);
     fs.mkdirSync(dir, { recursive: true });
-    const proc = spawn(binPath, [
-      "--secret-path", secretPath(serverId),
-      "--socket-path", agentSocketPath(serverId),
-    ], { cwd: dir, env: process.env });
+    const logPath = path.join(dir, "playitd.log");
+    try { fs.rmSync(logPath, { force: true }); } catch { /* best-effort */ }
+    const daemonArgs = ["--secret-path", secretPath(serverId), "--log-path", logPath];
+    const socketPath = agentSocketPath(serverId);
+    if (socketPath) daemonArgs.push("--socket-path", socketPath);
+    const proc = spawn(binPath, daemonArgs, { cwd: dir, env: process.env });
 
     runningTunnels.set(serverId, proc);
     let exited = false;
@@ -491,6 +504,12 @@ async function runTunnelLifecycle(serverId: string, port: number, binPath: strin
       data: { tunnelPid: proc.pid ?? null },
     }).catch(() => {});
 
+    // Daemon output used to go nowhere visible — a binary rejecting its
+    // flags surfaced only as "exit code 2" in the crash record. Keep both
+    // streams in the console; the structured log lands in playitd.log.
+    proc.stdout.on("data", (data) => {
+      console.log(`[Tunnel] ${serverId} stdout: ${data.toString().trim()}`);
+    });
     proc.stderr.on("data", (data) => {
       console.error(`[Tunnel] ${serverId} stderr: ${data.toString().trim()}`);
     });

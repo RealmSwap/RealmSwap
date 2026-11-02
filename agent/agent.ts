@@ -525,10 +525,10 @@ async function execTunnelStart(serverId: string, p: TunnelStartCommandPayload): 
   // dispatches TUNNEL_START idempotently on boot reconcile).
   await execTunnelStop(serverId, { kind: "TUNNEL_STOP" });
 
-  const proc = spawn(binPath, [
-    "--secret-path", secretPath,
-    "--socket-path", tunnelSocketPath(stateDir, serverId),
-  ], { cwd: stateDir, stdio: "ignore", detached: false });
+  const daemonArgs = ["--secret-path", secretPath, "--log-path", path.join(stateDir, `playitd-${serverId}.log`)];
+  const socketPath = tunnelSocketPath(stateDir, serverId);
+  if (socketPath) daemonArgs.push("--socket-path", socketPath);
+  const proc = spawn(binPath, daemonArgs, { cwd: stateDir, stdio: "ignore", detached: false });
   tunnelProcs.set(serverId, proc);
   try {
     fs.writeFileSync(tunnelPidPath(stateDir, serverId), String(proc.pid ?? 0));

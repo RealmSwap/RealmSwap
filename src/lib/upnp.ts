@@ -14,6 +14,14 @@ import os from "os";
  * Mappings carry a 1h lease and renew at a third of it — LocalRunner maps
  * once per start and nothing else renews game ports, so an unrenewed mapping
  * would silently expire mid-session.
+ *
+ * Discovery probes SSDP from every routable interface: Windows picks
+ * multicast egress by the 224/4 route metric, and on machines with virtual
+ * adapters (VirtualBox, VMware, Tailscale, Hyper-V) that race is regularly
+ * lost to an adapter the router never sees — UPnP then "stops working" until
+ * the metric table happens to change. The mapping's internal client is the
+ * local address on the gateway's own subnet, not whichever NIC
+ * os.networkInterfaces() happens to list first.
  */
 
 type Protocol = "TCP" | "UDP";
@@ -21,6 +29,22 @@ type Protocol = "TCP" | "UDP";
 interface UpnpEndpoint {
   serviceType: string;
   controlUrl: string;
+  /** The local address on the gateway's subnet — the NewInternalClient the
+   *  router will actually route back to this machine. */
+  internalClient: string;
+}
+
+/** What the device XML gives us before the gateway's subnet is known. */
+interface PickedService {
+  serviceType: string;
+  controlUrl: string;
+}
+
+interface RenewalState {
+  port: number;
+  protocol: Protocol;
+  description: string;
+  internalClient: string;
 }
 
 const SSDP_ADDR = "239.255.255.250";
@@ -30,10 +54,10 @@ const LEASE_SECONDS = 3600;
 const globalForUpnp = globalThis as unknown as {
   upnpEndpoints?: UpnpEndpoint[];
   upnpDiscovering?: Promise<UpnpEndpoint[]>;
-  upnpRenewals?: Map<string, NodeJS.Timeout>;
+  upnpRenewals?: Map<string, RenewalState & { timer: NodeJS.Timeout }>;
 };
 
-function renewals(): Map<string, NodeJS.Timeout> {
+function renewals(): Map<string, RenewalState & { timer: NodeJS.Timeout }> {
   if (!globalForUpnp.upnpRenewals) globalForUpnp.upnpRenewals = new Map();
   return globalForUpnp.upnpRenewals;
 }
@@ -52,16 +76,16 @@ export function parseSsdpLocation(packet: string): string | null {
 
 /** Pick the best WAN-connection service from a router's device XML.
  *  WANIPConnection v2 is preferred, then v1, then WANPPPConnection. */
-export function pickUpnpService(xml: string): UpnpEndpoint | null {
+export function pickUpnpService(xml: string): PickedService | null {
   const blocks = xml.match(/<service>[\s\S]*?<\/service>/g) ?? [];
-  const candidates: UpnpEndpoint[] = [];
+  const candidates: PickedService[] = [];
   for (const block of blocks) {
     const serviceType = block.match(/<serviceType>\s*([^<]+?)\s*<\/serviceType>/)?.[1];
     const controlUrl = block.match(/<controlURL>\s*([^<]+?)\s*<\/controlURL>/)?.[1];
     if (!serviceType || !controlUrl) continue;
     if (/WAN(IP|PPP)Connection/.test(serviceType)) candidates.push({ serviceType, controlUrl });
   }
-  const rank = (e: UpnpEndpoint) =>
+  const rank = (e: PickedService) =>
     e.serviceType.includes("WANIPConnection:2") ? 0 :
     e.serviceType.includes("WANIPConnection:1") ? 1 :
     e.serviceType.includes("WANPPPConnection") ? 2 : 3;
@@ -69,12 +93,18 @@ export function pickUpnpService(xml: string): UpnpEndpoint | null {
   return candidates[0] ?? null;
 }
 
-/** The AddPortMapping argument block; exported for tests. */
-export function addPortMappingArgs(port: number, protocol: Protocol, description: string): string {
+/** The AddPortMapping argument block; exported for tests. Call sites pass
+ *  the gateway-subnet address discovered with the endpoint. */
+export function addPortMappingArgs(
+  port: number,
+  protocol: Protocol,
+  description: string,
+  internalClient: string = getLanIP() ?? "127.0.0.1"
+): string {
   return (
     `<NewRemoteHost></NewRemoteHost><NewExternalPort>${port}</NewExternalPort>` +
     `<NewProtocol>${protocol}</NewProtocol><NewInternalPort>${port}</NewInternalPort>` +
-    `<NewInternalClient>${getLanIP() ?? "127.0.0.1"}</NewInternalClient><NewEnabled>1</NewEnabled>` +
+    `<NewInternalClient>${escapeXml(internalClient)}</NewInternalClient><NewEnabled>1</NewEnabled>` +
     `<NewPortMappingDescription>${escapeXml(description)}</NewPortMappingDescription>` +
     `<NewLeaseDuration>${LEASE_SECONDS}</NewLeaseDuration>`
   );
@@ -87,10 +117,12 @@ function deletePortMappingArgs(port: number, protocol: Protocol): string {
   );
 }
 
-function ssdpLocations(timeoutMs = 3500): Promise<string[]> {
+/** One M-SEARCH volley sent from a specific local interface (or the OS
+ *  default route when null); resolves with the LOCATION URLs that answered. */
+function ssdpProbe(bindIp: string | null, timeoutMs: number): Promise<string[]> {
   return new Promise((resolve) => {
     const found = new Set<string>();
-    const sock = dgram.createSocket({ type: "udp4", reuseAddr: true });
+    const sock = dgram.createSocket({ type: "udp4" });
     let done = false;
     const finish = () => {
       if (done) return;
@@ -103,7 +135,10 @@ function ssdpLocations(timeoutMs = 3500): Promise<string[]> {
       if (loc) found.add(loc);
     });
     sock.on("error", finish);
-    sock.bind(() => {
+    const onBound = () => {
+      try {
+        if (bindIp) sock.setMulticastInterface(bindIp);
+      } catch { /* interface may have vanished mid-probe */ }
       for (const st of [
         "urn:schemas-upnp-org:service:WANIPConnection:2",
         "urn:schemas-upnp-org:service:WANIPConnection:1",
@@ -117,7 +152,22 @@ function ssdpLocations(timeoutMs = 3500): Promise<string[]> {
         );
       }
       setTimeout(finish, timeoutMs).unref();
-    });
+    };
+    if (bindIp) sock.bind({ address: bindIp }, onBound);
+    else sock.bind(onBound);
+  });
+}
+
+function ssdpLocations(timeoutMs = 3500): Promise<string[]> {
+  // Probe from EVERY routable interface, not just the OS default: multicast
+  // egress follows the 224/4 route metric, and a virtual adapter can win
+  // that race on machines where UPnP otherwise reads as dead.
+  const probes = candidateLanIPs().map((ip) => ssdpProbe(ip, timeoutMs));
+  probes.push(ssdpProbe(null, timeoutMs));
+  return Promise.all(probes).then((sets) => {
+    const merged = new Set<string>();
+    for (const set of sets) for (const loc of set) merged.add(loc);
+    return Array.from(merged);
   });
 }
 
@@ -149,7 +199,12 @@ function discoverEndpoints(): Promise<UpnpEndpoint[]> {
       if (!xml) continue;
       const picked = pickUpnpService(xml);
       if (picked) {
-        endpoints.push({ ...picked, controlUrl: new URL(picked.controlUrl, location).toString() });
+        const controlUrl = new URL(picked.controlUrl, location).toString();
+        endpoints.push({
+          serviceType: picked.serviceType,
+          controlUrl,
+          internalClient: localIpForGateway(new URL(controlUrl).hostname),
+        });
       }
     }
     globalForUpnp.upnpEndpoints = endpoints;
@@ -215,33 +270,34 @@ function mappingKey(port: number, protocol: Protocol): string {
   return `${port}/${protocol}`;
 }
 
-function scheduleRenewal(port: number, protocol: Protocol, description: string): void {
+function scheduleRenewal(port: number, protocol: Protocol, description: string, internalClient: string): void {
   stopRenewal(port, protocol);
   const timer = setInterval(() => {
-    void renewMapping(port, protocol, description);
+    const state = renewals().get(mappingKey(port, protocol));
+    if (state) void renewMapping(state);
   }, (LEASE_SECONDS / 3) * 1000);
   timer.unref();
-  renewals().set(mappingKey(port, protocol), timer);
+  renewals().set(mappingKey(port, protocol), { port, protocol, description, internalClient, timer });
 }
 
 function stopRenewal(port: number, protocol: Protocol): void {
-  const timer = renewals().get(mappingKey(port, protocol));
-  if (timer) {
-    clearInterval(timer);
+  const state = renewals().get(mappingKey(port, protocol));
+  if (state) {
+    clearInterval(state.timer);
     renewals().delete(mappingKey(port, protocol));
   }
 }
 
-async function renewMapping(port: number, protocol: Protocol, description: string): Promise<void> {
+async function renewMapping(state: RenewalState): Promise<void> {
   const endpoints = globalForUpnp.upnpEndpoints;
   if (!endpoints?.length) return;
-  const args = addPortMappingArgs(port, protocol, description);
+  const args = addPortMappingArgs(state.port, state.protocol, state.description, state.internalClient);
   for (const endpoint of endpoints) {
     const res = await soapRequest(endpoint, "AddPortMapping", args);
     if (res.ok) return;
     invalidateStaleGateway(res.detail);
   }
-  console.error(`[UPnP Error] Lease renewal failed for port ${port} (${protocol}); will retry`);
+  console.error(`[UPnP Error] Lease renewal failed for port ${state.port} (${state.protocol}); will retry`);
 }
 
 // Maps a port on the router pointing to this computer
@@ -253,13 +309,12 @@ export function mapPort(port: number, protocol: Protocol = "UDP", description = 
         console.error(`[UPnP Error] No UPnP gateway answered discovery — port ${port} (${protocol}) not mapped`);
         return false;
       }
-      const args = addPortMappingArgs(port, protocol, description);
       let lastDetail = "no gateway accepted the mapping";
       for (const endpoint of endpoints) {
-        const res = await soapRequest(endpoint, "AddPortMapping", args);
+        const res = await soapRequest(endpoint, "AddPortMapping", addPortMappingArgs(port, protocol, description, endpoint.internalClient));
         if (res.ok) {
           console.log(`[UPnP] Successfully mapped port ${port} (${protocol})`);
-          scheduleRenewal(port, protocol, description);
+          scheduleRenewal(port, protocol, description, endpoint.internalClient);
           return true;
         }
         lastDetail = res.detail;
@@ -348,4 +403,49 @@ export function getLanIP(): string | null {
     }
   }
   return null;
+}
+
+/** Every routable local IPv4 (virtual adapters included, link-local
+ *  excluded) — SSDP is probed from each so a virtual adapter winning the
+ *  multicast route can't hide the gateway. */
+export function candidateLanIPs(): string[] {
+  const ips: string[] = [];
+  for (const ifaces of Object.values(os.networkInterfaces())) {
+    for (const iface of ifaces ?? []) {
+      if (iface.family === "IPv4" && !iface.internal && !iface.address.startsWith("169.254.")) {
+        ips.push(iface.address);
+      }
+    }
+  }
+  return ips;
+}
+
+/** Same-subnet test against an explicit netmask (os reports it, so no /24
+ *  guessing); exported for tests. */
+export function addressInSameSubnet(gatewayHost: string, address: string, netmask: string): boolean {
+  const parse = (ip: string): number | null => {
+    const parts = ip.split(".").map(Number);
+    if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
+    return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
+  };
+  const gateway = parse(gatewayHost);
+  const addr = parse(address);
+  const mask = parse(netmask);
+  if (gateway === null || addr === null || mask === null) return false;
+  return (addr & mask) === (gateway & mask);
+}
+
+/** The local address on the gateway's own subnet — the AddPortMapping
+ *  internal client the router will actually route back to. Falls back to
+ *  getLanIP() when no interface shares the gateway's subnet. */
+export function localIpForGateway(gatewayHost: string): string {
+  for (const ifaces of Object.values(os.networkInterfaces())) {
+    for (const iface of ifaces ?? []) {
+      if (iface.family === "IPv4" && !iface.internal && iface.netmask &&
+          addressInSameSubnet(gatewayHost, iface.address, iface.netmask)) {
+        return iface.address;
+      }
+    }
+  }
+  return getLanIP() ?? "127.0.0.1";
 }
