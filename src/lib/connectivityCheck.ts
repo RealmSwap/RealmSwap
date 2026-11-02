@@ -59,6 +59,7 @@ export async function runConnectivityChecks(
   server: {
     id: string; name: string; status: string; port: number;
     enableUpnp: boolean; tunnelUrl: string | null;
+    upnpMapped?: boolean | null;
     runnerType?: string | null;
   },
   spec: GameDefinitionSpec,
@@ -134,7 +135,10 @@ export async function runConnectivityChecks(
     }
   }
 
-  // 3. Router path: tunnel wins (works regardless of router), else UPnP
+  // 3. Router path: tunnel wins (works regardless of router), else the UPnP
+  //    outcome the runner recorded at start — a public-IP lookup alone can't
+  //    tell "mapping accepted" from "mapping refused" (every online machine
+  //    has a WAN IP, mapped or not).
   if (server.tunnelUrl) {
     const alive = tunnelAlive(server.id);
     checks.push({
@@ -145,22 +149,37 @@ export async function runConnectivityChecks(
         ? `Playit tunnel active (${server.tunnelUrl}) — friends can join even with no port forwarding.`
         : `A tunnel address is saved (${server.tunnelUrl}) but no playit agent is running. Toggle the tunnel off and on in Join Info — until then this address is unreachable.`,
     });
+  } else if (server.runnerType === "AGENT") {
+    checks.push({
+      id: "router",
+      label: "Router / outside access",
+      status: "warn",
+      detail: "The game runs on a node, so this machine's router isn't in the path — outside access depends on the node's network. Enable the playit tunnel to make it reachable from anywhere.",
+      fixCommand: "Turn on 'Playit.gg Tunneling' in Server Config → General Settings.",
+    });
   } else if (server.enableUpnp) {
-    const ip = await publicIP().catch(() => null);
-    if (ip) {
+    if (server.upnpMapped === true) {
+      const ip = await publicIP().catch(() => null);
       checks.push({
         id: "router",
         label: "Router / outside access",
         status: "ok",
-        detail: `Router answers UPnP and the port mapping was requested at start. Public IP: ${ip}.`,
+        detail: `The router accepted the UPnP port mapping at the last start${ip ? `. Public IP: ${ip}.` : "."}`,
+      });
+    } else if (server.upnpMapped === false) {
+      checks.push({
+        id: "router",
+        label: "Router / outside access",
+        status: "fail",
+        detail: "UPnP is enabled, but the router refused the port mapping at the last start (or no gateway answered discovery) — the port is not reachable from the internet.",
+        fixCommand: "Enable UPnP in your router's admin page, or turn on the Playit tunnel in General Settings (no router access needed).",
       });
     } else {
       checks.push({
         id: "router",
         label: "Router / outside access",
-        status: "fail",
-        detail: "UPnP is enabled but the router is not responding. Many routers disable UPnP by default.",
-        fixCommand: "Enable UPnP in your router's admin page, or turn on the Playit tunnel in General Settings (no router access needed).",
+        status: "warn",
+        detail: "UPnP is enabled, but RealmSwap hasn't recorded a mapping attempt yet. Restart the server once and this will show what the router actually said.",
       });
     }
   } else {

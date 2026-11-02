@@ -177,6 +177,7 @@ exports.Prisma.ServerScalarFieldEnum = {
   autoUpdateHour: 'autoUpdateHour',
   lastAutoUpdateAt: 'lastAutoUpdateAt',
   ipAddress: 'ipAddress',
+  upnpMapped: 'upnpMapped',
   port: 'port',
   definitionId: 'definitionId',
   paramValues: 'paramValues',

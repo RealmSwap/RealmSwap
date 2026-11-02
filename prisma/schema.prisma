@@ -86,6 +86,7 @@ model Server {
   autoUpdateHour   Int                 @default(4) // Local hour (0-23) of the nightly update window
   lastAutoUpdateAt DateTime? // Last overnight update run (dedupes within a calendar day)
   ipAddress        String
+  upnpMapped       Boolean? // Outcome of the last start-time UPnP attempt: true = router accepted the mapping, false = refused or no gateway answered, null = never attempted since this column landed
   port             Int
   definitionId     String?
   definition       GameDefinition?     @relation(fields: [definitionId], references: [id])

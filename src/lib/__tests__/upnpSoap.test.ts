@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 
-import { addPortMappingArgs, escapeXml, parseSsdpLocation, pickUpnpService } from "@/lib/upnp";
+import { addPortMappingArgs, addressInSameSubnet, escapeXml, parseSsdpLocation, pickUpnpService } from "@/lib/upnp";
 
 /**
  * Pure helpers of the zero-dependency UPnP client that replaced nat-api
@@ -68,5 +68,21 @@ describe("UPnP client helpers", () => {
     expect(args).toContain("<NewLeaseDuration>3600</NewLeaseDuration>");
     expect(args).toContain("<NewEnabled>1</NewEnabled>");
     expect(args).toMatch(/<NewInternalClient>(?!127\.0\.0\.1)[^<]+<\/NewInternalClient>/);
+  });
+
+  it("points the internal client at the discovered gateway's subnet when told to", () => {
+    const args = addPortMappingArgs(25565, "TCP", "RealmSwap - Test", "192.168.1.49");
+    expect(args).toContain("<NewInternalClient>192.168.1.49</NewInternalClient>");
+  });
+
+  it("judges gateway subnet membership by each interface's real netmask", () => {
+    expect(addressInSameSubnet("192.168.1.1", "192.168.1.49", "255.255.255.0")).toBe(true);
+    // A host-only virtual adapter on a different /24 is NOT the router's
+    // subnet, even though it is also 192.168.x.x — pointing the mapping
+    // there forwards into the void (this is exactly the Cody's-box failure).
+    expect(addressInSameSubnet("192.168.1.1", "192.168.56.1", "255.255.255.0")).toBe(false);
+    // A /16 netmask legitimately bridges the gap.
+    expect(addressInSameSubnet("192.168.1.1", "192.168.56.1", "255.255.0.0")).toBe(true);
+    expect(addressInSameSubnet("192.168.1.1", "not-an-ip", "255.255.255.0")).toBe(false);
   });
 });

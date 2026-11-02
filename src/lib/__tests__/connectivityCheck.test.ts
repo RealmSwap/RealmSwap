@@ -10,13 +10,14 @@ const rust = BUILTIN_DEFINITIONS.find((d) => d.slug === "RUST")!;
 
 type ServerLike = {
   id: string; name: string; status: string; port: number;
-  enableUpnp: boolean; tunnelUrl: string | null; runnerType?: string | null;
+  enableUpnp: boolean; tunnelUrl: string | null; upnpMapped?: boolean | null;
+  runnerType?: string | null;
 };
 
 function server(over: Partial<ServerLike> = {}): ServerLike {
   return {
     id: "s1", name: "Test", status: "RUNNING", port: 25565,
-    enableUpnp: true, tunnelUrl: null, ...over,
+    enableUpnp: true, tunnelUrl: null, upnpMapped: true, ...over,
   };
 }
 
@@ -64,9 +65,24 @@ describe("runConnectivityChecks", () => {
     expect(r.overall).toBe("blocked");
   });
 
-  it("unresponsive router with UPnP on fails with guidance", async () => {
-    const r = await runConnectivityChecks(server(), mc.spec, deps({ publicIP: async () => null }));
-    expect(r.checks.find((c) => c.id === "router")?.status).toBe("fail");
+  it("a router that refused the UPnP mapping fails with guidance instead of claiming ready", async () => {
+    const r = await runConnectivityChecks(server({ upnpMapped: false }), mc.spec, deps());
+    const router = r.checks.find((c) => c.id === "router")!;
+    expect(router.status).toBe("fail");
+    expect(router.detail).toMatch(/refused/);
+    expect(router.fixCommand).toMatch(/tunnel|UPnP/i);
+    expect(r.overall).toBe("blocked");
+  });
+
+  it("a router that accepted the mapping reads ok even when the public-IP lookup fails", async () => {
+    const r = await runConnectivityChecks(server({ upnpMapped: true }), mc.spec, deps({ publicIP: async () => null }));
+    expect(r.checks.find((c) => c.id === "router")?.status).toBe("ok");
+  });
+
+  it("UPnP on but no recorded attempt warns instead of claiming ready", async () => {
+    const r = await runConnectivityChecks(server({ upnpMapped: null }), mc.spec, deps());
+    expect(r.checks.find((c) => c.id === "router")?.status).toBe("warn");
+    expect(r.overall).toBe("maybe");
   });
 
   it("tunnel overrides router concerns entirely", async () => {
@@ -176,6 +192,13 @@ describe("runConnectivityChecks", () => {
     expect(listen(r).status).toBe("skip");
     expect(listen(r).detail).toMatch(/runs on a node/);
     expect(boundSockets).not.toHaveBeenCalled();
+  });
+
+  it("node-hosted servers don't claim this machine's router mapped anything", async () => {
+    const r = await runConnectivityChecks(server({ runnerType: "AGENT" }), mc.spec, deps());
+    const router = r.checks.find((c) => c.id === "router")!;
+    expect(router.status).toBe("warn");
+    expect(router.detail).toMatch(/node/);
   });
 
   it("Windows gets a firewall hint naming the real executable; other platforms skip", async () => {

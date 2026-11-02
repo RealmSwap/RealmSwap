@@ -194,9 +194,12 @@ export function modSnapshotTarName(serverId: string, snapshotId: string): string
 
 // ─── Playit tunnel daemons ──────────────────────────────────────────────────
 
-/** Where the agent keeps the playit binary + per-server daemon state. */
+/** Where the agent keeps the playit binary + per-server daemon state. Named
+ *  playitd* to match the daemon asset — upstream's `playit-*` binary became
+ *  a service-control CLI in playit-agent 1.x, and the new name also drops
+ *  any stale CLI download a node cached under the old filename. */
 export function tunnelBinPath(stateDir: string): string {
-  return path.join(stateDir, "bin", process.platform === "win32" ? "playit.exe" : "playit");
+  return path.join(stateDir, "bin", "playitd.exe");
 }
 
 export function tunnelSecretPath(stateDir: string, serverId: string): string {
@@ -204,10 +207,14 @@ export function tunnelSecretPath(stateDir: string, serverId: string): string {
   return path.join(stateDir, `playit-${serverId}.toml`);
 }
 
-export function tunnelSocketPath(stateDir: string, serverId: string): string {
+export function tunnelSocketPath(stateDir: string, serverId: string): string | null {
   if (!/^[A-Za-z0-9_-]+$/.test(serverId)) throw new Error("Invalid server id.");
+  // Windows: null — playitd 1.x's --socket-path rejects every pipe form we
+  // tried ("not a named pipe path") while its built-in default works, so the
+  // caller omits the flag there. Linux keeps a per-server unix socket so the
+  // default /run path can't collide with an installed playit.
   return process.platform === "win32"
-    ? `\\\\.\\pipe\\realmswap-agent-playitd-${serverId}`
+    ? null
     : path.join(stateDir, `playitd-${serverId}.sock`);
 }
 

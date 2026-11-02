@@ -307,9 +307,11 @@ export function ConnectionModal({ server, onClose }: { server: any; onClose: () 
                     ? `Tunnel live — friends connect through ${data.tunnel.url}.`
                     : tunnelOn && data?.tunnel?.claimUrl
                       ? "Waiting for you to claim the agent below — RealmSwap then creates the tunnel and writes your address automatically."
-                      : tunnelOn
-                        ? "Agent starting — the public address appears here as soon as playit reports one."
-                        : "Off — turn it on and friends connect through a playit relay: zero router setup, works behind strict routers, and your home IP stays private."}
+                      : tunnelOn && data?.tunnel?.alive === false
+                        ? "The tunnel agent is not running — it crashed or failed to start. Toggle the tunnel off and on to restart it."
+                        : tunnelOn
+                          ? "Agent starting — the public address appears here as soon as playit reports one."
+                          : "Off — turn it on and friends connect through a playit relay: zero router setup, works behind strict routers, and your home IP stays private."}
                 </p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
