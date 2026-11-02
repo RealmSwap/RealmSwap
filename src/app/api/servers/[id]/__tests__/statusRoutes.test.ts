@@ -88,6 +88,7 @@ vi.mock("@/lib/tunnels", () => ({
 import { GET as diskGET } from "@/app/api/servers/[id]/disk/route";
 import { GET as networkGET } from "@/app/api/servers/[id]/network-status/route";
 import { POST as sharePOST } from "@/app/api/servers/[id]/status-share/route";
+import { getPublicStatus } from "@/lib/statusShare";
 
 const req = (url: string, init: any = {}) => new NextRequest(`http://localhost${url}`, init);
 const params = Promise.resolve({ id: "s1" });
@@ -256,5 +257,68 @@ describe("POST /api/servers/[id]/status-share", () => {
 
   it("rejects unknown actions", async () => {
     expect((await post({ action: "explode" })).status).toBe(400);
+  });
+});
+
+describe("POST /api/servers/[id]/status-share — public-page cache invalidation", () => {
+  const post = (body: any) =>
+    sharePOST(req("/api/servers/s1/status-share", {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "content-type": "application/json" },
+    }), { params });
+
+  // Seed the real statusShare TTL cache under `code` via getPublicStatus with
+  // a local prisma stub whose row stops matching once the test moves
+  // row.code — mirroring the DB update the route just performed. Returns the
+  // lookup fn and how many queries the stub served (cache hits don't query).
+  const seedCache = async (code: string) => {
+    let queries = 0;
+    const row = { code };
+    const stub = {
+      server: {
+        findUnique: async ({ where }: any) => {
+          queries++;
+          return where.statusShareCode === row.code
+            ? { id: "s1", name: "Test Server", game: "MINECRAFT", status: "STOPPED", definitionId: null, statusShareCode: row.code, plannedSessions: [] }
+            : null;
+        },
+      },
+      serverTelemetry: { findMany: async () => [] },
+    } as any;
+    const lookup = (c: string) => getPublicStatus(c, { prisma: stub, now: new Date("2026-10-23T12:00:00Z") });
+    await lookup(code);
+    await lookup(code);
+    expect(queries).toBe(1); // second call served from the cache
+    return { lookup, queries: () => queries, row };
+  };
+
+  it("rotate stops the old code answering from cache immediately", async () => {
+    bag.access.server.statusShareCode = "old-code";
+    const { lookup, queries, row } = await seedCache("old-code");
+    await post({ action: "rotate" });
+    row.code = "new-code"; // the DB update the route just wrote
+    const status = await lookup("old-code");
+    expect(queries()).toBe(2); // re-queried, not served from the stale entry
+    expect(status).toBeNull(); // and the rotated-out code is dead
+  });
+
+  it("disable stops the old code answering from cache immediately", async () => {
+    bag.access.server.statusShareCode = "old-code";
+    const { lookup, queries, row } = await seedCache("old-code");
+    await post({ action: "disable" });
+    row.code = null as any; // the DB update the route just wrote
+    const status = await lookup("old-code");
+    expect(queries()).toBe(2);
+    expect(status).toBeNull();
+  });
+
+  it("enable with the code already live does not evict the (still valid) cache entry", async () => {
+    bag.access.server.statusShareCode = "existing1";
+    const { lookup, queries } = await seedCache("existing1");
+    await post({ action: "enable" });
+    const status = await lookup("existing1");
+    expect(queries()).toBe(1); // still cached — nothing was rotated out
+    expect(status?.code).toBe("existing1");
   });
 });
