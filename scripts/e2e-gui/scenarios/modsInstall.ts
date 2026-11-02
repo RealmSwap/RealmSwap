@@ -110,7 +110,7 @@ async function waitForInstallDone(page: import("playwright").Page, what: string,
     }
     if (sawProgress && lastTitle === "Failed") {
       const panelText = ((await panel.textContent().catch(() => "")) ?? "").slice(0, 300);
-      throw new Error(`${what} reports Failed: ${panelText}`);
+      throw new Error(`${what} reports Failed: ${panelText}\n${await fsEvidence(page, ctx)}`);
     }
     // Stalled ≥120s on one stage: pull the app's server-side view through the
     // browser session so the failure carries evidence, not just a timeout.
@@ -126,9 +126,45 @@ async function waitForInstallDone(page: import("playwright").Page, what: string,
   throw new Error(`${what} never reached Done — panel title: ${lastTitle}\nstage timeline: ${tail}${appTail}`);
 }
 
-/** One app-state sample for stall diagnostics; never throws. */
-async function sampleAppState(page: import("playwright").Page, baseUrl: string): Promise<string> {
+/**
+ * Ownership/mode evidence for snapshot failures: the harness process runs on
+ * the same machine as the app, so it can stat the exact paths the app's
+ * cpSync refused. uid/gid/mode of the world file, its dir, and the snapshots
+ * root — plus who we are.
+ */
+async function fsEvidence(page: import("playwright").Page, ctx?: import("../framework").GuiContext): Promise<string> {
   try {
+    const fs = await import("fs");
+    const base = ctx?.appBaseUrl;
+    if (!base) return "";
+    const servers = await page.request.get(`${base}/api/servers`);
+    const server0 = (await servers.json())?.servers?.[0];
+    if (!server0?.id) return "";
+    const serverId = server0.id;
+    const runner = `server runner=${server0.runnerType ?? "LOCAL"} status=${server0.status}`;
+    const world = `/tmp/realmswap-e2e-api-data/local-servers/${serverId}/world`;
+    const stat = (p: string) => {
+      try {
+        const s = fs.statSync(p);
+        return `${p.split("/").slice(-2).join("/")}: uid=${s.uid} gid=${s.gid} mode=${(s.mode & 0o777).toString(8)}`;
+      } catch (e: any) {
+        return `${p.split("/").slice(-2).join("/")}: ${e.code}`;
+      }
+    };
+    return [
+      `harness uid=${process.getuid?.()} gid=${process.getgid?.()}`,
+      runner,
+      stat(`${world}/level.dat_old`),
+      stat(world),
+      stat("/tmp/realmswap-e2e-api-data/snapshots"),
+    ].join(" | ");
+  } catch {
+    return "";
+  }
+}
+
+/** One app-state sample for stall diagnostics; never throws. */
+async function sampleAppState(page: import("playwright").Page, baseUrl: string): Promise<string> {  try {
     const servers = await page.request.get(`${baseUrl}/api/servers`);
     const list = (await servers.json())?.servers ?? [];
     const s = list[0];
