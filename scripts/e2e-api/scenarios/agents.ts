@@ -270,19 +270,22 @@ export const agentScenarios = [
         const downloadPath = String(command.payload?.downloadPath ?? "");
         expect(downloadPath.startsWith("/api/agents/download/") && downloadPath.includes("serverId="), `downloadPath → ${downloadPath}`);
 
-        // The route signs the token path WITHOUT the query string (the upload
-        // route signs WITH it) — a real agent that signs the full path gets
-        // 401. Both behaviors are pinned here.
-        const withQuery = await agentPathRequest(admin, creds, "GET", downloadPath, true);
-        expect(withQuery.status === 401 && String(withQuery.body?.error || "").includes("bad_signature"), `signed-with-query → ${withQuery.status}: ${withQuery.body?.error}`);
-        const wrongServer = await agentPathRequest(admin, creds, "GET", downloadPath.replace(/serverId=[^&]+/, `serverId=${ctx.state.surfaceServerId as string}`), false);
+        // The signature covers path + query — exactly the downloadPath string
+        // the orchestrator issued, which the real agent signs verbatim
+        // (agent/agent.ts downloadDashboardTar; the upload route already
+        // verifies the same way). Negatives: a token bound to another server,
+        // single-use replay, and a bare-path signature (the pre-fix contract)
+        // must all be rejected.
+        const wrongServer = await agentPathRequest(admin, creds, "GET", downloadPath.replace(/serverId=[^&]+/, `serverId=${ctx.state.surfaceServerId as string}`), true);
         expect(wrongServer.status === 404, `wrong-server query → ${wrongServer.status}, want 404 (token bound to server)`);
-        const download = await agentPathRequest(admin, creds, "GET", downloadPath, false);
+        const download = await agentPathRequest(admin, creds, "GET", downloadPath, true);
         expect(download.status === 200, `download → ${download.status}: ${download.bytes.length} bytes`);
         expect((download.headers.get("content-type") || "").includes("application/x-tar"), "tar content type");
         expect(download.bytes.length > 0, "non-empty tar delivered");
-        const reuse = await agentPathRequest(admin, creds, "GET", downloadPath, false);
+        const reuse = await agentPathRequest(admin, creds, "GET", downloadPath, true);
         expect(reuse.status === 404, `token reuse → ${reuse.status}, want 404 (single-use)`);
+        const barePath = await agentPathRequest(admin, creds, "GET", downloadPath, false);
+        expect(barePath.status === 401 && String(barePath.body?.error || "").includes("bad_signature"), `bare-path signature → ${barePath.status}: ${barePath.body?.error}`);
 
         const report = await agentSync(admin, creds, {
           protocolVersion: 1,
