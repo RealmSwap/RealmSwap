@@ -44,6 +44,7 @@ const MODRINTH_PROJECT_ID =
 
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+  let installId: string | undefined;
   try {
     const user = await getAuthenticatedUser();
     if (!user) {
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     // Progress sessions are keyed by the client's installId. The SSE route
     // auth-checks every subscriber against this server, so a guessed id only
     // exposes the stage feed of a server the caller can already see.
-    const installId = parsed.data.installId;
+    installId = parsed.data.installId;
     if (installId) beginProgress(installId);
 
     // Resolve the pack file: a pinned file/version wins, else the newest
@@ -236,8 +237,14 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       // Automatic Rollback
       console.error(`[Sandbox] Error detected. Rolling back ${serverId} to snapshot ${snapshot.id}`);
       if (installId) emitProgress(installId, { label: "Install failed — rolling back safely" });
-      await restoreSnapshot(snapshot.id);
-      await discardSnapshot(snapshot.id);
+      // The install error is the one worth reporting; a rollback failure
+      // must not replace it or skip the terminal progress frame.
+      try {
+        await restoreSnapshot(snapshot.id);
+        await discardSnapshot(snapshot.id);
+      } catch (rollbackErr: any) {
+        console.error(`[Sandbox] rollback failed for ${serverId}:`, rollbackErr);
+      }
       if (installId) endProgress(installId, "error", installError.message);
 
       return NextResponse.json({
@@ -249,6 +256,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
   } catch (error: any) {
     console.error("POST /api/servers/[id]/mods/install-pack error:", error);
+    // createSnapshot sits OUTSIDE the inner try — a snapshot failure lands
+    // here and must still terminate the progress session (else the UI panel
+    // freezes on the current stage forever).
+    if (installId) endProgress(installId, "error", error.message || "Pack install failed");
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
 }

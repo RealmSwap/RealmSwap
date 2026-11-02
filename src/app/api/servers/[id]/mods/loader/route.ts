@@ -58,6 +58,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
 // a Minecraft server, or tModLoader on a Terraria server.
 export async function POST(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+  let installId: string | undefined;
   try {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -119,7 +120,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       );
     }
 
-    const installId = parsed.data.installId;
+    installId = parsed.data.installId;
     if (installId) {
       beginProgress(installId);
       emitProgress(installId, { stage: "snapshot", label: "Taking a safety snapshot" });
@@ -163,8 +164,14 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       });
     } catch (err: any) {
       if (installId) emitProgress(installId, { label: "Loader install failed — rolling back safely" });
-      await restoreSnapshot(snapshot.id);
-      await discardSnapshot(snapshot.id);
+      // The install error is the one worth reporting; a rollback failure
+      // must not replace it or skip the terminal progress frame.
+      try {
+        await restoreSnapshot(snapshot.id);
+        await discardSnapshot(snapshot.id);
+      } catch (rollbackErr: any) {
+        console.error(`[Loader ${serverId}] rollback failed:`, rollbackErr);
+      }
       if (installId) endProgress(installId, "error", err.message);
       return NextResponse.json({
         error: `Loader installation failed and was rolled back. Cause: ${err.message}`,
@@ -173,6 +180,11 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     }
   } catch (error: any) {
     console.error("POST /api/servers/[id]/mods/loader error:", error);
+    // createSnapshot sits OUTSIDE the inner try — a snapshot failure lands
+    // here, skipping the inner catch's endProgress and leaving the UI's
+    // progress panel frozen on the current stage forever (the SSE session
+    // never goes terminal). Terminal-safe regardless of where we failed.
+    if (installId) endProgress(installId, "error", error.message || "Loader installation failed");
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
 }

@@ -96,11 +96,14 @@ async function waitForInstallDone(page: import("playwright").Page, what: string,
   // only accept a verdict after this install was seen mid-flight.
   let sawProgress = false;
   while (Date.now() < deadline) {
+    const prevTitle = lastTitle;
     lastTitle = ((await panel.locator(titleSel).first().textContent().catch(() => "")) ?? "").trim();
     if (lastTitle && lastTitle !== "Done" && lastTitle !== "Failed") {
-      if (lastTitle !== timeline[timeline.length - 1]) timeline.push(`${Math.round((Date.now() - deadline + 660_000) / 1000)}s:${lastTitle}`);
       sawProgress = true;
-      lastChange = Date.now();
+      if (lastTitle !== prevTitle) {
+        timeline.push(`${Math.round((660_000 - (deadline - Date.now())) / 1000)}s:${lastTitle}`);
+        lastChange = Date.now();
+      }
     }
     if (sawProgress && lastTitle === "Done") {
       return;
@@ -113,7 +116,7 @@ async function waitForInstallDone(page: import("playwright").Page, what: string,
     // browser session so the failure carries evidence, not just a timeout.
     if (Date.now() - lastChange > 120_000 && ctx?.appBaseUrl) {
       const note = await sampleAppState(page, ctx.appBaseUrl);
-      if (note && !timeline[timeline.length - 1]?.includes(note)) timeline.push(`${Math.round((Date.now() - deadline + 660_000) / 1000)}s:APP>${note}`);
+      if (note) timeline.push(`${Math.round((660_000 - (deadline - Date.now())) / 1000)}s:APP>${note}`);
       lastChange = Date.now();
     }
     await sleep(2000);
