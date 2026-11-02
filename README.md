@@ -58,6 +58,7 @@ One-click deployment out of the box:
 - **Automation**: scheduled backups, restarts, updates, and custom commands on a real cron engine.
 - **Cloud Advisor & migration tools**: moving to a rented box? Get provider recommendations and push your local save data over with the built-in SFTP client.
 - **Community marketplace**: discover and install community-made configurations, modpacks, and server templates.
+- **Remote Hosts**: register a second machine — the old laptop, the basement box — as an agent node (HMAC-authenticated enrollment) and run servers on it from the same dashboard: start/stop, mods, worlds, and backups, all from your main screen.
 
 ## Getting Started
 
@@ -66,7 +67,7 @@ One-click deployment out of the box:
 2. Run the installer and create your account — the first account on a fresh install is the admin.
 3. Pick a game, hit deploy, and open **Join Info** to invite your friends.
 
-> RealmSwap hosts on your own machine. The packaged installer targets **Windows** today (that's where the target audience's gaming PCs are); running the web app from source works anywhere Node runs, and a cross-platform Docker runner is in progress.
+> RealmSwap hosts on your own machine. The packaged installer targets **Windows** today (that's where the target audience's gaming PCs are); running the web app from source works anywhere Node runs, and a Docker runner for Linux container hosts is built in.
 
 ### From source (development)
 Prerequisites: [Node.js 22+](https://nodejs.org/) and [Git](https://git-scm.com/).
@@ -87,17 +88,17 @@ npm run electron:dev   # desktop app
 - **Backend**: Next.js API routes, Node.js (`child_process`), Prisma ORM
 - **Desktop wrapper**: Electron with an embedded standalone Node server (auto-updating)
 - **Database**: SQLite via Prisma — local file-based, zero configuration
-- **Runner abstraction**: server execution sits behind a `ServerRunner` interface — `LocalWindowsRunner` for native execution, `DockerRunner` for containerized hosts
+- **Runner abstraction**: server execution sits behind a `ServerRunner` interface — `LocalRunner` for native execution, `RemoteRunner` for agent nodes (Remote Hosts), `DockerRunner` for containerized hosts
 - **Mods engine**: provider abstraction (Modrinth / CurseForge / Thunderstore / Steam Workshop), dependency BFS resolution, jar-manifest loader detection, sandbox boot testing with bundled JDK
 - **RealmSync engine**: HTTP invite server serving a signed, HMAC-authenticated manifest + config bundle to joining players
 - **Connectivity**: automated playit.gg agent management (claim → tunnel → live address), zero-dependency UPnP client with lease renewal, LAN fallback
-- **E2E tests**: Playwright suite (`npm run e2e`) covering the public surface in CI
+- **Verification ladder**: `npm run verify` — typecheck, ~1,300 unit tests, an API e2e harness that exercises every route (including real Minecraft server boots), Electron GUI e2e, and a Playwright suite over the public surface. A nightly matrix adds the heavy scenarios and a Windows release smoke that installs real released artifacts and proves the auto-update path end to end.
 
 ## Roadmap & Contributing
 
 Contributions are welcome — branch off `main` and open a pull request. Currently on the roadmap:
 
-- **Dedicated-box mode** — auto-start on boot as a headless "old laptop in the closet" server that friends can wake from Discord
+- **Dedicated-box mode** — finish the "old laptop in the closet" story: no-login service mode for spare hardware (launch-at-login, Discord start/stop, and idle auto-stop already shipped)
 - **Hosted public status links** (`realmswap.app/s/<code>`) that work even when your PC is off
 - **Popular-packs gallery** — one-click, boot-tested installs of the most-played modpacks
 - **Docker container abstractions** for true cross-platform hosting
