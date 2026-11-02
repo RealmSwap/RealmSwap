@@ -17,6 +17,12 @@ export const serverLifecycleScenarios = [
     const { page } = ctx;
 
     // --- First-server wizard: pick game → name → deploy ---
+    // Scenarios share one app instance, and the previous scenario ends
+    // wherever its own last step landed — never inherit that page. The
+    // servers home hosts the wizard (FirstServerWizard renders while there
+    // are zero servers).
+    await page.getByRole("link", { name: "Servers", exact: true }).click();
+    await page.getByRole("heading", { name: "Active Servers" }).waitFor({ timeout: 20_000 });
     // The game card's accessible name includes its description + RAM text,
     // so match by substring.
     await page.getByRole("button", { name: "Minecraft" }).click();
