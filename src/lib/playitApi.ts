@@ -136,16 +136,29 @@ export class PlayitApi {
   /**
    * Create a tunnel bound to 127.0.0.1:localPort on the agent (the local
    * binding travels in origin agent_config fields — the config file cannot
-   * pre-seed tunnels). `ports.details` is the port COUNT, mirroring the
-   * legacy /tunnels/create port_count. The protocol must match the game's:
-   * a TCP tunnel in front of a UDP game forwards nothing.
+   * pre-seed tunnels) with a public address from playit's shared network.
+   *
+   * The 2026-11 body schema: `protocol` replaces the old `ports` enum and
+   * `endpoint` is now required. A playit game type (`tunnel-type`) creates
+   * on the free tier; the generic raw-ports fallback requires playit
+   * premium (free accounts get RequiresPlayitPremium). Verified live against
+   * api.playit.gg after the old `ports: {type: "custom-tcp", details: 1}`
+   * body started failing validation with "failed to parse body".
    */
-  async createTunnel(agentKey: string, agentId: string, localPort: number, portType: TunnelPortType): Promise<string | null> {
+  async createTunnel(
+    agentKey: string,
+    agentId: string,
+    opts: { localPort: number; portType: TunnelPortType; playitType: string | null; softwareDescription: string }
+  ): Promise<string | null> {
+    const { localPort, portType, playitType, softwareDescription } = opts;
+    const protocol = playitType
+      ? { type: "tunnel-type", details: playitType }
+      : { type: "raw-ports", details: { port_type: portType, port_count: 1, software_description: softwareDescription } };
     const data = (await this.call(
       "/v1/tunnels/create",
       {
         name: `RealmSwap ${localPort}`,
-        ports: { type: `custom-${portType}`, details: 1 },
+        protocol,
         origin: {
           type: "agent",
           data: {
@@ -158,6 +171,7 @@ export class PlayitApi {
             },
           },
         },
+        endpoint: { type: "region", details: { region: "global", port: null } },
         enabled: true,
       },
       agentKey
@@ -169,6 +183,39 @@ export class PlayitApi {
   async deleteTunnel(agentKey: string, tunnelId: string): Promise<void> {
     await this.call("/tunnels/delete", { tunnel_id: tunnelId }, agentKey);
   }
+}
+
+/**
+ * Playit's first-class game tunnel types that map onto games RealmSwap
+ * hosts, with the protocol playit forwards for each. Checked against
+ * playit.gg's tunnel catalog (2026-11): single-port types only — multi-port
+ * types (7days, project-zomboid, unturned) allocate several public ports,
+ * which doesn't fit RealmSwap's one-local-port-per-tunnel binding.
+ *
+ * Using the game type matters: playit's free tier rejects generic
+ * raw-ports tunnels (RequiresPlayitPremium) but still creates these.
+ */
+const PLAYIT_GAME_TUNNEL_TYPES: ReadonlyArray<{ games: string[]; type: string; portType: TunnelPortType }> = [
+  { games: ["MINECRAFT"], type: "minecraft-java", portType: "tcp" },
+  { games: ["MINECRAFT"], type: "minecraft-bedrock", portType: "udp" },
+  { games: ["PALWORLD"], type: "palworld", portType: "udp" },
+  { games: ["VALHEIM"], type: "valheim", portType: "udp" },
+  { games: ["TERRARIA"], type: "terraria", portType: "tcp" },
+  { games: ["RUST"], type: "rust", portType: "udp" },
+];
+
+/**
+ * The playit tunnel-type to request for a game slug needing `portType`, or
+ * null when no free-tier game type matches (caller falls back to raw-ports,
+ * which requires playit premium). MINECRAFT picks java vs bedrock by the
+ * port's protocol, since the slug alone doesn't say which variant it is.
+ */
+export function playitTypeForGame(game: string, portType: TunnelPortType): string | null {
+  const slug = game.toUpperCase();
+  for (const entry of PLAYIT_GAME_TUNNEL_TYPES) {
+    if (entry.games.includes(slug) && tunnelProtocolCovers(entry.portType, portType)) return entry.type;
+  }
+  return null;
 }
 
 /**

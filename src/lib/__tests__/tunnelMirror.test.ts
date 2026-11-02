@@ -72,14 +72,14 @@ describe("mirrorTunnelState protocol handling", () => {
     ]);
 
     await mirrorTunnelState({
-      serverId: "s1", port: 15637, portType: "udp", secret: "secret", api,
+      serverId: "s1", port: 15637, portType: "udp", playitType: "palworld", softwareDescription: "Palworld server", secret: "secret", api,
       cancelled, stillAlive: () => true, onDaemonGone: () => {}, pollMs: 1,
     });
 
     expect(api.deleteTunnel).toHaveBeenCalledTimes(1);
     expect(api.deleteTunnel).toHaveBeenCalledWith("secret", "old");
     expect(api.createTunnel).toHaveBeenCalledTimes(1);
-    expect(api.createTunnel).toHaveBeenCalledWith("secret", "agent", 15637, "udp");
+    expect(api.createTunnel).toHaveBeenCalledWith("secret", "agent", { localPort: 15637, portType: "udp", playitType: "palworld", softwareDescription: "Palworld server" });
     expect(tunnelUrls()).not.toContain("old.playit.gg:1");
     expect(tunnelUrls()).toContain("new.playit.gg:2");
   });
@@ -91,7 +91,7 @@ describe("mirrorTunnelState protocol handling", () => {
     ]);
 
     await mirrorTunnelState({
-      serverId: "s1", port: 2456, portType: "udp", secret: "secret", api,
+      serverId: "s1", port: 2456, portType: "udp", playitType: "valheim", softwareDescription: "Valheim server", secret: "secret", api,
       cancelled, stillAlive: () => true, onDaemonGone: () => {}, pollMs: 1,
     });
 
@@ -106,7 +106,7 @@ describe("mirrorTunnelState protocol handling", () => {
     ]);
 
     await mirrorTunnelState({
-      serverId: "s1", port: 25565, portType: "both", secret: "secret", api,
+      serverId: "s1", port: 25565, portType: "both", playitType: null, softwareDescription: "Game server", secret: "secret", api,
       cancelled, stillAlive: () => true, onDaemonGone: () => {}, pollMs: 1,
     });
 
@@ -120,7 +120,7 @@ describe("mirrorTunnelState protocol handling", () => {
     ]);
 
     await mirrorTunnelState({
-      serverId: "s1", port: 15637, portType: "udp", secret: "secret", api,
+      serverId: "s1", port: 15637, portType: "udp", playitType: "palworld", softwareDescription: "Palworld server", secret: "secret", api,
       cancelled, stillAlive: () => true, onDaemonGone: () => {}, pollMs: 1,
     });
 
@@ -140,7 +140,7 @@ describe("mirrorTunnelState protocol handling", () => {
     );
 
     await mirrorTunnelState({
-      serverId: "s1", port: 8211, portType: "udp", secret: "secret", api,
+      serverId: "s1", port: 8211, portType: "udp", playitType: null, softwareDescription: "Game server", secret: "secret", api,
       cancelled, stillAlive: () => true, onDaemonGone: () => {}, pollMs: 1,
     });
 
@@ -156,11 +156,11 @@ describe("mirrorTunnelState protocol handling", () => {
     ]);
 
     await mirrorTunnelState({
-      serverId: "s1", port: 28015, portType: "udp", secret: "secret", api,
+      serverId: "s1", port: 28015, portType: "udp", playitType: null, softwareDescription: "Game server", secret: "secret", api,
       cancelled, stillAlive: () => true, onDaemonGone: () => {}, pollMs: 1,
     });
 
     expect(api.createTunnel).toHaveBeenCalledTimes(1);
-    expect(api.createTunnel).toHaveBeenCalledWith("secret", "agent", 28015, "udp");
+    expect(api.createTunnel).toHaveBeenCalledWith("secret", "agent", { localPort: 28015, portType: "udp", playitType: null, softwareDescription: "Game server" });
   });
 });

@@ -9,6 +9,7 @@ import {
   PlayitApi,
   findTunnelForPort,
   isPlayitFailure,
+  playitTypeForGame,
   tunnelPortTypeFor,
   tunnelProtocolCovers,
   TunnelForPort,
@@ -212,28 +213,46 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * The protocol the public tunnel port must forward for this server's join
- * port, from its game definition — the DB row first (custom definitions live
- * only there), then the builtin table. Unknown games get "both", the one
- * answer that can't be wrong for joining.
+ * Everything the playit API needs to create this server's tunnel: the
+ * protocol(s) the public port must forward, the playit game tunnel-type to
+ * request when one covers the game (free tier — generic raw-ports tunnels
+ * need playit premium), and a human description for playit's dashboard.
  */
-async function resolveTunnelPortType(serverId: string, port: number): Promise<TunnelPortType> {
+interface TunnelSetup {
+  portType: TunnelPortType;
+  playitType: string | null;
+  softwareDescription: string;
+}
+
+/**
+ * The tunnel setup for this server's join port, from its game definition —
+ * the DB row first (custom definitions live only there), then the builtin
+ * table. Unknown games get "both" (the one answer that can't be wrong for
+ * joining) and no playit type.
+ */
+async function resolveTunnelSetup(serverId: string, port: number): Promise<TunnelSetup> {
   try {
     const server = await prisma.server.findUnique({
       where: { id: serverId },
       select: { game: true, definitionId: true },
     });
-    if (!server) return "both";
+    if (!server) return { portType: "both", playitType: null, softwareDescription: "Game server" };
     const slug = server.game.toUpperCase();
     const def = server.definitionId
       ? await prisma.gameDefinition.findUnique({ where: { id: server.definitionId } })
       : await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug } });
-    if (def) return tunnelPortTypeFor(parseSpec(def.spec), port);
-    const builtin = BUILTIN_DEFINITIONS.find((d) => d.slug === slug);
-    return builtin ? tunnelPortTypeFor(builtin.spec, port) : "both";
+    const displayName = def?.displayName ?? BUILTIN_DEFINITIONS.find((d) => d.slug === slug)?.displayName ?? server.game;
+    const portType = def
+      ? tunnelPortTypeFor(parseSpec(def.spec), port)
+      : tunnelPortTypeFor(BUILTIN_DEFINITIONS.find((d) => d.slug === slug)?.spec ?? { ports: [] }, port);
+    return {
+      portType,
+      playitType: playitTypeForGame(slug, portType),
+      softwareDescription: `${displayName} server`,
+    };
   } catch (err) {
-    console.error(`[Tunnel] Could not resolve the port protocol for ${serverId}; using both:`, (err as Error)?.message || err);
-    return "both";
+    console.error(`[Tunnel] Could not resolve the tunnel setup for ${serverId}; using defaults:`, (err as Error)?.message || err);
+    return { portType: "both", playitType: null, softwareDescription: "Game server" };
   }
 }
 
@@ -385,6 +404,8 @@ export async function mirrorTunnelState(opts: {
   serverId: string;
   port: number;
   portType: TunnelPortType;
+  playitType: string | null;
+  softwareDescription: string;
   secret: string;
   api: Pick<PlayitApi, "getRunData" | "createTunnel" | "deleteTunnel">;
   cancelled: () => boolean;
@@ -392,7 +413,7 @@ export async function mirrorTunnelState(opts: {
   onDaemonGone: () => Promise<void> | void;
   pollMs?: number;
 }): Promise<void> {
-  const { serverId, port, portType, secret, api, cancelled, stillAlive, onDaemonGone } = opts;
+  const { serverId, port, portType, playitType, softwareDescription, secret, api, cancelled, stillAlive, onDaemonGone } = opts;
   const pollMs = opts.pollMs ?? RUNDATA_POLL_MS;
   let createAttempted = false;
   let replaceAttempted = false;
@@ -419,8 +440,8 @@ export async function mirrorTunnelState(opts: {
         if (!createAttempted && runData.agent_id) {
           createAttempted = true;
           try {
-            await api.createTunnel(secret, runData.agent_id, port, portType);
-            console.log(`[Tunnel] Created ${portType.toUpperCase()} tunnel for ${serverId} bound to 127.0.0.1:${port}.`);
+            await api.createTunnel(secret, runData.agent_id, { localPort: port, portType, playitType, softwareDescription });
+            console.log(`[Tunnel] Created ${playitType ?? `${portType.toUpperCase()} raw-port`} tunnel for ${serverId} bound to 127.0.0.1:${port}.`);
           } catch (err) {
             console.error(`[Tunnel] Could not auto-create tunnel for ${serverId}:`, (err as Error)?.message || err);
             await notify(serverId, "⚠️ Tunnel needs one manual step", `RealmSwap couldn't create the playit tunnel for '${serverId}' automatically (${err instanceof Error ? err.message : err}). Create a ${portType.toUpperCase()} tunnel for local port ${port} on playit.gg — the address will appear here once done.`);
@@ -527,9 +548,9 @@ async function runTunnelLifecycle(serverId: string, port: number, binPath: strin
     });
 
     // ---- Phase 3: mirror the tunnel state for as long as the daemon lives ----
-    const portType = await resolveTunnelPortType(serverId, port);
+    const { portType, playitType, softwareDescription } = await resolveTunnelSetup(serverId, port);
     await mirrorTunnelState({
-      serverId, port, portType, secret, api,
+      serverId, port, portType, playitType, softwareDescription, secret, api,
       cancelled,
       stillAlive: () => runningTunnels.has(serverId),
       onDaemonGone: () => {}, // the close handler owns crash reporting locally
@@ -585,9 +606,9 @@ async function runAgentTunnelLifecycle(serverId: string, port: number): Promise<
       isTunnelAlive(serverId) || Date.now() - startedAt < 90_000;
     let reportedAlive = false;
 
-    const portType = await resolveTunnelPortType(serverId, port);
+    const { portType, playitType, softwareDescription } = await resolveTunnelSetup(serverId, port);
     await mirrorTunnelState({
-      serverId, port, portType, secret, api,
+      serverId, port, portType, playitType, softwareDescription, secret, api,
       cancelled,
       stillAlive: () => {
         if (isTunnelAlive(serverId)) { reportedAlive = true; return true; }
