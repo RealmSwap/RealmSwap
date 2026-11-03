@@ -2,9 +2,11 @@
  * In-process progress hub for long-running mod operations (pack installs,
  * loader installs, boot verification). The install route emits stage/byte
  * events keyed by a client-generated installId; the SSE route relays them to
- * the Mod Manager's progress panel. Sessions are ephemeral: last event is
- * kept for catch-up when a subscriber connects mid-flight, and everything is
- * dropped shortly after the terminal event.
+ * the Mod Manager's progress panel. Sessions are ephemeral: a bounded frame
+ * history is kept and REPLAYED to late subscribers (a fast machine can finish
+ * a whole small-pack install between the client's POST and its SSE connect —
+ * catch-up of only the last frame made those installs look boot-only), and
+ * everything is dropped shortly after the terminal event.
  */
 
 export type ModProgressStage =
@@ -33,6 +35,8 @@ type Subscriber = (event: ModProgressEvent) => void;
 interface ProgressSession {
   subs: Set<Subscriber>;
   last: ModProgressEvent;
+  /** Every frame this session emitted (bounded), replayed on subscribe. */
+  history: ModProgressEvent[];
   startedAt: number;
   terminal: boolean;
   endTimer?: ReturnType<typeof setTimeout>;
@@ -43,6 +47,9 @@ const sessions = new Map<string, ProgressSession>();
 const END_GRACE_MS = 10_000;
 /** Abandoned sessions (no terminal event — e.g. a crashed route) age out. */
 const STALE_MS = 30 * 60_000;
+/** Replay cap: boot-test label frames are throttled by the emitter, so this
+ * comfortably covers even a long Minecraft boot. */
+const HISTORY_MAX = 200;
 
 function sweepStale(now = Date.now()): void {
   Array.from(sessions.entries()).forEach(([id, session]) => {
@@ -56,7 +63,8 @@ function sweepStale(now = Date.now()): void {
 export function beginProgress(installId: string): void {
   sweepStale();
   if (!sessions.has(installId)) {
-    sessions.set(installId, { subs: new Set(), last: { stage: "resolving" }, startedAt: Date.now(), terminal: false });
+    const initial: ModProgressEvent = { stage: "resolving" };
+    sessions.set(installId, { subs: new Set(), last: initial, history: [initial], startedAt: Date.now(), terminal: false });
   }
 }
 
@@ -69,6 +77,10 @@ export function emitProgress(installId: string, event: Partial<ModProgressEvent>
   const session = sessions.get(installId);
   if (!session) return null;
   session.last = { ...session.last, ...event };
+  if (session.history.length >= HISTORY_MAX) {
+    session.history.shift();
+  }
+  session.history.push(session.last);
   for (const sub of Array.from(session.subs)) {
     try {
       sub(session.last);
@@ -79,13 +91,18 @@ export function emitProgress(installId: string, event: Partial<ModProgressEvent>
   return session.last;
 }
 
-/** Subscribe; fires immediately with the session's current state (catch-up). */
+/** Subscribe; replays the session's full frame history first (catch-up), then
+ * delivers live frames. The session's initial state is always in the history,
+ * so every subscriber sees at least one frame. */
 export function subscribeProgress(installId: string, sub: Subscriber): (() => void) | null {
   const session = sessions.get(installId);
   if (!session) return null;
+  const replay = [...session.history];
   session.subs.add(sub);
   try {
-    sub(session.last);
+    for (const event of replay) {
+      sub(event);
+    }
   } catch {
     /* catch-up delivery is best-effort */
   }

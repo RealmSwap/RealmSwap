@@ -817,5 +817,17 @@
   "PATCH /api/admin/realm-reports/[id]": {
     "status": "manual",
     "scenarios": []
+  },
+  "POST /api/servers/[id]/publish-realm": {
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
+  },
+  "POST /api/servers/[id]/realm-materialize": {
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   }
 }

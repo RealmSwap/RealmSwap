@@ -27,7 +27,8 @@ import {
   MemoryStick,
   QrCode,
   CalendarClock,
-  Users
+  Users,
+  Globe
 } from "lucide-react";
 
 export function ServerHeroCard({
@@ -335,6 +336,16 @@ export function ServerHeroCard({
         >
           <UploadCloud className="w-4 h-4" />
         </button>
+        {isLocal && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); actions.setPublishRealmServer(server); }}
+            disabled={isServerLoading || server.status === "STARTING"}
+            className="p-2 rounded-xl bg-slate-800 border border-white/5 hover:border-emerald-500/40 text-slate-400 hover:text-emerald-400 transition-colors disabled:opacity-30"
+            title="Publish as Realm"
+          >
+            <Globe className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Secondary Actions */}

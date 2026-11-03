@@ -8,6 +8,7 @@ import { VaultSection } from "./dashboard/VaultSection";
 import { FirstServerWizard } from "./dashboard/FirstServerWizard";
 import { ConnectionModal } from "./dashboard/ConnectionModal";
 import { FirstBootCelebration } from "./dashboard/FirstBootCelebration";
+import { PublishRealmModal } from "./dashboard/PublishRealmModal";
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -65,6 +66,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
 
   // Import Map Modal State
   const [advisorServer, setAdvisorServer] = useState<any>(null);
+  const [publishRealmServer, setPublishRealmServer] = useState<any>(null);
   const [connectionServer, setConnectionServer] = useState<any>(null);
   const [celebrationServer, setCelebrationServer] = useState<any>(null);
   const [importMapServer, setImportMapServer] = useState<any>(null);
@@ -516,6 +518,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                       handleArchiveServer,
                       handleOpenServerFolder,
                       setAdvisorServer,
+                      setPublishRealmServer,
                       setConnectionServer,
                       setImportMapServer,
                       setImportWorldPath,
@@ -592,6 +595,13 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                 .then(fresh => fresh && setData(fresh));
             }}
           />
+      )}
+
+      {publishRealmServer && (
+        <PublishRealmModal
+          server={publishRealmServer}
+          onClose={() => setPublishRealmServer(null)}
+        />
       )}
 
       {/* Import Map Dialog Overlay */}
