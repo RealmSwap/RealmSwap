@@ -2,8 +2,20 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { checkServerSlot } from "@/lib/entitlement";
 import { createClient } from "@/lib/supabase/server";
-import { deployTemplate, DeployableTemplate } from "@/lib/templates/installer";
+import { createRealmServerShell } from "@/lib/templates/installer";
 
+// POST /api/marketplace/deploy  { templateId, versionId?, installId? }
+//
+// Phase 1 of a realm deploy: record the acquisition (acquire_realm RPC:
+// ownership + download bump, idempotent) and create the server shell —
+// definition, params, config overrides. Fast, so the client learns the
+// serverId immediately and can subscribe to progress.
+//
+// v1 payloads are DONE at this point (historic placeholder behavior).
+// v2 payloads return `materialize` instructions: the client then subscribes
+// to the progress SSE and POSTs /api/servers/[id]/realm-materialize, which
+// downloads real files through the verified pipeline (loader → pack → mods →
+// boot test → rollback-on-failure, deleting the server on failure).
 export async function POST(request: Request) {
   try {
     const user = await getAuthenticatedUser();
@@ -67,18 +79,33 @@ export async function POST(request: Request) {
     }
 
     // Install locally from the chosen payload.
-    const serverId = await deployTemplate(
+    const shell = await createRealmServerShell(
       {
         id: realm.id,
         name: realm.name,
         gameSlug: realm.game_slug,
-        payload: payload as DeployableTemplate["payload"],
+        payload: payload as Parameters<typeof createRealmServerShell>[0]["payload"],
         customDefSpec,
       },
       user.id,
     );
 
-    return NextResponse.json({ success: true, serverId });
+    // Surface what the materialize phase will run so the client can describe
+    // it honestly before kicking off a (possibly minutes-long) verified install.
+    const p = (payload ?? {}) as { mods?: unknown[]; modpack?: unknown; loader?: unknown };
+    return NextResponse.json({
+      success: true,
+      serverId: shell.serverId,
+      done: !shell.v2,
+      materialize: shell.v2
+        ? {
+            game: shell.gameSlug,
+            hasModpack: Boolean(p.modpack),
+            modCount: Array.isArray(p.mods) ? p.mods.length : 0,
+            hasLoader: Boolean(p.loader),
+          }
+        : null,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

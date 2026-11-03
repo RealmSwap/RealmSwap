@@ -803,5 +803,17 @@
     "scenarios": [
       "ops/user-system"
     ]
+  },
+  "POST /api/servers/[id]/publish-realm": {
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
+  },
+  "POST /api/servers/[id]/realm-materialize": {
+    "status": "covered",
+    "scenarios": [
+      "marketplace/realms-roundtrip"
+    ]
   }
 }

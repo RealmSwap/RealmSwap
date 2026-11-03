@@ -29,13 +29,19 @@ describe("mod install progress hub", () => {
     expect(seen[3]).toEqual({ stage: "mods", current: 3, total: 10, bytesTotal: 5000, bytesDone: 1200, label: "cool-mod.jar" });
   });
 
-  it("replays current state to a late subscriber (catch-up)", () => {
+  it("replays the full frame history to a late subscriber (catch-up)", () => {
     beginProgress("late01");
     emitProgress("late01", { stage: "loader", label: "Installing NeoForge", current: 0, total: 1 });
 
     const seen: ModProgressEvent[] = [];
     subscribeProgress("late01", (e) => seen.push(e));
-    expect(seen).toEqual([{ stage: "loader", label: "Installing NeoForge", current: 0, total: 1 }]);
+    // Full history, oldest first — a fast machine can finish a whole small
+    // pack install before the client's SSE connects, and the late subscriber
+    // must still see every stage it went through.
+    expect(seen).toEqual([
+      { stage: "resolving" },
+      { stage: "loader", label: "Installing NeoForge", current: 0, total: 1 },
+    ]);
   });
 
   it("returns null for unknown sessions and ignores emits to them", () => {
