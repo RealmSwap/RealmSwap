@@ -37,8 +37,10 @@ import {
   Layers,
   Check,
   Loader2,
-  Package
+  Package,
+  Flag
 } from "lucide-react";
+import { toast } from "sonner";
 
 /* ─── Types ────────────────────────────────────────────────────── */
 
@@ -63,6 +65,15 @@ interface MarketplaceViewProps {
 }
 
 type TabId = "discover" | "browse";
+
+const REPORT_REASONS: { value: string; label: string }[] = [
+  { value: "INAPPROPRIATE", label: "Inappropriate content" },
+  { value: "MALICIOUS", label: "Malicious or unsafe" },
+  { value: "SPAM", label: "Spam" },
+  { value: "BROKEN", label: "Broken install" },
+  { value: "COPYRIGHT", label: "Copyright" },
+  { value: "OTHER", label: "Other" },
+];
 
 /* ─── Game Themes ──────────────────────────────────────────────── */
 
@@ -221,6 +232,12 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
   const [deployProgress, setDeployProgress] = useState<{ serverId: string; installId: string; templateId: string } | null>(null);
   const [systemMemoryGB, setSystemMemoryGB] = useState<number | null>(null);
   const [versions, setVersions] = useState<{ id: string; version: string; changelog: string | null; created_at: string }[]>([]);
+
+  /* Report Dialog */
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   /* ── Effects ─────────────────────────────────────────────────── */
 
@@ -438,6 +455,33 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
       console.error(e);
       addToast("error", "Error deploying template");
       setDeploying(false);
+    }
+  };
+
+  // Send a community report for the currently open realm. The 409 (already
+  // reported) surfaces its backend message verbatim.
+  const submitReport = async () => {
+    if (!selectedTemplate || !reportReason) return;
+    setReportSubmitting(true);
+    try {
+      const res = await fetch(`/api/marketplace/${selectedTemplate.id}/report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reportReason, details: reportDetails.trim() || undefined }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast.success(data.message || "Report sent. Thank you.");
+        setReportOpen(false);
+        setReportDetails("");
+      } else {
+        toast.error(data.error || "Failed to send report");
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to send report");
+    } finally {
+      setReportSubmitting(false);
     }
   };
 
@@ -939,7 +983,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
 
       {/* ─── Detail Modal ─────────────────────────────────────── */}
       {selectedTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); setDeployProgress(null); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); setDeployProgress(null); setReportOpen(false); }}>
           <div className="bg-[#0f111a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-slide-down overflow-hidden" onClick={e => e.stopPropagation()}>
             
             {/* Modal Header */}
@@ -966,7 +1010,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                   </p>
                 </div>
               </div>
-              <button onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); setDeployProgress(null); }} className="relative z-10 text-slate-400 hover:text-white transition-all p-2 bg-black/40 hover:bg-black/60 rounded-xl backdrop-blur-md border border-white/10">
+              <button onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); setDeployProgress(null); setReportOpen(false); }} className="relative z-10 text-slate-400 hover:text-white transition-all p-2 bg-black/40 hover:bg-black/60 rounded-xl backdrop-blur-md border border-white/10">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1163,8 +1207,14 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
 
             {/* Modal Footer */}
             <div className="p-6 border-t border-white/10 bg-slate-900 flex justify-end gap-3 rounded-b-2xl mt-auto shadow-[0_-10px_40px_rgba(0,0,0,0.5)] z-20">
-              <button 
-                onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); setDeployProgress(null); }}
+              <button
+                onClick={() => setReportOpen(true)}
+                className="mr-auto inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors px-2 rounded-lg"
+              >
+                <Flag className="w-3.5 h-3.5" /> Report
+              </button>
+              <button
+                onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); setDeployProgress(null); setReportOpen(false); }}
                 className="px-6 py-3 rounded-xl font-bold text-sm text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
                 disabled={deploying}
               >
@@ -1180,6 +1230,80 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                   <><Loader2 className="w-5 h-5 animate-spin relative z-10" /> <span className="relative z-10">Deploying...</span></>
                 ) : (
                   <><Download className="w-5 h-5 relative z-10" /> <span className="relative z-10">{showSecurityReport ? "Approve & Deploy" : "One-Click Deploy"}</span></>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Report Dialog ─────────────────────────────────────── */}
+      {selectedTemplate && reportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setReportOpen(false)}>
+          <div className="bg-[#0f111a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md animate-slide-down overflow-hidden" onClick={e => e.stopPropagation()}>
+
+            {/* Dialog Header */}
+            <div className="p-6 flex justify-between items-start border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                  <Flag className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-white">Report this realm</h3>
+                  <p className="text-xs text-mutedText mt-0.5">Tell the moderators what&rsquo;s wrong with {selectedTemplate.name}.</p>
+                </div>
+              </div>
+              <button onClick={() => setReportOpen(false)} className="text-slate-400 hover:text-white transition-all p-2 bg-black/40 hover:bg-black/60 rounded-xl backdrop-blur-md border border-white/10">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Dialog Body */}
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Reason</label>
+                <select
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors cursor-pointer font-bold"
+                >
+                  <option value="" disabled>Select a reason…</option>
+                  {REPORT_REASONS.map((r) => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-2">Details (optional)</label>
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder="Anything that helps the moderators understand the problem."
+                  rows={4}
+                  maxLength={1000}
+                  className="w-full px-3 py-2.5 text-sm rounded-lg bg-slate-950 border border-white/10 text-slate-200 outline-none focus:border-accentPurple transition-colors placeholder-slate-500 resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Dialog Footer */}
+            <div className="px-6 py-5 border-t border-white/10 bg-slate-900 flex justify-end gap-3 rounded-b-2xl">
+              <button
+                onClick={() => setReportOpen(false)}
+                disabled={reportSubmitting}
+                className="px-5 py-2.5 rounded-xl font-bold text-sm text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReport}
+                disabled={!reportReason || reportSubmitting}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-extrabold text-sm bg-accentPurple hover:bg-accentPurpleHover text-white shadow-lg shadow-accentPurple/25 transition-all disabled:opacity-50"
+              >
+                {reportSubmitting ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> <span>Sending…</span></>
+                ) : (
+                  <><Flag className="w-4 h-4" /> <span>Send Report</span></>
                 )}
               </button>
             </div>

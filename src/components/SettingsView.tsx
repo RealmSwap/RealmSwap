@@ -6,6 +6,26 @@ import { Save, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { initClientErrorReporting } from "@/lib/sentry.client";
 
+interface RealmReport {
+  id: string;
+  realm_id: string;
+  reason: string;
+  details: string | null;
+  status: string;
+  admin_note: string | null;
+  created_at: string;
+  realm: { name: string; slug: string; status: string } | null;
+  reporter: { display_name: string } | null;
+}
+
+function reportAge(dateStr: string): string {
+  const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+  if (mins < 60) return `${Math.max(1, mins)}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
 export function SettingsView({ user }: { user: any }) {
   const [discordId, setDiscordId] = useState(user?.discordId || "");
   const [loading, setLoading] = useState(false);
@@ -78,6 +98,40 @@ export function SettingsView({ user }: { user: any }) {
     }
   };
   const [pushSupported, setPushSupported] = useState(false);
+
+  /* Admin: open realm-report queue. Null until the first successful load, so
+     a 403 from the cloud boundary (local admin, not a cloud admin) leaves the
+     section invisible — silent, no error noise for the mismatch case. */
+  const [realmReports, setRealmReports] = useState<RealmReport[] | null>(null);
+  useEffect(() => {
+    if (user?.role !== "ADMIN") return;
+    fetch("/api/admin/realm-reports")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = await res.json();
+        setRealmReports(data.reports || []);
+      })
+      .catch(() => {});
+  }, []);
+
+  const setRealmReportStatus = async (
+    id: string,
+    status: "DISMISSED" | "REVIEWED" | "ACTIONED"
+  ) => {
+    try {
+      const res = await fetch(`/api/admin/realm-reports/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to update report");
+      setRealmReports((prev) => (prev || []).filter((r) => r.id !== id));
+      toast.success(`Report ${status.toLowerCase()}.`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update report");
+    }
+  };
 
   // Check if push is supported on mount
   if (typeof window !== "undefined" && !pushSupported) {
@@ -407,6 +461,71 @@ export function SettingsView({ user }: { user: any }) {
                     Upload JSON
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {user?.role === "ADMIN" && realmReports !== null && (
+            <div className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5 mt-8">
+              <div>
+                <h2 className="text-xl font-bold text-white mb-1">Realm reports</h2>
+                <p className="text-xs text-slate-400 mb-6">
+                  Community reports about marketplace realms.
+                </p>
+
+                {realmReports.length === 0 ? (
+                  <p className="text-xs text-slate-500">No open reports.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {realmReports.map((r) => (
+                      <div key={r.id} className="flex items-start justify-between gap-4 p-4 bg-slate-900 border border-white/5 rounded-lg">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-bold text-slate-200 truncate">
+                              {r.realm?.name || "Unknown realm"}
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-400 font-bold capitalize border border-white/5">
+                              {r.reason.toLowerCase()}
+                            </span>
+                            <span className="text-[10px] text-slate-500">
+                              {r.reporter?.display_name ? `by ${r.reporter.display_name}` : "reporter unavailable"}
+                              {" · "}
+                              {reportAge(r.created_at)}
+                            </span>
+                          </div>
+                          {r.details && (
+                            <p className="text-xs text-slate-500 mt-1 truncate" title={r.details}>
+                              {r.details}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setRealmReportStatus(r.id, "DISMISSED")}
+                            className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg font-bold transition-colors"
+                          >
+                            Dismiss
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRealmReportStatus(r.id, "REVIEWED")}
+                            className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg font-bold transition-colors"
+                          >
+                            Reviewed
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRealmReportStatus(r.id, "ACTIONED")}
+                            className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg font-bold transition-colors"
+                          >
+                            Actioned
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
