@@ -1,32 +1,30 @@
-import { useState, useEffect } from "react";
-import en from "@/locales/en.json";
-import es from "@/locales/es.json";
+"use client";
 
-const translations: Record<string, Record<string, string>> = {
-  en,
-  es
-};
+import { useContext } from "react";
+import { LocaleContext, dictionaries } from "@/components/LocaleProvider";
 
+/**
+ * Translate a namespaced key ("wizard.title") with optional {placeholder}
+ * interpolation. Falls back to English, then to the key itself, so a missing
+ * string can never blank the UI — and components mounted outside the
+ * LocaleProvider simply render English instead of crashing.
+ */
 export function useTranslation() {
-  const [locale, setLocale] = useState("en");
+  const ctx = useContext(LocaleContext);
 
-  useEffect(() => {
-    const savedLocale = localStorage.getItem("gamevault_locale");
-    if (savedLocale && translations[savedLocale]) {
-      setLocale(savedLocale);
-    }
-  }, []);
+  if (!ctx) {
+    return {
+      locale: "en",
+      setLocale: () => {},
+      t: (key: string, vars?: Record<string, string | number>) => {
+        const raw = dictionaries.en[key] ?? key;
+        if (!vars) return raw;
+        return raw.replace(/\{(\w+)\}/g, (_, name: string) =>
+          vars[name] !== undefined ? String(vars[name]) : `{${name}}`
+        );
+      },
+    };
+  }
 
-  const t = (key: keyof typeof en) => {
-    return translations[locale]?.[key] || translations["en"][key] || key;
-  };
-
-  const changeLocale = (newLocale: string) => {
-    if (translations[newLocale]) {
-      setLocale(newLocale);
-      localStorage.setItem("gamevault_locale", newLocale);
-    }
-  };
-
-  return { t, locale, changeLocale };
+  return ctx;
 }
