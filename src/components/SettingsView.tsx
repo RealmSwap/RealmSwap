@@ -2,11 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
-import { Save, UploadCloud, Languages } from "lucide-react";
+import { Save, UploadCloud, Languages, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 import { initClientErrorReporting } from "@/lib/sentry.client";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LOCALES } from "@/components/LocaleProvider";
+import { getStoredTheme, setTheme, type Theme } from "@/lib/theme";
 
 interface RealmReport {
   id: string;
@@ -30,6 +31,12 @@ function reportAge(dateStr: string): string {
 
 export function SettingsView({ user }: { user: any }) {
   const { t, locale, setLocale } = useTranslation();
+  const [theme, setThemeState] = useState<Theme>("dark");
+  useEffect(() => setThemeState(getStoredTheme()), []);
+  const changeTheme = (next: Theme) => {
+    setThemeState(next);
+    setTheme(next);
+  };
   const [discordId, setDiscordId] = useState(user?.discordId || "");
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -224,7 +231,7 @@ export function SettingsView({ user }: { user: any }) {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+    <div className="min-h-screen flex bg-background text-slate-100 font-sans selection:bg-accentPurple/30">
       <SidebarNavigation user={user} />
 
       <main className="flex-1 p-8 pb-24 md:pb-8 lg:p-12 lg:pb-12 overflow-y-auto">
@@ -308,6 +315,43 @@ export function SettingsView({ user }: { user: any }) {
                 </button>
               </div>
             )}
+          </form>
+
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5">
+            <div>
+              <h2 className="text-xl font-bold text-white mb-1">Appearance</h2>
+              <p className="text-xs text-slate-400 mb-6">
+                Dark is the classic RealmSwap look; light follows your daytime mood.
+              </p>
+
+              <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
+                <div className="flex items-center gap-3">
+                  {theme === "dark" ? <Moon className="w-4 h-4 text-slate-400" /> : <Sun className="w-4 h-4 text-amber-500" />}
+                  <h3 className="text-sm font-bold text-slate-200">Theme</h3>
+                </div>
+                <div className="flex rounded-lg bg-slate-950 border border-white/10 p-1 gap-1">
+                  {([
+                    { id: "dark" as Theme, label: "Dark", icon: Moon },
+                    { id: "light" as Theme, label: "Light", icon: Sun },
+                  ]).map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => changeTheme(opt.id)}
+                      aria-pressed={theme === opt.id}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                        theme === opt.id
+                          ? "bg-accentPurple text-white"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      <opt.icon className="w-3.5 h-3.5" />
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </form>
 
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5">

@@ -203,7 +203,7 @@ export default function AutomationsView({ user }: AutomationsViewProps) {
   const calendar = buildCalendar();
 
   return (
-    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+    <div className="min-h-screen flex bg-background text-slate-100 font-sans selection:bg-accentPurple/30">
       
       {/* Sidebar Navigation */}
       <SidebarNavigation user={user} />
@@ -376,7 +376,7 @@ export default function AutomationsView({ user }: AutomationsViewProps) {
       {/* Execution History Modal */}
       {historyAutomation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6 overflow-y-auto">
-          <div className="bg-[#030712] border border-white/10 rounded-2xl w-full max-w-2xl max-h-full flex flex-col shadow-2xl">
+          <div className="bg-background border border-white/10 rounded-2xl w-full max-w-2xl max-h-full flex flex-col shadow-2xl">
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-black text-white">Execution History</h2>

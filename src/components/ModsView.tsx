@@ -1332,7 +1332,7 @@ export default function ModsView({ user }: ModsViewProps) {
   const displayMods = searchResults;
 
   return (
-    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+    <div className="min-h-screen flex bg-background text-slate-100 font-sans selection:bg-accentPurple/30">
       {/* Sidebar Navigation */}
       <SidebarNavigation user={user} />
 
@@ -2350,7 +2350,7 @@ export default function ModsView({ user }: ModsViewProps) {
           onClick={() => setDetailMod(null)}
         >
           <div
-            className="bg-[#0f111a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col animate-slide-down"
+            className="bg-card border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col animate-slide-down"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -2504,7 +2504,7 @@ export default function ModsView({ user }: ModsViewProps) {
       {/* ─── Config Modal (existing) ───────────────────────────── */}
       {configModalOpen && configTargetMod && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#0f111a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col animate-slide-down">
+          <div className="bg-card border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col animate-slide-down">
             <div className="p-5 border-b border-white/10 flex justify-between items-center">
               <div>
                 <h3 className="font-extrabold text-lg text-white flex items-center gap-2">

@@ -2,6 +2,58 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Theme variables. tailwind.config.js points the background/card/muted/
+ * border/slate/white tokens at these, so the whole UI rethemes by toggling
+ * `theme-light` on <html> (done pre-hydration by the inline script in the
+ * root layout — no flash). Dark values are the exact hexes the app shipped
+ * with; light values invert the slate ramp and swap "white" for ink so the
+ * white-alpha borders and hover tints read correctly on a bright surface.
+ */
+:root {
+  color-scheme: dark;
+  --c-bg: #030712;
+  --c-card: #12141c;
+  --c-card-hover: #1b1e2a;
+  --c-muted: #94a3b8;
+  --c-border: #1f2937;
+  --c-white: #ffffff;
+
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+  --slate-950: #020617;
+}
+
+.theme-light {
+  color-scheme: light;
+  --c-bg: #f4f5f8;
+  --c-card: #ffffff;
+  --c-card-hover: #eef0f4;
+  --c-muted: #64748b;
+  --c-border: #dbe0e8;
+  --c-white: #0f172a;
+
+  --slate-50: #0f172a;
+  --slate-100: #1e293b;
+  --slate-200: #334155;
+  --slate-300: #475569;
+  --slate-400: #475569;
+  --slate-500: #64748b;
+  --slate-600: #94a3b8;
+  --slate-700: #cbd5e1;
+  --slate-800: #e2e8f0;
+  --slate-900: #f1f5f9;
+  --slate-950: #f8fafc;
+}
+
 @layer base {
   body {
     @apply bg-background text-white antialiased;
@@ -23,6 +75,11 @@
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.theme-light ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.18);
   background-clip: content-box;
 }
 
@@ -67,4 +124,21 @@
   background-size: 40px 40px;
   background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
                     linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+/* Light-mode corrections for the literal-rgba surfaces above: the glass
+   panels flip to white glass and the faint grid lines to dark ink. */
+.theme-light .glass-panel {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+.theme-light .glass-panel-purple {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+.theme-light .cyber-grid-bg {
+  background-image: linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
 }

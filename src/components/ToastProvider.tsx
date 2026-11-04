@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useCallback } from "react";
+import React, { createContext, useContext, ReactNode, useCallback, useEffect, useState } from "react";
 import { Toaster, toast as sonnerToast } from "sonner";
+import { getStoredTheme, type Theme } from "@/lib/theme";
 
 export type ToastType = "success" | "error" | "info";
 
@@ -19,6 +20,16 @@ interface ToastContextType {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  // Toasts follow the app theme — the settings toggle announces changes so
+  // this re-renders without a context of its own.
+  const [toasterTheme, setToasterTheme] = useState<Theme>("dark");
+  useEffect(() => {
+    setToasterTheme(getStoredTheme());
+    const onTheme = (e: Event) => setToasterTheme((e as CustomEvent<Theme>).detail);
+    window.addEventListener("rs-theme-changed", onTheme);
+    return () => window.removeEventListener("rs-theme-changed", onTheme);
+  }, []);
+
   const addToast = useCallback((type: ToastType, message: string) => {
     if (type === "success") {
       sonnerToast.success(message);
@@ -36,8 +47,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ addToast, removeToast }}>
       {children}
-      <Toaster 
-        theme="dark" 
+      <Toaster
+        theme={toasterTheme}
         position="bottom-right" 
         toastOptions={{
           style: {
