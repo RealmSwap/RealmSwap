@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { initClientErrorReporting } from "@/lib/sentry.client";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   Server as ServerIcon,
   Store,
@@ -24,6 +25,7 @@ import {
 
 export function SidebarNavigation({ user }: { user: any }) {
   const pathname = usePathname();
+  const { t } = useTranslation();
   // Activate opt-in crash reporting (inert without DSN + user consent).
   useEffect(() => { initClientErrorReporting(); }, []);
   const router = useRouter();
@@ -50,40 +52,40 @@ export function SidebarNavigation({ user }: { user: any }) {
 
   const navSections = [
     {
-      title: "Dashboard",
+      title: t("nav.section.dashboard"),
       links: [
-        { label: "Servers", icon: ServerIcon, href: "/dashboard" },
-        { label: "Marketplace", icon: Store, href: "/dashboard/marketplace" },
+        { label: t("nav.servers"), icon: ServerIcon, href: "/dashboard" },
+        { label: t("nav.marketplace"), icon: Store, href: "/dashboard/marketplace" },
       ]
     },
     {
-      title: "Manage",
+      title: t("nav.section.manage"),
       links: [
-        { label: "Mod Manager", icon: Wrench, href: "/dashboard/mods" },
-        { label: "World Backups", icon: FolderSync, href: "/dashboard/backups" },
-        { label: "Server Config", icon: Settings, href: "/dashboard/config" },
-        { label: "Automation", icon: Clock, href: "/dashboard/schedules" },
-        { label: "Remote Hosts", icon: Network, href: "/dashboard/nodes" },
+        { label: t("nav.mods"), icon: Wrench, href: "/dashboard/mods" },
+        { label: t("nav.backups"), icon: FolderSync, href: "/dashboard/backups" },
+        { label: t("nav.config"), icon: Settings, href: "/dashboard/config" },
+        { label: t("nav.automation"), icon: Clock, href: "/dashboard/schedules" },
+        { label: t("nav.nodes"), icon: Network, href: "/dashboard/nodes" },
       ]
     },
     {
-      title: "Monitor",
+      title: t("nav.section.monitor"),
       links: [
-        { label: "Server Console", icon: Terminal, href: "/dashboard/console" },
-        { label: "Audit Logs", icon: History, href: "/dashboard/logs" },
-        { label: "Game Players", icon: Users, href: "/dashboard/players" },
-        { label: "Team", icon: Users, href: "/dashboard/team" },
-        { label: "Storage", icon: HardDrive, href: "/dashboard/storage" },
+        { label: t("nav.console"), icon: Terminal, href: "/dashboard/console" },
+        { label: t("nav.logs"), icon: History, href: "/dashboard/logs" },
+        { label: t("nav.players"), icon: Users, href: "/dashboard/players" },
+        { label: t("nav.team"), icon: Users, href: "/dashboard/team" },
+        { label: t("nav.storage"), icon: HardDrive, href: "/dashboard/storage" },
       ]
     }
   ];
 
   const allLinks = navSections.flatMap((s) => s.links);
   const mobilePrimary = [
-    { label: "Servers", icon: ServerIcon, href: "/dashboard" },
-    { label: "Mods", icon: Wrench, href: "/dashboard/mods" },
-    { label: "Console", icon: Terminal, href: "/dashboard/console" },
-    { label: "Backups", icon: FolderSync, href: "/dashboard/backups" },
+    { label: t("nav.servers"), icon: ServerIcon, href: "/dashboard" },
+    { label: t("nav.modsShort"), icon: Wrench, href: "/dashboard/mods" },
+    { label: t("nav.consoleShort"), icon: Terminal, href: "/dashboard/console" },
+    { label: t("nav.backupsShort"), icon: FolderSync, href: "/dashboard/backups" },
   ];
   const mobilePrimaryHrefs = new Set(mobilePrimary.map((l) => l.href));
 
@@ -136,7 +138,7 @@ export function SidebarNavigation({ user }: { user: any }) {
           <div
             role="button"
             tabIndex={0}
-            aria-label="Account settings"
+            aria-label={t("nav.settings")}
             onClick={() => router.push("/dashboard/settings")}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); router.push("/dashboard/settings"); } }}
             className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-white/5 hover:border-white/10 transition-colors group cursor-pointer focus:outline-none focus:border-accentPurple/60"
@@ -147,24 +149,24 @@ export function SidebarNavigation({ user }: { user: any }) {
               </div>
               <div className="min-w-0">
                 <div className="text-sm font-bold text-slate-200 truncate group-hover:text-white transition-colors">{user?.name || "User"}</div>
-                <div className="text-[10px] text-accentPurple font-semibold uppercase tracking-wider group-hover:text-white transition-colors">Settings</div>
+                <div className="text-[10px] text-accentPurple font-semibold uppercase tracking-wider group-hover:text-white transition-colors">{t("nav.settings")}</div>
               </div>
             </div>
             <button
               onClick={(e) => { e.stopPropagation(); signOut(); }}
               disabled={signingOut}
-              aria-label="Sign out"
+              aria-label={t("nav.signOut")}
               className="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-red-400/50 disabled:opacity-40"
-              title="Sign Out"
+              title={t("nav.signOut")}
             >
               <LogOut className="w-4 h-4" />
             </button>
           </div>
-          
+
           <div className="flex items-center justify-center gap-4 text-[10px] text-slate-500">
-            <Link href="/terms" className="hover:text-slate-300 transition-colors">Terms of Service</Link>
+            <Link href="/terms" className="hover:text-slate-300 transition-colors">{t("nav.terms")}</Link>
             <span>•</span>
-            <Link href="/privacy" className="hover:text-slate-300 transition-colors">Privacy Policy</Link>
+            <Link href="/privacy" className="hover:text-slate-300 transition-colors">{t("nav.privacy")}</Link>
           </div>
         </div>
       </aside>
@@ -190,7 +192,7 @@ export function SidebarNavigation({ user }: { user: any }) {
         })}
         <button
           onClick={() => setMobileMenuOpen(true)}
-          aria-label="All pages"
+          aria-label={t("nav.more")}
           aria-expanded={mobileMenuOpen}
           className={`flex flex-col items-center gap-1 transition-all ${
             !mobilePrimaryHrefs.has(pathname) && pathname.startsWith("/dashboard")
@@ -199,20 +201,20 @@ export function SidebarNavigation({ user }: { user: any }) {
           }`}
         >
           <Menu className="w-6 h-6" />
-          <span className="text-[10px] font-bold">More</span>
+          <span className="text-[10px] font-bold">{t("nav.more")}</span>
         </button>
       </nav>
 
       {/* Mobile "More" sheet */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-[60] flex items-end" role="dialog" aria-label="All pages">
+        <div className="md:hidden fixed inset-0 z-[60] flex items-end" role="dialog" aria-label={t("nav.allPages")}>
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
           <div className="relative w-full max-h-[80vh] overflow-y-auto custom-scrollbar bg-slate-900 border-t border-white/10 rounded-t-2xl p-6 pb-10 shadow-2xl animate-slide-up">
             <div className="flex items-center justify-between mb-4 sticky top-0 bg-slate-900 pb-2">
-              <span className="text-sm font-extrabold text-white uppercase tracking-wider">All Pages</span>
+              <span className="text-sm font-extrabold text-white uppercase tracking-wider">{t("nav.allPages")}</span>
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Close menu"
@@ -257,7 +259,7 @@ export function SidebarNavigation({ user }: { user: any }) {
               }`}
             >
               <Settings className="w-4 h-4 shrink-0" />
-              <span>Settings</span>
+              <span>{t("nav.settings")}</span>
             </Link>
           </div>
         </div>

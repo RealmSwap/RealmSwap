@@ -9,6 +9,7 @@ import { FirstServerWizard } from "./dashboard/FirstServerWizard";
 import { ConnectionModal } from "./dashboard/ConnectionModal";
 import { FirstBootCelebration } from "./dashboard/FirstBootCelebration";
 import { FirstFriendChecklist } from "./dashboard/FirstFriendChecklist";
+import { useTranslation } from "@/hooks/useTranslation";
 import { PublishRealmModal } from "./dashboard/PublishRealmModal";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -97,6 +98,8 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   // the server exists, until the user clicks Finish.
   const [wizardActive, setWizardActive] = useState(false);
 
+  const { t } = useTranslation();
+
   // First-friend checklist: shown while the user's single server hasn't had a
   // friend online yet. The wizard covers zero servers; this covers the gap
   // between "deployed" and "someone actually joined". Per-server guards in
@@ -136,8 +139,8 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
       }
       return current;
     });
-    addToast("success", "Your first friend is online — game night is officially real. 🎉");
-  }, [addToast]);
+    addToast("success", t("dash.friendJoinedToast"));
+  }, [addToast, t]);
 
   // Live install/download progress for STARTING/UPDATING servers
   const [progressMap, setProgressMap] = useState<
@@ -534,14 +537,14 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
                   <ServerIcon className="w-5 h-5 text-accentPurple" />
-                  <span>Active Servers</span>
+                  <span>{t("dash.activeServers")}</span>
                 </h2>
                 <Link
                   href="/dashboard/servers/new"
                   className="px-4 py-2 rounded-xl bg-accentPurple hover:bg-accentPurple/90 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-accentPurple/25 hover:-translate-y-0.5"
                 >
                   <Plus className="w-4 h-4" />
-                  Deploy New Server
+                  {t("dash.deployNew")}
                 </Link>
               </div>
               

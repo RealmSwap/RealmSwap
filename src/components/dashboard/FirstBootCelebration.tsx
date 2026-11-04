@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Link2, QrCode, X } from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
+import { useTranslation } from "@/hooks/useTranslation";
 import { isLoopbackOrigin, statusPageUrl } from "@/lib/shareLink";
 
 const CONFETTI_COLORS = ["#a78bfa", "#34d399", "#60a5fa", "#fbbf24", "#f472b6", "#f87171"];
@@ -24,6 +25,7 @@ export function FirstBootCelebration({
   onOpenJoinInfo: () => void;
 }) {
   const { addToast } = useToast();
+  const { t } = useTranslation();
   const [copied, setCopied] = React.useState(false);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const shareLink = server.statusShareCode ? statusPageUrl(server.statusShareCode, origin) : null;
@@ -38,7 +40,7 @@ export function FirstBootCelebration({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      addToast("error", "Could not copy the link");
+      addToast("error", t("celebrate.copyError"));
     }
   };
 
@@ -87,9 +89,9 @@ export function FirstBootCelebration({
         </button>
 
         <div className="text-5xl mb-3">🎉</div>
-        <h2 className="text-2xl font-extrabold text-white">Your server is live!</h2>
+        <h2 className="text-2xl font-extrabold text-white">{t("celebrate.title")}</h2>
         <p className="text-sm text-slate-400 mt-2 leading-relaxed">
-          &lsquo;{server.name}&rsquo; just came online for the first time. Time to invite some friends.
+          {t("celebrate.body", { name: server.name })}
         </p>
 
         <div className="mt-6 space-y-2">
@@ -98,7 +100,7 @@ export function FirstBootCelebration({
             className="w-full py-2.5 rounded-xl bg-accentPurple hover:bg-accentPurple/80 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors"
           >
             <QrCode className="w-4 h-4" />
-            Open Join Info
+            {t("celebrate.joinInfo")}
           </button>
           {shareLink && !localOnly && (
             <button
@@ -107,14 +109,14 @@ export function FirstBootCelebration({
               title="Anyone with this link can see if the server is up — no login needed"
             >
               <Link2 className="w-4 h-4" />
-              {copied ? "Copied!" : "Copy status page link"}
+              {copied ? t("celebrate.copied") : t("celebrate.copyLink")}
             </button>
           )}
           <button
             onClick={onClose}
             className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors"
           >
-            Later
+            {t("celebrate.later")}
           </button>
         </div>
       </div>

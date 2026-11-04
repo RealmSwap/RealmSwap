@@ -13,7 +13,9 @@ export const settingsIpcScenarios = [
     const { page, electronApp } = ctx;
 
     await dismissCelebrationIfPresent(page);
-    await page.locator('[aria-label="Account settings"]').click();
+    // The sidebar profile button's accessible name follows the locale
+    // (nav.settings); the harness runs with the default English strings.
+    await page.locator('[aria-label="Settings"]').click();
     await page.getByRole("heading", { name: "Settings", exact: true }).waitFor({ timeout: 20_000 });
     await page.getByRole("heading", { name: "Discord Integration", exact: true }).waitFor({ timeout: 10_000 });
     await page.getByRole("heading", { name: "Notifications", exact: true }).waitFor({ timeout: 10_000 });

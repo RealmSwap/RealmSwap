@@ -2,9 +2,11 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
-import { Save, UploadCloud } from "lucide-react";
+import { Save, UploadCloud, Languages } from "lucide-react";
 import { toast } from "sonner";
 import { initClientErrorReporting } from "@/lib/sentry.client";
+import { useTranslation } from "@/hooks/useTranslation";
+import { LOCALES } from "@/components/LocaleProvider";
 
 interface RealmReport {
   id: string;
@@ -27,6 +29,7 @@ function reportAge(dateStr: string): string {
 }
 
 export function SettingsView({ user }: { user: any }) {
+  const { t, locale, setLocale } = useTranslation();
   const [discordId, setDiscordId] = useState(user?.discordId || "");
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -305,6 +308,30 @@ export function SettingsView({ user }: { user: any }) {
                 </button>
               </div>
             )}
+          </form>
+
+          <form onSubmit={(e) => e.preventDefault()} className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5">
+            <div>
+              <h2 className="text-xl font-bold text-white mb-1">{t("settings.language.title")}</h2>
+              <p className="text-xs text-slate-400 mb-6">{t("settings.language.body")}</p>
+
+              <div className="flex items-center justify-between p-4 bg-slate-900 border border-white/5 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Languages className="w-4 h-4 text-slate-400" />
+                  <h3 className="text-sm font-bold text-slate-200">{t("settings.language.title")}</h3>
+                </div>
+                <select
+                  value={locale}
+                  onChange={(e) => setLocale(e.target.value)}
+                  aria-label={t("settings.language.title")}
+                  className="bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-accentPurple focus:outline-none"
+                >
+                  {LOCALES.map((l) => (
+                    <option key={l.id} value={l.id}>{l.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </form>
 
           <form onSubmit={(e) => e.preventDefault()} className="space-y-6 bg-slate-950/50 p-6 rounded-2xl border border-white/5">

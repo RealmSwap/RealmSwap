@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ModalProvider } from "@/components/ModalProvider";
 import { ToastProvider } from "@/components/ToastProvider";
+import { LocaleProvider } from "@/components/LocaleProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -22,7 +23,7 @@ export default function RootLayout({
       <body className="bg-background text-white antialiased cyber-grid-bg">
         <ToastProvider>
           <ModalProvider>
-            {children}
+            <LocaleProvider>{children}</LocaleProvider>
           </ModalProvider>
         </ToastProvider>
       </body>
