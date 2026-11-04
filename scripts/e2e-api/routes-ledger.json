@@ -700,6 +700,14 @@
       "surface/server-surface"
     ]
   },
+  "GET /api/servers/[id]/version": {
+    "status": "manual",
+    "scenarios": []
+  },
+  "POST /api/servers/[id]/version": {
+    "status": "manual",
+    "scenarios": []
+  },
   "GET /api/servers": {
     "status": "covered",
     "scenarios": [

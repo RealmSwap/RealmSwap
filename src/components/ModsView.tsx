@@ -403,6 +403,15 @@ export default function ModsView({ user }: ModsViewProps) {
   const [installedMods, setInstalledMods] = useState<any[]>([]);
   const [loaderInfo, setLoaderInfo] = useState<{ supported: boolean; loader: { type: string; loaderVersion: string; minecraftVersion: string } | null } | null>(null);
   const [loaderBusy, setLoaderBusy] = useState(false);
+  const [mcVersionInfo, setMcVersionInfo] = useState<{
+    supported: boolean;
+    upgradeSupported: boolean;
+    currentVersion: string | null;
+    loader: { type: string; loaderVersion: string; minecraftVersion: string } | null;
+    releases: string[];
+  } | null>(null);
+  const [versionTarget, setVersionTarget] = useState("");
+  const [versionBusy, setVersionBusy] = useState(false);
   const { event: installEvent, start: startInstallProgress, dismiss: dismissInstallProgress } = useModInstallProgress(selectedServer?.id);
   const [updatingModId, setUpdatingModId] = useState<string | null>(null);
   const [togglingModId, setTogglingModId] = useState<string | null>(null);
@@ -554,6 +563,14 @@ export default function ModsView({ user }: ModsViewProps) {
       fetch(`/api/servers/${selectedServer.id}/mods/loader`)
         .then((r) => (r.ok ? r.json() : null))
         .then((d) => d && setLoaderInfo(d))
+        .catch(() => {});
+      fetch(`/api/servers/${selectedServer.id}/version`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (!d || !d.supported) return;
+          setMcVersionInfo(d);
+          setVersionTarget(d.releases?.find((v: string) => v !== d.currentVersion) ?? "");
+        })
         .catch(() => {});
       fetch(`/api/servers/${selectedServer.id}/mods`)
         .then((res) => res.json())
@@ -771,6 +788,59 @@ export default function ModsView({ user }: ModsViewProps) {
       else toast.error(err.message);
     } finally {
       setLoaderBusy(false);
+    }
+  };
+
+  /** Re-fetch the Minecraft version row — after a switch (and its loader
+   *  reinstall), both the version row and the loader banner go stale. */
+  const refreshMcVersionState = async () => {
+    if (!selectedServer) return;
+    const res = await fetch(`/api/servers/${selectedServer.id}/version`);
+    if (res.ok) {
+      const d = await res.json();
+      if (d.supported) {
+        setMcVersionInfo(d);
+        setVersionTarget(d.releases?.find((v: string) => v !== d.currentVersion) ?? "");
+      }
+    }
+  };
+
+  const handleUpgradeVersion = async () => {
+    if (!selectedServer || !versionTarget) return;
+    if (mcVersionInfo?.upgradeSupported === false) return;
+    const target = versionTarget;
+    const doSwitch = async () => {
+      setVersionBusy(true);
+      const installId = newInstallId();
+      startInstallProgress(installId);
+      try {
+        const res = await fetch(`/api/servers/${selectedServer.id}/version`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ targetVersion: target, installId }),
+        });
+        const data = await res.json();
+        if (!res.ok) { const e = new Error(data.error || `Failed to switch to Minecraft ${target}`); (e as any).bootOutput = data.bootOutput; (e as any).warnings = data.warnings; throw e; }
+        toast.success(data.message || `This server now runs Minecraft ${target}.`);
+        await Promise.all([refreshMcVersionState(), refreshLoaderState()]);
+      } catch (err: any) {
+        if ((err as any).bootOutput) showError(err.message, (err as any).bootOutput, (err as any).warnings);
+        else toast.error(err.message);
+      } finally {
+        setVersionBusy(false);
+      }
+    };
+    if (installedMods.length > 0) {
+      showModal({
+        type: "warning",
+        title: "Switch Minecraft Version",
+        message: `Some of your ${installedMods.length} installed mod${installedMods.length === 1 ? "" : "s"} may not support Minecraft ${target} yet. The switch is snapshot-backed: mods that won't load are quarantined, and if the server can't boot everything rolls back. Switch to ${target}?`,
+        confirmText: "Switch Version",
+        cancelText: "Cancel",
+        onConfirm: doSwitch,
+      });
+    } else {
+      await doSwitch();
     }
   };
 
@@ -1977,6 +2047,38 @@ export default function ModsView({ user }: ModsViewProps) {
                       </div>
                     </div>
                   )
+                )}
+                {game === "MINECRAFT" && mcVersionInfo?.supported && mcVersionInfo.currentVersion && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl bg-violet-500/10 border border-violet-500/25 text-xs text-violet-300">
+                    <span className="font-bold flex items-center gap-2">
+                      <Layers className="w-4 h-4" />
+                      Server version: Minecraft {mcVersionInfo.currentVersion}
+                      {mcVersionInfo.loader
+                        ? ` · ${LOADER_LABELS[mcVersionInfo.loader.type] || mcVersionInfo.loader.type} ${mcVersionInfo.loader.loaderVersion}`
+                        : " · vanilla"}
+                    </span>
+                    {mcVersionInfo.upgradeSupported !== false && mcVersionInfo.releases.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={versionTarget}
+                          onChange={(e) => setVersionTarget(e.target.value)}
+                          className="px-2 py-1.5 rounded-lg bg-slate-800/80 border border-slate-600/60 text-slate-200 font-bold focus:outline-none focus:ring-1 focus:ring-violet-400/60"
+                        >
+                          {mcVersionInfo.releases.filter((v) => v !== mcVersionInfo.currentVersion).slice(0, 60).map((v) => (
+                            <option key={v} value={v}>Minecraft {v}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={handleUpgradeVersion}
+                          disabled={versionBusy || !versionTarget}
+                          className="px-3 py-1.5 rounded-lg bg-violet-500/20 border border-violet-500/40 hover:bg-violet-500/30 text-violet-200 font-bold transition-colors disabled:opacity-50"
+                          title="Snapshot-backed version switch: swaps server.jar, reinstalls the loader for the new release, boot-tests in the sandbox, and rolls back automatically if the boot fails."
+                        >
+                          {versionBusy ? "Switching…" : "Switch Version"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
                 {game === "TERRARIA" && loaderInfo?.supported && (
                   loaderInfo.loader ? (
