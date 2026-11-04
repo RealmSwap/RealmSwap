@@ -91,7 +91,7 @@ export default function StorageView({ user }: { user: any }) {
   const freeGB = storage?.totals.freeGB ?? null;
 
   return (
-    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+    <div className="min-h-screen flex bg-background text-slate-100 font-sans selection:bg-accentPurple/30">
       {/* Sidebar */}
       <SidebarNavigation user={user} />
 

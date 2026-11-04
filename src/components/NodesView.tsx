@@ -115,7 +115,7 @@ export default function NodesView({ user }: { user: { id: string; role: string; 
   };
 
   return (
-    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+    <div className="min-h-screen flex bg-background text-slate-100 font-sans selection:bg-accentPurple/30">
       <SidebarNavigation user={user} />
 
       <main className="flex-1 p-8 max-w-4xl">

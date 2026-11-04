@@ -323,7 +323,7 @@ export default function BackupsView({ user }: BackupsViewProps) {
   const totalBackupMB = backups.reduce((sum, b) => sum + (Number(b.fileSizeMB) || 0), 0);
 
   return (
-    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+    <div className="min-h-screen flex bg-background text-slate-100 font-sans selection:bg-accentPurple/30">
       
       {/* Sidebar Navigation */}
       <SidebarNavigation user={user} />

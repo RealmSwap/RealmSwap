@@ -3,6 +3,7 @@ import "./globals.css";
 import { ModalProvider } from "@/components/ModalProvider";
 import { ToastProvider } from "@/components/ToastProvider";
 import { LocaleProvider } from "@/components/LocaleProvider";
+import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: {
@@ -21,6 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-background text-white antialiased cyber-grid-bg">
+        {/* Runs before hydration so a saved light theme paints with the first
+            frame instead of flashing dark. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
         <ToastProvider>
           <ModalProvider>
             <LocaleProvider>{children}</LocaleProvider>

@@ -130,10 +130,10 @@ export default function AutomationEditor({ server, automation, onSave, onClose }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6 overflow-y-auto">
-      <div className="bg-[#030712] border border-white/10 rounded-2xl w-full max-w-4xl max-h-full flex flex-col shadow-2xl relative animate-slide-down">
+      <div className="bg-background border border-white/10 rounded-2xl w-full max-w-4xl max-h-full flex flex-col shadow-2xl relative animate-slide-down">
         
         {/* Header */}
-        <div className="p-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#030712] z-10 rounded-t-2xl">
+        <div className="p-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-background z-10 rounded-t-2xl">
           <div>
             <h2 className="text-2xl font-black text-white">{automation ? "Edit Automation" : "Create Automation"}</h2>
             <p className="text-slate-400 text-sm mt-1">Configure workflow for {server.name}</p>
@@ -374,7 +374,7 @@ export default function AutomationEditor({ server, automation, onSave, onClose }
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-white/5 bg-[#030712] rounded-b-2xl flex justify-end gap-3 sticky bottom-0 z-10">
+        <div className="p-6 border-t border-white/5 bg-background rounded-b-2xl flex justify-end gap-3 sticky bottom-0 z-10">
           <button onClick={onClose} className="px-6 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-white/5 transition-colors">
             Cancel
           </button>

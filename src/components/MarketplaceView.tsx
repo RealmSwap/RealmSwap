@@ -642,7 +642,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
   /* ─── Render ──────────────────────────────────────────────────── */
 
   return (
-    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+    <div className="min-h-screen flex bg-background text-slate-100 font-sans selection:bg-accentPurple/30">
       {/* Sidebar Navigation */}
       <SidebarNavigation user={user} />
 
@@ -719,7 +719,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                       onClick={() => setSelectedTemplate(hero)}
                     >
                       {/* Background Effects */}
-                      <div className="absolute inset-0 bg-[#060a14]" />
+                      <div className="absolute inset-0 bg-card" />
                       <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-20 group-hover:opacity-30 transition-opacity duration-700`} />
                       <div className="absolute -top-32 -right-32 w-96 h-96 bg-white/5 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
                       
@@ -984,7 +984,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
       {/* ─── Detail Modal ─────────────────────────────────────── */}
       {selectedTemplate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => { setSelectedTemplate(null); setShowSecurityReport(false); setDeployProgress(null); setReportOpen(false); }}>
-          <div className="bg-[#0f111a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-slide-down overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className="bg-card border border-white/10 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-slide-down overflow-hidden" onClick={e => e.stopPropagation()}>
             
             {/* Modal Header */}
             <div className="relative p-8 flex justify-between items-start border-b border-white/10 overflow-hidden">
@@ -1089,7 +1089,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
               );
             })() : (
               /* Normal Detail View */
-              <div className="p-8 overflow-y-auto flex-1 space-y-8 bg-[#0b0e14]">
+              <div className="p-8 overflow-y-auto flex-1 space-y-8 bg-card">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5 flex flex-col items-center justify-center shadow-lg backdrop-blur-sm">
                     <Download className="w-6 h-6 text-emerald-400 mb-2" />
@@ -1240,7 +1240,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
       {/* ─── Report Dialog ─────────────────────────────────────── */}
       {selectedTemplate && reportOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setReportOpen(false)}>
-          <div className="bg-[#0f111a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md animate-slide-down overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className="bg-card border border-white/10 rounded-2xl shadow-2xl w-full max-w-md animate-slide-down overflow-hidden" onClick={e => e.stopPropagation()}>
 
             {/* Dialog Header */}
             <div className="p-6 flex justify-between items-start border-b border-white/10">
