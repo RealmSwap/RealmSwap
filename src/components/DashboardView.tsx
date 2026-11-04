@@ -8,6 +8,7 @@ import { VaultSection } from "./dashboard/VaultSection";
 import { FirstServerWizard } from "./dashboard/FirstServerWizard";
 import { ConnectionModal } from "./dashboard/ConnectionModal";
 import { FirstBootCelebration } from "./dashboard/FirstBootCelebration";
+import { FirstFriendChecklist } from "./dashboard/FirstFriendChecklist";
 import { PublishRealmModal } from "./dashboard/PublishRealmModal";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -96,6 +97,48 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   // The first-run wizard stays mounted through its post-deploy step even once
   // the server exists, until the user clicks Finish.
   const [wizardActive, setWizardActive] = useState(false);
+
+  // First-friend checklist: shown while the user's single server hasn't had a
+  // friend online yet. The wizard covers zero servers; this covers the gap
+  // between "deployed" and "someone actually joined". Per-server guards in
+  // localStorage are read after mount so SSR hydration stays honest.
+  const [checklistFor, setChecklistFor] = useState<string | null>(null);
+  useEffect(() => {
+    if (wizardActive || data.servers.length !== 1) {
+      setChecklistFor(null);
+      return;
+    }
+    const s = data.servers[0];
+    let skip = false;
+    try {
+      skip =
+        !!localStorage.getItem(`rs-checklist-dismissed-${s.id}`) ||
+        !!localStorage.getItem(`rs-checklist-complete-${s.id}`);
+    } catch {}
+    setChecklistFor(skip ? null : s.id);
+  }, [data.servers, wizardActive]);
+
+  const dismissChecklist = () => {
+    if (!checklistFor) return;
+    try {
+      localStorage.setItem(`rs-checklist-dismissed-${checklistFor}`, "1");
+    } catch {}
+    setChecklistFor(null);
+  };
+
+  // Fires once from the checklist when telemetry first shows a player in —
+  // store completion (the next dashboard poll hides the card) and celebrate.
+  const handleFriendJoined = React.useCallback(() => {
+    setChecklistFor((current) => {
+      if (current) {
+        try {
+          localStorage.setItem(`rs-checklist-complete-${current}`, "1");
+        } catch {}
+      }
+      return current;
+    });
+    addToast("success", "Your first friend is online — game night is officially real. 🎉");
+  }, [addToast]);
 
   // Live install/download progress for STARTING/UPDATING servers
   const [progressMap, setProgressMap] = useState<
@@ -579,6 +622,16 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                 )}
               </div>
             </section>
+
+            {checklistFor && data.servers[0] && (
+              <FirstFriendChecklist
+                server={data.servers[0]}
+                onOpenJoinInfo={() => setConnectionServer(data.servers[0])}
+                onStart={() => handlePowerAction(data.servers[0].id, "start")}
+                onDismiss={dismissChecklist}
+                onFriendJoined={handleFriendJoined}
+              />
+            )}
             </div>
             
             {/* Right Column: Server Health */}
