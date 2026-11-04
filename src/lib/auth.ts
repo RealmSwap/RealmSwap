@@ -178,6 +178,10 @@ export async function getAuthenticatedUser() {
   if (session?.access_token) {
     const payload = verifySupabaseTokenLocal(session.access_token);
     if (payload?.sub) {
+      // The hosted status relay pushes with the owner's own token (RLS
+      // auth.uid() = owner_id) — refresh its cache on every authed request.
+      const { cacheRelaySession } = await import("@/lib/statusRelay");
+      cacheRelaySession(session.access_token, payload.sub);
       return localMirrorFor({
         id: payload.sub,
         email: payload.email,
@@ -200,5 +204,14 @@ export async function getAuthenticatedUser() {
     return null;
   }
   if (!supabaseUser) return null;
+  // getUser() may have refreshed the session — re-read it for the relay cache.
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = (data.session as { access_token?: string } | null)?.access_token;
+    if (token) {
+      const { cacheRelaySession } = await import("@/lib/statusRelay");
+      cacheRelaySession(token, supabaseUser.id);
+    }
+  } catch {}
   return localMirrorFor(supabaseUser);
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { clearStatusCache } from "@/lib/statusShare";
+import { relayStatusSnapshot, removeHostedStatus } from "@/lib/statusRelay";
 import crypto from "crypto";
 
 async function generateCode(): Promise<string> {
@@ -53,6 +54,11 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     // The public page caches per code for 20s; a rotated-out or disabled
     // code must stop answering immediately, not for one more TTL window.
     if (previousCode && previousCode !== code) clearStatusCache(previousCode);
+
+    // Mirror the change to the hosted status page (realmswap.app/s/<code>).
+    // Fire-and-forget — the local page already works; the relay is a bonus.
+    if (code) relayStatusSnapshot(params.id, { force: true }).catch(() => {});
+    else if (previousCode) removeHostedStatus(previousCode).catch(() => {});
 
     await prisma.activityLog.create({
       data: {

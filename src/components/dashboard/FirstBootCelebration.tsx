@@ -2,10 +2,10 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { Link2, QrCode, X } from "lucide-react";
+import { Link2, Globe, QrCode, X } from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
 import { useTranslation } from "@/hooks/useTranslation";
-import { isLoopbackOrigin, statusPageUrl } from "@/lib/shareLink";
+import { isLoopbackOrigin, statusPageUrl, hostedStatusPageUrl } from "@/lib/shareLink";
 
 const CONFETTI_COLORS = ["#a78bfa", "#34d399", "#60a5fa", "#fbbf24", "#f472b6", "#f87171"];
 
@@ -27,8 +27,13 @@ export function FirstBootCelebration({
   const { addToast } = useToast();
   const { t } = useTranslation();
   const [copied, setCopied] = React.useState(false);
+  const [copiedHosted, setCopiedHosted] = React.useState(false);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const shareLink = server.statusShareCode ? statusPageUrl(server.statusShareCode, origin) : null;
+  // The hosted copy lives on realmswap.app — it works even when this PC is
+  // off, because the app relays a snapshot to the shared backend.
+  const hostedLink = server.statusShareCode ? hostedStatusPageUrl(server.statusShareCode) : null;
+  const hostedConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL);
   // The dashboard runs on the host's machine — a loopback link can't leave it,
   // so don't offer copying a "public" URL that friends can't open.
   const localOnly = !!shareLink && isLoopbackOrigin(origin);
@@ -39,6 +44,17 @@ export function FirstBootCelebration({
       await navigator.clipboard.writeText(shareLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      addToast("error", t("celebrate.copyError"));
+    }
+  };
+
+  const copyHostedLink = async () => {
+    if (!hostedLink) return;
+    try {
+      await navigator.clipboard.writeText(hostedLink);
+      setCopiedHosted(true);
+      setTimeout(() => setCopiedHosted(false), 2000);
     } catch {
       addToast("error", t("celebrate.copyError"));
     }
@@ -110,6 +126,16 @@ export function FirstBootCelebration({
             >
               <Link2 className="w-4 h-4" />
               {copied ? t("celebrate.copied") : t("celebrate.copyLink")}
+            </button>
+          )}
+          {hostedLink && hostedConfigured && (
+            <button
+              onClick={copyHostedLink}
+              className="w-full py-2.5 rounded-xl bg-slate-800 border border-white/5 hover:border-emerald-500/40 text-slate-200 hover:text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+              title={t("celebrate.copyPublicHint")}
+            >
+              <Globe className="w-4 h-4" />
+              {copiedHosted ? t("celebrate.copied") : t("celebrate.copyPublic")}
             </button>
           )}
           <button
