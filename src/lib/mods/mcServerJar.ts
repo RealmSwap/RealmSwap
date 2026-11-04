@@ -71,6 +71,36 @@ export async function resolveVanillaServerJar(
   };
 }
 
+let releasesCache: { at: number; ids: string[] } | null = null;
+const RELEASES_TTL_MS = 60 * 60 * 1000;
+
+/**
+ * Every release Mojang publishes, newest first — the version picker's
+ * options. Cached for an hour (the manifest changes only on release days);
+ * callers passing their own fetchImpl (tests) always skip the cache.
+ */
+export async function listMinecraftReleases(
+  deps?: { fetchImpl?: typeof fetch }
+): Promise<string[]> {
+  if (!deps && releasesCache && Date.now() - releasesCache.at < RELEASES_TTL_MS) {
+    return releasesCache.ids;
+  }
+  const doFetch = deps?.fetchImpl ?? fetch;
+  const res = await doFetch(VERSION_MANIFEST_URL, { headers: { Accept: "application/json" } });
+  if (!res.ok) {
+    throw new Error(`Couldn't load Mojang's version manifest (HTTP ${res.status}).`);
+  }
+  const manifest = (await res.json()) as VersionManifest;
+  const ids = (manifest.versions ?? [])
+    .filter((v) => v.type === "release")
+    .map((v) => v.id);
+  if (ids.length === 0) {
+    throw new Error("Mojang's version manifest listed no releases.");
+  }
+  if (!deps) releasesCache = { at: Date.now(), ids };
+  return ids;
+}
+
 /**
  * Download and swap in the given vanilla server.jar. The old jar is left to
  * the caller's snapshot — a failed boot test rolls the swap back. The staged
