@@ -173,13 +173,16 @@ export default function AutomationsView({ user }: AutomationsViewProps) {
       return d;
     });
     const byDay: Map<number, { name: string; time: string }[]> = new Map();
+    // An automation whose schedule can't be expanded used to just vanish from
+    // the calendar — name it instead so a broken config isn't invisible.
+    const unrenderable: string[] = [];
     for (const a of automations) {
       if (!a.enabled) continue;
       if ((EVENT_TRIGGER_TYPES as readonly string[]).includes(a.triggerType)) continue;
       let config = {};
-      try { config = a.triggerConfig ? JSON.parse(a.triggerConfig) : {}; } catch {}
+      try { config = a.triggerConfig ? JSON.parse(a.triggerConfig) : {}; } catch { unrenderable.push(a.name); continue; }
       let occurrences: Date[] = [];
-      try { occurrences = expandOccurrences(a.triggerType, config, now, 7); } catch {}
+      try { occurrences = expandOccurrences(a.triggerType, config, now, 7); } catch { unrenderable.push(a.name); }
       for (const occ of occurrences) {
         const idx = days.findIndex(d =>
           d.getFullYear() === occ.getFullYear() && d.getMonth() === occ.getMonth() && d.getDate() === occ.getDate()
@@ -195,6 +198,7 @@ export default function AutomationsView({ user }: AutomationsViewProps) {
     return {
       days,
       byDay,
+      unrenderable,
       eventTriggered: automations.filter(
         a => a.enabled && (EVENT_TRIGGER_TYPES as readonly string[]).includes(a.triggerType)
       ),
@@ -355,6 +359,15 @@ export default function AutomationsView({ user }: AutomationsViewProps) {
                         </span>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {calendar.unrenderable.length > 0 && (
+                  <div className="mt-6 pt-4 border-t border-white/5">
+                    <span className="text-xs font-bold text-amber-500/80 uppercase tracking-wider">Couldn't draw on the calendar</span>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {calendar.unrenderable.join(", ")} — the saved schedule didn't parse. Re-saving the automation rebuilds it.
+                    </p>
                   </div>
                 )}
              </div>
