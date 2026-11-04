@@ -9,6 +9,16 @@ export function statusPageUrl(code: string, origin: string): string {
 }
 
 /**
+ * The hosted copy of a status page (realmswap.app/s/<code>) — reachable even
+ * when the host PC is off, because the app relays a snapshot to the shared
+ * backend (src/lib/statusRelay.ts). Env-overridable for self-hosted sites.
+ */
+export function hostedStatusPageUrl(code: string): string {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://realmswap.app";
+  return `${site.replace(/\/+$/, "")}/s/${code}`;
+}
+
+/**
  * The dashboard app runs on the host's machine (localhost in dev,
  * 127.0.0.1:<port> packaged), and that port is never exposed to the
  * internet — it's the authenticated control plane. A status link copied

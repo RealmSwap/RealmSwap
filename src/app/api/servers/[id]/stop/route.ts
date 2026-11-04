@@ -41,6 +41,12 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       const { stopTunnel } = await import("@/lib/tunnels");
       await stopTunnel(server.id);
 
+      // The monitor tick only runs for live servers, so a deliberate stop
+      // would otherwise leave the hosted status page claiming "RUNNING"
+      // until the host PC goes quiet. Force-push the new state.
+      const { relayStatusSnapshot } = await import("@/lib/statusRelay");
+      relayStatusSnapshot(serverId, { force: true }).catch(() => {});
+
       return NextResponse.json(updated);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 400 });

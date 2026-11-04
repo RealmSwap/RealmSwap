@@ -97,6 +97,8 @@
   "celebrate.body": "'{name}' just came online for the first time. Time to invite some friends.",
   "celebrate.joinInfo": "Open Join Info",
   "celebrate.copyLink": "Copy status page link",
+  "celebrate.copyPublic": "Copy public link (works when your PC is off)",
+  "celebrate.copyPublicHint": "Anyone with this link sees the server's status on realmswap.app — even while this PC is off.",
   "celebrate.copied": "Copied!",
   "celebrate.later": "Later",
   "celebrate.copyError": "Could not copy the link",

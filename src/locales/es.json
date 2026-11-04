@@ -97,6 +97,8 @@
   "celebrate.body": "'{name}' se conectó por primera vez. Es hora de invitar a algunos amigos.",
   "celebrate.joinInfo": "Abrir info de conexión",
   "celebrate.copyLink": "Copiar enlace de la página de estado",
+  "celebrate.copyPublic": "Copiar enlace público (funciona con el PC apagado)",
+  "celebrate.copyPublicHint": "Quien tenga este enlace ve el estado del servidor en realmswap.app — incluso con este PC apagado.",
   "celebrate.copied": "¡Copiado!",
   "celebrate.later": "Después",
   "celebrate.copyError": "No se pudo copiar el enlace",
