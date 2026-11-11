@@ -1,0 +1,57 @@
+# One-off utility: regenerate package-lock.json on the CI platform (ubuntu,
+# Node 20 — exactly what npm ci runs on in CI) and commit it back. Exists
+# because npm's lockfile regeneration is platform-dependent in two ways:
+# the Linux-gated optional subtree of next (rolldown-vite) is only written
+# when resolving on Linux, and npm occasionally omits optional-platform
+# entries on other OSes (npm/cli#4828).
+#
+# Dispatch-only; installs dependencies and commits the lock — it never runs
+# the test suites. The generated client is discarded so only the lock moves.
+name: Regen Lock (one-off)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to regenerate package-lock.json on"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  regen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.branch }}
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+
+      # npm/cli#4828: a fresh resolve (no stale lock) is what produces the
+      # complete optional-platform matrix.
+      - name: Regenerate package-lock
+        run: |
+          rm -f package-lock.json
+          npm install --no-audit --no-fund
+
+      # The gate is the real thing CI runs: if this lock isn't npm-ci-valid,
+      # the job fails here instead of shipping a broken lock.
+      - name: Validate with npm ci
+        run: npm ci --dry-run
+
+      - name: Discard generated-client churn
+        run: git checkout -- src/generated/client || true
+
+      - name: Commit the refreshed lock
+        run: |
+          git config user.name "codyrmills28"
+          git config user.email "codyrmills28@users.noreply.github.com"
+          git add package-lock.json
+          git -c commit.gpgsign=false commit -m "chore(deps): regenerate package-lock on Linux (CI-valid)"
+          git push

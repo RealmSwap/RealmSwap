@@ -11,6 +11,18 @@
       "agents/nodes-lifecycle"
     ]
   },
+  "GET /api/telemetry": {
+    "status": "covered",
+    "scenarios": [
+      "telemetry/usage"
+    ]
+  },
+  "POST /api/telemetry": {
+    "status": "covered",
+    "scenarios": [
+      "telemetry/usage"
+    ]
+  },
 
   "POST /api/agents/register": {
     "status": "covered",

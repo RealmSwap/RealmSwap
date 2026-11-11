@@ -69,6 +69,7 @@ export class FakeSupabase {
   private realms: FakeRealm[] = [];
   private realmVersions: FakeRealmVersion[] = [];
   private realmVotes: FakeRealmVote[] = [];
+  private usageSnapshots: Array<Record<string, unknown> & { created_at: string }> = [];
   private server: http.Server | null = null;
 
   addUser(user: FakeUser) {
@@ -239,6 +240,25 @@ export class FakeSupabase {
             created_at: new Date().toISOString(),
           });
           return this.send(res, 201, []);
+        }
+        // Anonymous usage snapshots (strictly opt-in telemetry): insert-only,
+        // like the real table's RLS — accepted and stored, never readable.
+        if (restPath === "usage_snapshots") {
+          if (req.method === "POST") {
+            const body = await this.readBody(req);
+            const existing = this.usageSnapshots.findIndex(
+              (u) => u.install_id === body.install_id && u.day === body.day
+            );
+            if (existing >= 0) {
+              return this.send(res, 409, {
+                code: "23505",
+                message: "duplicate key value violates unique constraint usage_snapshots_pkey",
+              });
+            }
+            this.usageSnapshots.push({ ...body, created_at: new Date().toISOString() });
+            return this.send(res, 201, []);
+          }
+          return this.send(res, 200, []);
         }
         if (restPath === "realm_votes") {
           if (req.method === "POST") {

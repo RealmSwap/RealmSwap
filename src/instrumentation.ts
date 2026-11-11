@@ -18,6 +18,11 @@ export async function register() {
     const { maybePruneTelemetry } = await import("@/lib/telemetryRetention");
     maybePruneTelemetry();
 
+    // The anonymous usage snapshot (strictly opt-in; off until the admin
+    // consents) rides this boot + an hourly timer of its own.
+    const { startUsageTelemetry } = await import("@/lib/telemetry/sender");
+    startUsageTelemetry();
+
     // Docker containers outlive this process — reattach log followers, exit
     // watchers, and monitoring (or mark containers that are gone as stopped).
     const { getRunner } = await import("@/lib/runners");
