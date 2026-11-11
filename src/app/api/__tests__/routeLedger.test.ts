@@ -47,6 +47,13 @@ function routesOnDisk(): Map<string, string> {
       if (entry.name !== "route.ts") continue;
       // Ledger keys are URL paths; on Windows the directory separator is "\".
       const routePath = full.slice(API_DIR.length, -"route.ts".length).replace(/\\/g, "/").replace(/\/$/, "") || "";
+      // path.join emits "\" on Windows — normalize to "/" so the keys match
+      // the ledger's forward-slash routes on every platform.
+      const routePath = full
+        .slice(API_DIR.length, -"route.ts".length)
+        .split(path.sep)
+        .join("/")
+        .replace(/\/$/, "") || "";
       const src = fs.readFileSync(full, "utf8");
       for (const match of Array.from(src.matchAll(/export async function (GET|POST|PUT|DELETE|PATCH)/g))) {
         found.set(`${match[1]} /api${routePath}`, path.relative(REPO_ROOT, full));

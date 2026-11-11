@@ -12,7 +12,8 @@ import {
   QrCode,
   CloudUpload,
   CalendarClock,
-  ExternalLink
+  ExternalLink,
+  Gamepad2
 } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -28,10 +29,12 @@ import { useTranslation } from "@/hooks/useTranslation";
  * offsite S3 backups, and a snapshot schedule.
  */
 export function FirstServerWizard({
+  isAdmin,
   onDeployed,
   onDone,
   onOpenConnection
 }: {
+  isAdmin: boolean;
   onDeployed: (server: any) => void;
   onDone: () => void;
   onOpenConnection: (server: any) => void;
@@ -184,6 +187,27 @@ export function FirstServerWizard({
         <div className="w-full max-w-3xl">
           {loading ? (
             <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 text-accentPurple animate-spin" /></div>
+          ) : definitions.length === 0 ? (
+            /* A successful load with zero games used to render as a silent
+               empty grid. Built-in definitions load at startup — say that,
+               and point admins at the egg importer. */
+            <div className="py-10 text-center max-w-md">
+              <Gamepad2 className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+              <h4 className="font-bold text-white">No games in the catalog</h4>
+              <p className="text-slate-400 text-sm mt-1 leading-relaxed">
+                {isAdmin
+                  ? "The built-in catalog loads when the app starts — restarting usually restores it. You can also import a Pterodactyl egg from Settings → Administration."
+                  : "The built-in catalog loads when the app starts — restarting usually restores it. Otherwise, ask the server owner to import a game definition."}
+              </p>
+              {isAdmin && (
+                <Link
+                  href="/dashboard/settings"
+                  className="inline-flex mt-4 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-200 transition-colors"
+                >
+                  Open Settings <ExternalLink className="w-3 h-3 ml-1.5" />
+                </Link>
+              )}
+            </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {definitions.map((def) => (

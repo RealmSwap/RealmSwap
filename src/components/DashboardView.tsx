@@ -35,7 +35,8 @@ import {
   Activity,
   Package,
   FolderOpen,
-  UploadCloud
+  UploadCloud,
+  WifiOff
 } from "lucide-react";
 
 interface DashboardViewProps {
@@ -147,6 +148,14 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
     Record<string, { phase: string; percent: number | null; label: string } | null>
   >({});
 
+  // Dashboard connection health. SSE is the live channel; the 60s poll below
+  // is its fallback. Surface a degraded connection instead of silently
+  // showing data that has stopped moving.
+  const [apiUnreachable, setApiUnreachable] = useState(false);
+  // Optimistic until onerror says otherwise — avoids a banner flash on every
+  // load while the (local) stream connects.
+  const [sseLive, setSseLive] = useState(true);
+
   // Poll database for updates (live stats fluctuation)
   useEffect(() => {
     const fetchUpdates = async () => {
@@ -155,7 +164,8 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
         if (res.ok) {
           const updated = await res.json();
           setData(updated);
-          
+          setApiUnreachable(false);
+
           if (updated.activityLogs) {
             updated.activityLogs.forEach((log: any) => {
               if (!initialLoadRef.current && log.action === "SYSTEM_ERROR" && !seenLogIdsRef.current.has(log.id)) {
@@ -165,8 +175,13 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
             });
           }
           initialLoadRef.current = false;
+        } else {
+          setApiUnreachable(true);
         }
       } catch (err) {
+        // A failed poll used to only hit the console — the dashboard kept
+        // rendering aging data as if it were live.
+        setApiUnreachable(true);
         console.error("Error polling server states:", err);
       }
     };
@@ -219,7 +234,10 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
   // Global SSE Stream for live stats and status updates
   useEffect(() => {
     const es = new EventSource("/api/servers/stream");
-    
+    // EventSource retries on its own — just track liveness for the banner.
+    es.onopen = () => setSseLive(true);
+    es.onerror = () => setSseLive(false);
+
     es.addEventListener("message", (e) => {
       try {
         const payload = JSON.parse(e.data);
@@ -522,6 +540,22 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
             <div className="flex-1 max-w-7xl space-y-8 min-w-0">
               
 
+            {/* Connection health (apiUnreachable / sseLive above): amber while
+                SSE is down and the 60s poll is carrying updates, red when the
+                API itself can't be reached. Recovery clears them on their own. */}
+            {!apiUnreachable && !sseLive && (
+              <div className="px-4 py-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-xl font-medium text-xs flex items-center gap-2">
+                <WifiOff className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>Live updates paused — reconnecting. Data refreshes about once a minute in the meantime.</span>
+              </div>
+            )}
+            {apiUnreachable && (
+              <div className="px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-medium text-xs flex items-center gap-2">
+                <WifiOff className="w-3.5 h-3.5 flex-shrink-0" />
+                <span>Can't reach RealmSwap right now — showing the last known state. It reconnects automatically once the app is back.</span>
+              </div>
+            )}
+
             {/* Error Message */}
             {errorMessage && (
               <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl font-medium text-sm flex justify-between items-center shadow-lg shadow-red-500/5">
@@ -577,6 +611,7 @@ export default function DashboardView({ initialData }: DashboardViewProps) {
                 ))}
                 {(data.servers.length === 0 || wizardActive) && (
                   <FirstServerWizard
+                    isAdmin={data.user?.role === "ADMIN"}
                     onDeployed={(deployed: any) => {
                       setWizardActive(true);
                       refreshActiveServers();
