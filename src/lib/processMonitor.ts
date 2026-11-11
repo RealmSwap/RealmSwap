@@ -7,6 +7,7 @@ import { getServerDiskBytes, bytesToMB } from "./diskUsage";
 import { cachedAgentStorageBreakdown } from "./agents/agentDisk";
 import { forgetTreeStats } from "./runners/processTreeStats";
 import { resetAutoStopState, takePendingPlayerSample } from "./autoStopState";
+import { relayStatusSnapshot } from "./statusRelay";
 
 // Global store for process monitoring intervals and history
 const globalForMonitor = globalThis as unknown as {
@@ -122,6 +123,10 @@ export function startMonitoring(server: Server, runner: ServerRunner): void {
       // wired at boot in instrumentation.ts); importing autoStop here would
       // close an import cycle through the runners.
       serverEventBus.emit("monitor_tick", { serverId });
+
+      // Mirror the live snapshot to the hosted status page — rate-limited
+      // to one push per 5 min per server inside the relay. Fire-and-forget.
+      relayStatusSnapshot(serverId).catch(() => {});
 
       // Rows past the 7-day retention window are deleted here (throttled to
       // at most one prune per hour) so the table can't grow forever.

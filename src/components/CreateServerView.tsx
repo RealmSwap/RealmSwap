@@ -310,7 +310,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
   const showPasswordField = selectedGame != null;
 
   return (
-    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+    <div className="min-h-screen flex bg-background text-slate-100 font-sans selection:bg-accentPurple/30">
 
       {/* Sidebar Navigation */}
       <SidebarNavigation user={user} />

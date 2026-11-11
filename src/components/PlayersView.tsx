@@ -228,7 +228,7 @@ export default function PlayersView({ user }: { user: any }) {
   const filtered = players.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="min-h-screen flex bg-[#030712] text-slate-100 font-sans selection:bg-accentPurple/30">
+    <div className="min-h-screen flex bg-background text-slate-100 font-sans selection:bg-accentPurple/30">
       <SidebarNavigation user={user} />
       <main className="flex-1 flex flex-col min-w-0 p-6 overflow-y-auto">
         <div className="flex items-center justify-between mb-8">

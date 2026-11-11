@@ -394,7 +394,7 @@ export function HealthSidebar({
           onClick={() => setCrashOpen(false)}
         >
           <div
-            className="bg-[#030712] border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl"
+            className="bg-background border border-white/10 rounded-2xl w-full max-w-2xl shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between p-5 border-b border-white/5">

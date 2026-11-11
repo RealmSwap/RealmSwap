@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, Play, Puzzle, QrCode, Sparkles, Users, X } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface ChecklistStep {
   key: string;
@@ -34,6 +35,7 @@ export function FirstFriendChecklist({
   onDismiss: () => void;
   onFriendJoined: () => void;
 }) {
+  const { t } = useTranslation();
   const serverId = server.id;
   const [modsCount, setModsCount] = useState<number | null>(null);
   const [friendIn, setFriendIn] = useState(false);
@@ -92,44 +94,46 @@ export function FirstFriendChecklist({
       key: "boot",
       done: booted,
       icon: <Play className="w-4 h-4" />,
-      title: "Boot the server once",
+      title: t("checklist.boot.title"),
       hint: booted
-        ? "It's been online — the world is waiting."
-        : "Press Start on the card above — the first boot downloads the game files for you.",
-      action: booted ? undefined : { label: "Start", onClick: onStart },
+        ? t("checklist.boot.done")
+        : t("checklist.boot.todo"),
+      action: booted ? undefined : { label: t("checklist.boot.action"), onClick: onStart },
     },
     {
       key: "mods",
       done: (modsCount ?? 0) > 0,
       icon: <Puzzle className="w-4 h-4" />,
-      title: "Add your first mods",
+      title: t("checklist.mods.title"),
       hint:
-        (modsCount ?? 0) > 0
-          ? `${modsCount} mod${modsCount === 1 ? "" : "s"} installed.`
-          : "Optional — search Modrinth, CurseForge, Thunderstore or Steam Workshop and install in one click.",
+        modsCount != null && modsCount > 0
+          ? modsCount === 1
+            ? t("checklist.mods.doneOne")
+            : t("checklist.mods.done", { count: modsCount })
+          : t("checklist.mods.todo"),
       action:
         (modsCount ?? 0) > 0
           ? undefined
-          : { label: "Open Mods", href: `/dashboard/mods?server=${serverId}` },
+          : { label: t("checklist.mods.action"), href: `/dashboard/mods?server=${serverId}` },
     },
     {
       key: "invite",
       done: hasInvite,
       icon: <QrCode className="w-4 h-4" />,
-      title: "Share Join Info",
+      title: t("checklist.invite.title"),
       hint: hasInvite
-        ? "Invite minted — friends scan or click to auto-install every mod and join."
-        : "One link or QR: your friend's client gets every mod and config it needs.",
-      action: hasInvite ? undefined : { label: "Open Join Info", onClick: onOpenJoinInfo },
+        ? t("checklist.invite.done")
+        : t("checklist.invite.todo"),
+      action: hasInvite ? undefined : { label: t("checklist.invite.action"), onClick: onOpenJoinInfo },
     },
     {
       key: "friend",
       done: friendIn,
       icon: <Users className="w-4 h-4" />,
-      title: "First friend joins",
+      title: t("checklist.friend.title"),
       hint: friendIn
-        ? "Someone's in — game night is real."
-        : "We watch the player count for you and check this off automatically.",
+        ? t("checklist.friend.done")
+        : t("checklist.friend.todo"),
     },
   ];
 
@@ -137,7 +141,7 @@ export function FirstFriendChecklist({
     <section className="relative w-full p-5 rounded-2xl bg-slate-900/60 border border-accentPurple/20">
       <button
         onClick={onDismiss}
-        title="Dismiss this checklist"
+        title={t("checklist.dismiss")}
         className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
       >
         <X className="w-3.5 h-3.5" />
@@ -146,11 +150,11 @@ export function FirstFriendChecklist({
       <div className="flex items-center gap-2 mb-1">
         <Sparkles className="w-4 h-4 text-accentPurple" />
         <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
-          Get your first friend online
+          {t("checklist.title")}
         </h3>
       </div>
       <p className="text-xs text-slate-500 mb-4">
-        Four steps between you and game night — RealmSwap handles the rest.
+        {t("checklist.subtitle")}
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

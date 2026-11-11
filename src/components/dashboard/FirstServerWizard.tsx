@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Gamepad2
 } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 
 /**
  * First-run deploy wizard, shown on the dashboard when the user has no
@@ -38,6 +39,7 @@ export function FirstServerWizard({
   onDone: () => void;
   onOpenConnection: (server: any) => void;
 }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [definitions, setDefinitions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,8 +66,9 @@ export function FirstServerWizard({
         const d = await r.json();
         const list = d.definitions || [];
         setDefinitions(list);
+        if (list.length === 0) setError(t("wizard.error.emptyCatalog"));
       })
-      .catch(() => setError("Couldn't load the game list — the app may still be starting. Reopen this page in a moment."))
+      .catch(() => setError(t("wizard.error.definitions")))
       .finally(() => setLoading(false));
     // Headless deployments (NAS/mini PC) have no local-machine runner — when a
     // Docker daemon is reachable, deploys default to the container runtime.
@@ -139,10 +142,10 @@ export function FirstServerWizard({
         setSnapshotsOn(true);
       } else {
         const data = await res.json().catch(() => ({}));
-        setError(data.error || "Could not enable snapshots — set them on the Backups page.");
+        setError(data.error || t("wizard.error.snapshots"));
       }
     } catch {
-      setError("Could not enable snapshots — set them on the Backups page.");
+      setError(t("wizard.error.snapshots"));
     } finally {
       setSnapshotBusy(false);
     }
@@ -152,16 +155,16 @@ export function FirstServerWizard({
     <div className="col-span-full py-10 px-6 flex flex-col items-center border border-accentPurple/20 rounded-[18px] bg-gradient-to-b from-accentPurple/5 to-slate-900/20">
       <div className="flex items-center gap-2 mb-1">
         <Sparkles className="w-4 h-4 text-accentPurple" />
-        <span className="text-[10px] font-extrabold text-accentPurple uppercase tracking-widest">Welcome to RealmSwap</span>
+        <span className="text-[10px] font-extrabold text-accentPurple uppercase tracking-widest">{t("wizard.badge")}</span>
       </div>
-      <h3 className="font-extrabold text-xl text-white mb-1">Deploy your first server</h3>
+      <h3 className="font-extrabold text-xl text-white mb-1">{t("wizard.title")}</h3>
       <p className="text-slate-400 text-sm mb-6 text-center max-w-md">
-        Three quick steps. RealmSwap downloads and configures everything — you just pick a game.
+        {t("wizard.subtitle")}
       </p>
 
       {/* Step indicator */}
       <div className="flex items-center gap-2 mb-8 text-[11px] font-bold">
-        {["Pick Game", "Name It", "Make It Yours"].map((label, i) => (
+        {[t("wizard.step.game"), t("wizard.step.name"), t("wizard.step.makeYours")].map((label, i) => (
           <React.Fragment key={label}>
             {i > 0 && <span className="w-8 h-px bg-white/10" />}
             <span className={`flex items-center gap-1.5 ${step === i + 1 ? "text-white" : step > i + 1 ? "text-emerald-400" : "text-slate-500"}`}>
@@ -227,7 +230,7 @@ export function FirstServerWizard({
       {step === 2 && picked && (
         <div className="w-full max-w-md space-y-5">
           <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Server name</label>
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">{t("wizard.nameLabel")}</label>
             <input
               type="text"
               value={name}
@@ -238,7 +241,7 @@ export function FirstServerWizard({
           </div>
           <div>
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-              RAM allocation — <span className="text-accentPurple font-mono">{ram} GB</span>
+              {t("wizard.ramLabel")} — <span className="text-accentPurple font-mono">{ram} GB</span>
             </label>
             <input
               type="range"
@@ -249,17 +252,17 @@ export function FirstServerWizard({
               onChange={(e) => setRam(Number(e.target.value))}
               className="w-full accent-accentPurple"
             />
-            <p className="text-[10px] text-slate-500 mt-1">{picked.displayName} recommends {picked.recommendedRamGB} GB.</p>
+            <p className="text-[10px] text-slate-500 mt-1">{t("wizard.ramHint", { game: picked.displayName, gb: picked.recommendedRamGB })}</p>
           </div>
           <div>
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-              Password <span className="text-slate-600 normal-case font-medium">(optional — keeps randoms out)</span>
+              {t("wizard.passwordLabel")} <span className="text-slate-600 normal-case font-medium">{t("wizard.passwordOptional")}</span>
             </label>
             <input
               type="text"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Leave empty for an open server"
+              placeholder={t("wizard.passwordPlaceholder")}
               className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-white/10 text-sm text-white focus:border-accentPurple focus:outline-none"
             />
           </div>
@@ -269,21 +272,19 @@ export function FirstServerWizard({
               like the app hanging. */}
           {(picked.installMethod === "STEAMCMD" || picked.spec?.requiresJava || picked.spec?.install?.url) && (
             <p className="text-[11px] text-slate-500 leading-relaxed bg-slate-950/60 border border-white/5 rounded-lg px-3 py-2">
-              ℹ️ Heads up: the first start downloads the game server files
-              {picked.spec?.requiresJava ? " and the right Java runtime" : ""} automatically — that's a one-time
-              multi-minute download, and progress shows right on the server card.
+              {picked.spec?.requiresJava ? t("wizard.downloadNoteJava") : t("wizard.downloadNote")}
             </p>
           )}
           <div className="flex justify-between pt-2">
             <button onClick={() => setStep(1)} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-slate-400 hover:text-white text-sm font-bold transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Back
+              <ArrowLeft className="w-4 h-4" /> {t("wizard.back")}
             </button>
             <button
               onClick={deploy}
               disabled={deploying || !name.trim()}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accentPurple hover:bg-accentPurple/90 disabled:opacity-50 text-white font-bold text-sm transition-all shadow-lg shadow-accentPurple/25"
             >
-              {deploying ? <><Loader2 className="w-4 h-4 animate-spin" /> Deploying…</> : <><Rocket className="w-4 h-4" /> Deploy Server</>}
+              {deploying ? <><Loader2 className="w-4 h-4 animate-spin" /> {t("wizard.deploying")}</> : <><Rocket className="w-4 h-4" /> {t("wizard.deploy")}</>}
             </button>
           </div>
         </div>
@@ -294,10 +295,9 @@ export function FirstServerWizard({
           <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-4">
             <Check className="w-7 h-7 text-emerald-400" />
           </div>
-          <h4 className="font-extrabold text-white mb-1">{deployed.name} is ready</h4>
+          <h4 className="font-extrabold text-white mb-1">{t("wizard.readyTitle", { name: deployed.name })}</h4>
           <p className="text-sm text-slate-400 mb-6 text-center">
-            Press Start on its card to boot it the first time — the game files download automatically.
-            Three optional setup steps while you're here:
+            {t("wizard.readyBody")}
           </p>
 
           <div className="w-full space-y-3">
@@ -307,16 +307,16 @@ export function FirstServerWizard({
                 <QrCode className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-white">Friends outside your LAN?</div>
+                <div className="text-sm font-bold text-white">{t("wizard.tunnel.title")}</div>
                 <div className="text-xs text-slate-400 mt-0.5">
-                  RealmSwap can tunnel the server through playit.gg and claim it for you automatically.
+                  {t("wizard.tunnel.body")}
                 </div>
               </div>
               <button
                 onClick={() => onOpenConnection(deployed)}
                 className="flex-shrink-0 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-200 transition-colors"
               >
-                Open Join Info
+                {t("wizard.tunnel.action")}
               </button>
             </div>
 
@@ -327,12 +327,12 @@ export function FirstServerWizard({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-white">
-                  Offsite backups {s3?.configured ? <span className="text-emerald-400">· on{s3.bucket ? ` → ${s3.bucket}` : ""}</span> : ""}
+                  {t("wizard.s3.title")} {s3?.configured ? <span className="text-emerald-400">· {t("wizard.s3.on")}{s3.bucket ? ` → ${s3.bucket}` : ""}</span> : ""}
                 </div>
                 <div className="text-xs text-slate-400 mt-0.5">
                   {s3?.configured
-                    ? "Snapshots also copy to your own S3 bucket."
-                    : "Copy snapshots to your own S3 bucket so a dead disk can't take the worlds with it."}
+                    ? t("wizard.s3.bodyOn")
+                    : t("wizard.s3.bodyOff")}
                 </div>
               </div>
               {s3?.configured ? (
@@ -342,7 +342,7 @@ export function FirstServerWizard({
                   href={`/dashboard/backups?server=${deployed.id}`}
                   className="flex-shrink-0 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-200 transition-colors flex items-center gap-1.5"
                 >
-                  Set up <ExternalLink className="w-3 h-3" />
+                  {t("wizard.s3.setup")} <ExternalLink className="w-3 h-3" />
                 </Link>
               )}
             </div>
@@ -354,12 +354,12 @@ export function FirstServerWizard({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-white">
-                  Nightly snapshots {snapshotsOn && <span className="text-emerald-400">· on</span>}
+                  {t("wizard.snapshots.title")} {snapshotsOn && <span className="text-emerald-400">· {t("wizard.s3.on")}</span>}
                 </div>
                 <div className="text-xs text-slate-400 mt-0.5">
                   {snapshotsOn
-                    ? "A snapshot every 24 hours — change it anytime on the Backups page."
-                    : "Automatic world snapshot every 24 hours."}
+                    ? t("wizard.snapshots.bodyOn")
+                    : t("wizard.snapshots.bodyOff")}
                 </div>
               </div>
               {snapshotsOn ? (
@@ -370,7 +370,7 @@ export function FirstServerWizard({
                   disabled={snapshotBusy}
                   className="flex-shrink-0 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-200 transition-colors disabled:opacity-50"
                 >
-                  {snapshotBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Turn on"}
+                  {snapshotBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : t("wizard.snapshots.turnOn")}
                 </button>
               )}
             </div>
@@ -380,9 +380,9 @@ export function FirstServerWizard({
             onClick={onDone}
             className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accentPurple hover:bg-accentPurple/90 text-white font-bold text-sm transition-all shadow-lg shadow-accentPurple/25"
           >
-            Finish <ArrowRight className="w-4 h-4" />
+            {t("wizard.finish")} <ArrowRight className="w-4 h-4" />
           </button>
-          <p className="text-[10px] text-slate-500 mt-2">Everything above is optional — skip any of it.</p>
+          <p className="text-[10px] text-slate-500 mt-2">{t("wizard.skipNote")}</p>
         </div>
       )}
     </div>

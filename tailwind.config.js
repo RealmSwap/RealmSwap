@@ -8,9 +8,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "#08090c",
-        card: "#12141c",
-        cardHover: "#1b1e2a",
+        // Themeable palette. Every value is a CSS variable defined in
+        // globals.css (:root = dark defaults, html.theme-light = overrides),
+        // so existing bg-slate-900 / text-white / border-white/10 classes
+        // retheme without touching component JSX. The slate ramp INVERTS in
+        // light mode and "white" becomes the ink color, which flips the
+        // pervasive white-alpha borders/hover tints the right way too.
+        background: "var(--c-bg)",
+        card: "var(--c-card)",
+        cardHover: "var(--c-card-hover)",
         accentPurple: "#8b5cf6",
         accentPurpleHover: "#a78bfa",
         accentBlue: "#0ea5e9",
@@ -18,10 +24,24 @@ module.exports = {
         successGreen: "#10b981",
         warningYellow: "#f59e0b",
         dangerRed: "#ef4444",
-        mutedText: "#94a3b8",
-        borderDark: "#1f2937",
+        mutedText: "var(--c-muted)",
+        borderDark: "var(--c-border)",
         borderPurple: "rgba(139, 92, 246, 0.2)",
         borderPurpleHover: "rgba(139, 92, 246, 0.4)",
+        white: "var(--c-white)",
+        slate: {
+          50: "var(--slate-50)",
+          100: "var(--slate-100)",
+          200: "var(--slate-200)",
+          300: "var(--slate-300)",
+          400: "var(--slate-400)",
+          500: "var(--slate-500)",
+          600: "var(--slate-600)",
+          700: "var(--slate-700)",
+          800: "var(--slate-800)",
+          900: "var(--slate-900)",
+          950: "var(--slate-950)",
+        },
       },
       animation: {
         "pulse-glow": "pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",

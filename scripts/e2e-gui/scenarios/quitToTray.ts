@@ -13,9 +13,10 @@ export const teardownQuitScenarios = [
   scenario("gui/close-to-tray-and-quit", "sign out; window close hides to tray; File → Quit exits", ["smoke"], async (ctx) => {
     const { page, electronApp } = ctx;
 
-    // Sign out → back at the login page.
+    // Sign out → back at the login page. The button's accessible name
+    // follows the locale (nav.signOut); the harness runs English.
     await dismissCelebrationIfPresent(page);
-    await page.locator('[aria-label="Sign out"]').click();
+    await page.locator('[aria-label="Sign Out"]').click();
     await page.getByRole("heading", { name: "Welcome Back" }).waitFor({ timeout: 20_000 });
 
     // Close-to-tray: the window hides, the app keeps running.
