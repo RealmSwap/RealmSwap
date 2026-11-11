@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
     initBackupScheduler();
     ensureServerSecretsEncrypted();
     initUpdateScheduler();
+    initActionScheduler();
 
     const [servers, archives, logs] = await Promise.all([
       prisma.server.findMany({

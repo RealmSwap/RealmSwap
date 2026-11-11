@@ -14,6 +14,8 @@ const bag = vi.hoisted(() => ({
   executionsCreated: [] as any[],
   executionUpdates: [] as any[],
   automationUpdates: [] as any[],
+  // When set, the test action blocks on it — a run that outlasts the scheduler tick.
+  actionGate: null as Promise<void> | null,
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -45,14 +47,23 @@ vi.mock("@/lib/db", () => ({
     },
   },
 }));
-vi.mock("@/lib/sftpServer", () => ({ startSFTPServer: vi.fn() }));
 vi.mock("@/lib/automations/registry", () => ({
   ActionRegistry: new Map([
-    ["TEST_ACTION", { id: "TEST_ACTION", name: "Test", description: "", execute: async () => {} }],
+    [
+      "TEST_ACTION",
+      {
+        id: "TEST_ACTION",
+        name: "Test",
+        description: "",
+        execute: async () => {
+          if (bag.actionGate) await bag.actionGate;
+        },
+      },
+    ],
   ]),
 }));
 
-import { executeAutomation, fireServerCrashAutomations } from "../actionScheduler";
+import { executeAutomation, fireServerCrashAutomations, checkAutomations, MISSED_RUN_GRACE_MS } from "../actionScheduler";
 
 function cronAutomation(overrides: Record<string, any> = {}) {
   return {
@@ -73,6 +84,7 @@ beforeEach(() => {
   bag.executionsCreated = [];
   bag.executionUpdates = [];
   bag.automationUpdates = [];
+  bag.actionGate = null;
 });
 
 describe("executeAutomation", () => {
@@ -129,5 +141,85 @@ describe("fireServerCrashAutomations", () => {
     await new Promise(resolve => setTimeout(resolve, 20));
 
     expect(bag.executionsCreated.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// The scheduler tick. It runs on a PC that sleeps and gets closed, so it has
+// to cope with runs that came due while nothing was here to run them, and
+// with runs that outlast the tick interval.
+describe("checkAutomations", () => {
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+  const now = new Date("2026-11-10T19:00:00");
+  const dueAt = (msAgo: number, overrides: Record<string, any> = {}) => {
+    const automation = cronAutomation({ nextRunAt: new Date(now.getTime() - msAgo), ...overrides });
+    bag.automations = [automation];
+    bag.automation = automation;
+    return automation;
+  };
+
+  it("runs an automation that came due on time", async () => {
+    dueAt(30_000);
+    await checkAutomations(now);
+    await settle();
+
+    expect(bag.executionsCreated).toHaveLength(1);
+    expect(bag.executionsCreated[0].data.status).toBe("RUNNING");
+  });
+
+  it("still runs one that is late but inside the grace window", async () => {
+    dueAt(MISSED_RUN_GRACE_MS - 60_000);
+    await checkAutomations(now);
+    await settle();
+
+    expect(bag.executionsCreated[0].data.status).toBe("RUNNING");
+  });
+
+  it("records a run that came due while the app was away as missed, and moves the schedule past now", async () => {
+    dueAt(MISSED_RUN_GRACE_MS + 60_000);
+    await checkAutomations(now);
+    await settle();
+
+    expect(bag.executionsCreated).toHaveLength(1);
+    expect(bag.executionsCreated[0].data.status).toBe("SKIPPED");
+    expect(bag.executionsCreated[0].data.logs).toMatch(/Missed the run/);
+    expect(bag.executionUpdates).toHaveLength(0); // nothing actually ran
+
+    const data = bag.automationUpdates[0].data;
+    expect(data.nextRunAt.getTime()).toBeGreaterThan(now.getTime());
+    expect(data).not.toHaveProperty("lastRunAt");
+    expect(data).not.toHaveProperty("enabled");
+  });
+
+  it("switches off a ONE_TIME automation whose moment passed while the app was away", async () => {
+    dueAt(MISSED_RUN_GRACE_MS + 60_000, {
+      triggerType: "ONE_TIME",
+      triggerConfig: JSON.stringify({ runAt: "2026-11-10T12:00" }),
+    });
+    await checkAutomations(now);
+    await settle();
+
+    expect(bag.executionsCreated[0].data.status).toBe("SKIPPED");
+    expect(bag.automationUpdates[0].data).toMatchObject({ nextRunAt: null, enabled: false });
+  });
+
+  it("does not start a second copy of a run that is still going", async () => {
+    let release!: () => void;
+    bag.actionGate = new Promise<void>((resolve) => (release = resolve));
+    const automation = cronAutomation({ nextRunAt: new Date(Date.now() - 1000) });
+    bag.automations = [automation];
+    bag.automation = automation;
+
+    await checkAutomations();
+    await settle();
+    await checkAutomations(); // the next tick: nextRunAt has not advanced because the run is not finished
+    await settle();
+    expect(bag.executionsCreated).toHaveLength(1);
+
+    release();
+    await settle();
+    bag.actionGate = null;
+    await checkAutomations(); // finished, so it is eligible again
+    await settle();
+    expect(bag.executionsCreated).toHaveLength(2);
   });
 });

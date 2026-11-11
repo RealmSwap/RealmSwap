@@ -11,6 +11,7 @@
       "agents/nodes-lifecycle"
     ]
   },
+
   "POST /api/agents/register": {
     "status": "covered",
     "scenarios": [
@@ -768,6 +769,24 @@
     "status": "covered",
     "scenarios": [
       "ops/user-system"
+    ]
+  },
+  "GET /api/system/keep-awake": {
+    "status": "covered",
+    "scenarios": [
+      "system/power"
+    ]
+  },
+  "GET /api/system/power": {
+    "status": "covered",
+    "scenarios": [
+      "system/power"
+    ]
+  },
+  "PUT /api/system/power": {
+    "status": "covered",
+    "scenarios": [
+      "system/power"
     ]
   },
   "GET /api/system/storage": {
