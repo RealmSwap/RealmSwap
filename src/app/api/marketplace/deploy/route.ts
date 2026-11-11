@@ -2,9 +2,14 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { checkServerSlot } from "@/lib/entitlement";
 import { createClient } from "@/lib/supabase/server";
-import { createRealmServerShell } from "@/lib/templates/installer";
+import {
+  createRealmServerShell,
+  planRealmDefinition,
+  RealmDefinitionRejectedError,
+  type RealmDefinitionPlan,
+} from "@/lib/templates/installer";
 
-// POST /api/marketplace/deploy  { templateId, versionId?, installId? }
+// POST /api/marketplace/deploy  { templateId, versionId?, installId?, acceptCustomDefinition? }
 //
 // Phase 1 of a realm deploy: record the acquisition (acquire_realm RPC:
 // ownership + download bump, idempotent) and create the server shell —
@@ -16,6 +21,11 @@ import { createRealmServerShell } from "@/lib/templates/installer";
 // to the progress SSE and POSTs /api/servers/[id]/realm-materialize, which
 // downloads real files through the verified pipeline (loader → pack → mods →
 // boot test → rollback-on-failure, deleting the server on failure).
+//
+// A realm for a game RealmSwap doesn't ship brings its own game definition —
+// the program this machine will run. Those answer 409
+// CUSTOM_DEFINITION_CONSENT with a summary of exactly what would run, and
+// only proceed when the request is repeated with acceptCustomDefinition.
 export async function POST(request: Request) {
   try {
     const user = await getAuthenticatedUser();
@@ -38,7 +48,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { templateId, versionId } = await request.json();
+    const { templateId, versionId, acceptCustomDefinition } = await request.json();
     if (!templateId) {
       return NextResponse.json({ error: "Missing templateId" }, { status: 400 });
     }
@@ -71,6 +81,32 @@ export async function POST(request: Request) {
       customDefSpec = ver.custom_def_spec;
     }
 
+    // Settle the game definition before anything is acquired or created: a
+    // definition that fails the gate ends the deploy, and one that passes
+    // still waits for the user to see what it runs.
+    let definitionPlan: RealmDefinitionPlan;
+    try {
+      definitionPlan = await planRealmDefinition({ gameSlug: realm.game_slug, customDefSpec }, user.id);
+    } catch (err) {
+      if (err instanceof RealmDefinitionRejectedError) {
+        return NextResponse.json(
+          { error: err.message, code: "CUSTOM_DEFINITION_REJECTED", details: err.errors },
+          { status: 400 },
+        );
+      }
+      throw err;
+    }
+    if (definitionPlan.kind === "new" && acceptCustomDefinition !== true) {
+      return NextResponse.json(
+        {
+          error: "This realm installs its own game definition. Review what it runs and confirm to deploy.",
+          code: "CUSTOM_DEFINITION_CONSENT",
+          definition: definitionPlan.vetted.summary,
+        },
+        { status: 409 },
+      );
+    }
+
     // Record the acquisition in the cloud: ownership + transaction + download bump
     // (idempotent; rejects paid/unpublished realms).
     const { error: acqErr } = await supabase.rpc("acquire_realm", { p_realm_id: templateId });
@@ -88,6 +124,7 @@ export async function POST(request: Request) {
         customDefSpec,
       },
       user.id,
+      { allowNewDefinition: acceptCustomDefinition === true },
     );
 
     // Surface what the materialize phase will run so the client can describe

@@ -18,6 +18,12 @@ export function hostedStatusPageUrl(code: string): string {
   return `${site.replace(/\/+$/, "")}/s/${code}`;
 }
 
+/** A realm's public landing page on the marketing site (realmswap.app/r/<slug>). */
+export function realmPageUrl(slug: string): string {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://realmswap.app";
+  return `${site.replace(/\/+$/, "")}/r/${slug}`;
+}
+
 /**
  * The dashboard app runs on the host's machine (localhost in dev,
  * 127.0.0.1:<port> packaged), and that port is never exposed to the

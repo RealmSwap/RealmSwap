@@ -52,6 +52,42 @@ install — badge or not — does:
 A realm that deploys clean is *proven* by that boot, not by its badge. That
 is why UNVERIFIED content is safe to surface.
 
+## Realms that bring their own game definition
+
+A realm for a game RealmSwap doesn't ship carries `custom_def_spec`: a game
+definition. That is a different kind of content from mods and settings — it
+names **the program the deployer's machine runs** — so it gets its own rules.
+No amount of validation makes a stranger's server binary safe; what the rules
+guarantee is that the deployer's decision is an informed one.
+
+1. **The gate** (`src/lib/definitions/untrusted.ts`). A shared definition may
+   install from a Steam app id or an https download on the allowlisted hosts,
+   and may run one program: a file inside the server's own folder, or `java`
+   with `requiresJava` (the app's bundled Java). It may not contain scripts,
+   look a program up on the system `PATH` (`cmd.exe`, `powershell.exe`, …),
+   reach outside the server folder, write non-config files, set environment
+   variables that redirect what a process loads, or use a custom container
+   image. The gate runs at publish, and again at deploy on the deployer's
+   machine — the deploy-side run is the one that counts, because the cloud
+   row can be written without going through the app. Only the gate's
+   normalized copy is ever stored locally.
+2. **Consent.** A deploy that would install a new definition stops (HTTP 409
+   `CUSTOM_DEFINITION_CONSENT`) and shows where the files come from and the
+   exact program and arguments that will run. Nothing is acquired or created
+   until the user confirms. The badge does not skip this step: a badge is
+   awarded to a realm, and a later version can carry a different definition.
+3. **The floor in the database** (migration `20261110120000`). A trigger on
+   `realms` and `realm_versions` refuses the dangerous shapes on every write,
+   so app builds that predate the gate cannot be handed one.
+
+Definitions that need more than the gate allows are not marketplace content.
+They ship as built-ins, reviewed in a pull request.
+
+**One-time review after applying migration `20261110120000`:** the trigger
+only checks writes, so rows published before it are not re-examined. Run the
+two `realm_def_spec_violation` queries in that migration's header and set
+`status = 'REMOVED'` on anything hostile.
+
 ## Reporting (community)
 
 Every authenticated user can report a realm from the marketplace detail view
@@ -81,7 +117,9 @@ only their own reports; admins see the queue via RLS (`public.is_admin()`).
 ## SLA (until this is a team)
 
 One maintainer today: triage the open queue weekly, and immediately on any
-`MALICIOUS` report. Malicious payloads are prevented by construction
-(install/launch scripts banned at publish, download URLs domain-allowlisted,
-config secrets scrubbed, deploys sandboxed) — the queue exists for content
-policy, not code safety.
+`MALICIOUS` report. For realms of built-in games the payload is data — mods
+from the providers, config files with an extension allowlist and secrets
+scrubbed — so the queue is mostly about content policy. A realm that brings
+its own game definition is the exception: the gate and the consent step bound
+what it can do, but the program it runs is the author's. Treat a `MALICIOUS`
+report on one of those as a code-safety report.

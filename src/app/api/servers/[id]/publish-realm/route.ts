@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { verifyServerAccess } from "@/lib/serverAuth";
 import { buildRealmPayloadFromServer } from "@/lib/templates/extract";
@@ -37,12 +38,36 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
       return NextResponse.json({ error: err.message }, { status: 400 });
     }
 
+    // A server for a game RealmSwap doesn't ship runs on its owner's own game
+    // definition. The realm has to carry that definition, or nobody else
+    // could deploy it; publishRealm puts it through the shared-definition gate.
+    let customDefSpec: PublishRealmBody["customDefSpec"] = null;
+    if (server.definitionId) {
+      const def = await prisma.gameDefinition.findUnique({ where: { id: server.definitionId } });
+      if (def && def.ownerId !== null) {
+        if (def.installMethod === "CUSTOM_SCRIPT") {
+          return NextResponse.json(
+            { error: "This server runs a script-based custom game. Shared realms can't include scripts, so it can't be published." },
+            { status: 400 },
+          );
+        }
+        customDefSpec = {
+          ...JSON.parse(def.spec),
+          name: def.displayName.slice(0, 80),
+          ...(def.description ? { description: def.description.slice(0, 500) } : {}),
+          ...(def.icon.length <= 16 ? { icon: def.icon } : {}),
+          recommendedRamGB: Math.min(256, Math.max(1, def.recommendedRamGB)),
+        };
+      }
+    }
+
     const publishBody: PublishRealmBody = {
       name,
       description,
       gameSlug: server.game,
       tags: typeof body.tags === "string" && body.tags.trim() ? body.tags : `${server.game},Community`,
       payload: extracted.payload,
+      customDefSpec,
       realmId: body.realmId,
       version: body.version || "1.0.0",
       changelog: body.changelog ?? null,

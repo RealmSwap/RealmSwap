@@ -60,6 +60,18 @@ interface MarketplaceTemplate {
   createdAt: string;
 }
 
+/** What a realm's own game definition downloads and runs (from the deploy route's consent response). */
+interface DefinitionSummary {
+  installMethod: "STEAMCMD" | "DOWNLOAD";
+  source: string;
+  executable: string;
+  usesBundledJava: boolean;
+  args: string[];
+  envNames: string[];
+  configFiles: string[];
+  ports: string[];
+}
+
 interface MarketplaceViewProps {
   user: any;
 }
@@ -232,6 +244,8 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
   const [deployProgress, setDeployProgress] = useState<{ serverId: string; installId: string; templateId: string } | null>(null);
   const [systemMemoryGB, setSystemMemoryGB] = useState<number | null>(null);
   const [versions, setVersions] = useState<{ id: string; version: string; changelog: string | null; created_at: string }[]>([]);
+  // Set when a deploy stops for consent: the realm brings its own game definition.
+  const [definitionConsent, setDefinitionConsent] = useState<{ template: MarketplaceTemplate; versionId?: string; definition: DefinitionSummary } | null>(null);
 
   /* Report Dialog */
   const [reportOpen, setReportOpen] = useState(false);
@@ -392,22 +406,34 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
       .catch(() => setVersions([]));
   }, [selectedTemplate?.id]);
 
-  // Deploy a specific past version directly (the main button deploys the current
-  // version through the security-report flow).
-  const deployVersion = async (template: MarketplaceTemplate, versionId: string) => {
+  // Phase 1 of a deploy, shared by the main button and the version list. A
+  // realm that brings its own game definition answers 409 first; the consent
+  // dialog repeats the call with the user's OK.
+  const runDeploy = async (template: MarketplaceTemplate, versionId?: string, acceptCustomDefinition = false) => {
     setDeploying(true);
     // The installId is minted before phase 1 so the progress child can
     // subscribe before phase 2 starts streaming.
     const installId = newInstallId();
+    const noun = versionId ? "version" : "template";
     try {
       const res = await fetch("/api/marketplace/deploy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ templateId: template.id, versionId, installId }),
+        body: JSON.stringify({
+          templateId: template.id,
+          versionId,
+          installId,
+          ...(acceptCustomDefinition ? { acceptCustomDefinition: true } : {}),
+        }),
       });
       const data = await res.json();
+      if (res.status === 409 && data.code === "CUSTOM_DEFINITION_CONSENT") {
+        setDefinitionConsent({ template, versionId, definition: data.definition });
+        setDeploying(false);
+        return;
+      }
       if (!res.ok) {
-        addToast("error", "Failed to deploy version: " + (data.error || "Unknown error"));
+        addToast("error", `Failed to deploy ${noun}: ` + (data.error || "Unknown error"));
         setDeploying(false);
         return;
       }
@@ -420,42 +446,21 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
       }
     } catch (e) {
       console.error(e);
-      addToast("error", "Error deploying version");
+      addToast("error", `Error deploying ${noun}`);
       setDeploying(false);
     }
   };
+
+  // Deploy a specific past version directly (the main button deploys the current
+  // version through the security-report flow).
+  const deployVersion = (template: MarketplaceTemplate, versionId: string) => runDeploy(template, versionId);
 
   const handleDeploy = async (template: MarketplaceTemplate) => {
     if (!showSecurityReport) {
       setShowSecurityReport(true);
       return;
     }
-
-    setDeploying(true);
-    // Same two-phase flow as deployVersion above.
-    const installId = newInstallId();
-    try {
-      const res = await fetch("/api/marketplace/deploy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ templateId: template.id, installId })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        addToast("error", "Failed to deploy template: " + (data.error || "Unknown error"));
-        setDeploying(false);
-        return;
-      }
-      if (data.done) {
-        router.push(`/dashboard/config?server=${data.serverId}`);
-      } else {
-        setDeployProgress({ serverId: data.serverId, installId, templateId: template.id });
-      }
-    } catch (e) {
-      console.error(e);
-      addToast("error", "Error deploying template");
-      setDeploying(false);
-    }
+    await runDeploy(template);
   };
 
   // Send a community report for the currently open realm. The 409 (already
@@ -1032,7 +1037,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
               const requestedRam = customDef?.recommendedRamGB || 4;
               const ramWarning = systemMemoryGB && requestedRam > systemMemoryGB;
               const hasScripts = customDef?.install?.installScript || customDef?.launch?.launchScript;
-              const riskLevel = hasScripts ? "HIGH" : (ramWarning ? "MEDIUM" : "LOW");
+              const riskLevel = hasScripts ? "HIGH" : (customDef || ramWarning ? "MEDIUM" : "LOW");
 
               return (
                 <div className="p-6 overflow-y-auto flex-1 space-y-6">
@@ -1080,7 +1085,11 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                           {riskLevel} RISK
                         </div>
                         <div className="text-xs text-mutedText leading-relaxed">
-                          No arbitrary scripts detected. Template operates strictly as a data blueprint.
+                          {hasScripts
+                            ? "This realm's game definition contains a script. RealmSwap will refuse to deploy it."
+                            : customDef
+                            ? "This realm brings its own game definition — a program your PC downloads and runs. If RealmSwap doesn't already have this game, you'll be shown exactly what it runs and asked to confirm before anything is installed."
+                            : "No custom programs or scripts. This realm is a data blueprint: mods and settings for a game RealmSwap already supports."}
                         </div>
                       </div>
                     </div>
@@ -1136,7 +1145,7 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                     <div>
                       <h3 className="font-bold text-blue-400 text-sm mb-1">Custom Game Definition</h3>
                       <p className="text-xs text-blue-200/80 leading-relaxed">
-                        This template introduces a game not officially supported by RealmSwap yet. The game definition will be installed automatically to your local vault.
+                        This realm is for a game RealmSwap doesn&rsquo;t ship yet, so it brings its own game definition. Before installing it, RealmSwap shows you what it downloads and runs and asks you to confirm.
                       </p>
                     </div>
                   </div>
@@ -1231,6 +1240,81 @@ export default function MarketplaceView({ user }: MarketplaceViewProps) {
                 ) : (
                   <><Download className="w-5 h-5 relative z-10" /> <span className="relative z-10">{showSecurityReport ? "Approve & Deploy" : "One-Click Deploy"}</span></>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Custom Game Definition Consent ────────────────────── */}
+      {definitionConsent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setDefinitionConsent(null)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="definition-consent-title"
+            className="bg-card border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg animate-slide-down overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-6 flex items-start gap-3 border-b border-white/10">
+              <div className="p-2.5 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                <ShieldAlert className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h3 id="definition-consent-title" className="font-bold text-lg text-white">This realm runs its own game server program</h3>
+                <p className="text-xs text-mutedText mt-1 leading-relaxed">
+                  RealmSwap doesn&rsquo;t ship this game, so <span className="text-slate-200 font-bold">{definitionConsent.template.name}</span> by {definitionConsent.template.author} brings its own definition. Deploying it means your PC will:
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[50vh] overflow-y-auto">
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                  {definitionConsent.definition.installMethod === "STEAMCMD" ? "Download from Steam" : "Download this file"}
+                </span>
+                <code className="block text-xs text-slate-200 bg-slate-950 border border-white/10 rounded-lg px-3 py-2 break-all">{definitionConsent.definition.source}</code>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Then run this program each time the server starts</span>
+                <code className="block text-xs text-slate-200 bg-slate-950 border border-white/10 rounded-lg px-3 py-2 break-all">
+                  {definitionConsent.definition.usesBundledJava ? "java (RealmSwap's bundled Java)" : definitionConsent.definition.executable}
+                  {definitionConsent.definition.args.length > 0 && ` ${definitionConsent.definition.args.join(" ")}`}
+                </code>
+              </div>
+              {definitionConsent.definition.configFiles.length > 0 && (
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Write these config files in the server folder</span>
+                  <code className="block text-xs text-slate-200 bg-slate-950 border border-white/10 rounded-lg px-3 py-2 break-all">{definitionConsent.definition.configFiles.join(", ")}</code>
+                </div>
+              )}
+              {definitionConsent.definition.envNames.length > 0 && (
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Set these environment variables for it</span>
+                  <code className="block text-xs text-slate-200 bg-slate-950 border border-white/10 rounded-lg px-3 py-2 break-all">{definitionConsent.definition.envNames.join(", ")}</code>
+                </div>
+              )}
+              <p className="text-xs text-amber-200/90 leading-relaxed bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
+                RealmSwap checked that this is everything the definition does — no scripts, and nothing outside the server&rsquo;s own folder. It can&rsquo;t check what the program itself does once it&rsquo;s running. Only continue if you trust where it comes from.
+              </p>
+            </div>
+
+            <div className="p-6 pt-0 flex justify-end gap-3">
+              <button
+                onClick={() => setDefinitionConsent(null)}
+                className="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-300 bg-slate-900 border border-white/10 hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const { template, versionId } = definitionConsent;
+                  setDefinitionConsent(null);
+                  runDeploy(template, versionId, true);
+                }}
+                className="px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-amber-600 hover:bg-amber-500 transition-colors"
+              >
+                I trust this — deploy
               </button>
             </div>
           </div>
