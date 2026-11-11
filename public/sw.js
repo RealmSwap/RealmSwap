@@ -1,17 +1,22 @@
 self.addEventListener("push", function (event) {
   if (event.data) {
     const data = event.data.json();
+    // Connectivity alerts ("friends can't reach X" / "reachable again") get
+    // their own tag so they replace each other without clobbering a crash
+    // alert, and no one-tap restart: that isn't the fix, and people may be
+    // playing over LAN.
+    const connectivity = data.kind === "connectivity";
     const options = {
       body: data.body,
       icon: "/logo.png",
       badge: "/logo.png",
       vibrate: [100, 50, 100],
-      tag: data.serverId ? "server-" + data.serverId : undefined,
+      tag: data.serverId ? "server-" + data.serverId + (connectivity ? "-connectivity" : "") : undefined,
       data: {
         dateOfArrival: Date.now(),
         serverId: data.serverId,
       },
-      actions: data.serverId
+      actions: data.serverId && !connectivity
         ? [
             { action: "restart", title: "Restart Server" },
             { action: "explore", title: "View Dashboard" },
