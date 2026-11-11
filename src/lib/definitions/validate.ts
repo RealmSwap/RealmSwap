@@ -5,7 +5,7 @@ import { collectVariables } from "./template";
 export const KNOWN_FIXED_VARS = ["name", "nameSanitized", "password", "passwordEmpty", "port", "ram"] as const;
 
 /** Returns true if a path segment string is unsafe (absolute or contains ".." segments). */
-function isUnsafePath(p: string): boolean {
+export function isUnsafePath(p: string): boolean {
   // Check both POSIX and Windows absolute forms so this gate is host-OS-independent.
   // path.isAbsolute alone is platform-specific: a "C:\..." path is not absolute on a
   // POSIX host, so it would slip through when the validator runs on Linux (e.g. CI).

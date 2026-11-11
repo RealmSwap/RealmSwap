@@ -32,6 +32,7 @@ interface FakeUser {
 interface FakeRealm {
   id: string;
   seller_id: string;
+  slug: string | null;
   name: string;
   description: string;
   game_slug: string;
@@ -189,6 +190,7 @@ export class FakeSupabase {
             const row: FakeRealm = {
               id: randomId(),
               seller_id: callerId ?? "",
+              slug: typeof body.slug === "string" && body.slug ? body.slug : null,
               name: String(body.name ?? ""),
               description: String(body.description ?? ""),
               game_slug: String(body.game_slug ?? ""),

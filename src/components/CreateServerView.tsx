@@ -26,7 +26,9 @@ import {
   X,
   AlertTriangle,
   RefreshCw,
+  Download,
 } from "lucide-react";
+import { toast } from "sonner";
 import { evaluateNode, recommendNode, type SchedulingNode } from "@/lib/agents/scheduling";
 import DefinitionParamFields from "./DefinitionParamFields";
 
@@ -100,6 +102,28 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
       .catch(() => { if (!cancelled) setNodes([]); });
     return () => { cancelled = true; };
   }, []);
+
+  // Save one of the user's own game definitions as a file they can share.
+  const exportDefinition = async (game: any) => {
+    try {
+      const res = await fetch(`/api/definitions/${game.id}/export`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data?.error || "Couldn't export this game definition.");
+        return;
+      }
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${game.slug}.realmswap-game.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Couldn't export this game definition.");
+    }
+  };
 
   const handleGameSelect = (game: any) => {
     setSelectedGame(game);
@@ -436,6 +460,21 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                             </span>
                           )}
                         </div>
+                        {!game.isBuiltIn && game.installMethod !== "CUSTOM_SCRIPT" && (
+                          <button
+                            type="button"
+                            title="Export this game definition as a file you can share"
+                            aria-label={`Export ${game.displayName} as a file`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              exportDefinition(game);
+                            }}
+                            onKeyDown={(e) => e.stopPropagation()}
+                            className="p-1.5 rounded-lg bg-slate-950/70 border border-white/10 text-slate-300 hover:text-accentPurple hover:border-accentPurple/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accentPurple"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                       <div className="relative z-10">
                         <h4 className="font-extrabold text-sm text-slate-100">{game.displayName}</h4>

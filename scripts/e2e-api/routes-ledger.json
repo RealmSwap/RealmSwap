@@ -131,6 +131,18 @@
       "surface/membership-players"
     ]
   },
+  "GET /api/definitions/[id]/export": {
+    "status": "covered",
+    "scenarios": [
+      "definitions/file-share"
+    ]
+  },
+  "POST /api/definitions/import": {
+    "status": "covered",
+    "scenarios": [
+      "definitions/file-share"
+    ]
+  },
   "POST /api/marketplace/[id]/favorite": {
     "status": "covered",
     "scenarios": [

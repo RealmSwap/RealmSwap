@@ -1,6 +1,7 @@
 "use client";
 
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
+import { DefinitionFileImport } from "@/components/DefinitionFileImport";
 import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -796,6 +797,8 @@ export default function DefinitionEditor({ isAdmin }: DefinitionEditorProps) {
             Define a custom game server that will appear in your server catalog.
           </p>
         </div>
+
+        <DefinitionFileImport />
 
         {/* Form card */}
         <div className="glass-panel rounded-2xl border border-white/5 p-6 max-w-4xl">

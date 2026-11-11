@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { vetUntrustedSpec } from "@/lib/definitions/untrusted";
+import { slugify } from "@/lib/definitions/slug";
+import { realmPageUrl } from "@/lib/shareLink";
 import { TemplatePayload } from "./types";
 
 export interface PublishRealmBody {
@@ -9,10 +12,7 @@ export interface PublishRealmBody {
   gameSlug?: string;
   tags?: string | string[];
   payload?: TemplatePayload;
-  customDefSpec?: {
-    install?: { installScript?: unknown; url?: unknown; appId?: unknown };
-    launch?: { launchScript?: unknown };
-  } | null;
+  customDefSpec?: Record<string, any> | null;
   realmId?: string;
   version?: string;
   changelog?: string | null;
@@ -31,6 +31,10 @@ export async function publishRealm(body: PublishRealmBody, userId: string) {
     return { status: 400, json: { error: "Missing payload" } };
   }
 
+  // A realm's own game definition goes through the same gate a deploy runs
+  // on the other end, so nothing gets published that no one could deploy.
+  // What's stored is the gate's normalized copy plus its listing metadata.
+  let sharedDefSpec: Record<string, unknown> | null = null;
   if (customDefSpec) {
     if (customDefSpec.install?.installScript) {
       return { status: 400, json: { error: "Marketplace definitions cannot contain 'installScript' for security reasons. Please use a data-only blueprint." } };
@@ -38,6 +42,15 @@ export async function publishRealm(body: PublishRealmBody, userId: string) {
     if (customDefSpec.launch?.launchScript) {
       return { status: 400, json: { error: "Marketplace definitions cannot contain 'launchScript' for security reasons. Please use executable and args." } };
     }
+    const vetted = vetUntrustedSpec(customDefSpec);
+    if (!vetted.ok) {
+      return {
+        status: 400,
+        json: { error: `This game definition can't be shared: ${vetted.errors.slice(0, 3).join(" ")}`, details: vetted.errors },
+      };
+    }
+    const meta = Object.fromEntries(Object.entries(vetted.meta).filter(([, v]) => v !== undefined));
+    sharedDefSpec = { ...vetted.spec, ...meta };
   }
 
   // Best-effort app-side scrub of accidental secrets in config overrides (the DB
@@ -64,7 +77,7 @@ export async function publishRealm(body: PublishRealmBody, userId: string) {
       p_realm_id: realmId,
       p_version: version || "1.0.0",
       p_payload: payload,
-      p_custom_def_spec: customDefSpec ?? null,
+      p_custom_def_spec: sharedDefSpec,
       p_changelog: changelog ?? null,
     });
     if (error) return { status: 400, json: { error: error.message } };
@@ -82,22 +95,29 @@ export async function publishRealm(body: PublishRealmBody, userId: string) {
       ? tags
       : [];
 
+  // Every realm gets a public address: slugified name + a short random
+  // suffix, so two realms named alike still land on distinct pages (the DB's
+  // unique index is the backstop). Official seed realms bring curated slugs
+  // and never pass through here.
+  const slug = `${slugify(name).slice(0, 64) || "realm"}-${Math.random().toString(16).slice(2, 8)}`;
+
   const { data: realm, error } = await supabase
     .from("realms")
     .insert({
       seller_id: userId,
+      slug,
       name,
       description,
       game_slug: gameSlug,
       tags: tagsArr,
       payload,
-      custom_def_spec: customDefSpec ?? null,
+      custom_def_spec: sharedDefSpec,
       version: version || "1.0.0",
       status: "PUBLISHED",
       visibility: "PUBLIC",
       verified_level: "UNVERIFIED",
     })
-    .select("id, name, payload, custom_def_spec, version")
+    .select("id, name, slug, payload, custom_def_spec, version")
     .single();
 
   if (error) {
@@ -114,7 +134,11 @@ export async function publishRealm(body: PublishRealmBody, userId: string) {
     changelog: changelog ?? null,
   });
 
-  return { status: 200, json: { id: realm.id, name: realm.name, strippedSecrets } };
+  const finalSlug = realm.slug ?? slug;
+  return {
+    status: 200,
+    json: { id: realm.id, name: realm.name, slug: finalSlug, publicUrl: realmPageUrl(finalSlug), strippedSecrets },
+  };
 }
 
 /**
