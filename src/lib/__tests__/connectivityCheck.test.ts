@@ -27,6 +27,7 @@ type DepsLike = {
   publicIP: () => Promise<string | null>;
   platform: NodeJS.Platform;
   tunnelAlive: (serverId: string) => boolean;
+  upnpRenewalFailures: (port: number) => number;
 };
 
 const deps = (over: Partial<DepsLike> = {}): DepsLike => ({
@@ -35,6 +36,7 @@ const deps = (over: Partial<DepsLike> = {}): DepsLike => ({
   publicIP: async () => "203.0.113.10",
   platform: "win32" as NodeJS.Platform,
   tunnelAlive: () => true,
+  upnpRenewalFailures: () => 0,
   ...over,
 });
 
@@ -215,5 +217,29 @@ describe("runConnectivityChecks", () => {
     const r = await runConnectivityChecks(server(), mc.spec, deps());
     expect(r.checks.find((c) => c.id === "firewall")?.status).toBe("warn");
     expect(r.overall).toBe("ready");
+  });
+});
+
+// A mapping the router accepted at start can die later: renewals are the only
+// signal, and the check must not keep saying "ok" from a stale start-time flag.
+describe("UPnP lease renewal health in the router check", () => {
+  it("a mapping the router stopped renewing fails with a fix, despite the start-time flag", async () => {
+    const r = await runConnectivityChecks(server(), mc.spec, deps({ upnpRenewalFailures: () => 2 }));
+    const router = r.checks.find((c) => c.id === "router")!;
+    expect(router.status).toBe("fail");
+    expect(router.detail).toMatch(/stopped renewing/);
+    expect(router.fixCommand).toBeTruthy();
+    expect(r.overall).toBe("blocked");
+  });
+
+  it("one failed renewal is not yet an outage", async () => {
+    const r = await runConnectivityChecks(server(), mc.spec, deps({ upnpRenewalFailures: () => 1 }));
+    expect(r.checks.find((c) => c.id === "router")?.status).toBe("ok");
+    expect(r.overall).toBe("ready");
+  });
+
+  it("a healthy mapping reads as before", async () => {
+    const r = await runConnectivityChecks(server(), mc.spec, deps({ upnpRenewalFailures: () => 0 }));
+    expect(r.checks.find((c) => c.id === "router")?.status).toBe("ok");
   });
 });

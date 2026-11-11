@@ -41,6 +41,12 @@ export async function register() {
     const { attachAutoStopSampler } = await import("@/lib/autoStop");
     attachAutoStopSampler();
 
+    // Same for the connectivity monitor: it re-checks a running server's
+    // public path on a timer so the owner hears about a dead tunnel or a
+    // dropped UPnP mapping before their friends do.
+    const { attachConnectivityMonitor } = await import("@/lib/connectivityMonitor");
+    attachConnectivityMonitor();
+
     // Local Windows servers outlive this process too (Windows does not kill
     // child processes on quit/crash): mark dead ones stopped, reattach
     // monitoring to live ones, and clean up interrupted updates.
