@@ -23,7 +23,7 @@ import {
 
 import type { FeaturedRealm } from "@/lib/backend/realms";
 import RealmCard from "@/components/RealmCard";
-import { DOWNLOAD_URL, RELEASES_URL } from "@/lib/constants";
+import { RELEASES_URL, downloadUrl } from "@/lib/constants";
 
 // Mock games data for the interactive widget
 const GAMES_LIST = [
@@ -131,7 +131,7 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-4">
             <a
-              href={DOWNLOAD_URL}
+              href={downloadUrl("nav")}
               className="bg-accentPurple hover:bg-accentPurpleHover text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md shadow-accentPurple/20 border border-accentPurple/30"
             >
               Download
@@ -164,7 +164,7 @@ export default function LandingPage() {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-md mb-4">
           <a
-            href={DOWNLOAD_URL}
+            href={downloadUrl("hero")}
             className="w-full sm:w-auto bg-accentPurple hover:bg-accentPurpleHover text-white px-8 py-4 rounded-xl text-base font-bold transition-all duration-200 shadow-lg shadow-accentPurple/20 border border-accentPurple/40"
           >
             Download Free
@@ -476,7 +476,7 @@ export default function LandingPage() {
           Join thousands of gamer friend groups hosting smarter. Install RealmSwap on your PC today and run your own local game network for free.
         </p>
         <a
-          href={DOWNLOAD_URL}
+          href={downloadUrl("landing-bottom")}
           className="inline-block bg-accentPurple hover:bg-accentPurpleHover text-white px-8 py-4 rounded-xl text-base font-bold transition-all duration-200 shadow-lg shadow-accentPurple/20 border border-accentPurple/40"
         >
           Download Free Now
