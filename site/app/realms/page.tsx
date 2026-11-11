@@ -9,9 +9,10 @@ import { getPublicRealms } from "@/lib/backend/realms";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Browse Realms | RealmSwap",
+  title: "Browse Realms",
   description:
     "Browse ready-made community realms — modpacks, worlds, and full server setups you can deploy on your own PC in one click, free.",
+  alternates: { canonical: "/realms" },
 };
 
 type RealmsIndexProps = {

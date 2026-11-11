@@ -21,6 +21,10 @@ let cachedPublicClient: SupabaseClient | null = null;
  * Anon Supabase client for PUBLIC reads, or `null` when the env is not
  * configured. The anon/publishable key is safe to expose; RLS restricts what it
  * can read. Cached per server instance. No auth session is used.
+ *
+ * Fetches are explicitly `no-store`: every page using this client is declared
+ * `force-dynamic` because it shows live marketplace/status data, and a
+ * persisted data-cache entry would quietly serve yesterday's answer.
  */
 export function getPublicSupabaseClient(): SupabaseClient | null {
   if (!isBackendConfigured()) return null;
@@ -28,7 +32,12 @@ export function getPublicSupabaseClient(): SupabaseClient | null {
     cachedPublicClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { auth: { persistSession: false, autoRefreshToken: false } },
+      {
+        auth: { persistSession: false, autoRefreshToken: false },
+        global: {
+          fetch: (url, init) => fetch(url, { ...init, cache: "no-store" }),
+        },
+      },
     );
   }
   return cachedPublicClient;

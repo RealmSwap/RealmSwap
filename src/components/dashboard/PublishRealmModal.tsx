@@ -21,9 +21,10 @@ export function PublishRealmModal({ server, onClose }: { server: any; onClose: (
   const [tags, setTags] = useState(`${server.game},Community`);
   const [version, setVersion] = useState("1.0.0");
   const [publishing, setPublishing] = useState(false);
-  // Set after a successful publish that carried warnings: the modal then
-  // shows the amber list until the user clicks OK.
-  const [successWarnings, setSuccessWarnings] = useState<string[] | null>(null);
+  // Set after a successful publish: the public page's address (copyable) and
+  // any extraction warnings. The modal stays open until the user clicks OK so
+  // neither scrolls past.
+  const [success, setSuccess] = useState<{ publicUrl: string | null; warnings: string[] } | null>(null);
 
   const submit = async () => {
     setPublishing(true);
@@ -40,16 +41,21 @@ export function PublishRealmModal({ server, onClose }: { server: any; onClose: (
         ? ` (${data.summary.modCount} mods${data.summary.hasModpack ? ", modpack included" : ""})`
         : "";
       toast.success(`Published '${data.name || name}' to the marketplace${summary}`);
-      if (Array.isArray(data.warnings) && data.warnings.length > 0) {
-        setSuccessWarnings(data.warnings);
-      } else {
-        onClose();
-      }
+      setSuccess({
+        publicUrl: typeof data.publicUrl === "string" ? data.publicUrl : null,
+        warnings: Array.isArray(data.warnings) ? data.warnings : [],
+      });
     } catch (e: any) {
       toast.error(e.message);
     } finally {
       setPublishing(false);
     }
+  };
+
+  const copyLink = async () => {
+    if (!success?.publicUrl) return;
+    await navigator.clipboard.writeText(success.publicUrl);
+    toast.success("Public page link copied.");
   };
 
   return (
@@ -77,7 +83,7 @@ export function PublishRealmModal({ server, onClose }: { server: any; onClose: (
               onChange={e => setName(e.target.value)}
               className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors"
               placeholder="e.g. Valheim Hardcore PvP"
-              disabled={publishing || successWarnings !== null}
+              disabled={publishing || success !== null}
             />
           </div>
           <div>
@@ -87,7 +93,7 @@ export function PublishRealmModal({ server, onClose }: { server: any; onClose: (
               onChange={e => setDescription(e.target.value)}
               className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors resize-none h-24"
               placeholder="Describe your server setup and configuration..."
-              disabled={publishing || successWarnings !== null}
+              disabled={publishing || success !== null}
             />
           </div>
           <div>
@@ -98,7 +104,7 @@ export function PublishRealmModal({ server, onClose }: { server: any; onClose: (
               onChange={e => setTags(e.target.value)}
               className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors"
               placeholder="MINECRAFT,Community"
-              disabled={publishing || successWarnings !== null}
+              disabled={publishing || success !== null}
             />
           </div>
           <div>
@@ -109,23 +115,40 @@ export function PublishRealmModal({ server, onClose }: { server: any; onClose: (
               onChange={e => setVersion(e.target.value)}
               className="w-full bg-black/40 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accentBlue transition-colors"
               placeholder="1.0.0"
-              disabled={publishing || successWarnings !== null}
+              disabled={publishing || success !== null}
             />
           </div>
 
-          {successWarnings && (
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs space-y-1">
-              <span className="font-bold block">Published with warnings:</span>
-              <ul className="list-disc list-inside space-y-0.5">
-                {successWarnings.map((w, i) => (
-                  <li key={i}>{w}</li>
-                ))}
-              </ul>
+          {success && (
+            <div className="space-y-3">
+              {success.publicUrl && (
+                <div className="p-3 rounded-lg bg-accentBlue/10 border border-accentBlue/30 text-xs text-slate-300 space-y-2">
+                  <span className="font-bold text-slate-200 block">Your realm has a public page:</span>
+                  <code className="block break-all text-accentBlue">{success.publicUrl}</code>
+                  <button
+                    onClick={copyLink}
+                    className="px-3 py-1.5 rounded-lg font-bold bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-200 transition-colors"
+                  >
+                    Copy public link
+                  </button>
+                  <span className="block text-slate-500">Share it anywhere — it shows the realm and what's inside.</span>
+                </div>
+              )}
+              {success.warnings.length > 0 && (
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs space-y-1">
+                  <span className="font-bold block">Published with warnings:</span>
+                  <ul className="list-disc list-inside space-y-0.5">
+                    {success.warnings.map((w, i) => (
+                      <li key={i}>{w}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>
         <div className="p-5 bg-slate-950 flex justify-end gap-3 border-t border-slate-800">
-          {successWarnings ? (
+          {success ? (
             <button
               onClick={onClose}
               className="px-5 py-2 rounded-lg font-bold text-sm bg-accentBlue hover:bg-blue-500 text-white transition-all shadow-lg shadow-accentBlue/20"

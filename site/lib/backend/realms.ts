@@ -173,6 +173,28 @@ type RealmIndexRow = {
 };
 
 /**
+ * Every slugable public realm, for the sitemap. Returns [] on any error —
+ * a sitemap missing entries is a smaller wrong than a broken route.
+ */
+export async function getAllPublicRealmSlugs(limit = 1000): Promise<string[]> {
+  const supabase = getPublicSupabaseClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("realms")
+    .select("slug")
+    .eq("status", "PUBLISHED")
+    .eq("visibility", "PUBLIC")
+    .not("slug", "is", null)
+    .order("like_count", { ascending: false })
+    .limit(limit)
+    .returns<{ slug: string }[]>();
+
+  if (error || !data) return [];
+  return data.map((r) => r.slug).filter((s): s is string => Boolean(s));
+}
+
+/**
  * PUBLISHED + PUBLIC realms for the browse index, most-liked first. Realms
  * without a slug can never be linked, so they are excluded at the query.
  * `total` is the unfiltered row count (may exceed the returned page).
