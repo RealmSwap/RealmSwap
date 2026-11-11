@@ -27,6 +27,17 @@ export default function PrivacyPolicy() {
             <p>
               When you use RealmSwap, we collect information that you provide directly to us, including your account details (such as your name, email address, and authentication credentials). Because RealmSwap operates locally and manages game servers on your hardware, we also collect technical information regarding your server configurations, game saves, mods installed, and system performance metrics.
             </p>
+            <p className="mt-3">
+              <strong className="text-white">Anonymous usage milestones (strictly opt-in).</strong> If — and only if —
+              the admin turns on &ldquo;Share anonymous usage milestones&rdquo; in Settings, RealmSwap sends one summary
+              per day: how many servers exist, which games they run (built-in game names only), and which milestones
+              have happened (first boot, mods installed, an invite minted, someone playing, a status page shared, a
+              game night planned, a remote host enrolled, whether any server ran that day). These summaries contain no
+              account identifiers, no server names, no addresses, no passwords, and no player data — they are keyed
+              only by a random id created when you opt in (a fresh one is created each time you opt back in), and they
+              are sent with the public anon key so nothing about your account is attached. The exact contents are
+              shown field-by-field in Settings before you decide, and nothing is sent while the feature is off.
+            </p>
           </section>
 
           <section>
