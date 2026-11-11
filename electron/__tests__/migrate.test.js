@@ -10,7 +10,7 @@ import {
   checksum,
   formatStamp,
 } from "../migrate.js";
-import { PrismaClient } from "../../src/generated/client/index.js";
+import { PrismaClient, Prisma } from "../../src/generated/client/index.js";
 
 function tmpDir(prefix) {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
@@ -224,4 +224,53 @@ PRAGMA defer_foreign_keys=OFF;`
     expect(fs.existsSync(path.join(o.backupDir))).toBe(true);
     expect(fs.readdirSync(o.backupDir).length).toBeGreaterThan(0);
   });
+});
+
+// The packaged app's schema comes ONLY from prisma/migrations: the installer's
+// template.db is built by replaying them, and existing installs upgrade
+// through them — while dev and the e2e harnesses build their schema with
+// `prisma db push`. A field added to schema.prisma without a migration
+// therefore works everywhere except in the shipped app, which is exactly how
+// ModInstallation.disabled went missing for five releases. Replay the real
+// migrations and check every column the generated client will ask for.
+describe("real migrations vs the generated client", () => {
+  it(
+    "a database built from prisma/migrations has every column the client selects",
+    { timeout: 60_000 },
+    async () => {
+      const dbPath = path.join(work, "real.db");
+      await runMigrations({
+        dbPath,
+        migrationsDir: path.resolve(__dirname, "..", "..", "prisma", "migrations"),
+        makeClient,
+        backupDir: path.join(work, "backups"),
+        log: { info() {} },
+      });
+
+      const db = makeClient("file:" + dbPath.replace(/\\/g, "/"));
+      const missing = [];
+      try {
+        for (const model of Prisma.dmmf.datamodel.models) {
+          const table = model.dbName ?? model.name;
+          const rows = await db.$queryRawUnsafe(`PRAGMA table_info("${table}")`);
+          const columns = new Set(rows.map((r) => r.name));
+          if (columns.size === 0) {
+            missing.push(`${table} (whole table)`);
+            continue;
+          }
+          for (const field of model.fields) {
+            if (field.kind !== "scalar" && field.kind !== "enum") continue;
+            const column = field.dbName ?? field.name;
+            if (!columns.has(column)) missing.push(`${table}.${column}`);
+          }
+        }
+      } finally {
+        await db.$disconnect();
+      }
+      expect(
+        missing,
+        `schema.prisma declares columns that no migration creates — the packaged app would query a column that doesn't exist. Add a migration: ${missing.join(", ")}`
+      ).toEqual([]);
+    }
+  );
 });

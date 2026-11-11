@@ -50,11 +50,14 @@ function log(msg: string) {
 
 function npx(cmd: string, args: string[], env: Record<string, string>): ReturnType<typeof spawnSync> {
   const bin = process.platform === "win32" ? `${cmd}.cmd` : cmd;
+  // .cmd shims can only spawn through a shell (Node refuses them directly),
+  // and every arg here is a fixed token, so shell:true is safe.
   return spawnSync(bin, args, {
     cwd: REPO_ROOT,
     env: { ...process.env, ...env },
     stdio: ["ignore", "pipe", "pipe"],
     maxBuffer: 64 * 1024 * 1024,
+    shell: process.platform === "win32",
   });
 }
 
@@ -173,7 +176,17 @@ export async function startApp(): Promise<AppHandle> {
   const child = spawn(
     process.platform === "win32" ? "npx.cmd" : "npx",
     ["next", "start", "--hostname", "127.0.0.1", "--port", String(APP_PORT)],
-    { cwd: REPO_ROOT, env: { ...process.env, ...appEnv }, detached: true, stdio: ["ignore", "pipe", "pipe"] }
+    {
+      cwd: REPO_ROOT,
+      env: { ...process.env, ...appEnv },
+      // detached process-group tracking is a POSIX mechanism; on Windows it
+      // (with the shell shim) breaks stdio piping, and stopApp kills the
+      // tree via taskkill anyway.
+      detached: process.platform !== "win32",
+      stdio: ["ignore", "pipe", "pipe"],
+      // .cmd needs a shell; stopApp kills the whole tree below.
+      shell: process.platform === "win32",
+    }
   );
 
   let ring = Buffer.alloc(0);
@@ -220,6 +233,16 @@ async function stopApp(child: ChildProcess, fakeSupabase: FakeSupabase): Promise
   await fakeSupabase.stop();
   await new Promise((resolve) => {
     if (child.exitCode !== null) return resolve(null);
+    // shell:true means the direct child is cmd.exe — kill the whole tree, or
+    // the next-server grandchild survives and holds the port.
+    if (process.platform === "win32" && child.pid) {
+      try {
+        spawnSync("taskkill", ["/PID", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+        return resolve(null);
+      } catch {
+        /* fall through to child.kill */
+      }
+    }
     try {
       if (process.platform !== "win32" && child.pid) process.kill(-child.pid, "SIGTERM");
       else child.kill("SIGTERM");

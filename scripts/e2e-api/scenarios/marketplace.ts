@@ -16,13 +16,15 @@ import { scenario, step, type ScenarioContext } from "./framework";
 import { serverDir, memberClient } from "./surface";
 import { getBinary, postRaw } from "./fixtures";
 
-/** Extract ./realm.json from a .realm (gzip tar) buffer via the system tar. */
+/** Extract ./realm.json from a .realm (gzip tar) buffer via the system tar.
+ *  No member filter: Windows bsdtar rejects the "./"-prefixed name that the
+ *  archive's entries carry, so extract everything into the throwaway dir. */
 function readRealmJson(bytes: Buffer): any {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rs-e2e-realm-"));
   try {
     const tarPath = path.join(dir, "export.realm");
     fs.writeFileSync(tarPath, bytes);
-    execFileSync("tar", ["-xzf", tarPath, "-C", dir, "./realm.json"]);
+    execFileSync("tar", ["-xzf", tarPath, "-C", dir]);
     return JSON.parse(fs.readFileSync(path.join(dir, "realm.json"), "utf8"));
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
