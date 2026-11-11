@@ -65,6 +65,14 @@ export async function register() {
           }
         })
         .catch((err: any) => console.error("[AutoStart] launch pass failed:", err?.message));
+
+      // Scheduled automations must fire even when nobody opens the dashboard
+      // after an unattended boot or wake — and the wake timer that gets this
+      // PC up ahead of the next scheduled start is planned from them.
+      const { initActionScheduler } = await import("@/lib/actionScheduler");
+      initActionScheduler();
+      const { startWakeScheduler } = await import("@/lib/power/wakeScheduler");
+      startWakeScheduler();
     }
 
     // The dashboard hosts game processes — an unhandled stream error (EPIPE

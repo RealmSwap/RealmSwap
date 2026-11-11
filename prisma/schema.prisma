@@ -497,3 +497,12 @@ model AgentCommand {
   @@index([nodeId, status])
   @@index([serverId])
 }
+
+/// Install-wide settings, one row per key. For choices that belong to this
+/// machine rather than to a user or a server — e.g. power behavior
+/// (keep-awake, wake timers). Written by the ADMIN through /api/system/power.
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

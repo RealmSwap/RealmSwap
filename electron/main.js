@@ -1,5 +1,5 @@
 "use strict";
-const { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain } = require("electron");
+const { app, BrowserWindow, Tray, Menu, nativeImage, shell, ipcMain, powerSaveBlocker, powerMonitor } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const net = require("net");
@@ -14,9 +14,16 @@ const {
 } = require("./updater");
 const { runMigrations } = require("./migrate");
 const { loadPackagedEnv } = require("./packagedEnv");
+const { createKeepAwake, fetchKeepAwakeDecision } = require("./keepAwake");
 
 const isDev = process.env.GAMEVAULT_DEV === "1";
 const internalToken = crypto.randomBytes(16).toString("hex");
+
+// The wake task launches RealmSwap itself with --wake. When the app is
+// already running that instance just re-checks keep-awake (see
+// second-instance); when it isn't, RealmSwap starts for the scheduled session
+// but stays in the tray — nobody asked for a window at 7 p.m.
+const launchedToWake = process.argv.includes("--wake");
 
 // Brand the app as RealmSwap. Must run before any app.getPath("userData") so
 // the data directory resolves to %APPDATA%/RealmSwap.
@@ -44,6 +51,7 @@ let mainWindow = null;
 let tray = null;
 let isQuitting = false;
 let serverPort = 0;
+let keepAwake = null;
 
 function beginQuit() {
   isQuitting = true;
@@ -250,7 +258,7 @@ async function createWindow(port) {
   const url = resolveDeepLinkUrl(deepLinkArg);
 
   await mainWindow.loadURL(url);
-  mainWindow.show();
+  if (!launchedToWake) mainWindow.show();
   buildTray();
 }
 
@@ -259,6 +267,12 @@ if (!gotLock) {
   app.quit();
 } else {
   app.on("second-instance", (event, commandLine, workingDirectory) => {
+    // The wake task launching an already-running RealmSwap only needs the
+    // keep-awake decision re-checked — not the window popping up.
+    if (commandLine.includes("--wake")) {
+      if (keepAwake) keepAwake.pollNow();
+      return;
+    }
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
@@ -344,6 +358,18 @@ app.whenReady().then(async () => {
       await waitForServer(serverPort, 30000);
       logStartup(`server ready on port ${serverPort}`);
       await createWindow(serverPort);
+      // Hold this PC awake while the dashboard says it should be: players on
+      // (or possibly on) a server, or right around a scheduled start. The
+      // decision lives server-side so the shell only relays it; after a wake
+      // timer fires, "resume" re-checks well inside the ~2 minutes Windows
+      // gives an unattended machine before it sleeps again.
+      keepAwake = createKeepAwake({
+        fetchDecision: () => fetchKeepAwakeDecision(serverPort, internalToken),
+        blocker: powerSaveBlocker,
+        log: logStartup,
+      });
+      keepAwake.start();
+      powerMonitor.on("resume", () => keepAwake.pollNow());
       initAutoUpdate({
         getMainWindow: () => mainWindow,
         beginQuit,
@@ -384,6 +410,7 @@ app.on("before-quit", async (e) => {
   if (isQuitting === true && !isDev && serverPort) {
     e.preventDefault();
     isQuitting = "done";
+    if (keepAwake) keepAwake.stop();
     await stopAllServers(serverPort, internalToken);
     app.quit();
   }

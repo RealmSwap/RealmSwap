@@ -503,6 +503,12 @@ exports.Prisma.AgentCommandScalarFieldEnum = {
   completedAt: 'completedAt'
 };
 
+exports.Prisma.AppSettingScalarFieldEnum = {
+  key: 'key',
+  value: 'value',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -543,7 +549,8 @@ exports.Prisma.ModelName = {
   PlayerServerAccess: 'PlayerServerAccess',
   PlayerAuditLog: 'PlayerAuditLog',
   AgentNode: 'AgentNode',
-  AgentCommand: 'AgentCommand'
+  AgentCommand: 'AgentCommand',
+  AppSetting: 'AppSetting'
 };
 
 /**

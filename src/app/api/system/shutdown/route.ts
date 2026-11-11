@@ -5,6 +5,7 @@ import { stopAllRunningServers } from "./stopAll";
 import { stopRealmSyncServer } from "@/lib/realmSyncHost";
 import { stopAllTunnels } from "@/lib/tunnels";
 import { secureSecretEquals } from "@/lib/secureCompare";
+import { clearWakeTaskOnQuit } from "@/lib/power/wakeScheduler";
 
 export async function POST(req: NextRequest) {
   const token = req.headers.get("x-internal-token");
@@ -41,6 +42,10 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[Shutdown] Failed to stop tunnels:", err);
   }
+
+  // A RealmSwap that was quit on purpose should not wake the PC later and
+  // relaunch itself; the timer is re-registered the next time the app runs.
+  await clearWakeTaskOnQuit();
 
   return NextResponse.json({ stopped });
 }
