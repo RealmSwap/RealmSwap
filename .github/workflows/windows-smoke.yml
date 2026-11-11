@@ -118,10 +118,38 @@ jobs:
           NEXT_TELEMETRY_DISABLED: "1"
           SENTRY_DSN: ""
           NEXT_PUBLIC_SENTRY_DSN: ""
+          # Signing rides the same environment-gated config as releases
+          # (scripts/make-signing-config.js); on PR runs the secrets are
+          # absent and the build is unsigned, as always.
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SIGNING_ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
+          AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: |
           npm run electron:build > build.log 2>&1 || { tail -300 build.log; exit 1; }
           ls -la dist/
           tail -30 build.log
+
+      - name: Record the installer's signature status
+        shell: pwsh
+        env:
+          EXPECT_SIGNED: ${{ vars.EXPECT_SIGNED_INSTALLER }}
+          AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
+        run: |
+          $sig = Get-AuthenticodeSignature "C:\rsbuild\dist\RealmSwap-Setup.exe"
+          $subject = if ($sig.SignerCertificate) { $sig.SignerCertificate.Subject } else { "(none)" }
+          "Smoke installer signature: $($sig.Status) — $subject" >> $env:GITHUB_STEP_SUMMARY
+          if ($env:EXPECT_SIGNED -eq "true") {
+            if ($sig.Status -ne "Valid") { throw "EXPECT_SIGNED_INSTALLER is set, but the smoke build is not validly signed (status: $($sig.Status))." }
+            if ($env:AZURE_SIGNING_PUBLISHER -and $subject -notlike "*$($env:AZURE_SIGNING_PUBLISHER)*") {
+              throw "Signed as '$subject', which does not match the configured publisher '$($env:AZURE_SIGNING_PUBLISHER)'."
+            }
+          }
 
       - name: Silent-install the freshly built installer
         shell: pwsh
