@@ -45,8 +45,6 @@ function routesOnDisk(): Map<string, string> {
         continue;
       }
       if (entry.name !== "route.ts") continue;
-      // Ledger keys are URL paths; on Windows the directory separator is "\".
-      const routePath = full.slice(API_DIR.length, -"route.ts".length).replace(/\\/g, "/").replace(/\/$/, "") || "";
       // path.join emits "\" on Windows — normalize to "/" so the keys match
       // the ledger's forward-slash routes on every platform.
       const routePath = full
