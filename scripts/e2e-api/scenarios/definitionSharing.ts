@@ -49,7 +49,7 @@ export const definitionSharingScenarios = [
         expect((exported.headers.get("content-disposition") || "").includes(".realmswap-game.json"), "attachment filename ends in .realmswap-game.json");
         expect(exported.body?.definition?.spec?.install?.appId === "896660", "spec round-trips");
         ctx.state.definitionFile = exported.body;
-        ctx.state.definitionId = definitionId;
+        ctx.state.sharedDefinitionId = definitionId;
       });
 
       await step("import: preview says what runs and writes nothing; confirm creates", async () => {
