@@ -4,7 +4,7 @@
 
 RealmSwap is a free, locally-hosted game server manager for your gaming PC or home machine. Pick a game, click deploy, and share one invite — your friends join, and the mods their client needs download themselves. No rent, no queues, no oversold nodes, and your world never locks behind a lapsed subscription.
 
-**Every mod install is boot-tested before you see "success."** RealmSwap installs the modpack into a sandbox, actually boots the server, and only then calls it done — a bad mod, missing dependency, or wrong loader rolls the server back automatically instead of leaving you with a world that won't start.
+**Mod installs are boot-tested before you see "success" — live today for Minecraft, Valheim, Project Zomboid, and Terraria, with more games on the way.** For those games, RealmSwap installs the modpack into a sandbox, actually boots the server, and only then calls it done — a bad mod, missing dependency, or wrong loader rolls the server back automatically instead of leaving you with a world that won't start.
 
 <p align="center">
   <a href="docs/demo/realmswap-demo.mp4">
@@ -35,7 +35,7 @@ One-click deployment out of the box:
 ## Key Features
 
 ### Mods that actually work
-- **Verified installs**: every mod install, update, and modpack import runs snapshot → install → **sandbox boot test** → auto-rollback. Broken installs fail loudly with the server's own boot output — never a silent "success" that doesn't load.
+- **Verified installs**: every mod install, update, and modpack import runs snapshot → install → auto-rollback, with the **sandbox boot test** live for **Minecraft, Valheim, Project Zomboid, and Terraria** today (more games on the way). Broken installs fail loudly with the server's own boot output — never a silent "success" that doesn't load.
 - **All the loaders**: Fabric, Forge, NeoForge, and Quilt install in one click (and modpacks pin the right one automatically).
 - **CurseForge + Modrinth + Thunderstore + Steam Workshop**: search, one-click install with automatic dependency resolution, real versions, and per-mod updates. Modpack imports for `.mrpack` (Modrinth) and CurseForge manifests.
 - **Client-mod handling**: client-only mods are detected and excluded from servers instead of crashing your boot, and problem jars are quarantined and retried for you.

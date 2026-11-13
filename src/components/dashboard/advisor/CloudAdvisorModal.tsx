@@ -251,7 +251,15 @@ export function CloudAdvisorModal({ serverId, serverName, onClose, onMigrateSucc
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-white">Cloud Hosting</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-black text-white">Cloud Hosting</h2>
+                <span
+                  title="Cloud Advisor recommendations come from rough built-in estimates, not your server's real telemetry — treat them as a starting point."
+                  className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                >
+                  Beta — estimates are rough
+                </span>
+              </div>
               <p className="text-xs text-slate-400 font-medium">Manage cloud deployment for {serverName}</p>
             </div>
           </div>
