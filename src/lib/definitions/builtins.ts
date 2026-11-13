@@ -173,6 +173,10 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       launch: {
         executable: "cmd.exe", executableOnPath: true, cwdSubDir: "zomboid-server",
         args: ["/c", "StartServer64.bat", "-cachedir=./zomboid-data", "-servername", "servertest"],
+        // PZWiki dedicated-server admin console documents `quit` as "saves the
+        // current world and exits". stdin pipes through cmd.exe /c to the Java
+        // server console, same plumbing as the Minecraft stop.
+        stdinStopCommand: "quit\n",
       },
       container: {
         executable: "start-server.sh",
@@ -204,6 +208,12 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           { value: ["TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"], includeWhen: "passwordEmpty" },
           "-server", "-nosound", "-QueryPort=27015", "-automanagemods",
         ],
+        // ARK wiki RCON command table documents `DoExit` — "Exits the server".
+        // UNCERTAIN: the wiki does not state whether DoExit flushes the final
+        // world save, and ARK only honors RCON when launched with -EnableRCON /
+        // RCONPort / RCONServerPassword (operator-configured on the server row,
+        // not passed here). If the RCON send fails, stop falls back to force-kill.
+        rconStopCommand: "DoExit",
       },
       container: {
         executable: "ShooterGame/Binaries/Linux/ShooterGameServer",
@@ -242,6 +252,11 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           "-autocreate", "1", "-worldname", "{nameSanitized}",
           "-world", "worlds/{nameSanitized}.wld",
         ],
+        // Terraria wiki dedicated-server console documents `exit` as saving the
+        // world and exiting. TerrariaServer.exe reads console commands from
+        // stdin (spawned with a direct pipe — see the runner's resolveCommand
+        // comment on keeping stdin wired).
+        stdinStopCommand: "exit\n",
       },
       container: {
         executable: "TerrariaServer.bin.x86_64",
@@ -278,6 +293,13 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           { value: ["?port=8211?players={maxPlayers}"], includeWhen: "passwordEmpty" },
           "-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS",
         ],
+        // Palworld wiki admin commands document `Shutdown {seconds} {message}`:
+        // the server broadcasts the message, saves the world, and exits after
+        // the delay. The commonly cited 30s delay exceeds the runner's 7s
+        // force-kill window (we would kill it mid-grace, before the save) —
+        // 5s keeps the whole save inside the window; force-kill stays as the
+        // backstop for slow saves on large worlds.
+        rconStopCommand: "Shutdown 5 Server_stopping",
       },
       container: {
         executable: "PalServer.sh",
@@ -322,6 +344,13 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           "+server.seed", "{seed}", "+server.worldsize", "{worldSize}", "+server.maxplayers", "{maxPlayers}",
           "+server.hostname", "{name}", "+rcon.port", "28016", "+rcon.password", "{password}", "+rcon.web", "1",
         ],
+        // Facepunch admin console commands document `quit` as the graceful
+        // server shutdown (saves map + config). RustDedicated runs -batchmode
+        // (no stdin console), so RCON is the only channel — it fires only when
+        // the server row has RCON configured. NOTE: rcon-client speaks the
+        // legacy Source-RCON listener (+rcon.web 0); with the default webconsole
+        // (+rcon.web 1) the send fails and stop falls back to force-kill.
+        rconStopCommand: "quit",
       },
       container: {
         executable: "RustDedicated",

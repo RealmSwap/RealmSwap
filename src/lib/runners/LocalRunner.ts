@@ -29,6 +29,7 @@ import { downloadFile, setupSteamCMD, ensureSteamCmdUpdated, installSteamCmdApp 
 import { dataRoot } from "../appPaths";
 import { isCrashExit, evaluateCrash, CRASH_MAX_RETRIES, type CrashCounter } from "../crashPolicy";
 import { appendLog, clearLogs, serverLogFile, getServerLogTail } from "../serverLogs";
+import { rconManager } from "../rconManager";
 
 // Global process map to persist running processes across Next.js dev server hot-reloads
 const globalForRunner = globalThis as unknown as {
@@ -847,14 +848,44 @@ async function stopLocalServer(serverId: string): Promise<void> {
 
   appendLog(serverId, "Termination request received. Terminating process tree...");
 
-  // Use the spec's stdinStopCommand for graceful shutdown (e.g. Minecraft sends "stop\n")
   const { spec } = (server ? await resolveDefinition(server).catch(() => null) : null) ?? { spec: null as any };
-  if (spec?.launch?.stdinStopCommand) {
+
+  // Arm the force-kill timer BEFORE the graceful channels: an RCON connect has
+  // its own (longer) timeout, and no matter what happens below the process tree
+  // must die inside this window.
+  const timeout = setTimeout(() => {
+    if (localProcesses.has(serverId)) {
+      appendLog(serverId, "Shutdown timed out. Force killing process...");
+      child.kill("SIGKILL");
+      // Force kill sub-processes on Windows
+      exec(`taskkill /F /T /PID ${child.pid}`, () => {});
+    }
+  }, 7000);
+
+  // Graceful stop, best channel first:
+  //   1. stdin console command (e.g. Minecraft "stop", Terraria "exit")
+  //   2. RCON command when the server row has RCON configured (e.g. Palworld "Shutdown")
+  //   3. force-kill immediately (unchanged when the game declares neither)
+  const stdinStopCommand = spec?.launch?.stdinStopCommand;
+  const rconStopCommand = spec?.launch?.rconStopCommand;
+  if (stdinStopCommand) {
+    appendLog(serverId, "Sending graceful stop command via server console...");
     try {
-      child.stdin.write(spec.launch.stdinStopCommand);
+      child.stdin.write(stdinStopCommand);
     } catch {
       child.kill("SIGTERM");
     }
+  } else if (rconStopCommand && server?.rconPort && server?.rconPassword) {
+    appendLog(serverId, `Sending graceful stop command via RCON (${rconStopCommand})...`);
+    const response = await rconManager.execute(serverId, rconStopCommand);
+    if (response === null) {
+      appendLog(serverId, "RCON stop unavailable. Force killing process tree...");
+      exec(`taskkill /F /T /PID ${child.pid}`, (err) => {
+        if (err) child.kill("SIGKILL");
+      });
+    }
+    // A non-null response means the command was accepted — wait below for the
+    // natural exit (the timer above escalates if it never comes).
   } else {
     exec(`taskkill /F /T /PID ${child.pid}`, (err) => {
       if (err) child.kill("SIGKILL");
@@ -866,15 +897,6 @@ async function stopLocalServer(serverId: string): Promise<void> {
   const unmap = server
     ? releaseUpnpMappings(server, (m) => appendLog(serverId, m))
     : Promise.resolve();
-
-  const timeout = setTimeout(() => {
-    if (localProcesses.has(serverId)) {
-      appendLog(serverId, "Shutdown timed out. Force killing process...");
-      child.kill("SIGKILL");
-      // Force kill sub-processes on Windows
-      exec(`taskkill /F /T /PID ${child.pid}`, () => {});
-    }
-  }, 7000);
 
   await exitPromise;
   clearTimeout(timeout);
