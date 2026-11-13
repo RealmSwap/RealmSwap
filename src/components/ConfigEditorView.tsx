@@ -64,6 +64,13 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
   const [supportsGameSettings, setSupportsGameSettings] = useState(true);
   const [gameLoading, setGameLoading] = useState(false);
   const [gameSaving, setGameSaving] = useState(false);
+
+  // Remote console (RCON) — per-server settings for live rosters + admin actions.
+  const [rconPort, setRconPort] = useState("");
+  const [rconLoadedPort, setRconLoadedPort] = useState<number | null>(null);
+  const [rconPassword, setRconPassword] = useState("");
+  const [rconConfigured, setRconConfigured] = useState(false);
+  const [rconSaving, setRconSaving] = useState(false);
   
   // Publish Modal State
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -143,6 +150,10 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
     setGameFields([]);
     setGameValues({});
     setGameSavedValues({});
+    setRconPort("");
+    setRconLoadedPort(null);
+    setRconPassword("");
+    setRconConfigured(false);
     try {
       const res = await fetch(`/api/servers/${server.id}/settings`);
       const data = await res.json();
@@ -154,6 +165,11 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
       for (const f of data.fields || []) values[f.key] = f.value;
       setGameValues(values);
       setGameSavedValues(values);
+      // RCON comes back masked — the password is only ever "configured"/not.
+      const rconPortValue = data.rcon?.port;
+      setRconLoadedPort(typeof rconPortValue === "number" ? rconPortValue : null);
+      setRconPort(rconPortValue != null ? String(rconPortValue) : "");
+      setRconConfigured(!!data.rcon?.passwordConfigured);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -194,6 +210,44 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
       setError(err.message);
     } finally {
       setGameSaving(false);
+    }
+  };
+
+  // RCON is per-server and saved independently of the game-settings form.
+  const rconDirty = (() => {
+    const port = rconPort.trim();
+    const parsedPort = port === "" ? null : Number(port);
+    if (parsedPort !== rconLoadedPort && (port === "" || Number.isInteger(parsedPort))) return true;
+    return rconPassword.length > 0;
+  })();
+
+  const saveRconSettings = async () => {
+    if (!selectedServer || !rconDirty) return;
+    setRconSaving(true);
+    setError(null);
+    try {
+      const body: Record<string, unknown> = {};
+      const port = rconPort.trim();
+      const parsedPort = port === "" ? null : Number(port);
+      if (parsedPort !== rconLoadedPort) body.rconPort = parsedPort;
+      if (rconPassword) body.rconPassword = rconPassword;
+      const res = await fetch(`/api/servers/${selectedServer.id}/settings`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save RCON settings");
+      setRconLoadedPort(parsedPort);
+      setRconConfigured(!!data.rcon?.passwordConfigured || rconPassword.length > 0);
+      setRconPassword("");
+      setSuccess(data.message || "RCON settings saved.");
+      setTimeout(() => setSuccess(null), 4000);
+    } catch (err: any) {
+      setError(err.message);
+      setTimeout(() => setError(null), 4000);
+    } finally {
+      setRconSaving(false);
     }
   };
 
@@ -702,6 +756,62 @@ export default function ConfigEditorView({ user }: ConfigEditorViewProps) {
                             <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accentPurple"></div>
                           </label>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Remote console — live rosters, kick/ban/broadcast actions */}
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-white">Remote Console (RCON)</h3>
+                        <button
+                          onClick={saveRconSettings}
+                          disabled={rconSaving || !rconDirty}
+                          className="px-4 py-1.5 rounded-lg bg-accentPurple hover:bg-accentPurpleHover disabled:bg-accentPurple/30 disabled:cursor-not-allowed text-xs font-bold text-white transition-colors flex items-center gap-1.5 border border-accentPurple/30"
+                        >
+                          {rconSaving ? (
+                            <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Saving...</>
+                          ) : (
+                            <><Save className="w-3.5 h-3.5" /> Save RCON</>
+                          )}
+                        </button>
+                      </div>
+                      <div className="p-4 bg-slate-900 border border-white/5 rounded-lg space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">RCON Port</label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={65535}
+                              value={rconPort}
+                              onChange={(e) => setRconPort(e.target.value)}
+                              placeholder="e.g. 25575"
+                              className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                              RCON Password{" "}
+                              <span className={`ml-1 px-1.5 py-0.5 rounded font-bold uppercase ${rconConfigured ? "bg-emerald-500/20 text-emerald-400" : "bg-slate-800 text-slate-500"}`}>
+                                {rconConfigured ? "Configured" : "Not set"}
+                              </span>
+                            </label>
+                            <input
+                              type="password"
+                              value={rconPassword}
+                              onChange={(e) => setRconPassword(e.target.value)}
+                              placeholder={rconConfigured ? "Configured — type to replace" : "Choose a password"}
+                              className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-accentPurple transition-colors"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          The game&apos;s remote console must be enabled in its own config for this to work — e.g. Minecraft needs
+                          <span className="text-slate-300 font-mono"> enable-rcon=true</span> in server.properties. RealmSwap writes
+                          <span className="text-slate-300 font-mono"> rcon.port</span> /<span className="text-slate-300 font-mono"> rcon.password</span> there
+                          from these fields (vanilla default 25575) on the next start; other games usually expose RCON in their own settings file or launch flags.
+                          Powers the live roster and console actions; when RCON isn&apos;t set, live counts fall back to game queries.
+                        </p>
                       </div>
                     </div>
                   </div>

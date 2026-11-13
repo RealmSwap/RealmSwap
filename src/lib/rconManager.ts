@@ -1,6 +1,8 @@
 import { Rcon } from "rcon-client";
 import { prisma } from "./db";
 import { resolveGameHost } from "./gameHost";
+import { queryGameServer, playerNamesFromQuery } from "./serverQuery";
+import { parseSpec } from "./definitions/serialize";
 
 class RconManager {
   private connections: Map<string, Rcon> = new Map();
@@ -100,6 +102,40 @@ class RconManager {
       console.error(`RCON Players Error [${serverId}]:`, err);
       return [];
     }
+  }
+
+  /**
+   * Live roster for the Players page: RCON first (names + admin actions work),
+   * falling back to the shared gamedig query when RCON isn't configured (or
+   * doesn't answer) so "live player counts" work for every game that speaks a
+   * query protocol, not just RCON-configured ones.
+   */
+  async getLivePlayers(server: {
+    id: string;
+    game: string;
+    status: string;
+    definitionId?: string | null;
+    port: number;
+    name: string;
+    ramAllocation: number;
+    password?: string | null;
+    paramValues?: string | null;
+    runnerType?: string | null;
+    nodeId?: string | null;
+  }): Promise<{ players: string[]; source: "rcon" | "query" | null }> {
+    if (server.status !== "RUNNING") return { players: [], source: null };
+
+    const viaRcon = await this.getPlayers(server.id, server.game);
+    if (viaRcon.length > 0) return { players: viaRcon, source: "rcon" };
+
+    const record = server.definitionId
+      ? await prisma.gameDefinition.findUnique({ where: { id: server.definitionId } })
+      : await prisma.gameDefinition.findFirst({ where: { ownerId: null, slug: server.game.toUpperCase() } });
+    const spec = record ? parseSpec(record.spec) : null;
+    if (!spec?.queryType) return { players: [], source: null };
+
+    const result = await queryGameServer(server, spec, { host: await resolveGameHost(server) });
+    return { players: playerNamesFromQuery(result), source: result.status === "online" ? "query" : null };
   }
 }
 
