@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
 
     const body = await req.json();
     const name = (body.name || server.name.replace(/\s*-\s*Deployed$/, "")).toString().slice(0, 80);
-    const description = (body.description || `Deploy '${name}' — the exact setup from a working RealmSwap server, boot-tested on deploy.`).toString().slice(0, 500);
+    const description = (body.description || `Deploy '${name}' — the exact setup from a working RealmSwap server, boot-tested on deploy (Minecraft, Valheim, Project Zomboid, and Terraria today).`).toString().slice(0, 500);
 
     let extracted;
     try {
