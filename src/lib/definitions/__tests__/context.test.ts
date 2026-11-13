@@ -32,4 +32,29 @@ describe("buildContext", () => {
     const ctx = buildContext({ name: "x", password: "", port: 1, ram: 4, paramValuesJson: null, spec });
     expect(ctx.slots).toBe(8);
   });
+
+  it("renders RCON disabled by default (templates always resolve)", () => {
+    const ctx = buildContext({ name: "x", password: null, port: 1, ram: 4, paramValuesJson: null, spec: baseSpec });
+    expect(ctx.rconEnabled).toBe("false");
+    expect(ctx.rconPort).toBe(25575);
+    expect(ctx.rconPassword).toBe("");
+  });
+
+  it("carries configured RCON settings into the template context", () => {
+    const ctx = buildContext({
+      name: "x", password: null, port: 1, ram: 4, paramValuesJson: null, spec: baseSpec,
+      rconPort: 25510, rconPassword: "sekret",
+    });
+    expect(ctx.rconEnabled).toBe("true");
+    expect(ctx.rconPort).toBe(25510);
+    expect(ctx.rconPassword).toBe("sekret");
+  });
+
+  it("stays disabled when only one half of the RCON pair is set", () => {
+    const ctx = buildContext({
+      name: "x", password: null, port: 1, ram: 4, paramValuesJson: null, spec: baseSpec,
+      rconPort: 25575, rconPassword: null,
+    });
+    expect(ctx.rconEnabled).toBe("false");
+  });
 });

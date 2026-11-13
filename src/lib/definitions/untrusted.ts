@@ -57,7 +57,9 @@ const FORBIDDEN_ENV = new Set([
 
 const IDENTIFIER = /^[A-Za-z][A-Za-z0-9_]{0,39}$/;
 const ENV_NAME = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
-const PORT_VALUE = /^(\d{1,5}|\{[A-Za-z][A-Za-z0-9_]{0,39}\})$/;
+// "{port}+1" offsets cover Steam games whose query listener sits one port above
+// the join port (Valheim, V Rising); resolveQueryPort applies the offset.
+const PORT_VALUE = /^(\d{1,5}|\{[A-Za-z][A-Za-z0-9_]{0,39}\}(\+\d{1,5})?)$/;
 const WINDOWS_DEVICE_NAME = /^(con|prn|aux|nul|com\d|lpt\d)$/i;
 const CONTROL_CHARS = /[\x00-\x1f\x7f]/;
 

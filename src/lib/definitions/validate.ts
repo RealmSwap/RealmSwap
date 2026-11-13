@@ -2,7 +2,7 @@ import path from "path";
 import type { GameDefinitionSpec, InstallMethod, ParamSpec, ArgSpec } from "./types";
 import { collectVariables } from "./template";
 
-export const KNOWN_FIXED_VARS = ["name", "nameSanitized", "password", "passwordEmpty", "port", "ram"] as const;
+export const KNOWN_FIXED_VARS = ["name", "nameSanitized", "password", "passwordEmpty", "port", "ram", "rconEnabled", "rconPort", "rconPassword"] as const;
 
 /** Returns true if a path segment string is unsafe (absolute or contains ".." segments). */
 export function isUnsafePath(p: string): boolean {

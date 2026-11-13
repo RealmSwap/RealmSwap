@@ -231,6 +231,10 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     ram: ramAllocation,
     paramValuesJson: server.paramValues,
     spec,
+    // Start re-renders managed config files — carry RCON so rcon.* lines
+    // (Minecraft server.properties) don't revert to disabled.
+    rconPort: server.rconPort,
+    rconPassword: server.rconPassword,
   });
 
   // 2. Map router ports using UPnP — the user's explicit choice, no runner

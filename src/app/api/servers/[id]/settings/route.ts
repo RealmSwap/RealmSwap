@@ -46,6 +46,9 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       // Games whose definitions declare no params have no structured settings
       // (yet); the raw config editor remains the escape hatch for them.
       supportsSettings: resolved.spec.params.length > 0,
+      // Per-server RCON (used for live rosters + console commands). The
+      // password is never echoed — GET responses only carry whether one is set.
+      rcon: { port: server.rconPort ?? null, passwordConfigured: !!server.rconPassword },
     });
   } catch (error: any) {
     console.error("GET /api/servers/[id]/settings error:", error);
@@ -71,54 +74,75 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
     if (!resolved) return NextResponse.json({ error: "Unsupported game" }, { status: 400 });
     const { spec } = resolved;
 
+    // paramValues is optional so an RCON-only save doesn't have to resend the
+    // whole game-settings form. rconPort: null clears the port; the password
+    // is write-only — omitted (or empty) means "keep the stored one".
     const bodySchema = z.object({
-      paramValues: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
+      paramValues: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
+      rconPort: z.number().int().min(1).max(65535).nullable().optional(),
+      rconPassword: z.string().min(1).max(512).optional(),
     });
     const parsed = bodySchema.safeParse(await req.json());
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid payload", details: parsed.error.format() }, { status: 400 });
     }
+    const { paramValues: incomingParamValues, rconPort, rconPassword } = parsed.data;
+    if (incomingParamValues === undefined && rconPort === undefined && rconPassword === undefined) {
+      return NextResponse.json({ error: "Nothing to save" }, { status: 400 });
+    }
+    const rconChanged = rconPort !== undefined || rconPassword !== undefined;
 
     // Merge onto defaults + previously stored values so partial updates and
     // pre-existing empty stores validate against the full effective set.
     const stored = parseParamValues(server.paramValues);
-    const effective = {
-      ...Object.fromEntries(spec.params.flatMap((p) => (p.default !== undefined ? [[p.key, p.default] as const] : []))),
-      ...stored,
-      ...parsed.data.paramValues,
-    };
-    const errors = validateParamValues(spec.params, effective);
-    if (errors.length) return NextResponse.json({ error: errors.join(" ") }, { status: 400 });
+    let clean = stored;
+    let valuesChanged = false;
+    if (incomingParamValues !== undefined) {
+      const effective = {
+        ...Object.fromEntries(spec.params.flatMap((p) => (p.default !== undefined ? [[p.key, p.default] as const] : []))),
+        ...stored,
+        ...incomingParamValues,
+      };
+      const errors = validateParamValues(spec.params, effective);
+      if (errors.length) return NextResponse.json({ error: errors.join(" ") }, { status: 400 });
 
-    // Unknown keys are dropped by taking only declared params from the merge.
-    const clean = Object.fromEntries(
-      spec.params.map((p) => [p.key, effective[p.key]])
-    ) as Record<string, string | number | boolean>;
+      // Unknown keys are dropped by taking only declared params from the merge.
+      clean = Object.fromEntries(
+        spec.params.map((p) => [p.key, effective[p.key]])
+      ) as Record<string, string | number | boolean>;
+
+      const previous = Object.fromEntries(
+        spec.params.map((p) => [p.key, p.key in stored ? stored[p.key] : p.default ?? ""])
+      ) as Record<string, string | number | boolean>;
+      valuesChanged = spec.params.some((p) => String(previous[p.key] ?? "") !== String(clean[p.key] ?? ""));
+    }
 
     const isRunning = server.status === "RUNNING" || server.status === "STARTING";
-    const previous = Object.fromEntries(
-      spec.params.map((p) => [p.key, p.key in stored ? stored[p.key] : p.default ?? ""])
-    ) as Record<string, string | number | boolean>;
-    const valuesChanged = spec.params.some((p) => String(previous[p.key] ?? "") !== String(clean[p.key] ?? ""));
-    await prisma.server.update({
+    const updated = await prisma.server.update({
       where: { id: server.id },
       data: {
-        paramValues: stringifyParamValues(clean),
+        ...(incomingParamValues !== undefined ? { paramValues: stringifyParamValues(clean) } : {}),
+        ...(rconPort !== undefined ? { rconPort } : {}),
+        ...(rconPassword !== undefined ? { rconPassword } : {}),
         // Applied immediately below when stopped; while running the values ride
         // along until the next start — surface that on the server card.
-        pendingRestart: isRunning && valuesChanged ? true : isRunning ? server.pendingRestart : false,
+        pendingRestart: isRunning && (valuesChanged || rconChanged) ? true : isRunning ? server.pendingRestart : false,
       },
     });
 
     let appliedNow = false;
-    if (!isRunning && spec.configFiles.length > 0) {
+    if (!isRunning && (incomingParamValues !== undefined || rconChanged) && spec.configFiles.length > 0) {
       const ctx = buildContext({
         name: server.name,
         password: server.password,
         port: server.port,
         ram: server.ramAllocation,
-        paramValuesJson: stringifyParamValues(clean),
+        paramValuesJson: incomingParamValues !== undefined ? stringifyParamValues(clean) : server.paramValues,
         spec,
+        // The re-render must carry the effective RCON settings or managed
+        // rcon.* lines (Minecraft server.properties) would revert to disabled.
+        rconPort: rconPort !== undefined ? rconPort : server.rconPort,
+        rconPassword: rconPassword !== undefined ? rconPassword : server.rconPassword,
       });
       if (server.runnerType === "AGENT") {
         // The files live on the node — apply the rendered set there in one
@@ -149,7 +173,9 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       data: {
         userId: user.id,
         action: "UPDATE_SETTINGS",
-        details: `Updated game settings for server '${server.name}' (${resolved.def.displayName}).`,
+        details:
+          `Updated ${incomingParamValues !== undefined ? "game settings" : "RCON settings"} for server '${server.name}' (${resolved.def.displayName}).` +
+          (rconChanged && incomingParamValues !== undefined ? " RCON settings were part of the save." : ""),
       },
     });
 
@@ -159,6 +185,8 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       message: appliedNow
         ? "Settings saved and applied to config files."
         : "Settings saved. They take effect the next time the server starts.",
+      // Same masked view as GET so the form can refresh its "configured" state.
+      rcon: { port: updated.rconPort ?? null, passwordConfigured: !!updated.rconPassword },
     });
   } catch (error: any) {
     console.error("PUT /api/servers/[id]/settings error:", error);

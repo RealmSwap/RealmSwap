@@ -8,6 +8,11 @@ export function buildContext(input: {
   ram: number;
   paramValuesJson: string | null;
   spec: GameDefinitionSpec;
+  // Per-server RCON settings (Server.rconPort/rconPassword). Callers that
+  // re-render config files must pass these so RCON lines survive the rewrite;
+  // callers that only plan ports/args may omit them.
+  rconPort?: number | null;
+  rconPassword?: string | null;
 }): DefinitionContext {
   const { name, password, port, ram, paramValuesJson, spec } = input;
 
@@ -17,6 +22,11 @@ export function buildContext(input: {
     pw = policy.fallback ?? "";
   }
 
+  // RCON is opt-in. Templates that reference {rconEnabled}/{rconPort}/
+  // {rconPassword} (Minecraft server.properties) must always render, so an
+  // unconfigured server renders the game's own disabled defaults.
+  const rconConfigured = input.rconPort != null && !!input.rconPassword;
+
   const ctx: DefinitionContext = {
     name,
     nameSanitized: name.replace(/[^a-zA-Z0-9]/g, "_"),
@@ -24,6 +34,9 @@ export function buildContext(input: {
     passwordEmpty: pw ? "" : "1",
     port,
     ram,
+    rconEnabled: rconConfigured ? "true" : "false",
+    rconPort: input.rconPort ?? 25575,
+    rconPassword: input.rconPassword ?? "",
   };
 
   for (const p of spec.params) {
