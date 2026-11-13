@@ -121,7 +121,7 @@
         {
           "path": "server.properties",
           "strategy": "template",
-          "template": "server-port={port}\nquery.port=25565\nonline-mode={onlineMode}\nmax-players={maxPlayers}\nmotd={motd}\ndifficulty={difficulty}\ngamemode={gamemode}\npvp={pvp}\nview-distance={viewDistance}\n"
+          "template": "server-port={port}\nquery.port=25565\nenable-rcon={rconEnabled}\nrcon.port={rconPort}\nrcon.password={rconPassword}\nonline-mode={onlineMode}\nmax-players={maxPlayers}\nmotd={motd}\ndifficulty={difficulty}\ngamemode={gamemode}\npvp={pvp}\nview-distance={viewDistance}\n"
         }
       ],
       "editableConfigPath": "server.properties",
@@ -209,6 +209,8 @@
         ]
       },
       "defaultPort": 2456,
+      "queryType": "valheim",
+      "queryPort": "{port}+1",
       "params": [
         {
           "key": "worldName",
@@ -263,6 +265,7 @@
         "args": []
       },
       "defaultPort": 15637,
+      "queryType": "enshrouded",
       "params": [
         {
           "key": "slotCount",
@@ -348,6 +351,7 @@
         ]
       },
       "defaultPort": 16261,
+      "queryType": "projectzomboid",
       "params": [],
       "configFiles": [
         {
@@ -433,6 +437,8 @@
         ]
       },
       "defaultPort": 7777,
+      "queryType": "ase",
+      "queryPort": "27015",
       "params": [
         {
           "key": "maxPlayers",
@@ -716,6 +722,7 @@
         ]
       },
       "defaultPort": 28015,
+      "queryType": "rust",
       "params": [
         {
           "key": "maxPlayers",
@@ -847,6 +854,7 @@
         ]
       },
       "defaultPort": 7777,
+      "queryType": "satisfactory",
       "params": [],
       "configFiles": [],
       "ports": [
@@ -922,6 +930,8 @@
         ]
       },
       "defaultPort": 9876,
+      "queryType": "vrising",
+      "queryPort": "{port}+1",
       "params": [],
       "configFiles": [],
       "editableConfigPath": "vrising-server/save-data/Settings/ServerHostSettings.json",
