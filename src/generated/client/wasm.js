@@ -509,6 +509,20 @@ exports.Prisma.AppSettingScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.NotificationSettingsScalarFieldEnum = {
+  id: 'id',
+  smtpHost: 'smtpHost',
+  smtpPort: 'smtpPort',
+  smtpSecure: 'smtpSecure',
+  smtpUser: 'smtpUser',
+  smtpPass: 'smtpPass',
+  smtpFrom: 'smtpFrom',
+  discordWebhook: 'discordWebhook',
+  lastError: 'lastError',
+  lastSentAt: 'lastSentAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -550,7 +564,8 @@ exports.Prisma.ModelName = {
   PlayerAuditLog: 'PlayerAuditLog',
   AgentNode: 'AgentNode',
   AgentCommand: 'AgentCommand',
-  AppSetting: 'AppSetting'
+  AppSetting: 'AppSetting',
+  NotificationSettings: 'NotificationSettings'
 };
 
 /**

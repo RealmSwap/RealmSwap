@@ -97,3 +97,8 @@ export const S3_SECRET_FIELDS = ["accessKey", "secretKey"] as const;
  *  never displayed) and the enrollment token (re-served to the minting ADMIN
  *  while the node is still PENDING; nulled the moment the agent registers). */
 export const AGENT_NODE_SECRET_FIELDS = ["secret", "enrollTokenEnc"] as const;
+
+/** The NotificationSettings fields managed by the same transparent
+ *  encryption: the SMTP password and the Discord webhook URL (which embeds a
+ *  secret token). Both are masked out of the API regardless. */
+export const NOTIFICATION_SECRET_FIELDS = ["smtpPass", "discordWebhook"] as const;

@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
 import { PowerSettings } from "@/components/PowerSettings";
-import { Save, UploadCloud, Languages, Moon, Sun } from "lucide-react";
+import { Save, UploadCloud, Languages, Moon, Sun, Mail, Webhook, Send } from "lucide-react";
 import { toast } from "sonner";
 import { initClientErrorReporting } from "@/lib/sentry.client";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -141,6 +141,90 @@ export function SettingsView({ user }: { user: any }) {
       toast.success(`Report ${status.toLowerCase()}.`);
     } catch (err: any) {
       toast.error(err.message || "Failed to update report");
+    }
+  };
+
+  // Admin: notification delivery config (SMTP + Discord webhook). Null until
+  // the first successful load so a 403 leaves the section silent, matching
+  // the realm-reports handling above.
+  interface NotificationDeliveryConfig {
+    smtp: { configured: boolean; host: string; port: number; secure: boolean; user: string; from: string; passwordConfigured: boolean };
+    discord: { webhookConfigured: boolean };
+    health: { lastError: string | null; lastSentAt: string | null };
+  }
+  const [deliveryCfg, setDeliveryCfg] = useState<NotificationDeliveryConfig | null>(null);
+  const [deliverySaving, setDeliverySaving] = useState(false);
+  const [smtpHost, setSmtpHost] = useState("");
+  const [smtpPort, setSmtpPort] = useState("587");
+  const [smtpSecure, setSmtpSecure] = useState(false);
+  const [smtpUser, setSmtpUser] = useState("");
+  const [smtpPass, setSmtpPass] = useState("");
+  const [smtpFrom, setSmtpFrom] = useState("");
+  const [discordWebhook, setDiscordWebhook] = useState("");
+  useEffect(() => {
+    if (user?.role !== "ADMIN") return;
+    fetch("/api/system/notifications")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data: NotificationDeliveryConfig = await res.json();
+        setDeliveryCfg(data);
+        setSmtpHost(data.smtp.host || "");
+        setSmtpPort(String(data.smtp.port || 587));
+        setSmtpSecure(!!data.smtp.secure);
+        setSmtpUser(data.smtp.user || "");
+        setSmtpFrom(data.smtp.from || "");
+        setDiscordWebhook(""); // the webhook URL holds a secret token — never echoed back
+      })
+      .catch(() => {});
+  }, []);
+
+  const saveDelivery = async () => {
+    setDeliverySaving(true);
+    try {
+      const res = await fetch("/api/system/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          smtpHost,
+          smtpPort: parseInt(smtpPort) || 587,
+          smtpSecure,
+          smtpUser,
+          // Blank = keep the saved password (server contract).
+          smtpPass: smtpPass === "" ? undefined : smtpPass,
+          smtpFrom,
+          discordWebhook,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to save delivery settings");
+      setDeliveryCfg(data);
+      setSmtpPass("");
+      toast.success("Delivery settings saved.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save delivery settings");
+    } finally {
+      setDeliverySaving(false);
+    }
+  };
+
+  const testDelivery = async (channel: "email" | "discord") => {
+    try {
+      const res = await fetch("/api/system/notifications/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channel }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        toast.success(data.message || "Test sent.");
+        // The endpoint stamps health on success — refresh what we show.
+        fetch("/api/system/notifications").then(async (r) => r.ok && setDeliveryCfg(await r.json())).catch(() => {});
+      } else {
+        toast.error(data.error || `Test failed (${res.status})`);
+        fetch("/api/system/notifications").then(async (r) => r.ok && setDeliveryCfg(await r.json())).catch(() => {});
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Test failed");
     }
   };
 
@@ -461,6 +545,104 @@ export function SettingsView({ user }: { user: any }) {
                 </div>
               </div>
             </div>
+
+            {/* Admin: where the alerts above actually go. Without a working
+               channel here, an enabled toggle is silent — this section makes
+               that visible (and fixable) instead of a no-op. */}
+            {user?.role === "ADMIN" && (
+              <div className="pt-6 border-t border-white/5 space-y-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-slate-400" />
+                    Delivery Channels (admin)
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    SMTP carries the email alerts; a Discord webhook posts server-wide alerts to your server (no bot
+                    needed). The toggles above only opt you in — without a channel here they have nothing to send through.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">SMTP Host</span>
+                    <input type="text" value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} placeholder="smtp.gmail.com"
+                      className="mt-1 w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accentPurple" />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">SMTP Port</span>
+                    <input type="number" value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} placeholder="587"
+                      className="mt-1 w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accentPurple" />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">SMTP Username</span>
+                    <input type="text" value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} placeholder="you@example.com"
+                      className="mt-1 w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accentPurple" />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">SMTP Password</span>
+                    <input type="password" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)}
+                      placeholder={deliveryCfg?.smtp.passwordConfigured ? "Saved — leave blank to keep" : "App password"}
+                      className="mt-1 w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accentPurple" />
+                  </label>
+                  <label className="block">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">From Address</span>
+                    <input type="text" value={smtpFrom} onChange={(e) => setSmtpFrom(e.target.value)} placeholder="RealmSwap <you@example.com>"
+                      className="mt-1 w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accentPurple" />
+                  </label>
+                  <label className="flex items-center justify-between gap-3 p-3 bg-slate-900 border border-white/5 rounded-lg self-end">
+                    <span className="text-xs font-bold text-slate-300">Use TLS on connect (port 465)</span>
+                    <input type="checkbox" checked={smtpSecure} onChange={(e) => setSmtpSecure(e.target.checked)}
+                      className="w-4 h-4 accent-purple-500" />
+                  </label>
+                </div>
+
+                <label className="block">
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                    <Webhook className="w-3.5 h-3.5" /> Discord Webhook URL
+                  </span>
+                  <input type="text" value={discordWebhook} onChange={(e) => setDiscordWebhook(e.target.value)}
+                    placeholder={deliveryCfg?.discord.webhookConfigured ? "Saved — paste a new URL to replace" : "https://discord.com/api/webhooks/..."}
+                    className="mt-1 w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accentPurple" />
+                  <span className="text-[10px] text-slate-500 block mt-1">
+                    Server Settings → Integrations → Webhooks in Discord. Alert embeds post to that channel.
+                  </span>
+                </label>
+
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <button type="button" onClick={saveDelivery} disabled={deliverySaving}
+                    className="flex items-center gap-2 bg-accentPurple hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-bold text-xs transition-colors disabled:opacity-50">
+                    <Save className="w-3.5 h-3.5" />
+                    Save Delivery Settings
+                  </button>
+                  <button type="button" onClick={() => testDelivery("email")} disabled={!smtpHost}
+                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition-colors disabled:opacity-50">
+                    <Send className="w-3.5 h-3.5" />
+                    Send Test Email
+                  </button>
+                  <button type="button" onClick={() => testDelivery("discord")} disabled={!deliveryCfg?.discord.webhookConfigured && !discordWebhook}
+                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg font-bold text-xs transition-colors disabled:opacity-50">
+                    <Send className="w-3.5 h-3.5" />
+                    Send Test Webhook
+                  </button>
+                </div>
+
+                {deliveryCfg && (
+                  <div className="text-xs p-3 bg-slate-900 border border-white/5 rounded-lg">
+                    {deliveryCfg.health.lastError ? (
+                      <p className="text-red-400 break-words">
+                        Last delivery failed: {deliveryCfg.health.lastError}
+                      </p>
+                    ) : deliveryCfg.health.lastSentAt ? (
+                      <p className="text-emerald-400">
+                        Last delivered {new Date(deliveryCfg.health.lastSentAt).toLocaleString()}.
+                      </p>
+                    ) : (
+                      <p className="text-slate-500">No sends yet — use a test button to check a channel.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="pt-4 border-t border-white/5">
               <p className="text-[10px] text-slate-500 text-right">Preferences save the moment you flip a toggle.</p>

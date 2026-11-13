@@ -19,7 +19,7 @@ generator client {
 model User {
   id                 String             @id @default(cuid())
   email              String             @unique
-  passwordHash       String             // legacy — identity is now Supabase Auth; mirror rows store "" (unused)
+  passwordHash       String // legacy — identity is now Supabase Auth; mirror rows store "" (unused)
   name               String
   discordId          String?            @unique
   createdAt          DateTime           @default(now())
@@ -60,65 +60,65 @@ model Subscription {
 }
 
 model Server {
-  id               String              @id @default(cuid())
-  userId           String
-  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name             String
-  game             String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
-  ramAllocation    Float // GB allocated
-  region           String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
-  status           String // "RUNNING", "STOPPED", "STARTING"
-  runnerType       String              @default("CLOUD") // "LOCAL" | "DOCKER" | "AGENT"; default is a legacy value — resolveRunnerType always sets this explicitly at create, and the factory falls through to LOCAL for anything not "DOCKER" or "AGENT"
-  nodeId           String? // Set when runnerType is "AGENT": the AgentNode hosting this server
-  localPath        String? // File path for local server storage
-  pid              Int? // Process ID for local runner execution
-  password         String? // Unhashed password for Valheim/game server configs
-  rconPort         Int?    // RCON Port
-  rconPassword     String? // RCON Password
-  sftpPassword     String? // Unique generated password for SFTP access
-  sftpPort         Int?    // Assigned SFTP port (typically 2022+id)
-  tunnelEnabled    Boolean             @default(false)
-  tunnelUrl        String? // playit.gg tunnel URL (e.g., xxx.auto.playit.gg:12345)
-  tunnelClaimUrl   String? // playit agent claim link while the agent is unclaimed
-  tunnelPid        Int? // OS pid of the spawned playit agent, for orphan cleanup on boot
-  enableUpnp       Boolean             @default(false) // Trigger router port mapping
-  autoUpdate       Boolean             @default(false) // Nightly SteamCMD update while the server is stopped
-  autoUpdateHour   Int                 @default(4) // Local hour (0-23) of the nightly update window
-  lastAutoUpdateAt DateTime? // Last overnight update run (dedupes within a calendar day)
-  ipAddress        String
-  upnpMapped       Boolean? // Outcome of the last start-time UPnP attempt: true = router accepted the mapping, false = refused or no gateway answered, null = never attempted since this column landed
-  port             Int
-  definitionId     String?
-  definition       GameDefinition?     @relation(fields: [definitionId], references: [id])
-  paramValues      String? // JSON object of custom param values
-  pendingRestart   Boolean             @default(false) // Settings changed while running; cleared on next start
-  healthStatus     String              @default("OK") // "OK", "DEGRADED", "FAILING"
-  cpuUsage         Float               @default(0) // Mocked live utilization percentage
-  memoryUsage      Float               @default(0) // Mocked live RAM utilization in GB
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  snapshotInterval Int                 @default(0) // 0 = disabled, 1, 6, 12, 24 hours
-  lastSnapshotAt   DateTime?
-  backupRetention  Int                 @default(20) // keep last N snapshot zips per server; 0 = keep everything
-  backups          Backup[]
-  collaborators    Collaborator[]
-  mods             ModInstallation[]
-  snapshots        ServerSnapshot[]
-  modpack          InstalledModpack?
-  automations      Automation[]
-  hostLink         ServerHostLink?
-  inviteCode       String?             @unique // For RealmSync
-  statusShareCode  String?             @unique // Public no-login status page (/s/<code>); null = disabled
-  autoStartLeadMinutes Int             @default(15) // Minutes before a planned Discord session to auto-boot (0 = at start time)
-  autoStartOnLaunch Boolean            @default(false) // Dedicated-box mode: start with the app (after boot reconcile, production only)
-  idleStopEnabled  Boolean             @default(false) // Auto-stop once the server has been empty for idleStopMinutes
-  idleStopMinutes  Int                 @default(30) // Empty streak (5-min player samples) that triggers the idle stop
-  sessionAutoStopHours Int             @default(0) // Hours after a planned session's start to stop it if still empty; 0 = off
-  firstOnlineAt    DateTime? // First time this server reached RUNNING — drives the first-boot celebration
-  plannedSessions  PlannedSession[]
-  discordRoles     DiscordRoleAccess[]
-  playerAccess     PlayerServerAccess[]
-  telemetry        ServerTelemetry[]
+  id                   String               @id @default(cuid())
+  userId               String
+  user                 User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                 String
+  game                 String // "MINECRAFT", "VALHEIM", "ZOMBOID", "ARK"
+  ramAllocation        Float // GB allocated
+  region               String // "US_EAST", "US_WEST", "EU_CENTRAL", "ASIA"
+  status               String // "RUNNING", "STOPPED", "STARTING"
+  runnerType           String               @default("CLOUD") // "LOCAL" | "DOCKER" | "AGENT"; default is a legacy value — resolveRunnerType always sets this explicitly at create, and the factory falls through to LOCAL for anything not "DOCKER" or "AGENT"
+  nodeId               String? // Set when runnerType is "AGENT": the AgentNode hosting this server
+  localPath            String? // File path for local server storage
+  pid                  Int? // Process ID for local runner execution
+  password             String? // Unhashed password for Valheim/game server configs
+  rconPort             Int? // RCON Port
+  rconPassword         String? // RCON Password
+  sftpPassword         String? // Unique generated password for SFTP access
+  sftpPort             Int? // Assigned SFTP port (typically 2022+id)
+  tunnelEnabled        Boolean              @default(false)
+  tunnelUrl            String? // playit.gg tunnel URL (e.g., xxx.auto.playit.gg:12345)
+  tunnelClaimUrl       String? // playit agent claim link while the agent is unclaimed
+  tunnelPid            Int? // OS pid of the spawned playit agent, for orphan cleanup on boot
+  enableUpnp           Boolean              @default(false) // Trigger router port mapping
+  autoUpdate           Boolean              @default(false) // Nightly SteamCMD update while the server is stopped
+  autoUpdateHour       Int                  @default(4) // Local hour (0-23) of the nightly update window
+  lastAutoUpdateAt     DateTime? // Last overnight update run (dedupes within a calendar day)
+  ipAddress            String
+  upnpMapped           Boolean? // Outcome of the last start-time UPnP attempt: true = router accepted the mapping, false = refused or no gateway answered, null = never attempted since this column landed
+  port                 Int
+  definitionId         String?
+  definition           GameDefinition?      @relation(fields: [definitionId], references: [id])
+  paramValues          String? // JSON object of custom param values
+  pendingRestart       Boolean              @default(false) // Settings changed while running; cleared on next start
+  healthStatus         String               @default("OK") // "OK", "DEGRADED", "FAILING"
+  cpuUsage             Float                @default(0) // Mocked live utilization percentage
+  memoryUsage          Float                @default(0) // Mocked live RAM utilization in GB
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  snapshotInterval     Int                  @default(0) // 0 = disabled, 1, 6, 12, 24 hours
+  lastSnapshotAt       DateTime?
+  backupRetention      Int                  @default(20) // keep last N snapshot zips per server; 0 = keep everything
+  backups              Backup[]
+  collaborators        Collaborator[]
+  mods                 ModInstallation[]
+  snapshots            ServerSnapshot[]
+  modpack              InstalledModpack?
+  automations          Automation[]
+  hostLink             ServerHostLink?
+  inviteCode           String?              @unique // For RealmSync
+  statusShareCode      String?              @unique // Public no-login status page (/s/<code>); null = disabled
+  autoStartLeadMinutes Int                  @default(15) // Minutes before a planned Discord session to auto-boot (0 = at start time)
+  autoStartOnLaunch    Boolean              @default(false) // Dedicated-box mode: start with the app (after boot reconcile, production only)
+  idleStopEnabled      Boolean              @default(false) // Auto-stop once the server has been empty for idleStopMinutes
+  idleStopMinutes      Int                  @default(30) // Empty streak (5-min player samples) that triggers the idle stop
+  sessionAutoStopHours Int                  @default(0) // Hours after a planned session's start to stop it if still empty; 0 = off
+  firstOnlineAt        DateTime? // First time this server reached RUNNING — drives the first-boot celebration
+  plannedSessions      PlannedSession[]
+  discordRoles         DiscordRoleAccess[]
+  playerAccess         PlayerServerAccess[]
+  telemetry            ServerTelemetry[]
 }
 
 model DiscordRoleAccess {
@@ -188,21 +188,21 @@ model ActivityLog {
 }
 
 model Backup {
-  id         String   @id @default(cuid())
-  serverId   String
-  server     Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  userId     String
-  name       String // e.g. "Survival World - Auto Save" or "Manual Snapshot"
-  game       String // "MINECRAFT", etc.
-  filePath   String // path to backup zip/folder on disk
-  fileSizeMB Float
-  backupType String // "MANUAL" or "AUTOMATED"
-  verifiedAt DateTime? // last successful restore-verification (archive opened + entries decompressed)
-  verifyError String? // non-null when the last verification failed
-  offsiteStatus String? // null = never attempted; "PENDING", "UPLOADED", "FAILED"
-  offsiteError String? // last offsite upload error message
+  id                String    @id @default(cuid())
+  serverId          String
+  server            Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  userId            String
+  name              String // e.g. "Survival World - Auto Save" or "Manual Snapshot"
+  game              String // "MINECRAFT", etc.
+  filePath          String // path to backup zip/folder on disk
+  fileSizeMB        Float
+  backupType        String // "MANUAL" or "AUTOMATED"
+  verifiedAt        DateTime? // last successful restore-verification (archive opened + entries decompressed)
+  verifyError       String? // non-null when the last verification failed
+  offsiteStatus     String? // null = never attempted; "PENDING", "UPLOADED", "FAILED"
+  offsiteError      String? // last offsite upload error message
   offsiteUploadedAt DateTime?
-  createdAt  DateTime @default(now())
+  createdAt         DateTime  @default(now())
 }
 
 // Per-user offsite storage credentials. secretKey (and accessKey) are
@@ -279,18 +279,18 @@ model InstalledModpack {
 }
 
 model ModInstallation {
-  id           String   @id @default(cuid())
-  serverId     String
-  server       Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  provider     String // "thunderstore", "workshop", "manual"
-  packageId    String // "denikson-BepInExPack_Valheim"
-  version      String
-  name         String
-  dependencies String? // JSON array of required packageIds
+  id            String   @id @default(cuid())
+  serverId      String
+  server        Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  provider      String // "thunderstore", "workshop", "manual"
+  packageId     String // "denikson-BepInExPack_Valheim"
+  version       String
+  name          String
+  dependencies  String? // JSON array of required packageIds
   workshopModId String? // Zomboid: the mod ID written to Mods= in servertest.ini (packageId is the Workshop ID)
-  disabled     Boolean  @default(false) // files kept on disk but delisted from the game's mod list (see lifecycle.ts)
-  installedAt  DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  disabled      Boolean  @default(false) // files kept on disk but delisted from the game's mod list (see lifecycle.ts)
+  installedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([serverId, provider, packageId])
 }
@@ -308,15 +308,15 @@ model ServerSnapshot {
 }
 
 model ServerTelemetry {
-  id        String   @id @default(cuid())
-  serverId  String
-  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  cpu       Float    // CPU percentage
-  ramMB     Float    // RAM used in MB
-  diskMB    Float? // Server folder size in MB (null on rows written before this existed)
-  playerCount Int?   // Players reported by the game query, stamped every ~5 min (null = no sample this tick / query failed)
-  maxPlayers  Int?   // Slot count reported alongside playerCount (null when the game doesn't report it)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  serverId    String
+  server      Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  cpu         Float // CPU percentage
+  ramMB       Float // RAM used in MB
+  diskMB      Float? // Server folder size in MB (null on rows written before this existed)
+  playerCount Int? // Players reported by the game query, stamped every ~5 min (null = no sample this tick / query failed)
+  maxPlayers  Int? // Slot count reported alongside playerCount (null when the game doesn't report it)
+  createdAt   DateTime @default(now())
 
   @@index([serverId, createdAt])
 }
@@ -327,24 +327,24 @@ model Automation {
   server        Server    @relation(fields: [serverId], references: [id], onDelete: Cascade)
   name          String
   enabled       Boolean   @default(true)
-  triggerType   String    // "CRON", "ONE_TIME", "DAILY", "WEEKLY", "MONTHLY", "SERVER_CRASH", etc.
-  triggerConfig String?   // JSON
+  triggerType   String // "CRON", "ONE_TIME", "DAILY", "WEEKLY", "MONTHLY", "SERVER_CRASH", etc.
+  triggerConfig String? // JSON
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastRunAt     DateTime?
   nextRunAt     DateTime?
 
-  conditions    AutomationCondition[]
-  actions       AutomationAction[]
-  executions    AutomationExecution[]
+  conditions AutomationCondition[]
+  actions    AutomationAction[]
+  executions AutomationExecution[]
 }
 
 model AutomationCondition {
   id           String     @id @default(cuid())
   automationId String
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
-  type         String     // "PLAYERS_ONLINE", "CPU_USAGE", "RAM_USAGE", "SERVER_STATE"
-  operator     String     // "EQUALS", "LESS_THAN", "GREATER_THAN"
+  type         String // "PLAYERS_ONLINE", "CPU_USAGE", "RAM_USAGE", "SERVER_STATE"
+  operator     String // "EQUALS", "LESS_THAN", "GREATER_THAN"
   value        String
 }
 
@@ -353,8 +353,8 @@ model AutomationAction {
   automationId String
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
   order        Int
-  type         String     // "START_SERVER", "RESTART_SERVER", "DISCORD_ANNOUNCEMENT"
-  config       String?    // JSON
+  type         String // "START_SERVER", "RESTART_SERVER", "DISCORD_ANNOUNCEMENT"
+  config       String? // JSON
 }
 
 model AutomationExecution {
@@ -363,8 +363,8 @@ model AutomationExecution {
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
   startedAt    DateTime   @default(now())
   finishedAt   DateTime?
-  status       String     // "SUCCESS", "RUNNING", "FAILED"
-  logs         String?    // JSON array of execution logs/details
+  status       String // "SUCCESS", "RUNNING", "FAILED"
+  logs         String? // JSON array of execution logs/details
 }
 
 model MarketplaceTemplate {
@@ -413,71 +413,71 @@ model PushSubscription {
 }
 
 model Player {
-  id                 String             @id @default(cuid())
-  userId             String
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  name               String
-  steamId            String?
-  xboxId             String?
-  minecraftUuid      String?
-  discordId          String?
-  
-  status             String             @default("TRUSTED") // "TRUSTED", "VIP", "BANNED", "GUEST"
-  roles              String?            // Comma-separated global roles
-  
-  isGloballyBanned   Boolean            @default(false)
-  globalBanReason    String?
-  
-  serverAccess       PlayerServerAccess[]
-  
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name          String
+  steamId       String?
+  xboxId        String?
+  minecraftUuid String?
+  discordId     String?
+
+  status String  @default("TRUSTED") // "TRUSTED", "VIP", "BANNED", "GUEST"
+  roles  String? // Comma-separated global roles
+
+  isGloballyBanned Boolean @default(false)
+  globalBanReason  String?
+
+  serverAccess PlayerServerAccess[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model PlayerServerAccess {
-  id                 String             @id @default(cuid())
-  playerId           String
-  serverId           String
-  
-  isWhitelisted      Boolean            @default(false)
-  isBanned           Boolean            @default(false)
-  serverRole         String?            // Override or specific role for this server
-  
-  player             Player             @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  server             Server             @relation(fields: [serverId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(cuid())
+  playerId String
+  serverId String
+
+  isWhitelisted Boolean @default(false)
+  isBanned      Boolean @default(false)
+  serverRole    String? // Override or specific role for this server
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
   @@unique([playerId, serverId])
 }
 
 model PlayerAuditLog {
-  id                 String             @id @default(cuid())
-  playerId           String?            // Null if the action was general, but usually targeted at a player
-  serverId           String?            // Null if action was global
-  action             String             // "GLOBAL_BAN", "WHITELIST_ADD", "ROLE_ASSIGNED"
-  details            String
-  performedBy        String             // User ID of the admin who performed it
-  createdAt          DateTime           @default(now())
+  id          String   @id @default(cuid())
+  playerId    String? // Null if the action was general, but usually targeted at a player
+  serverId    String? // Null if action was global
+  action      String // "GLOBAL_BAN", "WHITELIST_ADD", "ROLE_ASSIGNED"
+  details     String
+  performedBy String // User ID of the admin who performed it
+  createdAt   DateTime @default(now())
 }
 
 model AgentNode {
-  id               String    @id @default(cuid())
-  name             String
-  userId           String    // Admin who created the enrollment
-  status           String    @default("PENDING") // "PENDING" (awaiting agent enrollment) | "ACTIVE" | "REVOKED"
-  enrollTokenHash  String?   @unique // sha256 of the one-time enrollment token (never stored in plaintext)
-  enrollExpiresAt  DateTime?
-  enrollTokenEnc   String? // Token re-served to the minting ADMIN until the node enrolls or the token expires — encrypted at rest via AGENT_NODE_SECRET_FIELDS
-  secret           String? // The node's HMAC secret — encrypted at rest via AGENT_NODE_SECRET_FIELDS; the agent holds the only other copy
-  platform         String? // os.platform() of the agent host
-  arch             String?
-  agentVersion     String?
-  dockerVersion    String?
-  lanIp            String? // Agent-reported LAN address — what friends connect to
-  totalRamMB       Int?
-  freeDiskGB       Float?
-  lastSeenAt       DateTime?
-  createdAt        DateTime  @default(now())
+  id              String    @id @default(cuid())
+  name            String
+  userId          String // Admin who created the enrollment
+  status          String    @default("PENDING") // "PENDING" (awaiting agent enrollment) | "ACTIVE" | "REVOKED"
+  enrollTokenHash String?   @unique // sha256 of the one-time enrollment token (never stored in plaintext)
+  enrollExpiresAt DateTime?
+  enrollTokenEnc  String? // Token re-served to the minting ADMIN until the node enrolls or the token expires — encrypted at rest via AGENT_NODE_SECRET_FIELDS
+  secret          String? // The node's HMAC secret — encrypted at rest via AGENT_NODE_SECRET_FIELDS; the agent holds the only other copy
+  platform        String? // os.platform() of the agent host
+  arch            String?
+  agentVersion    String?
+  dockerVersion   String?
+  lanIp           String? // Agent-reported LAN address — what friends connect to
+  totalRamMB      Int?
+  freeDiskGB      Float?
+  lastSeenAt      DateTime?
+  createdAt       DateTime  @default(now())
 
   @@index([userId])
 }
@@ -505,4 +505,24 @@ model AppSetting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+/// Install-wide notification delivery config, singleton row (id "singleton").
+/// SMTP carries the email alerts and a Discord webhook the server-wide
+/// pings — both configured by the ADMIN through /api/system/notifications so
+/// the packaged app (which injects no SMTP env vars) can actually deliver.
+/// smtpPass and discordWebhook hold secrets; the API never returns them.
+/// lastError/lastSentAt record delivery health for the Settings UI.
+model NotificationSettings {
+  id             String    @id @default("singleton")
+  smtpHost       String?
+  smtpPort       Int       @default(587)
+  smtpSecure     Boolean   @default(false)
+  smtpUser       String?
+  smtpPass       String?
+  smtpFrom       String?
+  discordWebhook String?
+  lastError      String?
+  lastSentAt     DateTime?
+  updatedAt      DateTime  @updatedAt
 }
