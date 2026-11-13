@@ -149,6 +149,7 @@ const specSchema = z.object({
       transform: z.literal("joinCode").optional(),
     })).max(10).optional(),
     stdinStopCommand: text(200).optional(),
+    rconStopCommand: text(200).optional(),
     launchScript: z.unknown().optional(),
     executableOnPath: z.boolean().optional(),
     preLaunchDirs: z.array(relPath("launch.preLaunchDirs")).max(20).optional(),
