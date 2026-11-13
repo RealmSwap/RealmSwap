@@ -53,6 +53,9 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
   const [enableUpnp, setEnableUpnp] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Non-blocking prereq notices (VC++ redist / .NET) attached by the deploy
+  // API on success — deployment already happened, this is just a heads-up.
+  const [deployWarnings, setDeployWarnings] = useState<string[]>([]);
   const [paramValues, setParamValues] = useState<Record<string, any>>({});
 
   // Migration Wizard State
@@ -156,6 +159,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
 
     setLoading(true);
     setError(null);
+    setDeployWarnings([]);
 
     try {
       const res = await fetch("/api/servers", {
@@ -179,12 +183,27 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
         throw new Error(data.error || "Failed to create server");
       }
 
+      // Prereq warnings mean the server EXISTS but may fail to start — hold
+      // the redirect so the user reads them, then Continue finishes the trip.
+      const warnings: string[] = Array.isArray(data.warnings) ? data.warnings : [];
+      if (warnings.length > 0) {
+        setDeployWarnings(warnings);
+        setLoading(false);
+        return;
+      }
+
       router.push("/dashboard");
       router.refresh();
     } catch (err: any) {
       setError(err.message || "An error occurred. Try again.");
       setLoading(false);
     }
+  };
+
+  const finishDeploy = () => {
+    setDeployWarnings([]);
+    router.push("/dashboard");
+    router.refresh();
   };
 
   const handleFileDrop = async (e: React.DragEvent) => {
@@ -401,6 +420,24 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
                 <span className="font-bold block">Deployment Blocked</span>
                 <span>{error}</span>
               </div>
+            </div>
+          )}
+
+          {deployWarnings.length > 0 && (
+            <div className="p-4 mb-6 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm flex items-center gap-3 animate-slide-down">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+              <div className="flex-1">
+                <span className="font-bold block">Server deployed — check prerequisites</span>
+                {deployWarnings.map((w, i) => (
+                  <span key={i} className="block mt-1">{w}</span>
+                ))}
+              </div>
+              <button
+                onClick={finishDeploy}
+                className="px-4 py-2 rounded-lg font-bold text-sm bg-accentPurple text-white hover:opacity-90 transition-all flex-shrink-0"
+              >
+                Continue
+              </button>
             </div>
           )}
 
