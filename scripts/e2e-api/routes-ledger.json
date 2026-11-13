@@ -801,6 +801,18 @@
       "system/power"
     ]
   },
+  "GET /api/system/notifications": {
+    "status": "manual",
+    "scenarios": []
+  },
+  "PUT /api/system/notifications": {
+    "status": "manual",
+    "scenarios": []
+  },
+  "POST /api/system/notifications/test": {
+    "status": "manual",
+    "scenarios": []
+  },
   "GET /api/system/storage": {
     "status": "covered",
     "scenarios": [
