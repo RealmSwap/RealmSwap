@@ -295,7 +295,7 @@ export default function CreateServerView({ user }: CreateServerViewProps) {
       const sizeNote = requiredDiskGB ? ` ~${requiredDiskGB}GB download.` : "";
       return {
         title: `SteamCMD & ${selectedGame.displayName} Download Size Warning`,
-        body: `Running local ${selectedGame.displayName} servers requires SteamCMD. When you click Start on the dashboard, the app will automatically download SteamCMD, extract it, and trigger the${sizeNote ? ` ${selectedGame.displayName} Dedicated Server download (${requiredDiskGB}GB).` : " server download."} Progress will be displayed in your server console log.`,
+        body: `Running local ${selectedGame.displayName} servers requires SteamCMD. When you click Start on the dashboard, the app will automatically download SteamCMD, extract it, and trigger the${sizeNote ? ` ${selectedGame.displayName} Dedicated Server download (${requiredDiskGB}GB).` : " server download."} Live progress shows right on the server card as it downloads, with full detail in the server console log.`,
       };
     }
 

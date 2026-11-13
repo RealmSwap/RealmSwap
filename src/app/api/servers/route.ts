@@ -86,6 +86,7 @@ export async function GET(req: NextRequest) {
         id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
       },
       servers: servers.map((s) => {
         const peakGB = (peakByServer.get(s.id) ?? 0) / 1024;
