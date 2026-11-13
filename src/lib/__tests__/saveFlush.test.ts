@@ -14,8 +14,15 @@ describe("getSaveFlushPlan", () => {
     expect(getSaveFlushPlan("ZOMBOID")!.pre).toEqual(["save"]);
   });
 
+  it("gives Rust and ARK their documented RCON save commands", () => {
+    // Facepunch docs: server.save saves the currently loaded map.
+    expect(getSaveFlushPlan("RUST")!.pre).toEqual(["server.save"]);
+    // ARK wiki RCON table: SaveWorld forces a world save.
+    expect(getSaveFlushPlan("ARK")!.pre).toEqual(["SaveWorld"]);
+  });
+
   it("returns null for games without a reliable RCON save command", () => {
-    for (const game of ["VALHEIM", "RUST", "ARK", "TERRARIA", "ENSHROUDED", "UNKNOWN_GAME"]) {
+    for (const game of ["VALHEIM", "TERRARIA", "ENSHROUDED", "UNKNOWN_GAME"]) {
       expect(getSaveFlushPlan(game)).toBeNull();
     }
   });
