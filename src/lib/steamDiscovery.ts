@@ -158,7 +158,7 @@ export function libraryPathsFromVdf(text: string): string[] {
     for (const [key, value] of Object.entries(node)) {
       if (typeof value === "string") {
         const isPathValue =
-          looksLikeDrivePath(value) &&
+          (looksLikeDrivePath(value) || path.isAbsolute(value)) &&
           (key === "path" || /^\d+$/.test(key));
         if (isPathValue) {
           found.push(unescapeVdfString(value));
@@ -207,7 +207,9 @@ export function steamRootCandidates(
   const roots: string[] = [];
   const pf86 = env["ProgramFiles(x86)"];
   if (pf86) {
-    roots.push(path.join(pf86, "Steam"));
+    // Env values carry Windows-style backslashes even when path.sep is "/" (CI),
+    // which would otherwise yield mixed-separator roots that never dedupe.
+    roots.push(path.join(pf86.replace(/\\/g, path.sep), "Steam"));
   }
   for (const parts of STATIC_STEAM_ROOT_PARTS) {
     roots.push(parts.join(path.sep));
