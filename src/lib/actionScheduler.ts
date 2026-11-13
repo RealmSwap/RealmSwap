@@ -3,11 +3,20 @@ import { ActionRegistry } from "./automations/registry";
 import { AutomationContext, TriggerConfig, TriggerType } from "./automations/types";
 import { computeNextRunAt } from "./automations/schedule";
 import { Automation, AutomationExecution } from "@/generated/client";
-import { startSFTPServer } from "./sftpServer";
 
 const globalForScheduler = globalThis as unknown as {
   actionSchedulerInterval: NodeJS.Timeout | undefined;
+  automationsInFlight: Set<string> | undefined;
 };
+
+/**
+ * How late a scheduled run may still fire. RealmSwap lives on a PC that
+ * sleeps and gets closed, so "due" rows pile up while it's away — and
+ * replaying a 4 a.m. restart at 7 p.m., in the middle of game night, is worse
+ * than skipping it. A run later than this is recorded as missed and the
+ * schedule moves on to its next occurrence.
+ */
+export const MISSED_RUN_GRACE_MS = 15 * 60 * 1000;
 
 // Evaluate conditions
 async function evaluateConditions(automationId: string, server: any): Promise<boolean> {
@@ -173,11 +182,38 @@ export async function fireServerCrashAutomations(serverId: string) {
   }
 }
 
-// Check and execute scheduled automations
-async function checkAutomations() {
+/** Record a run that came due while nothing was here to run it, and move the schedule on. */
+async function skipMissedRun(automation: Automation, now: Date) {
+  let nextRunAt: Date | null = null;
   try {
-    const now = new Date();
-    
+    const config = automation.triggerConfig ? JSON.parse(automation.triggerConfig) : {};
+    nextRunAt = computeNextRunAt(automation.triggerType as TriggerType, config, now);
+  } catch (e) {}
+
+  const missed = automation.nextRunAt?.toISOString() ?? "an earlier time";
+  console.log(`[Automation Engine] '${automation.name}' missed its run at ${missed}; skipping to ${nextRunAt?.toISOString() ?? "no further runs"}.`);
+  await prisma.automationExecution.create({
+    data: {
+      automationId: automation.id,
+      status: "SKIPPED",
+      finishedAt: now,
+      logs: JSON.stringify([
+        `[${now.toISOString()}] Missed the run scheduled for ${missed}: RealmSwap wasn't running, or this PC was asleep. Skipped instead of running late.`,
+      ]),
+    },
+  });
+  await prisma.automation.update({
+    where: { id: automation.id },
+    data: {
+      nextRunAt,
+      ...(automation.triggerType === "ONE_TIME" ? { enabled: false } : {}),
+    },
+  });
+}
+
+// Check and execute scheduled automations
+export async function checkAutomations(now: Date = new Date()) {
+  try {
     const automations = await prisma.automation.findMany({
       where: { 
         enabled: true,
@@ -185,8 +221,22 @@ async function checkAutomations() {
       },
     });
 
+    // nextRunAt only advances once a run finishes, so without this a run that
+    // outlasts the 60s tick would be started again on every tick until it did.
+    const inFlight = (globalForScheduler.automationsInFlight ??= new Set<string>());
+
     for (const automation of automations) {
-      executeAutomation(automation.id).catch(e => console.error("Execution error", e));
+      if (inFlight.has(automation.id)) continue;
+
+      if (automation.nextRunAt && now.getTime() - automation.nextRunAt.getTime() > MISSED_RUN_GRACE_MS) {
+        await skipMissedRun(automation, now).catch(e => console.error("Missed-run bookkeeping error", e));
+        continue;
+      }
+
+      inFlight.add(automation.id);
+      executeAutomation(automation.id)
+        .catch(e => console.error("Execution error", e))
+        .finally(() => inFlight.delete(automation.id));
     }
   } catch (err: any) {
     console.error("[Automation Engine Error] Failed checking schedules:", err.message);
@@ -200,9 +250,6 @@ export function initActionScheduler() {
   }
 
   console.log("[Automation Engine] Initialized background scheduled tasks loop (60s check).");
-  
-  // Start SFTP Server
-  startSFTPServer();
 
   // Run check immediately on start, then every 60s
   checkAutomations().catch(err => console.error("Initial automation check failed:", err));

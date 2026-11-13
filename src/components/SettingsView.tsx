@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
+import { PowerSettings } from "@/components/PowerSettings";
 import { Save, UploadCloud, Languages, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 import { initClientErrorReporting } from "@/lib/sentry.client";
@@ -498,6 +499,8 @@ export function SettingsView({ user }: { user: any }) {
                     </label>
                   )}
                 </div>
+
+                <PowerSettings />
               </div>
             </div>
           )}

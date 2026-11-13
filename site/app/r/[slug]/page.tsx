@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { getRealmBySlug } from "@/lib/backend/realms";
-import { DOWNLOAD_URL } from "@/lib/constants";
+import { downloadUrl } from "@/lib/constants";
 
 // Always render live data — realm pages are cheap, public, and change often.
 export const dynamic = "force-dynamic";
@@ -28,7 +28,7 @@ export async function generateMetadata({
 }: RealmPageProps): Promise<Metadata> {
   const realm = await getRealmBySlug(params.slug);
   if (!realm) {
-    return { title: "Realm not found | RealmSwap" };
+    return { title: "Realm not found" };
   }
   const title = `${realm.name} — one-click Realm`;
   const description =
@@ -37,6 +37,7 @@ export async function generateMetadata({
   return {
     title,
     description,
+    alternates: { canonical: `/r/${realm.slug}` },
     openGraph: {
       title,
       description,
@@ -76,6 +77,7 @@ export default async function RealmLandingPage({ params }: RealmPageProps) {
   if (!realm) notFound();
 
   const isOfficial = realm.verifiedLevel === "OFFICIAL";
+  const isVerified = realm.verifiedLevel === "VERIFIED";
   const creatorName = realm.sellerId
     ? (realm.sellerName ?? "Community creator")
     : "RealmSwap Official";
@@ -87,8 +89,25 @@ export default async function RealmLandingPage({ params }: RealmPageProps) {
     ? new Date(realm.createdAt).getFullYear()
     : null;
 
+  // Light structured data: name, creator, counts — what a search engine can
+  // responsibly show for a community listing.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: realm.name,
+    applicationCategory: "Game",
+    operatingSystem: "Windows",
+    ...(realm.description ? { description: realm.description } : {}),
+    author: { "@type": "Person", name: creatorName },
+    ...(publishedYear ? { datePublished: String(publishedYear) } : {}),
+  };
+
   return (
     <div className="min-h-screen text-white flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Header */}
       <header className="glass-panel border-b border-borderDark px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -99,7 +118,7 @@ export default async function RealmLandingPage({ params }: RealmPageProps) {
             <ArrowLeft className="w-4 h-4" /> RealmSwap
           </Link>
           <a
-            href={DOWNLOAD_URL}
+            href={downloadUrl("realm-header", realm.slug)}
             className="bg-accentPurple hover:bg-accentPurpleHover text-white px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md shadow-accentPurple/20 border border-accentPurple/30"
           >
             Download
@@ -132,6 +151,11 @@ export default async function RealmLandingPage({ params }: RealmPageProps) {
               {isOfficial && (
                 <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded bg-gradient-to-r from-amber-500/20 to-accentPurple/20 text-amber-300 border border-amber-400/40">
                   <ShieldCheck className="w-3.5 h-3.5" /> Official
+                </span>
+              )}
+              {isVerified && !isOfficial && (
+                <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-400/40">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Verified
                 </span>
               )}
             </div>
@@ -223,7 +247,7 @@ export default async function RealmLandingPage({ params }: RealmPageProps) {
                 <div>
                   <p className="font-bold">
                     <a
-                      href={DOWNLOAD_URL}
+                      href={downloadUrl("realm-steps", realm.slug)}
                       className="text-accentPurple hover:text-accentPurpleHover underline decoration-accentPurple/40 underline-offset-4 transition-colors"
                     >
                       Download RealmSwap
@@ -268,7 +292,7 @@ export default async function RealmLandingPage({ params }: RealmPageProps) {
             </p>
 
             <a
-              href={DOWNLOAD_URL}
+              href={downloadUrl("realm-cta", realm.slug)}
               className="inline-block bg-accentPurple hover:bg-accentPurpleHover text-white px-8 py-4 rounded-xl text-base font-bold transition-all duration-200 shadow-lg shadow-accentPurple/20 border border-accentPurple/40"
             >
               Get RealmSwap Free

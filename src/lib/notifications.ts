@@ -33,7 +33,10 @@ export async function sendNotification(
   userId: string,
   title: string,
   message: string,
-  opts?: { serverId?: string }
+  // `kind` lets the push handler (public/sw.js) offer actions that fit: a
+  // connectivity alert must not carry the one-tap "Restart Server" a crash
+  // alert does — restarting a server people may be on over LAN isn't the fix.
+  opts?: { serverId?: string; kind?: "connectivity" }
 ) {
   try {
     const user = await prisma.user.findUnique({
@@ -94,7 +97,7 @@ export async function sendNotification(
 
     // 3. Web Push
     if (user.notifyWebPush && user.PushSubscription && user.PushSubscription.length > 0 && ensureVapidConfigured()) {
-      const payload = JSON.stringify({ title, body: message, serverId: opts?.serverId });
+      const payload = JSON.stringify({ title, body: message, serverId: opts?.serverId, kind: opts?.kind });
       
       for (const sub of user.PushSubscription) {
         try {

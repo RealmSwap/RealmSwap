@@ -40,11 +40,12 @@ interface PickedService {
   controlUrl: string;
 }
 
-interface RenewalState {
+export interface RenewalState {
   port: number;
   protocol: Protocol;
   description: string;
   internalClient: string;
+  failures: number;
 }
 
 const SSDP_ADDR = "239.255.255.250";
@@ -277,7 +278,7 @@ function scheduleRenewal(port: number, protocol: Protocol, description: string, 
     if (state) void renewMapping(state);
   }, (LEASE_SECONDS / 3) * 1000);
   timer.unref();
-  renewals().set(mappingKey(port, protocol), { port, protocol, description, internalClient, timer });
+  renewals().set(mappingKey(port, protocol), { port, protocol, description, internalClient, timer, failures: 0 });
 }
 
 function stopRenewal(port: number, protocol: Protocol): void {
@@ -288,16 +289,47 @@ function stopRenewal(port: number, protocol: Protocol): void {
   }
 }
 
-async function renewMapping(state: RenewalState): Promise<void> {
-  const endpoints = globalForUpnp.upnpEndpoints;
-  if (!endpoints?.length) return;
+/**
+ * Re-send the mapping. A dropped gateway (the router stopped answering once)
+ * must not end renewals for good: discoverEndpoints() looks for one again, so
+ * a rebooted router is re-mapped on the next renewal instead of the port
+ * silently expiring. Failures are counted per mapping and surfaced through
+ * upnpRenewalFailures() — renewals are the router path's heartbeat, and a
+ * string of them failing is how "the router stopped forwarding" becomes
+ * knowable.
+ */
+export async function renewMapping(state: RenewalState): Promise<void> {
+  const endpoints = await discoverEndpoints().catch(() => []);
   const args = addPortMappingArgs(state.port, state.protocol, state.description, state.internalClient);
   for (const endpoint of endpoints) {
     const res = await soapRequest(endpoint, "AddPortMapping", args);
-    if (res.ok) return;
+    if (res.ok) {
+      state.failures = 0;
+      return;
+    }
     invalidateStaleGateway(res.detail);
   }
-  console.error(`[UPnP Error] Lease renewal failed for port ${state.port} (${state.protocol}); will retry`);
+  state.failures += 1;
+  console.error(`[UPnP Error] Lease renewal failed for port ${state.port} (${state.protocol}) — ${state.failures} in a row; will retry`);
+}
+
+/**
+ * Two renewals failing in a row means the original lease is running out
+ * unrenewed: the port is about to close, or already has if the router
+ * rebooted.
+ */
+export const UPNP_RENEWAL_FAILURES_BEFORE_DOWN = 2;
+
+/**
+ * How many lease renewals in a row have failed for a mapped port, across its
+ * protocols; 0 when healthy or when nothing is mapped.
+ */
+export function upnpRenewalFailures(port: number): number {
+  let worst = 0;
+  renewals().forEach((state) => {
+    if (state.port === port) worst = Math.max(worst, state.failures);
+  });
+  return worst;
 }
 
 // Maps a port on the router pointing to this computer

@@ -19,6 +19,7 @@ import { parseSpec } from "./definitions/serialize";
 import { BUILTIN_DEFINITIONS } from "./definitions/builtins";
 import { enqueueCommand, resolveUsableNode, awaitCommandResult } from "./agents/commands";
 import { NODE_ONLINE_WINDOW_MS, type CommandPayload } from "./agents/protocol";
+import { noteConnectivityAlerted } from "./connectivityState";
 
 const BIN_DIR = path.join(dataRoot(), "bin");
 const DOWNLOAD_TIMEOUT_MS = 60_000;
@@ -374,6 +375,9 @@ async function reportTunnelCrash(serverId: string, reason: string): Promise<void
     if (server) {
       const { sendNotification } = await import("./notifications");
       sendNotification(server.userId, "🕳️ Tunnel Disconnected", `The playit tunnel for '${server.name}' stopped unexpectedly (${reason}). Friends can't join through it until you re-enable it from Join Info.`);
+      // The owner has now been told; the connectivity monitor should only
+      // follow up when the server is reachable again.
+      noteConnectivityAlerted(serverId);
       await prisma.activityLog.create({
         data: {
           userId: server.userId,

@@ -18,6 +18,11 @@ export async function register() {
     const { maybePruneTelemetry } = await import("@/lib/telemetryRetention");
     maybePruneTelemetry();
 
+    // The anonymous usage snapshot (strictly opt-in; off until the admin
+    // consents) rides this boot + an hourly timer of its own.
+    const { startUsageTelemetry } = await import("@/lib/telemetry/sender");
+    startUsageTelemetry();
+
     // Docker containers outlive this process — reattach log followers, exit
     // watchers, and monitoring (or mark containers that are gone as stopped).
     const { getRunner } = await import("@/lib/runners");
@@ -40,6 +45,12 @@ export async function register() {
     // autoStop (which would close an import cycle through the runners).
     const { attachAutoStopSampler } = await import("@/lib/autoStop");
     attachAutoStopSampler();
+
+    // Same for the connectivity monitor: it re-checks a running server's
+    // public path on a timer so the owner hears about a dead tunnel or a
+    // dropped UPnP mapping before their friends do.
+    const { attachConnectivityMonitor } = await import("@/lib/connectivityMonitor");
+    attachConnectivityMonitor();
 
     // Local Windows servers outlive this process too (Windows does not kill
     // child processes on quit/crash): mark dead ones stopped, reattach
@@ -65,6 +76,14 @@ export async function register() {
           }
         })
         .catch((err: any) => console.error("[AutoStart] launch pass failed:", err?.message));
+
+      // Scheduled automations must fire even when nobody opens the dashboard
+      // after an unattended boot or wake — and the wake timer that gets this
+      // PC up ahead of the next scheduled start is planned from them.
+      const { initActionScheduler } = await import("@/lib/actionScheduler");
+      initActionScheduler();
+      const { startWakeScheduler } = await import("@/lib/power/wakeScheduler");
+      startWakeScheduler();
     }
 
     // The dashboard hosts game processes — an unhandled stream error (EPIPE

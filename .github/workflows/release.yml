@@ -96,6 +96,12 @@ jobs:
 
       # pwsh: `exit` is not valid inside a `( … )` subexpression, so this can't
       # collapse to the one-liner `… || (cat build.log && exit 1)`.
+      #
+      # Signing activates by environment alone (see scripts/make-signing-config.js
+      # and docs/code-signing.md): Azure Trusted Signing when its repo variables
+      # + secrets are present, a classic certificate when CSC_LINK is set,
+      # unsigned exactly as before when neither is. With signing configured,
+      # forceCodeSigning makes an unsigned artifact fail the build itself.
       - name: Build Windows installer
         working-directory: 'C:\rsbuild'
         env:
@@ -103,9 +109,48 @@ jobs:
           DEBUG: electron-builder
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_SIGNING_ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
+          AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         run: |
           npm run electron:build > build.log 2>&1
           if ($LASTEXITCODE -ne 0) { Get-Content build.log; exit 1 }
+
+      # What actually shipped must actually be signed: an Authenticode check on
+      # the installer, not a hope that electron-builder's log line means it.
+      - name: Verify the installer's signature
+        if: always()
+        shell: pwsh
+        env:
+          EXPECT_SIGNED: ${{ vars.EXPECT_SIGNED_INSTALLER }}
+          AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
+        run: |
+          $sig = Get-AuthenticodeSignature "C:\rsbuild\dist\RealmSwap-Setup.exe"
+          $subject = if ($sig.SignerCertificate) { $sig.SignerCertificate.Subject } else { "(none)" }
+          "Installer signature: $($sig.Status) — $subject" >> $env:GITHUB_STEP_SUMMARY
+          if ($env:EXPECT_SIGNED -eq "true") {
+            if ($sig.Status -ne "Valid") { throw "EXPECT_SIGNED_INSTALLER is set, but the installer is not validly signed (status: $($sig.Status))." }
+            if ($env:AZURE_SIGNING_PUBLISHER -and $subject -notlike "*$($env:AZURE_SIGNING_PUBLISHER)*") {
+              throw "Signed as '$subject', which does not match the configured publisher '$($env:AZURE_SIGNING_PUBLISHER)'."
+            }
+          } elseif ($sig.Status -eq "NotSigned") {
+            Write-Host "::warning::This release is UNSIGNED — SmartScreen will warn on first run and the auto-updater cannot verify signatures. Set up signing per docs/code-signing.md and set the EXPECT_SIGNED_INSTALLER repo variable."
+          }
+
+      # Users can verify a download even before SmartScreen reputation exists.
+      - name: Write SHA256 checksums
+        shell: pwsh
+        run: |
+          $files = "C:\rsbuild\dist\RealmSwap-Setup.exe", "C:\rsbuild\dist\RealmSwap-Setup.exe.blockmap", "C:\rsbuild\dist\latest.yml"
+          $lines = $files | ForEach-Object { "{0}  {1}" -f ((Get-FileHash -Algorithm SHA256 $_).Hash.ToLowerInvariant()), (Split-Path $_ -Leaf) }
+          $lines | Set-Content -Encoding ascii C:\rsbuild\dist\SHA256SUMS.txt
+          Get-Content C:\rsbuild\dist\SHA256SUMS.txt
 
       - name: Upload build logs
         if: failure()
@@ -130,3 +175,4 @@ jobs:
             C:\rsbuild\dist\RealmSwap-Setup.exe
             C:\rsbuild\dist\RealmSwap-Setup.exe.blockmap
             C:\rsbuild\dist\latest.yml
+            C:\rsbuild\dist\SHA256SUMS.txt

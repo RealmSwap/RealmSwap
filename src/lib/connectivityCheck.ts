@@ -1,5 +1,5 @@
 import net from "net";
-import { getPublicIP } from "./upnp";
+import { getPublicIP, upnpRenewalFailures as liveUpnpRenewalFailures, UPNP_RENEWAL_FAILURES_BEFORE_DOWN } from "./upnp";
 import { listBoundSockets, type BoundSocket } from "./boundPorts";
 import type { GameDefinitionSpec } from "./definitions/types";
 
@@ -25,6 +25,8 @@ export interface ConnectivityDeps {
   publicIP?: () => Promise<string | null>;
   platform?: NodeJS.Platform;
   tunnelAlive?: (serverId: string) => boolean; // live playit agent for this server
+  /** Consecutive failed UPnP lease renewals for a port (0 = healthy). */
+  upnpRenewalFailures?: (port: number) => number;
 }
 
 /** Real local TCP probe — resolves true when something listens on 127.0.0.1:port. */
@@ -69,6 +71,7 @@ export async function runConnectivityChecks(
   const connect = deps.connect ?? defaultConnect;
   const publicIP = deps.publicIP ?? getPublicIP;
   const platform = deps.platform ?? process.platform;
+  const upnpRenewalFailures = deps.upnpRenewalFailures ?? liveUpnpRenewalFailures;
   // Live liveness is injected (the tunnels module owns the agent map); the
   // DB flag alone is not proof the tunnel still forwards.
   const tunnelAlive = deps.tunnelAlive ?? (() => false);
@@ -158,7 +161,17 @@ export async function runConnectivityChecks(
       fixCommand: "Turn on 'Playit.gg Tunneling' in Server Config → General Settings.",
     });
   } else if (server.enableUpnp) {
-    if (server.upnpMapped === true) {
+    if (server.upnpMapped === true && upnpRenewalFailures(server.port) >= UPNP_RENEWAL_FAILURES_BEFORE_DOWN) {
+      // Accepted at start, but the router has since stopped renewing it — the
+      // start-time flag alone would keep saying "ok" long after the port closed.
+      checks.push({
+        id: "router",
+        label: "Router / outside access",
+        status: "fail",
+        detail: "The router accepted the UPnP port mapping at the last start but has stopped renewing it — it may have rebooted or dropped the rule. The port is closing or already closed from the internet.",
+        fixCommand: "Restart the server to request the mapping again, or turn on the Playit tunnel in General Settings (no router access needed).",
+      });
+    } else if (server.upnpMapped === true) {
       const ip = await publicIP().catch(() => null);
       checks.push({
         id: "router",

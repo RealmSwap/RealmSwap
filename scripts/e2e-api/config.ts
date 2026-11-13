@@ -13,6 +13,7 @@
  */
 
 import path from "path";
+import os from "os";
 
 function intEnv(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -39,8 +40,10 @@ export const DATABASE_URL = `file:${DB_FILE}`;
 
 /** App data dir (local-servers, runtimes cache, logs). local-servers and
  *  local-archives are wiped per run; runtimes/ is kept so the Temurin JRE and
- *  any SteamCMD setup survive between runs. */
-export const DATA_DIR = process.env.E2E_API_DATA_DIR || "/tmp/realmswap-e2e-api-data";
+ *  any SteamCMD setup survive between runs. os.tmpdir() keeps this a real
+ *  absolute path on Windows too ("/tmp/..." would be drive-relative there,
+ *  which tar and the JRE provisioner can't follow). */
+export const DATA_DIR = process.env.E2E_API_DATA_DIR || path.join(os.tmpdir(), "realmswap-e2e-api-data");
 
 /** Isolated build output so `next build` never clobbers a running dev server's .next. */
 export const DIST_DIR = process.env.E2E_API_DIST_DIR || ".next-e2e";

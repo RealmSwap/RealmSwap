@@ -40,6 +40,7 @@ One-click deployment out of the box:
 - **CurseForge + Modrinth + Thunderstore + Steam Workshop**: search, one-click install with automatic dependency resolution, real versions, and per-mod updates. Modpack imports for `.mrpack` (Modrinth) and CurseForge manifests.
 - **Client-mod handling**: client-only mods are detected and excluded from servers instead of crashing your boot, and problem jars are quarantined and retried for you.
 - **First-try modpacks**: the target demo — a heavy pack like All the Mods 10 (499 mods), installed and booted, first try, in minutes.
+- **Share custom games safely**: export any custom game definition as a `.realmswap-game.json` file, or publish a realm for a game RealmSwap doesn't ship. Shared definitions pass a strict gate — no scripts, nothing outside the server folder, downloads only from allowlisted hosts — and realms that bring their own game show you exactly what it downloads and runs before installing anything.
 
 ### Friends join in one click
 - **RealmSync invites**: share a QR code or `realmsync://` link; the RealmSync companion app downloads every required mod and config to your friend's client and drops them into your server. The end of "does my friend need the modpack?"
@@ -50,14 +51,16 @@ One-click deployment out of the box:
 ### Built for game night
 - **Discord game-night planning**: plan sessions, collect RSVPs, and the server **auto-starts before game night** (with a lead time you set) and can auto-stop when it's over.
 - **Control from Discord**: start, stop, and monitor from your server's Discord bot.
+- **The PC wakes up for game night**: a Windows wake timer goes off a few minutes before a scheduled start (automation or Discord session), and RealmSwap holds the machine awake while players are on — or when it can't tell — so a host nobody is typing on doesn't fall asleep under its friends. Toggle both in Settings → Dedicated Box.
 - **Crash recovery with one-tap restart**: crashes are detected and auto-retried, and you get a push/email/Discord alert with a **Restart Server** button right in the notification.
+- **Reachability alerts**: if a running server's public path breaks — a tunnel playit stopped forwarding, a router that rebooted and dropped its UPnP mapping — you get a push/email/Discord alert before your friends hit a connection timeout, and another when it's back.
 - **Idle auto-stop**: nobody online? RealmSwap can shut the server down (and your power bill with it) after a quiet window you choose.
 
 ### Your data stays yours
 - **Verified backups**: every snapshot is verified on creation (the archive is opened and entries decompressed) and badged ✓ Verified / ⚠ Failed. Save state is flushed before backup on games that support it.
 - **Offsite S3 backups**: point RealmSwap at any S3-compatible bucket for encrypted offsite copies — and restore from the cloud even if the local file is gone.
 - **RealmSwap Vault**: done with a game? Archive the whole server (worlds, configs, mods) to your hard drive and restore it instantly months later. Switch games without losing a block.
-- **Shareable status page**: generate a no-login link showing whether the server is up, who's online, and the next planned session — perfect for pinning in Discord.
+- **Shareable status pages**: generate a no-login link showing whether the server is up, who's online, and the next planned session — perfect for pinning in Discord. A hosted copy at `realmswap.app/s/<code>` keeps answering even when your PC is off.
 
 ### A real dashboard, not an admin console
 - **Live console**: read live logs with level colors and filtering, send commands, and browse archived logs.
@@ -74,6 +77,12 @@ One-click deployment out of the box:
 1. Download `RealmSwap-Setup.exe` from the [latest release](https://github.com/RealmSwap/RealmSwap/releases/latest).
 2. Run the installer and create your account — the first account on a fresh install is the admin.
 3. Pick a game, hit deploy, and open **Join Info** to invite your friends.
+
+> Windows SmartScreen may show "Windows protected your PC" on first run —
+> choose **More info → Run anyway** (the app is currently unsigned; its
+> publisher reputation builds with installs). Every release publishes
+> `SHA256SUMS.txt` so you can verify your download:
+> `Get-FileHash .\RealmSwap-Setup.exe -Algorithm SHA256`.
 
 > RealmSwap hosts on your own machine. The packaged installer targets **Windows** today (that's where the target audience's gaming PCs are); running the web app from source works anywhere Node runs, and a Docker runner for Linux container hosts is built in.
 
@@ -100,14 +109,15 @@ npm run electron:dev   # desktop app
 - **Mods engine**: provider abstraction (Modrinth / CurseForge / Thunderstore / Steam Workshop), dependency BFS resolution, jar-manifest loader detection, sandbox boot testing with bundled JDK
 - **RealmSync engine**: HTTP invite server serving a signed, HMAC-authenticated manifest + config bundle to joining players
 - **Connectivity**: automated playit.gg agent management (claim → tunnel → live address), zero-dependency UPnP client with lease renewal, LAN fallback
-- **Verification ladder**: `npm run verify` — typecheck, ~1,300 unit tests, an API e2e harness that exercises every route (including real Minecraft server boots), Electron GUI e2e, and a Playwright suite over the public surface. A nightly matrix adds the heavy scenarios and a Windows release smoke that installs real released artifacts and proves the auto-update path end to end.
+- **Verification ladder**: `npm run verify` — typecheck, ~1,500 unit tests, an API e2e harness that exercises every route (including real Minecraft server boots), Electron GUI e2e, and a Playwright suite over the public surface. A nightly matrix adds the heavy scenarios and a Windows release smoke that installs real released artifacts and proves the auto-update path end to end.
 
 ## Roadmap & Contributing
 
 Contributions are welcome — branch off `main` and open a pull request. Currently on the roadmap:
 
-- **Dedicated-box mode** — finish the "old laptop in the closet" story: no-login service mode for spare hardware (launch-at-login, Discord start/stop, and idle auto-stop already shipped)
-- **Hosted public status links** (`realmswap.app/s/<code>`) that work even when your PC is off
-- **Popular-packs gallery** — one-click, boot-tested installs of the most-played modpacks
+- **Dedicated-box mode** — finish the "old laptop in the closet" story: no-login service mode for spare hardware (launch-at-login, wake timers, Discord start/stop, and idle auto-stop already shipped)
+- **Wake-on-LAN for remote hosts** — the same wake-before-game-night treatment for agent nodes, which currently need to be awake to accept a start
+- **Community game-definition marketplace listings** — first-class browse/review for shared game definitions (the safety gate, consent step, and file sharing already shipped)
+- **Windows code signing** — the build pipeline signs automatically once an Azure Artifact Signing account or certificate is configured (see `docs/code-signing.md`; releases already publish SHA256 checksums)
 - **Docker container abstractions** for true cross-platform hosting
 - More game definitions — the least-served games first

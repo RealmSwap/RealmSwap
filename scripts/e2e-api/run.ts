@@ -26,6 +26,8 @@ import { membershipScenarios } from "./scenarios/membership";
 import { backupScenarios } from "./scenarios/backups";
 import { realmsyncScenarios } from "./scenarios/realmsync";
 import { marketplaceScenarios } from "./scenarios/marketplace";
+import { definitionSharingScenarios } from "./scenarios/definitionSharing";
+import { powerScenarios } from "./scenarios/power";
 import { agentScenarios } from "./scenarios/agents";
 import { opsScenarios } from "./scenarios/ops";
 import { botScenarios } from "./scenarios/bots";
@@ -43,6 +45,8 @@ const ALL_SCENARIOS: Scenario[] = [
   ...backupScenarios,
   ...realmsyncScenarios,
   ...marketplaceScenarios,
+  ...definitionSharingScenarios,
+  ...powerScenarios,
   ...agentScenarios,
   ...opsScenarios,
   ...botScenarios,

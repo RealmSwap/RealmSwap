@@ -91,6 +91,25 @@ npx tsx scripts/e2e-api/run.ts --tag all --only <scenarioId>   # one scenario (d
   marketplace chain runs for real: publish (with secret scrubbing) → list →
   mine → versions → favorite toggle → deploy (creates a local server and
   writes the payload's config overrides) → version history.
+- **marketplace/custom-definitions** — realms for games RealmSwap doesn't
+  ship: publish refuses a definition that runs a PATH program, the first
+  deploy answers **409 CUSTOM_DEFINITION_CONSENT** with exactly-what-runs
+  detail and records no acquisition, deploying with consent installs the
+  definition (STEAMCMD, gate-normalized), a redeploy needs no second consent,
+  and a hostile definition written **straight into the cloud** (PostgREST
+  bypass) is refused at deploy with CUSTOM_DEFINITION_REJECTED.
+- **definitions/file-share** — the `.realmswap-game.json` round trip: export
+  (attachment, spec intact), import **preview** that writes nothing, confirm
+  import that uniquifies the slug; wrong-format files, PATH-program
+  definitions, and script-based definitions refused in both directions.
+- **system/power** — the keep-awake lookup is internal-token only and always
+  answers with reasons; power settings are ADMIN-gated, report the plan
+  without touching the OS outside the Windows desktop app, and persist a
+  toggle.
+- **telemetry/usage** — strictly opt-in usage milestones: preview explains
+  every field, consent is ADMIN-only, enabling sends the first daily
+  snapshot into the fake's `usage_snapshots` table (which refuses a second
+  row for the same install+day), disabling forgets the install id.
 - **agents/nodes-lifecycle** — the harness plays the node over the real HMAC
   protocol: admin mints an enrollment token, register is single-use, every
   sync auth failure mode is explicit (bad headers/signature/timestamp,

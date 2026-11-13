@@ -21,7 +21,7 @@
     "db:check": "prisma migrate diff --from-migrations prisma/migrations --shadow-database-url \"file:./prisma/shadow-check.db\" --to-schema-datamodel prisma/schema.prisma --exit-code",
     "electron:dev": "cross-env GAMEVAULT_DEV=1 concurrently -k \"next dev\" \"wait-on http://localhost:3000/start && electron .\"",
     "prepackage": "node scripts/make-template-db.js && next build",
-    "electron:build": "npm run prepackage && electron-builder --publish never",
+    "electron:build": "npm run prepackage && node scripts/make-signing-config.js electron-builder.effective.yml && electron-builder --config electron-builder.effective.yml --publish never",
     "bot": "tsx src/bot/index.ts",
     "agent": "tsx agent/agent.ts",
     "e2e:gui": "tsx scripts/e2e-gui/run.ts --tag smoke",
@@ -50,7 +50,7 @@
     "gamedig": "^5.3.3",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^1.61.0",
-    "next": "^16.4.3",
+    "next": "16.4.6",
     "nodemailer": "^10.2.1",
     "pidtree": "^1.0.0",
     "pidusage": "^4.0.1",
@@ -93,7 +93,8 @@
     "tailwindcss": "^3.4.4",
     "typescript": "^5.4.5",
     "vitest": "^1.6.1",
-    "wait-on": "^9.0.10"
+    "wait-on": "^9.0.10",
+    "yaml": "^2.9.1"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

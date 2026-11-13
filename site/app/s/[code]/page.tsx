@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { Activity, ArrowLeft, Download, Users } from "lucide-react";
 
 import { getHostedStatus } from "@/lib/backend/status";
-import { DOWNLOAD_URL } from "@/lib/constants";
+import { downloadUrl } from "@/lib/constants";
+import { gameLabel } from "@/lib/gameLabel";
 
 // Always render live data — the snapshot changes every few minutes while the
 // host plays, and the whole point of this page is "is it up right now?".
@@ -18,23 +19,6 @@ type StatusPageProps = {
 // goes stale — past this age the page says so instead of trusting the snapshot.
 const FRESH_WINDOW_MS = 15 * 60_000;
 
-function gameLabel(game: string): string {
-  const labels: Record<string, string> = {
-    MINECRAFT: "Minecraft",
-    VALHEIM: "Valheim",
-    ENSHROUDED: "Enshrouded",
-    ZOMBOID: "Project Zomboid",
-    ARK: "ARK: Survival Evolved",
-    TERRARIA: "Terraria",
-    PALWORLD: "Palworld",
-    RUST: "Rust",
-    SATISFACTORY: "Satisfactory",
-    VRISING: "V Rising",
-    WINDROSE: "Windrose",
-  };
-  return labels[game.toUpperCase()] ?? game;
-}
-
 function ago(iso: string): string {
   const mins = Math.max(1, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
   if (mins < 60) return `${mins} min ago`;
@@ -43,13 +27,16 @@ function ago(iso: string): string {
   return `${Math.round(hours / 24)} days ago`;
 }
 
+// The link is the capability — whoever holds it can read who's online — so it
+// must never be indexed, cached as a search result, or archived.
 export async function generateMetadata({ params }: StatusPageProps): Promise<Metadata> {
   const status = await getHostedStatus(params.code);
-  if (!status) return { title: "Server status | RealmSwap" };
+  if (!status) return { title: "Server status", robots: { index: false, follow: false } };
   const online = status.status === "RUNNING";
   return {
-    title: `${status.name} — ${online ? "Online" : "Offline"} | RealmSwap`,
+    title: `${status.name} — ${online ? "Online" : "Offline"}`,
     description: `Live status for the ${gameLabel(status.game)} server "${status.name}".`,
+    robots: { index: false, follow: false },
   };
 }
 
@@ -105,7 +92,7 @@ export default async function HostedStatusPage({ params }: StatusPageProps) {
 
         <div className="mt-6 flex flex-col items-center gap-3">
           <Link
-            href={DOWNLOAD_URL}
+            href={downloadUrl("status")}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accentPurple hover:bg-accentPurpleHover text-white font-bold text-sm transition-colors"
           >
             <Download className="w-4 h-4" />

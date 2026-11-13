@@ -11,6 +11,19 @@
       "agents/nodes-lifecycle"
     ]
   },
+  "GET /api/telemetry": {
+    "status": "covered",
+    "scenarios": [
+      "telemetry/usage"
+    ]
+  },
+  "POST /api/telemetry": {
+    "status": "covered",
+    "scenarios": [
+      "telemetry/usage"
+    ]
+  },
+
   "POST /api/agents/register": {
     "status": "covered",
     "scenarios": [
@@ -129,6 +142,18 @@
     "status": "covered",
     "scenarios": [
       "surface/membership-players"
+    ]
+  },
+  "GET /api/definitions/[id]/export": {
+    "status": "covered",
+    "scenarios": [
+      "definitions/file-share"
+    ]
+  },
+  "POST /api/definitions/import": {
+    "status": "covered",
+    "scenarios": [
+      "definitions/file-share"
     ]
   },
   "POST /api/marketplace/[id]/favorite": {
@@ -756,6 +781,24 @@
     "status": "covered",
     "scenarios": [
       "ops/user-system"
+    ]
+  },
+  "GET /api/system/keep-awake": {
+    "status": "covered",
+    "scenarios": [
+      "system/power"
+    ]
+  },
+  "GET /api/system/power": {
+    "status": "covered",
+    "scenarios": [
+      "system/power"
+    ]
+  },
+  "PUT /api/system/power": {
+    "status": "covered",
+    "scenarios": [
+      "system/power"
     ]
   },
   "GET /api/system/storage": {

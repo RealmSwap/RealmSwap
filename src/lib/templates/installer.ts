@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { parseSpec, stringifyParamValues } from "@/lib/definitions/serialize";
+import { vetUntrustedSpec, type UntrustedDefinitionSummary, type UntrustedSpecResult } from "@/lib/definitions/untrusted";
 import { dataRoot } from "@/lib/appPaths";
 import { TemplatePayload, TemplateConfigOverride, DeployableTemplate, isV2Payload } from "./types";
 import path from "path";
@@ -20,52 +21,88 @@ export interface CreatedServerShell {
   v2: boolean;
 }
 
+/** The realm's own game definition failed the untrusted-definition gate. */
+export class RealmDefinitionRejectedError extends Error {
+  constructor(public readonly errors: string[]) {
+    super(`This realm's custom game definition was refused: ${errors.slice(0, 3).join(" ")}`);
+    this.name = "RealmDefinitionRejectedError";
+  }
+}
+
+/** Deploying would install a new game definition and the caller has not agreed to it. */
+export class RealmDefinitionConsentError extends Error {
+  constructor(public readonly summary: UntrustedDefinitionSummary) {
+    super("This realm installs its own game definition; deploying it needs explicit consent.");
+    this.name = "RealmDefinitionConsentError";
+  }
+}
+
+export type RealmDefinitionPlan =
+  | { kind: "existing"; definitionId: string }
+  | { kind: "new"; slug: string; vetted: Extract<UntrustedSpecResult, { ok: true }> };
+
+/**
+ * Decide which game definition a realm deploy binds to, without writing
+ * anything. A definition the deployer can already use wins — a built-in
+ * (matched case-insensitively, so a realm can't shadow "MINECRAFT" with its
+ * own "minecraft" and inherit the runners' game-specific handling) or one
+ * they own. Only otherwise does the realm's custom_def_spec come into play,
+ * and then it must pass the untrusted-definition gate: the realm row is cloud
+ * data that any signed-in account can write without going through this app.
+ */
+export async function planRealmDefinition(
+  template: Pick<DeployableTemplate, "gameSlug" | "customDefSpec">,
+  userId: string,
+): Promise<RealmDefinitionPlan> {
+  const slug = String(template.gameSlug ?? "");
+  const candidates = await prisma.gameDefinition.findMany({
+    where: {
+      OR: [
+        { ownerId: null, slug: { in: [slug, slug.toUpperCase()] } },
+        { ownerId: userId, slug },
+      ],
+    },
+  });
+  const existing = candidates.find((d) => d.ownerId === null) ?? candidates[0];
+  if (existing) return { kind: "existing", definitionId: existing.id };
+
+  if (!template.customDefSpec) {
+    throw new Error("Required game definition not found and no custom spec provided.");
+  }
+  if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(slug)) {
+    throw new RealmDefinitionRejectedError(["The realm's game id is not a valid identifier."]);
+  }
+  const vetted = vetUntrustedSpec(template.customDefSpec);
+  if (!vetted.ok) throw new RealmDefinitionRejectedError(vetted.errors);
+  return { kind: "new", slug, vetted };
+}
+
 async function resolveDefinitionId(
   template: DeployableTemplate,
   userId: string,
+  allowNewDefinition: boolean,
 ): Promise<string> {
-  // 1. Handle Custom Game Definition
-  if (template.customDefSpec) {
-    const existingDef = await prisma.gameDefinition.findFirst({
-      where: { slug: template.gameSlug },
-    });
+  const plan = await planRealmDefinition(template, userId);
+  if (plan.kind === "existing") return plan.definitionId;
+  if (!allowNewDefinition) throw new RealmDefinitionConsentError(plan.vetted.summary);
 
-    if (existingDef) {
-      return existingDef.id;
-    }
-    const customDefSpec = template.customDefSpec as any;
-
-    if (customDefSpec.install?.url) {
-      const allowedDomains = ["github.com", "githubusercontent.com", "thunderstore.io", "curseforge.com", "steamcdn-a.akamaihd.net"];
-      try {
-        const parsedUrl = new URL(customDefSpec.install.url);
-        const isAllowed = allowedDomains.some(d => parsedUrl.hostname === d || parsedUrl.hostname.endsWith("." + d));
-        if (!isAllowed) {
-          throw new Error(`Download URL origin not trusted: ${parsedUrl.hostname}`);
-        }
-      } catch (e: any) {
-        throw new Error(`Invalid or untrusted download URL in definition: ${e.message}`);
-      }
-    }
-
-    const newDef = await prisma.gameDefinition.create({
-      data: {
-        slug: template.gameSlug,
-        displayName: customDefSpec.name || template.gameSlug,
-        icon: "🎮", // default fallback
-        installMethod: customDefSpec.install ? (customDefSpec.install.appId ? "STEAMCMD" : "DOWNLOAD") : "CUSTOM_SCRIPT",
-        spec: JSON.stringify(customDefSpec),
-        ownerId: userId,
-      },
-    });
-    return newDef.id;
-  }
-
-  const existingDef = await prisma.gameDefinition.findFirst({
-    where: { slug: template.gameSlug },
+  const { spec, installMethod, meta } = plan.vetted;
+  const install = spec.install as { requiredDiskGB?: number };
+  const newDef = await prisma.gameDefinition.create({
+    data: {
+      slug: plan.slug,
+      displayName: meta.name || plan.slug,
+      icon: meta.icon || "🎮",
+      ...(meta.description ? { description: meta.description } : {}),
+      ...(meta.recommendedRamGB ? { recommendedRamGB: meta.recommendedRamGB } : {}),
+      ...(install.requiredDiskGB ? { requiredDiskGB: install.requiredDiskGB } : {}),
+      installMethod,
+      // The gate's normalized copy, never the cloud row's raw JSON.
+      spec: JSON.stringify(spec),
+      ownerId: userId,
+    },
   });
-  if (!existingDef) throw new Error("Required game definition not found and no custom spec provided.");
-  return existingDef.id;
+  return newDef.id;
 }
 
 /**
@@ -115,13 +152,19 @@ export function applyConfigOverrides(
  * ModInstallation rows (version "latest", nothing downloaded). v2 payloads
  * record no mod rows — the materialize phase downloads real files through the
  * verified pipeline and the installers record real rows.
+ *
+ * A realm that brings its own game definition only deploys with
+ * `allowNewDefinition` — the caller's statement that the user saw what that
+ * definition runs and agreed. Without it this throws
+ * RealmDefinitionConsentError before anything is written.
  */
 export async function createRealmServerShell(
   template: DeployableTemplate,
   userId: string,
+  opts: { allowNewDefinition?: boolean } = {},
 ): Promise<CreatedServerShell> {
   const payload = template.payload;
-  const defId = await resolveDefinitionId(template, userId);
+  const defId = await resolveDefinitionId(template, userId, opts.allowNewDefinition === true);
 
   // 2. Create the Server
   const def = await prisma.gameDefinition.findUniqueOrThrow({ where: { id: defId } });
