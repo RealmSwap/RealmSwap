@@ -10,6 +10,7 @@ import { initUpdateScheduler } from "@/lib/updateScheduler";
 import { parseSpec, stringifyParamValues } from "@/lib/definitions/serialize";
 import { validateParamValues } from "@/lib/definitions/validate";
 import { isPortAvailable, getFreeDiskSpaceGB, isSteamCmdInstalled } from "@/lib/preflight";
+import { collectPrereqWarnings } from "@/lib/prereqs";
 import { dataRoot } from "@/lib/appPaths";
 import { resolveRunnerType } from "@/lib/runners/resolveRunnerType";
 import { isDockerAvailable } from "@/lib/runners/docker/dockerCli";
@@ -269,6 +270,14 @@ export async function POST(req: NextRequest) {
     }
     // --- End Pre-flight Validations ---
 
+    // 3. Runtime-library prerequisites (VC++ redist / .NET Framework):
+    //    advisory only. A missing library usually means the server fails to
+    //    start later, not a deploy that deserves a 400, so we attach warnings
+    //    to the success response instead of blocking. Remote nodes run on
+    //    their own Windows host whose registry we can't see from here.
+    const prereqWarnings =
+      runnerType === "AGENT" ? [] : await collectPrereqWarnings(def.slug);
+
     const region = "LOCALHOST";
     const ipAddress = "127.0.0.1";
 
@@ -304,7 +313,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(newServer, { status: 201 });
+    // Prereq warnings ride alongside the created server; the client shows
+    // them as non-blocking notices (CreateServerView deployWarnings).
+    return NextResponse.json({ ...newServer, warnings: prereqWarnings }, { status: 201 });
   } catch (error) {
     console.error("POST /api/servers error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { buildQueryContext, resolveQueryPort, queryGameServer } from "../serverQuery";
+import { buildQueryContext, resolveQueryPort, queryGameServer, playerNamesFromQuery } from "../serverQuery";
 import type { GameDefinitionSpec } from "../definitions/types";
 
 /**
@@ -82,6 +82,36 @@ describe("resolveQueryPort + buildQueryContext", () => {
     const server = { ...baseServer, paramValues: JSON.stringify({ queryPort: "27015" }) };
     const ctx = buildQueryContext(server);
     expect(resolveQueryPort(spec({ queryPort: "{queryPort}" }), ctx, 25565)).toBe(27015);
+  });
+
+  it("applies {port}+N offsets for games whose query port sits above the join port", () => {
+    const ctx = buildQueryContext({ ...baseServer, port: 2456 });
+    expect(resolveQueryPort(spec({ queryPort: "{port}+1" }), ctx, 2456)).toBe(2457);
+    expect(resolveQueryPort(spec({ queryPort: "{port}+15" }), ctx, 2456)).toBe(2471);
+  });
+
+  it("adds plain-number queryPort offsets too", () => {
+    const ctx = buildQueryContext(baseServer);
+    expect(resolveQueryPort(spec({ queryPort: "27015" }), ctx, 25565)).toBe(27015);
+  });
+
+  it("falls back to the server port for a malformed queryPort template", () => {
+    const ctx = buildQueryContext(baseServer);
+    expect(resolveQueryPort(spec({ queryPort: "{nope}" }), ctx, 25565)).toBe(25565);
+  });
+
+  it("playerNamesFromQuery keeps only named players", () => {
+    expect(
+      playerNamesFromQuery({
+        status: "online",
+        name: "x",
+        players: 3,
+        maxplayers: 10,
+        playerList: [{ name: "A" }, { name: null }, { name: "" }, {}, "junk"],
+      })
+    ).toEqual(["A"]);
+    expect(playerNamesFromQuery({ status: "offline", error: "no" })).toEqual([]);
+    expect(playerNamesFromQuery({ status: "unsupported", error: "no" })).toEqual([]);
   });
 
   it("builds the template context from server fields", () => {

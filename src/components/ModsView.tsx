@@ -539,7 +539,7 @@ export default function ModsView({ user }: ModsViewProps) {
       ))}
       {packMode && (
         <span className="text-[10px] text-mutedText ml-1">
-          One-click full pack installs — snapshot + boot-tested, rolled back on failure.
+          One-click full pack installs — snapshot + rollback on failure, boot-tested in the sandbox (Minecraft, Valheim, Project Zomboid, and Terraria today).
         </span>
       )}
     </>
@@ -1997,7 +1997,7 @@ export default function ModsView({ user }: ModsViewProps) {
                           onClick={handleUpdateAll}
                           disabled={updateAllBusy}
                           className="px-3 py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 text-sky-200 font-bold transition-colors disabled:opacity-50"
-                          title="Updates every stale mod in one snapshot window: sequential updates, one sandbox boot test, full rollback on any failure."
+                          title="Updates every stale mod in one snapshot window: sequential updates, full rollback on any failure, plus a sandbox boot test on Minecraft, Valheim, Project Zomboid, and Terraria."
                         >
                           {updateAllBusy ? "Updating…" : `Update all (${updatesInfo.updates.length})`}
                         </button>

@@ -506,3 +506,23 @@ model AppSetting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+/// Install-wide notification delivery config, singleton row (id "singleton").
+/// SMTP carries the email alerts and a Discord webhook the server-wide
+/// pings — both configured by the ADMIN through /api/system/notifications so
+/// the packaged app (which injects no SMTP env vars) can actually deliver.
+/// smtpPass and discordWebhook hold secrets; the API never returns them.
+/// lastError/lastSentAt record delivery health for the Settings UI.
+model NotificationSettings {
+  id             String    @id @default("singleton")
+  smtpHost       String?
+  smtpPort       Int       @default(587)
+  smtpSecure     Boolean   @default(false)
+  smtpUser       String?
+  smtpPass       String?
+  smtpFrom       String?
+  discordWebhook String?
+  lastError      String?
+  lastSentAt     DateTime?
+  updatedAt      DateTime  @updatedAt
+}

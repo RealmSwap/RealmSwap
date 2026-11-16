@@ -4,7 +4,7 @@
 
 RealmSwap is a free, locally-hosted game server manager for your gaming PC or home machine. Pick a game, click deploy, and share one invite — your friends join, and the mods their client needs download themselves. No rent, no queues, no oversold nodes, and your world never locks behind a lapsed subscription.
 
-**Every mod install is boot-tested before you see "success."** RealmSwap installs the modpack into a sandbox, actually boots the server, and only then calls it done — a bad mod, missing dependency, or wrong loader rolls the server back automatically instead of leaving you with a world that won't start.
+**Mod installs are boot-tested before you see "success" — live today for Minecraft, Valheim, Project Zomboid, and Terraria, with more games on the way.** For those games, RealmSwap installs the modpack into a sandbox, actually boots the server, and only then calls it done — a bad mod, missing dependency, or wrong loader rolls the server back automatically instead of leaving you with a world that won't start.
 
 <p align="center">
   <a href="docs/demo/realmswap-demo.mp4">
@@ -35,7 +35,7 @@ One-click deployment out of the box:
 ## Key Features
 
 ### Mods that actually work
-- **Verified installs**: every mod install, update, and modpack import runs snapshot → install → **sandbox boot test** → auto-rollback. Broken installs fail loudly with the server's own boot output — never a silent "success" that doesn't load.
+- **Verified installs**: every mod install, update, and modpack import runs snapshot → install → auto-rollback, with the **sandbox boot test** live for **Minecraft, Valheim, Project Zomboid, and Terraria** today (more games on the way). Broken installs fail loudly with the server's own boot output — never a silent "success" that doesn't load.
 - **All the loaders**: Fabric, Forge, NeoForge, and Quilt install in one click (and modpacks pin the right one automatically).
 - **CurseForge + Modrinth + Thunderstore + Steam Workshop**: search, one-click install with automatic dependency resolution, real versions, and per-mod updates. Modpack imports for `.mrpack` (Modrinth) and CurseForge manifests.
 - **Client-mod handling**: client-only mods are detected and excluded from servers instead of crashing your boot, and problem jars are quarantined and retried for you.
@@ -52,7 +52,7 @@ One-click deployment out of the box:
 - **Discord game-night planning**: plan sessions, collect RSVPs, and the server **auto-starts before game night** (with a lead time you set) and can auto-stop when it's over.
 - **Control from Discord**: start, stop, and monitor from your server's Discord bot.
 - **The PC wakes up for game night**: a Windows wake timer goes off a few minutes before a scheduled start (automation or Discord session), and RealmSwap holds the machine awake while players are on — or when it can't tell — so a host nobody is typing on doesn't fall asleep under its friends. Toggle both in Settings → Dedicated Box.
-- **Crash recovery with one-tap restart**: crashes are detected and auto-retried, and you get a push/email/Discord alert with a **Restart Server** button right in the notification.
+- **Crash recovery with one-tap restart**: crashes are detected and auto-retried, and you get a push/email/Discord alert with a **Restart Server** button right in the notification. Email (SMTP) and the server-wide Discord webhook are configured by the admin in Settings → Notifications, with a send-test button and delivery health right there.
 - **Reachability alerts**: if a running server's public path breaks — a tunnel playit stopped forwarding, a router that rebooted and dropped its UPnP mapping — you get a push/email/Discord alert before your friends hit a connection timeout, and another when it's back.
 - **Idle auto-stop**: nobody online? RealmSwap can shut the server down (and your power bill with it) after a quiet window you choose.
 

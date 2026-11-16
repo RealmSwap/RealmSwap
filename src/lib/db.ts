@@ -1,5 +1,5 @@
 import { PrismaClient } from "../generated/client";
-import { encryptSecret, decryptSecret, SERVER_SECRET_FIELDS, S3_SECRET_FIELDS, AGENT_NODE_SECRET_FIELDS } from "./secretBox";
+import { encryptSecret, decryptSecret, SERVER_SECRET_FIELDS, S3_SECRET_FIELDS, AGENT_NODE_SECRET_FIELDS, NOTIFICATION_SECRET_FIELDS } from "./secretBox";
 
 // In packaged Electron the main process sets DATABASE_URL to the userData DB
 // before this module loads. In dev / tests it is usually unset, so default to
@@ -56,6 +56,7 @@ function createPrismaClient() {
       server: secretModelExtension(SERVER_SECRET_FIELDS),
       s3Setting: secretModelExtension(S3_SECRET_FIELDS),
       agentNode: secretModelExtension(AGENT_NODE_SECRET_FIELDS),
+      notificationSettings: secretModelExtension(NOTIFICATION_SECRET_FIELDS),
     },
   });
 }

@@ -493,7 +493,7 @@ export default function PlayersView({ user }: { user: any }) {
               <div className="flex flex-col items-center justify-center h-full text-slate-500">
                 <Users className="w-16 h-16 mb-4 opacity-20" />
                 <p className="text-sm font-bold">No one is online right now</p>
-                <p className="text-xs mt-1 text-slate-600">Or the server's remote console (RCON) isn't configured yet.</p>
+                <p className="text-xs mt-1 text-slate-600">The server isn&apos;t reporting a roster — set up RCON in Server Settings, or its game may not support queries.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -41,6 +41,7 @@ export interface LaunchSpec {
   env?: Record<string, string>;
   stdoutPatterns?: StdoutPattern[];
   stdinStopCommand?: string;
+  rconStopCommand?: string;     // graceful shutdown via rconManager (only fires when the server row has rconPort + rconPassword set)
   launchScript?: string;
   executableOnPath?: boolean;   // true: spawn executable by name (found on PATH, e.g. "java", "cmd.exe"); false/omitted: resolve against the install dir
   preLaunchDirs?: string[];     // directories (relative to install dir) to create before launch

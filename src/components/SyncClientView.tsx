@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarNavigation } from "@/components/dashboard/SidebarNavigation";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Download, Play, ShieldAlert, Package, CheckCircle2, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
@@ -21,6 +21,7 @@ export default function SyncClientView({ link, host, codeId, secret, manifest, e
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [gamePath, setGamePath] = useState("");
+  const warnedParseFailure = useRef(false);
 
   const handleSyncAndPlay = async () => {
     if (!manifest) return;
@@ -40,13 +41,14 @@ export default function SyncClientView({ link, host, codeId, secret, manifest, e
       
       // Setup SSE for progress
       const es = new EventSource(`/api/client/sync/progress?taskId=${data.taskId}`);
-      
+      warnedParseFailure.current = false;
+
       es.addEventListener("message", (e) => {
         try {
           const payload = JSON.parse(e.data);
           setSyncStatus(payload.status);
           setProgress(payload.percent);
-          
+
           if (payload.done) {
             es.close();
             setSyncing(false);
@@ -59,7 +61,15 @@ export default function SyncClientView({ link, host, codeId, secret, manifest, e
             setSyncStatus(null);
             addToast("error", payload.error);
           }
-        } catch(err) {}
+        } catch (err) {
+          // A malformed chunk shouldn't stay silent, but a toast per bad
+          // event would spam — warn every time, notify once per sync.
+          console.warn("Failed to parse sync progress event:", e.data, err);
+          if (!warnedParseFailure.current) {
+            warnedParseFailure.current = true;
+            addToast("info", "Some progress updates could not be read. The sync is still running.");
+          }
+        }
       });
       
       es.addEventListener("error", () => {

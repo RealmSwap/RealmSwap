@@ -15,7 +15,7 @@ export interface ConfigFilePlan { relPath: string; strategy: ConfigStrategy; con
 export interface LaunchPlan {
   executable: string; args: string[]; cwdSubDir?: string;
   env?: Record<string, string>; stdoutPatterns?: StdoutPattern[];
-  stdinStopCommand?: string; launchScript?: string;
+  stdinStopCommand?: string; rconStopCommand?: string; launchScript?: string;
   executableOnPath?: boolean;
   preLaunchDirs?: string[];
   readyPattern?: string;
@@ -87,6 +87,7 @@ export function planLaunch(spec: GameDefinitionSpec, ctx: DefinitionContext): La
     env,
     stdoutPatterns: l.stdoutPatterns,
     stdinStopCommand: l.stdinStopCommand,
+    rconStopCommand: l.rconStopCommand,
     launchScript: l.launchScript,
     executableOnPath: l.executableOnPath,
     preLaunchDirs: l.preLaunchDirs,

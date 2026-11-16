@@ -4,8 +4,8 @@
  * Zipping a RUNNING server's save folder races the server's own writes — the
  * archive can pass verification yet contain a torn world. Games that expose a
  * save/flush command over RCON get one before the zip and a resume afterwards.
- * Games without a reliable command (Valheim, Rust, ARK, Terraria, Enshrouded)
- * are deliberately absent: their backups proceed unflushed exactly as before
+ * Games without a reliable command (Valheim, Terraria, Enshrouded) are
+ * deliberately absent: their backups proceed unflushed exactly as before
  * rather than sending commands that pretend to help.
  */
 export interface SaveFlushPlan {
@@ -27,6 +27,14 @@ export function getSaveFlushPlan(game: string): SaveFlushPlan | null {
     case "ZOMBOID":
       // Project Zomboid RCON "save" writes the world and map.
       return { pre: ["save"], post: [] };
+    case "RUST":
+      // Facepunch admin console commands document `server.save` —
+      // "Saves the currently loaded map".
+      return { pre: ["server.save"], post: [] };
+    case "ARK":
+      // ARK wiki RCON command table documents `SaveWorld` — "Forces the server
+      // to save the game world". UNCERTAIN: response text varies by build.
+      return { pre: ["SaveWorld"], post: [] };
     default:
       return null;
   }

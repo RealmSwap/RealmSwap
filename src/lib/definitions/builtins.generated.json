@@ -121,17 +121,13 @@
         {
           "path": "server.properties",
           "strategy": "template",
-          "template": "server-port={port}\nquery.port=25565\nonline-mode={onlineMode}\nmax-players={maxPlayers}\nmotd={motd}\ndifficulty={difficulty}\ngamemode={gamemode}\npvp={pvp}\nview-distance={viewDistance}\n"
+          "template": "server-port={port}\nquery.port=25565\nenable-rcon={rconEnabled}\nrcon.port={rconPort}\nrcon.password={rconPassword}\nonline-mode={onlineMode}\nmax-players={maxPlayers}\nmotd={motd}\ndifficulty={difficulty}\ngamemode={gamemode}\npvp={pvp}\nview-distance={viewDistance}\n"
         }
       ],
       "editableConfigPath": "server.properties",
       "ports": [
         {
           "protocol": "TCP",
-          "port": "25565"
-        },
-        {
-          "protocol": "UDP",
           "port": "25565"
         }
       ],
@@ -213,6 +209,8 @@
         ]
       },
       "defaultPort": 2456,
+      "queryType": "valheim",
+      "queryPort": "{port}+1",
       "params": [
         {
           "key": "worldName",
@@ -267,6 +265,7 @@
         "args": []
       },
       "defaultPort": 15637,
+      "queryType": "enshrouded",
       "params": [
         {
           "key": "slotCount",
@@ -304,16 +303,8 @@
       },
       "ports": [
         {
-          "protocol": "TCP",
-          "port": "15636"
-        },
-        {
           "protocol": "UDP",
           "port": "15636"
-        },
-        {
-          "protocol": "TCP",
-          "port": "15637"
         },
         {
           "protocol": "UDP",
@@ -347,7 +338,8 @@
           "-cachedir=./zomboid-data",
           "-servername",
           "servertest"
-        ]
+        ],
+        "stdinStopCommand": "quit\n"
       },
       "container": {
         "executable": "start-server.sh",
@@ -359,6 +351,7 @@
         ]
       },
       "defaultPort": 16261,
+      "queryType": "projectzomboid",
       "params": [],
       "configFiles": [
         {
@@ -418,7 +411,8 @@
           "-nosound",
           "-QueryPort=27015",
           "-automanagemods"
-        ]
+        ],
+        "rconStopCommand": "DoExit"
       },
       "container": {
         "executable": "ShooterGame/Binaries/Linux/ShooterGameServer",
@@ -443,6 +437,8 @@
         ]
       },
       "defaultPort": 7777,
+      "queryType": "ase",
+      "queryPort": "27015",
       "params": [
         {
           "key": "maxPlayers",
@@ -507,7 +503,8 @@
           "{nameSanitized}",
           "-world",
           "worlds/{nameSanitized}.wld"
-        ]
+        ],
+        "stdinStopCommand": "exit\n"
       },
       "container": {
         "executable": "TerrariaServer.bin.x86_64",
@@ -549,10 +546,6 @@
         {
           "protocol": "TCP",
           "port": "7777"
-        },
-        {
-          "protocol": "UDP",
-          "port": "7777"
         }
       ]
     }
@@ -591,7 +584,8 @@
           "-useperfthreads",
           "-NoAsyncLoadingThread",
           "-UseMultithreadForDS"
-        ]
+        ],
+        "rconStopCommand": "Shutdown 5 Server_stopping"
       },
       "container": {
         "executable": "PalServer.sh",
@@ -696,7 +690,8 @@
           "{password}",
           "+rcon.web",
           "1"
-        ]
+        ],
+        "rconStopCommand": "quit"
       },
       "container": {
         "executable": "RustDedicated",
@@ -727,6 +722,7 @@
         ]
       },
       "defaultPort": 28015,
+      "queryType": "rust",
       "params": [
         {
           "key": "maxPlayers",
@@ -858,6 +854,7 @@
         ]
       },
       "defaultPort": 7777,
+      "queryType": "satisfactory",
       "params": [],
       "configFiles": [],
       "ports": [
@@ -933,6 +930,8 @@
         ]
       },
       "defaultPort": 9876,
+      "queryType": "vrising",
+      "queryPort": "{port}+1",
       "params": [],
       "configFiles": [],
       "editableConfigPath": "vrising-server/save-data/Settings/ServerHostSettings.json",

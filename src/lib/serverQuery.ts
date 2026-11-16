@@ -38,7 +38,19 @@ export function buildQueryContext(server: {
 
 export function resolveQueryPort(spec: GameDefinitionSpec, ctx: GameQueryContext, fallbackPort: number): number {
   if (!spec.queryPort) return fallbackPort;
-  return parseInt(renderTemplate(spec.queryPort, ctx), 10);
+  let rendered: string;
+  try {
+    rendered = renderTemplate(spec.queryPort, ctx).trim();
+  } catch {
+    // An unresolvable template (unknown {var}) must not crash the caller —
+    // fall back to the join port like a spec without a queryPort would.
+    return fallbackPort;
+  }
+  // "{port}+1" style offsets: several Steam games (Valheim, V Rising) run their
+  // query listener one port above the join port the server row stores.
+  const m = /^(\d{1,5})(?:\+(\d{1,5}))?$/.exec(rendered);
+  if (!m) return fallbackPort;
+  return Number(m[1]) + (m[2] ? Number(m[2]) : 0);
 }
 
 export type GameQueryResult =
@@ -80,4 +92,16 @@ export async function queryGameServer(
   } catch (e: any) {
     return { status: "offline", error: e?.message || "Query failed" };
   }
+}
+
+/**
+ * Live-roster names from a gamedig result. Some protocols return unnamed
+ * players (null/empty name entries) — those are dropped rather than shown
+ * as blank roster cards.
+ */
+export function playerNamesFromQuery(result: GameQueryResult): string[] {
+  if (result.status !== "online") return [];
+  return result.playerList
+    .map((p) => (p as { name?: unknown } | null)?.name)
+    .filter((n): n is string => typeof n === "string" && n.length > 0);
 }

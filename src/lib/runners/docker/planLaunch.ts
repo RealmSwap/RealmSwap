@@ -127,6 +127,8 @@ export async function planDockerStart(record: {
   password: string | null;
   paramValues: string | null;
   runnerType?: string | null;
+  rconPort?: number | null;
+  rconPassword?: string | null;
 }): Promise<DockerStartPlan> {
   const { spec, installMethod } = await resolveDefinition(record);
   if (installMethod !== "STEAMCMD" && installMethod !== "DOWNLOAD") {
@@ -138,6 +140,9 @@ export async function planDockerStart(record: {
   const ctx = buildContext({
     name: record.name, password: record.password, port: record.port,
     ram: record.ramAllocation, paramValuesJson: record.paramValues, spec,
+    // The START payload carries the managed config files — carry RCON so
+    // rcon.* lines (Minecraft server.properties) don't revert to disabled.
+    rconPort: record.rconPort, rconPassword: record.rconPassword,
   });
 
   const container = planContainer(spec, ctx);

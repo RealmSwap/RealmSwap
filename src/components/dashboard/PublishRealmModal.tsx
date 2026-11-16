@@ -16,7 +16,7 @@ export function PublishRealmModal({ server, onClose }: { server: any; onClose: (
   const defaultName = (server.name || "").replace(/\s*-\s*Deployed$/, "");
   const [name, setName] = useState(defaultName);
   const [description, setDescription] = useState(
-    `Deploy '${defaultName}' — the exact setup from a working RealmSwap server, boot-tested on deploy.`
+    `Deploy '${defaultName}' — the exact setup from a working RealmSwap server, boot-tested on deploy (Minecraft, Valheim, Project Zomboid, and Terraria today).`
   );
   const [tags, setTags] = useState(`${server.game},Community`);
   const [version, setVersion] = useState("1.0.0");

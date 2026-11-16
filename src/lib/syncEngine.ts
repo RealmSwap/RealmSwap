@@ -12,6 +12,10 @@ import {
   verifyBodySignature,
 } from "@/lib/realmsync";
 import {
+  findSteamGameDir,
+  steamAppIdForGame,
+} from "@/lib/steamDiscovery";
+import {
   ThunderstorePackage,
   ThunderstoreVersion,
   communityForGame,
@@ -139,26 +143,9 @@ export class SyncTask extends EventEmitter {
   }
 
   autoDetectGameDir(gameName: string): string | null {
-    // A simplified Steam game locator for Windows
-    // Normally we'd read libraryfolders.vdf, but for this MVP, we check the default path.
-    // The roots are assembled from parts (not a single path.join literal) because
-    // bundlers statically resolve literal path.join(...) strings as filesystem
-    // asset references — which fails `next build` on any machine that doesn't
-    // have that exact Steam folder.
-    let folderName = gameName;
-    if (gameName.toLowerCase() === "valheim") folderName = "Valheim";
-    if (gameName.toLowerCase() === "lethal company") folderName = "Lethal Company";
-
-    const steamRoots = [
-      ["C:", "Program Files (x86)", "Steam", "steamapps", "common"],
-      ["D:", "SteamLibrary", "steamapps", "common"],
-    ];
-    for (const parts of steamRoots) {
-      const candidate = parts.join(path.sep) + path.sep + folderName;
-      if (fs.existsSync(candidate)) return candidate;
-    }
-
-    return null;
+    // Full Windows Steam discovery (libraryfolders.vdf + appmanifest_*.acf,
+    // folder-name guessing as last resort) lives in steamDiscovery.
+    return findSteamGameDir(gameName);
   }
 
   async downloadThunderstoreMod(packageId: string, version: string, gameDir: string, pluginsDir: string) {
@@ -247,8 +234,10 @@ export class SyncTask extends EventEmitter {
   }
 
   async launchGame(gameName: string) {
-    let appId = "892970"; // Valheim default
-    if (gameName.toLowerCase() === "lethal company") appId = "1966720";
+    // Per-game client appId from the typed map; only games without an entry
+    // fall back to the legacy Valheim-default behavior below.
+    const mapped = steamAppIdForGame(gameName);
+    const appId = mapped ?? this.legacyFallbackAppId(gameName);
 
     return new Promise<void>((resolve) => {
       // Use Windows cmd start to invoke steam:// URL
@@ -256,6 +245,13 @@ export class SyncTask extends EventEmitter {
         resolve(); // Ignore errors, user might have game on Xbox
       });
     });
+  }
+
+  /** Pre-map behavior kept verbatim for unmapped games (e.g. Minecraft). */
+  private legacyFallbackAppId(gameName: string): string {
+    let appId = "892970"; // Valheim default
+    if (gameName.toLowerCase() === "lethal company") appId = "1966720";
+    return appId;
   }
 }
 

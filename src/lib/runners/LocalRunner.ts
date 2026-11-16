@@ -29,6 +29,7 @@ import { downloadFile, setupSteamCMD, ensureSteamCmdUpdated, installSteamCmdApp 
 import { dataRoot } from "../appPaths";
 import { isCrashExit, evaluateCrash, CRASH_MAX_RETRIES, type CrashCounter } from "../crashPolicy";
 import { appendLog, clearLogs, serverLogFile, getServerLogTail } from "../serverLogs";
+import { rconManager } from "../rconManager";
 
 // Global process map to persist running processes across Next.js dev server hot-reloads
 const globalForRunner = globalThis as unknown as {
@@ -231,6 +232,10 @@ async function startLocalServer(serverId: string, game: string, ramAllocation: n
     ram: ramAllocation,
     paramValuesJson: server.paramValues,
     spec,
+    // Start re-renders managed config files — carry RCON so rcon.* lines
+    // (Minecraft server.properties) don't revert to disabled.
+    rconPort: server.rconPort,
+    rconPassword: server.rconPassword,
   });
 
   // 2. Map router ports using UPnP — the user's explicit choice, no runner
@@ -843,49 +848,33 @@ async function stopLocalServer(serverId: string): Promise<void> {
 
   appendLog(serverId, "Termination request received. Terminating process tree...");
 
-  // Use the spec's stdinStopCommand for graceful shutdown (e.g. Minecraft sends "stop\n")
   const { spec } = (server ? await resolveDefinition(server).catch(() => null) : null) ?? { spec: null as any };
-  if (spec?.launch?.stdinStopCommand) {
-    try {
-      child.stdin.write(spec.launch.stdinStopCommand);
-    } catch {
-      child.kill("SIGTERM");
-    }
-  } else {
-    exec(`taskkill /F /T /PID ${child.pid}`, (err) => {
-      if (err) child.kill("SIGKILL");
-    });
-  }
 
-  // Release the router maps while the process drains: the time-boxed UPnP
-  // round-trips overlap the grace period instead of extending it.
-  const unmap = server
-    ? releaseUpnpMappings(server, (m) => appendLog(serverId, m))
-    : Promise.resolve();
-
-  // Force-kill backstop. For a READY server the queued stop command drains
-  // within a few ticks, so a short window suffices. For a server still in
-  // STARTING, the command is not consumed until the boot's tick loop comes
-  // alive — first-boot worldgen on a cold disk outlasts any fixed deadline,
-  // and killing mid-generation tears the world (the nightly loader-matrix
-  // boot test failed on exactly that: "Overworld settings missing" after a
-  // force-killed first boot). Arm the short window only once readiness
-  // flips, with a boot-scale ceiling so a wedged boot still gets reaped.
+  // Force-kill backstops, armed before the graceful channels. For a READY
+  // server the stop command drains within a few ticks, so a short window
+  // suffices. For a server still in STARTING, the command is not consumed
+  // until the boot's tick loop comes alive — first-boot worldgen on a cold
+  // disk outlasts any fixed deadline, and killing mid-generation tears the
+  // world (the nightly loader-matrix boot test failed on exactly that:
+  // "Overworld settings missing" after a force-killed first boot). The short
+  // window arms on readiness; the boot-scale ceiling keeps the tree-dies-
+  // inside-a-window guarantee for a wedged boot and no-ops once the short
+  // window is armed.
   const FORCE_KILL_GRACE_MS = 7000;
   const STARTING_STOP_CEILING_MS = 600_000; // matches the sandbox boot-test window
   let forceKillTimer: NodeJS.Timeout | null = null;
+  const forceKill = () => {
+    if (localProcesses.has(serverId)) {
+      appendLog(serverId, "Shutdown timed out. Force killing process...");
+      child.kill("SIGKILL");
+      // Force kill sub-processes on Windows
+      exec(`taskkill /F /T /PID ${child.pid}`, () => {});
+    }
+  };
   const armForceKill = () => {
     if (forceKillTimer) return;
-    forceKillTimer = setTimeout(() => {
-      if (localProcesses.has(serverId)) {
-        appendLog(serverId, "Shutdown timed out. Force killing process...");
-        child.kill("SIGKILL");
-        // Force kill sub-processes on Windows
-        exec(`taskkill /F /T /PID ${child.pid}`, () => {});
-      }
-    }, FORCE_KILL_GRACE_MS);
+    forceKillTimer = setTimeout(forceKill, FORCE_KILL_GRACE_MS);
   };
-
   const onStatusUpdate = (evt: { serverId: string; status: string }) => {
     if (evt.serverId === serverId && evt.status === "RUNNING") {
       appendLog(serverId, "Server finished starting; the queued stop command now has its grace window.");
@@ -900,13 +889,48 @@ async function stopLocalServer(serverId: string): Promise<void> {
     }
   }, STARTING_STOP_CEILING_MS);
   if (server?.status === "RUNNING") {
-    // Stale-read safety: readiness already flipped before the DB read —
-    // keep today's behavior and arm the short window immediately.
-    clearTimeout(startingStopCeiling);
+    // Readiness already flipped (the DB read above can predate it by ms):
+    // arm the short window immediately — the ready-server behavior.
     armForceKill();
   } else {
     serverEventBus.on("status_update", onStatusUpdate);
   }
+
+  // Graceful stop, best channel first:
+  //   1. stdin console command (e.g. Minecraft "stop", Terraria "exit")
+  //   2. RCON command when the server row has RCON configured (e.g. Palworld "Shutdown")
+  //   3. force-kill immediately (unchanged when the game declares neither)
+  const stdinStopCommand = spec?.launch?.stdinStopCommand;
+  const rconStopCommand = spec?.launch?.rconStopCommand;
+  if (stdinStopCommand) {
+    appendLog(serverId, "Sending graceful stop command via server console...");
+    try {
+      child.stdin.write(stdinStopCommand);
+    } catch {
+      child.kill("SIGTERM");
+    }
+  } else if (rconStopCommand && server?.rconPort && server?.rconPassword) {
+    appendLog(serverId, `Sending graceful stop command via RCON (${rconStopCommand})...`);
+    const response = await rconManager.execute(serverId, rconStopCommand);
+    if (response === null) {
+      appendLog(serverId, "RCON stop unavailable. Force killing process tree...");
+      exec(`taskkill /F /T /PID ${child.pid}`, (err) => {
+        if (err) child.kill("SIGKILL");
+      });
+    }
+    // A non-null response means the command was accepted — wait below for the
+    // natural exit (the timer above escalates if it never comes).
+  } else {
+    exec(`taskkill /F /T /PID ${child.pid}`, (err) => {
+      if (err) child.kill("SIGKILL");
+    });
+  }
+
+  // Release the router maps while the process drains: the time-boxed UPnP
+  // round-trips overlap the grace period instead of extending it.
+  const unmap = server
+    ? releaseUpnpMappings(server, (m) => appendLog(serverId, m))
+    : Promise.resolve();
 
   await exitPromise;
   if (forceKillTimer) clearTimeout(forceKillTimer);

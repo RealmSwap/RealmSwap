@@ -57,7 +57,10 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       configFiles: [
         { path: "eula.txt", strategy: "template", template: "eula=true\n" },
         { path: "server.properties", strategy: "template",
-          template: "server-port={port}\nquery.port=25565\nonline-mode={onlineMode}\nmax-players={maxPlayers}\nmotd={motd}\ndifficulty={difficulty}\ngamemode={gamemode}\npvp={pvp}\nview-distance={viewDistance}\n" },
+          // rcon.* lines are template-managed: buildContext renders them from
+          // the per-server RCON settings (disabled defaults when unconfigured),
+          // and the merge keeps every hand-edited key outside this set.
+          template: "server-port={port}\nquery.port=25565\nenable-rcon={rconEnabled}\nrcon.port={rconPort}\nrcon.password={rconPassword}\nonline-mode={onlineMode}\nmax-players={maxPlayers}\nmotd={motd}\ndifficulty={difficulty}\ngamemode={gamemode}\npvp={pvp}\nview-distance={viewDistance}\n" },
       ],
       editableConfigPath: "server.properties",
       // Java Edition joins over TCP only. UDP 25565 is the optional GameSpy
@@ -96,6 +99,10 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         args: ["-nographics", "-batchmode", "-name", "{name}", "-port", "2456", "-world", "{worldName}", "-password", "{password}", "-public", "1", "-crossplay"],
       },
       defaultPort: 2456,
+      // gamedig 'valheim' (valve protocol): the dedicated server's Steam query
+      // listener sits one above the join port (2456 join -> 2457 query).
+      queryType: "valheim",
+      queryPort: "{port}+1",
       params: [
         { key: "worldName", label: "World name", type: "text", default: "Dedicated", group: "World",
           help: "Which local world the server loads/creates. Changing it starts a fresh world." },
@@ -119,6 +126,10 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       install: { appId: "2278520", installSubDir: "enshrouded-server", checkFile: "enshrouded_server.exe", requiredDiskGB: 4.0 },
       launch: { executable: "enshrouded_server.exe", cwdSubDir: "enshrouded-server", args: [] },
       defaultPort: 15637,
+      // gamedig 'enshrouded' (valve protocol): the join address IS the query
+      // port (15637 — gamedig's own port_query for enshrouded), which is
+      // exactly what server.port stores here.
+      queryType: "enshrouded",
       params: [
         { key: "slotCount", label: "Player slots", type: "number", default: 16, min: 1, max: 16, group: "Gameplay",
           help: "Enshrouded caps dedicated servers at 16 slots." },
@@ -162,13 +173,21 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       launch: {
         executable: "cmd.exe", executableOnPath: true, cwdSubDir: "zomboid-server",
         args: ["/c", "StartServer64.bat", "-cachedir=./zomboid-data", "-servername", "servertest"],
+        // PZWiki dedicated-server admin console documents `quit` as "saves the
+        // current world and exits". stdin pipes through cmd.exe /c to the Java
+        // server console, same plumbing as the Minecraft stop.
+        stdinStopCommand: "quit\n",
       },
       container: {
         executable: "start-server.sh",
         installSubDir: "zomboid-server",
         args: ["-cachedir=/data/zomboid-server/zomboid-data", "-servername", "servertest"],
       },
-      defaultPort: 16261, params: [],
+      defaultPort: 16261,
+      // gamedig 'projectzomboid' (valve protocol) queries the game port itself
+      // (gamedig's default for PZ is 16261 = the join port), so no offset.
+      queryType: "projectzomboid",
+      params: [],
       configFiles: [{ path: "zomboid-data/Server/servertest.ini", strategy: "zomboidIniMerge" }],
       editableConfigPath: "zomboid-server/zomboid-data/Server/servertest.ini",
       ports: [{ protocol: "UDP", port: "16261" }, { protocol: "UDP", port: "16262" }, { protocol: "UDP", port: "8766" }],
@@ -189,6 +208,12 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           { value: ["TheIsland?SessionName={name}?Port=7777?QueryPort=27015?MaxPlayers={maxPlayers}"], includeWhen: "passwordEmpty" },
           "-server", "-nosound", "-QueryPort=27015", "-automanagemods",
         ],
+        // ARK wiki RCON command table documents `DoExit` — "Exits the server".
+        // UNCERTAIN: the wiki does not state whether DoExit flushes the final
+        // world save, and ARK only honors RCON when launched with -EnableRCON /
+        // RCONPort / RCONServerPassword (operator-configured on the server row,
+        // not passed here). If the RCON send fails, stop falls back to force-kill.
+        rconStopCommand: "DoExit",
       },
       container: {
         executable: "ShooterGame/Binaries/Linux/ShooterGameServer",
@@ -200,7 +225,12 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         ],
       },
       defaultPort: 7777,
-            params: [
+      // gamedig 'ase' (ARK: Survival Evolved, valve protocol): ARK's documented
+      // Steam query port 27015 — the same port our launch args pin with
+      // -QueryPort=27015 (the 7777/7778 pair is game traffic, not A2S).
+      queryType: "ase",
+      queryPort: "27015",
+      params: [
         { key: "maxPlayers", label: "Max players", type: "number", default: 20, min: 1, max: 200, group: "Gameplay" },
       ],
       configFiles: [],
@@ -222,6 +252,11 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           "-autocreate", "1", "-worldname", "{nameSanitized}",
           "-world", "worlds/{nameSanitized}.wld",
         ],
+        // Terraria wiki dedicated-server console documents `exit` as saving the
+        // world and exiting. TerrariaServer.exe reads console commands from
+        // stdin (spawned with a direct pipe — see the runner's resolveCommand
+        // comment on keeping stdin wired).
+        stdinStopCommand: "exit\n",
       },
       container: {
         executable: "TerrariaServer.bin.x86_64",
@@ -237,6 +272,9 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
       params: [
         { key: "maxPlayers", label: "Max players", type: "number", default: 8, min: 1, max: 32, group: "Gameplay" },
       ], configFiles: [],
+      // No queryType: the vanilla dedicated server we install has no query
+      // protocol — gamedig's terraria type (terrariatshock) only speaks to
+      // TShock servers (join port +101), which ours is not.
       // Terraria's dedicated server speaks TCP only.
       ports: [{ protocol: "TCP", port: "7777" }],
     },
@@ -255,6 +293,13 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           { value: ["?port=8211?players={maxPlayers}"], includeWhen: "passwordEmpty" },
           "-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS",
         ],
+        // Palworld wiki admin commands document `Shutdown {seconds} {message}`:
+        // the server broadcasts the message, saves the world, and exits after
+        // the delay. The commonly cited 30s delay exceeds the runner's 7s
+        // force-kill window (we would kill it mid-grace, before the save) —
+        // 5s keeps the whole save inside the window; force-kill stays as the
+        // backstop for slow saves on large worlds.
+        rconStopCommand: "Shutdown 5 Server_stopping",
       },
       container: {
         executable: "PalServer.sh",
@@ -266,6 +311,9 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         ],
       },
       defaultPort: 8211,
+      // No queryType: gamedig's palworld type is the experimental REST API
+      // (port 8212, needs RESTAPIEnabled=true plus admin credentials) — not
+      // something we can query blind. The live roster rides RCON (ShowPlayers).
       params: [
         { key: "maxPlayers", label: "Max players", type: "number", default: 16, min: 1, max: 32, group: "Gameplay" },
         { key: "difficulty", label: "Difficulty", type: "enum", default: "None", options: ["None", "Normal", "Hard"], group: "Gameplay" },
@@ -296,6 +344,13 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           "+server.seed", "{seed}", "+server.worldsize", "{worldSize}", "+server.maxplayers", "{maxPlayers}",
           "+server.hostname", "{name}", "+rcon.port", "28016", "+rcon.password", "{password}", "+rcon.web", "1",
         ],
+        // Facepunch admin console commands document `quit` as the graceful
+        // server shutdown (saves map + config). RustDedicated runs -batchmode
+        // (no stdin console), so RCON is the only channel — it fires only when
+        // the server row has RCON configured. NOTE: rcon-client speaks the
+        // legacy Source-RCON listener (+rcon.web 0); with the default webconsole
+        // (+rcon.web 1) the send fails and stop falls back to force-kill.
+        rconStopCommand: "quit",
       },
       container: {
         executable: "RustDedicated",
@@ -308,6 +363,10 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         ],
       },
       defaultPort: 28015,
+      // gamedig 'rust' (valve protocol) answers A2S on the game port itself
+      // (gamedig's default for Rust is 28015 = server.port); the 28016 TCP port
+      // is the websocket RCON, not a query listener.
+      queryType: "rust",
       params: [
         { key: "maxPlayers", label: "Max players", type: "number", default: 10, min: 1, max: 500, group: "Gameplay" },
         { key: "worldSize", label: "World size", type: "number", default: 3000, min: 1000, max: 6000, group: "World",
@@ -383,6 +442,10 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
         args: ["FactoryServer.sh", "-log", "-unattended"],
       },
       defaultPort: 7777,
+      // gamedig 'satisfactory' queries the game's HTTPS API on the game port
+      // (7777, Satisfactory's documented dedicated-server port; self-signed
+      // certs are gamedig's default assumption there).
+      queryType: "satisfactory",
       params: [], configFiles: [],
       ports: [
         { protocol: "TCP", port: "7777" }, { protocol: "UDP", port: "7777" },
@@ -436,7 +499,13 @@ export const BUILTIN_DEFINITIONS: BuiltinDefinition[] = [
           "-job-worker-count", "8",
         ],
       },
-      defaultPort: 9876, params: [], configFiles: [],
+      defaultPort: 9876,
+      // gamedig 'vrising' (valve protocol): V Rising's documented Steam query
+      // port is game port + 1 (9876 join -> 9877 query, matching the UDP 9877
+      // declared in ports).
+      queryType: "vrising",
+      queryPort: "{port}+1",
+      params: [], configFiles: [],
       editableConfigPath: "vrising-server/save-data/Settings/ServerHostSettings.json",
       ports: [{ protocol: "UDP", port: "9876" }, { protocol: "UDP", port: "9877" }],
     },
