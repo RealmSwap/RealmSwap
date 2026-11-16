@@ -79,13 +79,25 @@ export const modsInstallScenarios = [
     const startRes = await page.request.post(`${ctx?.appBaseUrl}/api/servers/${sid}/start`);
     if (!startRes.ok()) throw new Error(`start refused (HTTP ${startRes.status()}): ${(await startRes.text()).slice(0, 200)}`);
     const t0 = Date.now();
+    // RUNNING only means the port accepts connections — on a first boot that
+    // lands mid-worldgen, and stopping there force-kills the world
+    // half-written (the 2026-11-13 nightly's "Overworld settings missing"
+    // loader-boot failure came from exactly this). MC doesn't consume the
+    // stdin stop until its tick loop is live, so a stop before Done degrades
+    // into the stop path's force-kill. Wait for MC's own Done line: after it
+    // the world is complete and a stop is a clean save-and-exit.
+    let booted = false;
     for (;;) {
       await sleep(3000);
       const st = await page.request.get(`${ctx?.appBaseUrl}/api/servers`);
       const row = ((await st.json())?.servers ?? []).find((s: any) => s.id === sid);
-      if (row?.status === "RUNNING") break;
       if (row?.status === "CRASHED") throw new Error("fresh server crashed during its first boot (mods-install setup)");
-      if (Date.now() - t0 > 240_000) throw new Error(`first boot never reached RUNNING (status ${row?.status})`);
+      if (row?.status === "RUNNING" && !booted) {
+        const logs = await (await page.request.get(`${ctx?.appBaseUrl}/api/servers/${sid}/logs`)).text();
+        if (/Done \(\d/.test(logs)) booted = true;
+      }
+      if (booted) break;
+      if (Date.now() - t0 > 300_000) throw new Error(`first boot never reached a stoppable Done (status ${row?.status})`);
     }
     await page.request.post(`${ctx?.appBaseUrl}/api/servers/${sid}/stop`);
     for (;;) {
@@ -184,7 +196,9 @@ async function waitForInstallDone(
       ]);
       if (settled && !(settled instanceof Error)) {
         if (!settled.ok()) {
-          throw new Error(`${what} refused (HTTP ${settled.status()}): ${(await settled.text()).slice(0, 300)}\nstage timeline: ${timeline.slice(-8).join(" | ")}`);
+          // Keep a wide slice: the body carries the bootOutput evidence, and
+          // the 300-char cut hid exactly the stack trace that diagnoses it.
+          throw new Error(`${what} refused (HTTP ${settled.status()}): ${(await settled.text()).slice(0, 2000)}\nstage timeline: ${timeline.slice(-8).join(" | ")}`);
         }
         if (sawProgress) return; // route completed after real progress; panel may have unmounted with the Done frame
         throw new Error(`${what} completed without the progress panel ever showing a stage\nstage timeline: ${timeline.slice(-8).join(" | ")}`);

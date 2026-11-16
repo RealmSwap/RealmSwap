@@ -850,17 +850,51 @@ async function stopLocalServer(serverId: string): Promise<void> {
 
   const { spec } = (server ? await resolveDefinition(server).catch(() => null) : null) ?? { spec: null as any };
 
-  // Arm the force-kill timer BEFORE the graceful channels: an RCON connect has
-  // its own (longer) timeout, and no matter what happens below the process tree
-  // must die inside this window.
-  const timeout = setTimeout(() => {
+  // Force-kill backstops, armed before the graceful channels. For a READY
+  // server the stop command drains within a few ticks, so a short window
+  // suffices. For a server still in STARTING, the command is not consumed
+  // until the boot's tick loop comes alive — first-boot worldgen on a cold
+  // disk outlasts any fixed deadline, and killing mid-generation tears the
+  // world (the nightly loader-matrix boot test failed on exactly that:
+  // "Overworld settings missing" after a force-killed first boot). The short
+  // window arms on readiness; the boot-scale ceiling keeps the tree-dies-
+  // inside-a-window guarantee for a wedged boot and no-ops once the short
+  // window is armed.
+  const FORCE_KILL_GRACE_MS = 7000;
+  const STARTING_STOP_CEILING_MS = 600_000; // matches the sandbox boot-test window
+  let forceKillTimer: NodeJS.Timeout | null = null;
+  const forceKill = () => {
     if (localProcesses.has(serverId)) {
       appendLog(serverId, "Shutdown timed out. Force killing process...");
       child.kill("SIGKILL");
       // Force kill sub-processes on Windows
       exec(`taskkill /F /T /PID ${child.pid}`, () => {});
     }
-  }, 7000);
+  };
+  const armForceKill = () => {
+    if (forceKillTimer) return;
+    forceKillTimer = setTimeout(forceKill, FORCE_KILL_GRACE_MS);
+  };
+  const onStatusUpdate = (evt: { serverId: string; status: string }) => {
+    if (evt.serverId === serverId && evt.status === "RUNNING") {
+      appendLog(serverId, "Server finished starting; the queued stop command now has its grace window.");
+      serverEventBus.off("status_update", onStatusUpdate);
+      armForceKill();
+    }
+  };
+  const startingStopCeiling = setTimeout(() => {
+    if (!forceKillTimer) {
+      appendLog(serverId, "Stop waited out the boot window without seeing readiness. Force killing process...");
+      armForceKill();
+    }
+  }, STARTING_STOP_CEILING_MS);
+  if (server?.status === "RUNNING") {
+    // Readiness already flipped (the DB read above can predate it by ms):
+    // arm the short window immediately — the ready-server behavior.
+    armForceKill();
+  } else {
+    serverEventBus.on("status_update", onStatusUpdate);
+  }
 
   // Graceful stop, best channel first:
   //   1. stdin console command (e.g. Minecraft "stop", Terraria "exit")
@@ -899,7 +933,9 @@ async function stopLocalServer(serverId: string): Promise<void> {
     : Promise.resolve();
 
   await exitPromise;
-  clearTimeout(timeout);
+  if (forceKillTimer) clearTimeout(forceKillTimer);
+  clearTimeout(startingStopCeiling);
+  serverEventBus.off("status_update", onStatusUpdate);
   await unmap;
 }
 

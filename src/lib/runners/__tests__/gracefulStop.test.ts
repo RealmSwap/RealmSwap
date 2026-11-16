@@ -72,7 +72,7 @@ vi.mock("../../serverLogs", () => ({
 }));
 
 vi.mock("../../eventBus", () => ({
-  serverEventBus: { emit: vi.fn(), on: vi.fn() },
+  serverEventBus: { emit: vi.fn(), on: vi.fn(), off: vi.fn() },
 }));
 
 vi.mock("../../processMonitor", () => ({
