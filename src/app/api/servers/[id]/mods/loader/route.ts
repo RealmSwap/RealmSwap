@@ -173,6 +173,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         console.error(`[Loader ${serverId}] rollback failed:`, rollbackErr);
       }
       if (installId) endProgress(installId, "error", err.message);
+      // Callers cap the error body; the full boot capture only survives here.
+      if (err instanceof SandboxBootError) {
+        console.error(`[Loader ${serverId}] boot test failed, full output:\n${err.output}`);
+      }
       return NextResponse.json({
         error: `Loader installation failed and was rolled back. Cause: ${err.message}`,
         ...(err instanceof SandboxBootError ? { bootOutput: err.output } : {}),

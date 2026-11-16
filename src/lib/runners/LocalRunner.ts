@@ -863,17 +863,55 @@ async function stopLocalServer(serverId: string): Promise<void> {
     ? releaseUpnpMappings(server, (m) => appendLog(serverId, m))
     : Promise.resolve();
 
-  const timeout = setTimeout(() => {
-    if (localProcesses.has(serverId)) {
-      appendLog(serverId, "Shutdown timed out. Force killing process...");
-      child.kill("SIGKILL");
-      // Force kill sub-processes on Windows
-      exec(`taskkill /F /T /PID ${child.pid}`, () => {});
+  // Force-kill backstop. For a READY server the queued stop command drains
+  // within a few ticks, so a short window suffices. For a server still in
+  // STARTING, the command is not consumed until the boot's tick loop comes
+  // alive — first-boot worldgen on a cold disk outlasts any fixed deadline,
+  // and killing mid-generation tears the world (the nightly loader-matrix
+  // boot test failed on exactly that: "Overworld settings missing" after a
+  // force-killed first boot). Arm the short window only once readiness
+  // flips, with a boot-scale ceiling so a wedged boot still gets reaped.
+  const FORCE_KILL_GRACE_MS = 7000;
+  const STARTING_STOP_CEILING_MS = 600_000; // matches the sandbox boot-test window
+  let forceKillTimer: NodeJS.Timeout | null = null;
+  const armForceKill = () => {
+    if (forceKillTimer) return;
+    forceKillTimer = setTimeout(() => {
+      if (localProcesses.has(serverId)) {
+        appendLog(serverId, "Shutdown timed out. Force killing process...");
+        child.kill("SIGKILL");
+        // Force kill sub-processes on Windows
+        exec(`taskkill /F /T /PID ${child.pid}`, () => {});
+      }
+    }, FORCE_KILL_GRACE_MS);
+  };
+
+  const onStatusUpdate = (evt: { serverId: string; status: string }) => {
+    if (evt.serverId === serverId && evt.status === "RUNNING") {
+      appendLog(serverId, "Server finished starting; the queued stop command now has its grace window.");
+      serverEventBus.off("status_update", onStatusUpdate);
+      armForceKill();
     }
-  }, 7000);
+  };
+  const startingStopCeiling = setTimeout(() => {
+    if (!forceKillTimer) {
+      appendLog(serverId, "Stop waited out the boot window without seeing readiness. Force killing process...");
+      armForceKill();
+    }
+  }, STARTING_STOP_CEILING_MS);
+  if (server?.status === "RUNNING") {
+    // Stale-read safety: readiness already flipped before the DB read —
+    // keep today's behavior and arm the short window immediately.
+    clearTimeout(startingStopCeiling);
+    armForceKill();
+  } else {
+    serverEventBus.on("status_update", onStatusUpdate);
+  }
 
   await exitPromise;
-  clearTimeout(timeout);
+  if (forceKillTimer) clearTimeout(forceKillTimer);
+  clearTimeout(startingStopCeiling);
+  serverEventBus.off("status_update", onStatusUpdate);
   await unmap;
 }
 

@@ -322,6 +322,10 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
         console.error(`[Sandbox] rollback failed for ${serverId}:`, rollbackErr);
       }
       if (installId) endProgress(installId, "error", installError.message);
+      // Callers cap the error body; the full boot capture only survives here.
+      if (installError instanceof SandboxBootError) {
+        console.error(`[Sandbox] boot test failed for ${serverId}, full output:\n${installError.output}`);
+      }
 
       return NextResponse.json({
         error: `Installation failed or crashed the server. Safe Rollback completed. Cause: ${installError.message}`,
