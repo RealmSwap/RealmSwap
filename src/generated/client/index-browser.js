@@ -484,6 +484,7 @@ exports.Prisma.AgentNodeScalarFieldEnum = {
   agentVersion: 'agentVersion',
   dockerVersion: 'dockerVersion',
   lanIp: 'lanIp',
+  macAddress: 'macAddress',
   totalRamMB: 'totalRamMB',
   freeDiskGB: 'freeDiskGB',
   lastSeenAt: 'lastSeenAt',

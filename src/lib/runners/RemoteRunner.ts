@@ -4,6 +4,7 @@ import { clearProgress } from "@/lib/downloadProgress";
 import { startMonitoring } from "@/lib/processMonitor";
 import { enqueueCommand, awaitCommandResult } from "@/lib/agents/commands";
 import { NODE_ONLINE_WINDOW_MS, type CommandPayload } from "@/lib/agents/protocol";
+import { wakeNode } from "@/lib/wol";
 import { planDockerStart, planDockerUpdate, resolveDefinition } from "./docker/planLaunch";
 import type { ServerRunner, ProcessStats } from "./types";
 import type { Server } from "@/generated/client";
@@ -39,6 +40,10 @@ function isOnline(node: { lastSeenAt: Date | null }): boolean {
   return !!node.lastSeenAt && Date.now() - node.lastSeenAt.getTime() < NODE_ONLINE_WINDOW_MS;
 }
 
+/** How long a freshly-woken node gets to boot, start the agent, and first-sync. */
+export const WAKE_ONLINE_WAIT_MS = 150_000;
+const WAKE_POLL_MS = 5_000;
+
 export class RemoteRunner implements ServerRunner {
   // Install is implicit on remote nodes: the container entrypoint runs
   // SteamCMD on every start, exactly like the Docker runner.
@@ -59,6 +64,37 @@ export class RemoteRunner implements ServerRunner {
     return awaitCommandResult(id, timeoutMs);
   }
 
+  /**
+   * A start may be the very thing that must wake the node: the machine is
+   * asleep until a magic packet lands on its NIC, and the agent only picks up
+   * the queued START after it boots and syncs. Without a known MAC the old
+   * refusal stands — there is nothing to wake.
+   */
+  private async ensureNodeAwake(serverId: string): Promise<void> {
+    const node = await getNode(serverId);
+    assertNodeUsable(node);
+    if (isOnline(node)) return;
+    if (!node.macAddress) {
+      throw new Error(`Node '${node.name}' is offline (last seen ${node.lastSeenAt?.toISOString() ?? "never"}).`);
+    }
+    appendLog(serverId, `[Remote] Node '${node.name}' is asleep — sending a Wake-on-LAN packet to ${node.macAddress}…`);
+    await wakeNode(node.macAddress).catch((err: any) => {
+      appendLog(serverId, `[Remote] Wake packet could not be sent: ${err?.message ?? err}`);
+    });
+    const deadline = Date.now() + WAKE_ONLINE_WAIT_MS;
+    while (Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, WAKE_POLL_MS));
+      const fresh = await getNode(serverId);
+      if (isOnline(fresh)) {
+        appendLog(serverId, `[Remote] Node '${node.name}' is back online — dispatching.`);
+        return;
+      }
+    }
+    throw new Error(
+      `Node '${node.name}' never came online after a Wake-on-LAN packet — check that the agent runs at boot on it.`
+    );
+  }
+
   async start(server: Server): Promise<void> {
     const record = await prisma.server.findUnique({ where: { id: server.id } });
     if (!record) throw new Error("Server record not found in database.");
@@ -72,6 +108,10 @@ export class RemoteRunner implements ServerRunner {
       throw err;
     }
 
+    await this.ensureNodeAwake(record.id).catch((err: any) => {
+      appendLog(record.id, `[Remote] ${err?.message ?? err}`);
+      throw err;
+    });
     await prisma.server.update({ where: { id: record.id }, data: { status: "STARTING", pid: null, cpuUsage: 0, memoryUsage: 0 } }).catch(() => {});
     appendLog(record.id, `[Remote] Dispatching start to agent node…`);
 

@@ -267,6 +267,8 @@ export interface SyncRequest {
   arch: string;
   dockerVersion: string | null;
   lanIp: string | null;
+  /** Primary interface's MAC — the dashboard's Wake-on-LAN target when this node is asleep. */
+  macAddress?: string | null;
   totalRamMB: number | null;
   freeDiskGB: number | null;
   servers: ServerReport[];
