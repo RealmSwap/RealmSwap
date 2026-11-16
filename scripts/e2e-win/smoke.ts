@@ -534,8 +534,16 @@ async function runBuildSmoke(): Promise<number> {
     });
 
     await timed("mc/query-ping", async () => {
-      const res = await apiRequest(client, cookie, "GET", `/api/servers/${serverId}/query`);
-      expect(res.status === 200, `query → ${res.status}: ${res.text.slice(0, 200)}`);
+      // RUNNING flips on TCP accept — mid-boot, before the query listener
+      // answers gamedig honestly — and an offline verdict carries no
+      // maxplayers, so asserting the first response failed both the
+      // 2026-11-13 and -14 nightlies ("query maxplayers → undefined"). The
+      // mjs smoke has always polled for status online; do the same here.
+      const res = await poll("query online", 90_000, async () => {
+        const r = await apiRequest(client, cookie, "GET", `/api/servers/${serverId}/query`);
+        if (r.status !== 200) throw new Error(`query → ${r.status}: ${r.text.slice(0, 200)}`);
+        return r.body?.status === "online" ? r : null;
+      });
       expect(res.body?.maxplayers >= 1, `query maxplayers → ${res.body?.maxplayers}`);
       return `max ${res.body?.maxplayers}, online ${res.body?.players}`;
     });
