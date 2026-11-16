@@ -26,6 +26,24 @@ function getServer(admin: import("../client").ApiClient, id: string): Promise<an
   });
 }
 
+/**
+ * RUNNING flips on TCP-port accept — mid-first-boot, before MC's tick loop
+ * can consume the queued stdin stop — so a stop there degrades into the stop
+ * path's force-kill mid-worldgen and can tear the world (the 2026-11-13
+ * nightly's "Overworld settings missing" loader-boot failure). A first boot
+ * is only stoppable once MC has printed its Done line.
+ */
+async function waitForStoppableBoot(admin: import("../client").ApiClient, serverId: string): Promise<void> {
+  const verdict = await pollUntil(async () => {
+    const s = await getServer(admin, serverId);
+    if (s?.status === "CRASHED") throw new Error("server crashed during its first boot (loader setup)");
+    if (s?.status !== "RUNNING") return s?.status ?? "unknown";
+    const logs = await admin.get(`/api/servers/${serverId}/logs`);
+    return /Done \(\d/.test(logs.body?.logs ?? "") ? "booted" : "RUNNING-before-Done";
+  }, (v) => v === "booted", BOOT_TIMEOUT_MS, 3000);
+  expect(verdict === "booted", `first boot never reached MC's Done line (state: ${verdict})`);
+}
+
 export const loaderScenarios = [
   scenario(
     "mods/loader-matrix",
@@ -49,13 +67,7 @@ export const loaderScenarios = [
 
           const start = await admin.post(`/api/servers/${serverId}/start`);
           expect(start.status === 200, `start → ${start.status}: ${start.text.slice(0, 200)}`);
-          const server = await pollUntil(
-            () => getServer(admin, serverId),
-            (s) => s?.status === "RUNNING" || s?.status === "CRASHED",
-            BOOT_TIMEOUT_MS,
-            3000
-          );
-          expect(server?.status === "RUNNING", `${loader} base server status → ${server?.status}`);
+          await waitForStoppableBoot(admin, serverId);
           const stop = await admin.post(`/api/servers/${serverId}/stop`);
           expect(stop.status === 200, `stop → ${stop.status}`);
         });
@@ -101,13 +113,7 @@ export const loaderScenarios = [
           ctx.state.quiltServerId = serverId;
           const start = await admin.post(`/api/servers/${serverId}/start`);
           expect(start.status === 200, `start → ${start.status}`);
-          const server = await pollUntil(
-            () => getServer(admin, serverId),
-            (s) => s?.status === "RUNNING" || s?.status === "CRASHED",
-            BOOT_TIMEOUT_MS,
-            3000
-          );
-          expect(server?.status === "RUNNING", `quilt base server status → ${server?.status}`);
+          await waitForStoppableBoot(admin, serverId);
           await admin.post(`/api/servers/${serverId}/stop`);
 
           const install = await admin.post(`/api/servers/${serverId}/mods/loader`, { loader: "quilt" });
