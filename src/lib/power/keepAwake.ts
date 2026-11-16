@@ -82,6 +82,9 @@ export async function computeKeepAwake(now: Date = new Date()): Promise<KeepAwak
     })
   );
 
-  const startWindow = activeStartWindow(await loadScheduledStarts(now), now);
+  // Agent-hosted starts are the node's business — holding THIS PC awake for
+  // their arrival window would only burn power on a machine nobody connects to.
+  const localStarts = (await loadScheduledStarts(now)).filter((s) => s.runnerType !== "AGENT");
+  const startWindow = activeStartWindow(localStarts, now);
   return decideKeepAwake({ settings, servers, startWindow });
 }

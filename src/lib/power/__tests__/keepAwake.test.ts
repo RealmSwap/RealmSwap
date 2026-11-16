@@ -19,6 +19,8 @@ const start = (over: Partial<ScheduledStart> = {}): ScheduledStart => ({
   serverName: "Srv",
   source: "session",
   label: "Friday Night",
+  runnerType: "LOCAL",
+  nodeMac: null,
   ...over,
 });
 

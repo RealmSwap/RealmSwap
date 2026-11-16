@@ -625,6 +625,19 @@ function lanIp(): string | null {
   return null;
 }
 
+/** The MAC of the interface lanIp() picked — the Wake-on-LAN target for starts fired while this machine is asleep. */
+function primaryMac(): string | null {
+  const ifaces = os.networkInterfaces();
+  for (const list of Object.values(ifaces)) {
+    for (const iface of list ?? []) {
+      if (iface.family === "IPv4" && !iface.internal && iface.mac && iface.mac !== "00:00:00:00:00:00") {
+        return iface.mac;
+      }
+    }
+  }
+  return null;
+}
+
 function freeDiskGB(): number | null {
   try {
     const s = fs.statfsSync(stateDir);
@@ -710,6 +723,7 @@ async function syncOnce(state: AgentState, agentVersion: string): Promise<void> 
     arch: os.arch(),
     dockerVersion: await dockerVersion(),
     lanIp: lanIp(),
+    macAddress: primaryMac(),
     totalRamMB: Math.round(os.totalmem() / 1024 / 1024),
     freeDiskGB: freeDiskGB(),
     servers,

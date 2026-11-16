@@ -81,6 +81,7 @@ export async function POST(req: Request) {
       ...(parsed.agentVersion ? { agentVersion: parsed.agentVersion } : {}),
       ...(parsed.dockerVersion !== undefined ? { dockerVersion: parsed.dockerVersion } : {}),
       ...(parsed.lanIp !== undefined ? { lanIp: parsed.lanIp } : {}),
+      ...(parsed.macAddress !== undefined ? { macAddress: parsed.macAddress } : {}),
       ...(parsed.totalRamMB != null ? { totalRamMB: Math.round(parsed.totalRamMB) } : {}),
       ...(parsed.freeDiskGB != null ? { freeDiskGB: parsed.freeDiskGB } : {}),
     },

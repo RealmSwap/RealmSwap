@@ -57,7 +57,12 @@ vi.mock("@/lib/downloadProgress", () => ({
   clearProgress: vi.fn(),
 }));
 
+vi.mock("@/lib/wol", () => ({
+  wakeNode: vi.fn(async () => {}),
+}));
+
 import { RemoteRunner } from "../RemoteRunner";
+import { wakeNode } from "@/lib/wol";
 
 const runner = new RemoteRunner();
 
@@ -66,6 +71,10 @@ function onlineNode(overrides: Record<string, any> = {}) {
     id: "node-1", name: "Test Node", status: "ACTIVE", secret: "s3cret",
     lastSeenAt: new Date(Date.now() - 5000), ...overrides,
   };
+}
+
+function asleepNode(overrides: Record<string, any> = {}) {
+  return onlineNode({ lastSeenAt: new Date(Date.now() - 10 * 60 * 1000), ...overrides });
 }
 
 function agentServer(overrides: Record<string, any> = {}) {
@@ -85,6 +94,7 @@ describe("RemoteRunner", () => {
     bag.planDockerStart.mockReset().mockResolvedValue({ payload: { kind: "START", dataDirName: "srv" } });
     bag.planDockerUpdate.mockReset().mockResolvedValue({ payload: { kind: "UPDATE", steamcmdCmd: "steamcmd ..." } });
     bag.startMonitoring.mockClear();
+    vi.mocked(wakeNode).mockClear();
     bag.server = agentServer();
     bag.node = onlineNode();
   });
@@ -113,8 +123,40 @@ describe("RemoteRunner", () => {
   });
 
   it("refuses to operate on an offline node", async () => {
-    bag.node = onlineNode({ lastSeenAt: new Date(Date.now() - 10 * 60 * 1000) });
+    bag.node = asleepNode();
     await expect(runner.stop(bag.server)).rejects.toThrow(/offline/);
+    expect(bag.enqueueCommand).not.toHaveBeenCalled();
+  });
+
+  it("start on an asleep node sends a Wake-on-LAN packet and dispatches once the node syncs", async () => {
+    bag.node = asleepNode({ macAddress: "aa:bb:cc:dd:ee:ff" });
+    vi.useFakeTimers();
+    const p = runner.start(bag.server);
+    await vi.advanceTimersByTimeAsync(10_000); // a couple of poll ticks, still asleep
+    expect(wakeNode).toHaveBeenCalledWith("aa:bb:cc:dd:ee:ff");
+    expect(bag.enqueueCommand).not.toHaveBeenCalled();
+    bag.node = onlineNode(); // the agent boots and syncs
+    await vi.advanceTimersByTimeAsync(10_000); // the next poll sees it online
+    await p;
+    vi.useRealTimers();
+    expect(bag.enqueueCommand).toHaveBeenCalledWith("node-1", "srv", "START", { kind: "START", dataDirName: "srv" });
+    expect(bag.startMonitoring).toHaveBeenCalledTimes(1);
+  });
+
+  it("without a known MAC, a start on an asleep node still refuses", async () => {
+    bag.node = asleepNode();
+    await expect(runner.start(bag.server)).rejects.toThrow(/offline/);
+    expect(wakeNode).not.toHaveBeenCalled();
+    expect(bag.enqueueCommand).not.toHaveBeenCalled();
+  });
+
+  it("a node that never comes back after the packet fails honestly", async () => {
+    bag.node = asleepNode({ macAddress: "aa:bb:cc:dd:ee:ff" });
+    vi.useFakeTimers();
+    const expectation = expect(runner.start(bag.server)).rejects.toThrow(/never came online after a Wake-on-LAN packet/);
+    await vi.advanceTimersByTimeAsync(160_000);
+    await expectation;
+    vi.useRealTimers();
     expect(bag.enqueueCommand).not.toHaveBeenCalled();
   });
 

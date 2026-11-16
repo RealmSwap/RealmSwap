@@ -474,6 +474,7 @@ model AgentNode {
   agentVersion     String?
   dockerVersion    String?
   lanIp            String? // Agent-reported LAN address — what friends connect to
+  macAddress       String? // Agent-reported primary-interface MAC — the Wake-on-LAN target for starts on an offline node
   totalRamMB       Int?
   freeDiskGB       Float?
   lastSeenAt       DateTime?
