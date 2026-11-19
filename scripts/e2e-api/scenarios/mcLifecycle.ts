@@ -213,20 +213,41 @@ export const mcLifecycleScenarios = [
           1000
         );
         expect(!!server?.pid, "server row must expose a pid while booting");
+        const killedPid = server.pid;
         try {
-          process.kill(server.pid, "SIGKILL");
+          process.kill(killedPid, "SIGKILL");
         } catch (err: any) {
-          throw new Error(`could not SIGKILL the booting server (pid ${server.pid}): ${err.message}`);
+          throw new Error(`could not SIGKILL the booting server (pid ${killedPid}): ${err.message}`);
         }
-        const terminal = await pollUntil(
-          () => getServer(admin, serverId),
-          (s) => ["CRASHED", "STOPPED"].includes(s?.status),
-          120_000,
-          2000
+        // The killed boot must never be reported RUNNING again as that
+        // process. The crash engine auto-restarts a SIGKILLed boot as a NEW
+        // pid (5s delay + a fresh boot), so a later RUNNING under a different
+        // pid is honest — what this guards is the readiness race that flips
+        // RUNNING for a dead boot: RUNNING with the killed pid, or with no
+        // pid at all (a port-probe hit against nothing).
+        let lie: string | null = null;
+        await pollUntil(
+          async () => {
+            const s = await getServer(admin, serverId);
+            if (s?.status === "RUNNING" && (s.pid === killedPid || s.pid == null)) {
+              lie = `status RUNNING with pid ${s.pid} after killing pid ${killedPid}`;
+              return true;
+            }
+            return false;
+          },
+          (hit) => !!hit,
+          90_000,
+          1000
         );
-        expect(
-          terminal?.status === "CRASHED" || terminal?.status === "STOPPED",
-          `status after kill → ${terminal?.status}, want CRASHED/STOPPED (never RUNNING)`
+        expect(lie === null, lie ?? "");
+        // The auto-restart brought a new boot up — stop it so the archive
+        // step below sees a stopped server and port 25565 frees up.
+        await admin.post(`/api/servers/${serverId}/stop`);
+        await pollUntil(
+          () => getServer(admin, serverId),
+          (s) => s?.status === "STOPPED" || s?.status === "CRASHED",
+          60_000,
+          1000
         );
       });
 
