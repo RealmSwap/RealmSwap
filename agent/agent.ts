@@ -21,7 +21,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { promisify } from "util";
-import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, installStagedTree, readServerFile, writeServerFile, listServerDir, applyConfigEntries, deletePathsInDataDir, scanTreeFor, modSnapshotTarName, tunnelBinPath, tunnelSecretPath, tunnelSocketPath, tunnelPidPath, downloadToFile, reconcileTunnelOrphans, walkDiskUsage } from "./lib";
+import { writeConfigFiles, buildDockerRunArgs, parseStatsLine, timingSafeEqualHex, buildTarArgs, extractTarArgs, installStagedTree, readServerFile, writeServerFile, listServerDir, applyConfigEntries, deletePathsInDataDir, scanTreeFor, modSnapshotTarName, tunnelBinPath, tunnelSecretPath, tunnelSocketPath, tunnelPidPath, downloadToFile, reconcileTunnelOrphans, walkDiskUsage } from "./lib";
 import type {
   SyncRequest, SyncResponse, SyncCommand, RegisterResponse,
   StartCommandPayload, StopCommandPayload, UpdateCommandPayload, SendCommandPayload,
@@ -312,7 +312,7 @@ async function execBackupRestore(serverId: string, p: BackupRestoreCommandPayloa
     // Stage first: a corrupt archive or full disk fails with the live world
     // intact (dashboard restore semantics, mirrored).
     fs.rmSync(stagingDir, { recursive: true, force: true });
-    await runTar(["-xf", tarPath, "-C", stagingDir]);
+    await runTar(extractTarArgs(tarPath, stagingDir));
     const stagedEntries = fs.readdirSync(stagingDir);
     if (stagedEntries.length === 0) {
       return { ok: false, error: "Restored archive staged empty — refusing to touch the live world." };
@@ -424,7 +424,7 @@ async function execFilesApply(serverId: string, p: FilesApplyCommandPayload): Pr
     const dl = await downloadDashboardTar(p.downloadPath, tarPath);
     if (!dl.ok) return fail(dl.error);
     fs.mkdirSync(stagingDir, { recursive: true });
-    await runTar(["-xf", tarPath, "-C", stagingDir]);
+    await runTar(extractTarArgs(tarPath, stagingDir));
     const stagedEntries = fs.readdirSync(stagingDir);
     if (stagedEntries.length === 0) {
       return fail("Shipped archive staged empty — refusing to touch the server files.");
@@ -469,7 +469,7 @@ async function execFilesRestore(serverId: string, p: FilesRestoreCommandPayload)
   const stagingDir = path.join(stateDir, `rollback-${serverId}-${Date.now()}.staging`);
   try {
     fs.mkdirSync(stagingDir, { recursive: true });
-    await runTar(["-xf", snapPath, "-C", stagingDir]);
+    await runTar(extractTarArgs(snapPath, stagingDir));
     // Files the failed install added are cleared first when the dashboard
     // knows them; the snapshot then overlays the pre-install versions back.
     if (p.clearPaths && p.clearPaths.length > 0) {

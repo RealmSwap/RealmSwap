@@ -120,10 +120,50 @@ describe("ensureJava", () => {
         provision: async () => {
           provisioned = true;
         },
+        validate: () => true,
       }
     );
     expect(result).toBe(javaPath("/data", 25));
     expect(provisioned).toBe(false);
+  });
+
+  it("wipes and re-provisions a corrupt cached runtime instead of reusing it forever", async () => {
+    // Live shape (2026-11-19): a partial provision sat in the cache dir and
+    // every later start short-circuited onto it, crashing each MC boot.
+    const calls: string[] = [];
+    let provisioned = false;
+    let removed: string[] = [];
+    const result = await ensureJava(
+      25,
+      { dataRoot: "/data", platform: "win32" },
+      {
+        exists: (p) => p === javaPath("/data", 25) || provisioned,
+        provision: async () => {
+          provisioned = true;
+          calls.push("provision");
+        },
+        validate: (exe) => provisioned && exe === javaPath("/data", 25),
+        remove: (dir) => removed.push(dir),
+      }
+    );
+    expect(result).toBe(javaPath("/data", 25));
+    expect(calls).toEqual(["provision"]);
+    expect(removed).toEqual([path.join("/data", "runtimes", "jdk-25")]);
+  });
+
+  it("throws and clears the cache when a freshly provisioned runtime cannot run", async () => {
+    const removed: string[] = [];
+    await expect(
+      ensureJava(21, { dataRoot: "/d", platform: "win32" }, {
+        exists: () => true,
+        provision: async () => {},
+        validate: () => false,
+        remove: (dir) => removed.push(dir),
+      })
+    ).rejects.toThrow(/failed to run/i);
+    // Both wipes: the corrupt cached dir, then the bad fresh provision.
+    const cacheDir = path.join("/d", "runtimes", "jdk-21");
+    expect(removed).toEqual([cacheDir, cacheDir]);
   });
 
   it("provisions when missing, then returns the path", async () => {
@@ -138,6 +178,7 @@ describe("ensureJava", () => {
           calls.push(major);
           present = true;
         },
+        validate: () => true,
       }
     );
     expect(calls).toEqual([21]);

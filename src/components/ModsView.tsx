@@ -515,6 +515,16 @@ export default function ModsView({ user }: ModsViewProps) {
     game === "PALWORLD" ||
     game === "SATISFACTORY";
 
+  /** Why a game has no mod browsing yet — release-honest copy instead of a
+   *  generic "yet" that implies an integration is imminent. */
+  const unsupportedModNote: Record<string, string> = {
+    ENSHROUDED:
+      "Enshrouded's community mods live on Nexus Mods (no programmatic provider we can integrate), most are client-side only, and the community loader has been fragile across game updates — so there's nothing we can install safely on your behalf yet.",
+    WINDROSE:
+      "Windrose's mod scene is brand-new: server mods are manual .pak drops shared on Nexus and CurseForge, with no searchable provider API we can integrate. One-click mod installs land here once that exists.",
+  };
+  const unsupportedNote = unsupportedModNote[game];
+
   /* Shared Mods | Modpacks switch (Discover's Trending row + Browse search) */
   const packModeSwitch = game === "MINECRAFT" && (
     <>
@@ -539,7 +549,7 @@ export default function ModsView({ user }: ModsViewProps) {
       ))}
       {packMode && (
         <span className="text-[10px] text-mutedText ml-1">
-          One-click full pack installs — snapshot + rollback on failure, boot-tested in the sandbox (Minecraft, Valheim, Project Zomboid, and Terraria today).
+          One-click full pack installs — snapshot + rollback on failure, boot-tested in the sandbox before you see success.
         </span>
       )}
     </>
@@ -1585,6 +1595,10 @@ export default function ModsView({ user }: ModsViewProps) {
                         {selectedServer.game} yet
                       </span>
                       <p className="text-xs text-mutedText max-w-sm mx-auto mt-1.5">
+                        {unsupportedNote ??
+                          "No searchable mod provider exists for this game yet."}
+                      </p>
+                      <p className="text-xs text-mutedText max-w-sm mx-auto mt-1.5">
                         Check the{" "}
                         <Link
                           href="/dashboard"
@@ -1997,7 +2011,7 @@ export default function ModsView({ user }: ModsViewProps) {
                           onClick={handleUpdateAll}
                           disabled={updateAllBusy}
                           className="px-3 py-1.5 rounded-lg bg-sky-500/20 border border-sky-500/40 hover:bg-sky-500/30 text-sky-200 font-bold transition-colors disabled:opacity-50"
-                          title="Updates every stale mod in one snapshot window: sequential updates, full rollback on any failure, plus a sandbox boot test on Minecraft, Valheim, Project Zomboid, and Terraria."
+                          title="Updates every stale mod in one snapshot window: sequential updates, full rollback on any failure, plus a sandbox boot test before the new versions go live."
                         >
                           {updateAllBusy ? "Updating…" : `Update all (${updatesInfo.updates.length})`}
                         </button>

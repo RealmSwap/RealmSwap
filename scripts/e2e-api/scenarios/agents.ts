@@ -200,7 +200,11 @@ export const agentScenarios = [
         fs.mkdirSync(path.join(serverDir(agentServerId), "world"), { recursive: true });
         fs.writeFileSync(path.join(serverDir(agentServerId), "world", "level.dat"), "agent world data");
         tarPath = path.join(os.tmpdir(), `rs-e2e-agent-backup-${Date.now()}.tar`);
-        execFileSync("tar", ["-cf", tarPath, "-C", serverDir(agentServerId), "world"]);
+        // --force-local + forward slashes: Git Bash's GNU tar reads "C:..."
+        // as host:path otherwise (Windows bsdtar accepts both forms).
+        const forceLocal = process.platform === "win32" ? ["--force-local"] : [];
+        const fwd = (p: string) => p.split("\\").join("/");
+        execFileSync("tar", [...forceLocal, "-cf", fwd(tarPath), "-C", fwd(serverDir(agentServerId)), "world"]);
       });
 
       let backupId = "";

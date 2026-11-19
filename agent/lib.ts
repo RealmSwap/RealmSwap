@@ -374,9 +374,34 @@ export function timingSafeEqualHex(a: string, b: string): boolean {
   return crypto.timingSafeEqual(ba, bb);
 }
 
-/** tar argv for an upload (system tar — Linux + Windows 10+ bsdtar). */
+/**
+ * tar argv for the system tar (Linux GNU tar, Windows 10+ bsdtar). Mirrors
+ * dashboard backupService.systemTarArgs: on Windows, --force-local stops Git
+ * Bash's GNU tar reading "C:..." as host:path ("tar: Cannot connect to C:"),
+ * and forward slashes stop it mangling backslash-separated filenames —
+ * bsdtar accepts both forms.
+ */
+export function tarArgs(
+  op: "-cf" | "-xf",
+  tarPath: string,
+  changeTo: string | null,
+  rest: string[] = []
+): string[] {
+  if (process.platform !== "win32") {
+    return [op, tarPath, ...(changeTo ? ["-C", changeTo] : []), ...rest];
+  }
+  const fwd = (p: string) => p.split("\\").join("/");
+  return ["--force-local", op, fwd(tarPath), ...(changeTo ? ["-C", fwd(changeTo)] : []), ...rest];
+}
+
+/** tar argv for creating an archive rooted at baseDir (agent raw uploads, snapshots). */
 export function buildTarArgs(baseDir: string, entries: string[], tarPath: string): string[] {
-  return ["-cf", tarPath, "-C", baseDir, ...entries];
+  return tarArgs("-cf", tarPath, baseDir, entries);
+}
+
+/** tar argv for extracting an archive into destDir (agent restores). */
+export function extractTarArgs(tarPath: string, destDir: string): string[] {
+  return tarArgs("-xf", tarPath, destDir);
 }
 
 /**

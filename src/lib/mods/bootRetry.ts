@@ -539,8 +539,8 @@ export async function testServerBootWithQuarantine(args: {
   // packaged app's console is invisible, and the v0.5.8 incident (a
   // PATH-only lookup that silently skipped every boot test) was only
   // diagnosed from screenshots — this line makes "ran" vs "skipped" a fact
-  // in the response itself. Other games boot their own exe/bat (or have no
-  // sandbox boot at all), so a java label there would be fiction.
+  // in the response itself. Other games boot their own exe (no java on the
+  // launch path), so a java label there would be fiction.
   if (game === "MINECRAFT") {
     const javaExe = args.deps?.javaExe ?? resolveSandboxJava(serverRoot);
     warnings.push(
