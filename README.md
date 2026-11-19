@@ -120,4 +120,5 @@ Contributions are welcome — branch off `main` and open a pull request. Current
 - **Community game-definition marketplace listings** — first-class browse/review for shared game definitions (the safety gate, consent step, and file sharing already shipped)
 - **Windows code signing** — the build pipeline signs automatically once an Azure Artifact Signing account or certificate is configured (see `docs/code-signing.md`; releases already publish SHA256 checksums)
 - **Docker container abstractions** for true cross-platform hosting
+- **CurseForge mod support for Windrose** — the ecosystem exists (Windrose has an official CurseForge section with native server-side pak mods, installed into `R5/Content/Paks/~mods/`), but the integration needs Windrose's numeric CurseForge game id (the `/games` API endpoint is partner-gated, so it can't be auto-discovered) and an end-to-end pass against a real Windrose server
 - More game definitions — the least-served games first
