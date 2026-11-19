@@ -2,7 +2,18 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { minecraftBootSucceeded, minecraftBootArgs, resolveSandboxJava, testServerBoot, SandboxBootError } from "../sandbox";
+import { minecraftBootSucceeded, rustBootSucceeded, minecraftBootArgs, resolveSandboxJava, testServerBoot, SandboxBootError } from "../sandbox";
+
+describe("rustBootSucceeded", () => {
+  it("recognizes the RustDedicated ready line", () => {
+    expect(rustBootSucceeded("Server startup complete")).toBe(true);
+    expect(rustBootSucceeded("[Server] Server startup complete\n")).toBe(true);
+  });
+  it("does not fire on boot noise", () => {
+    expect(rustBootSucceeded("Loading Oxide Core...")).toBe(false);
+    expect(rustBootSucceeded("Generating terrain for seed 1337")).toBe(false);
+  });
+});
 
 describe("minecraftBootSucceeded", () => {
   it("recognizes the vanilla and loader Done line", () => {
@@ -259,5 +270,63 @@ describe("testServerBoot — Minecraft verdicts (fake java on PATH)", () => {
     } finally {
       process.env.PATH = `${binDir}${path.delimiter}${SAVED_PATH}`;
     }
+  });
+});
+
+/**
+ * Rust got a sandbox launcher alongside Minecraft's verdict style: the
+ * "Server startup complete" ready line ends the test early, and ANY exit
+ * before it fails. A fake `RustDedicated.exe` shell script at the exact
+ * sandbox path plays the server (POSIX-only, like the fake-java suite).
+ */
+describe("testServerBoot — Rust verdicts (fake RustDedicated.exe at sandbox path)", () => {
+  const SAVED_DATA = process.env.GAMEVAULT_DATA_DIR;
+  let dataDir = "";
+  const serverId = "rust-sandbox";
+  const exePath = () => path.join(dataDir, "local-servers", serverId, "rust-server", "RustDedicated.exe");
+
+  beforeAll(() => {
+    dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "sandbox-rust-"));
+    process.env.GAMEVAULT_DATA_DIR = dataDir;
+  });
+  afterAll(() => {
+    if (SAVED_DATA === undefined) delete process.env.GAMEVAULT_DATA_DIR;
+    else process.env.GAMEVAULT_DATA_DIR = SAVED_DATA;
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  function fakeRust(script: string) {
+    fs.mkdirSync(path.dirname(exePath()), { recursive: true });
+    fs.writeFileSync(exePath(), `#!/bin/sh\n${script}\n`);
+    fs.chmodSync(exePath(), 0o755);
+  }
+
+  const posixOnly = process.platform === "win32" ? it.skip : it;
+
+  posixOnly("passes as soon as the ready line appears, without waiting out the window", async () => {
+    fakeRust('echo "Loading Oxide Core..."; echo "Server startup complete"; sleep 30');
+    const started = Date.now();
+    await expect(testServerBoot(serverId, "RUST")).resolves.toBe(true);
+    expect(Date.now() - started).toBeLessThan(5000);
+  });
+
+  posixOnly("fails on a non-zero exit before the ready line, carrying the captured output", async () => {
+    fakeRust('echo "Loading Oxide Core..."; echo "Plugin \'BrokenPlugin\' failed to compile" 1>&2; exit 1');
+    const err = await testServerBoot(serverId, "RUST").catch((e) => e);
+    expect(err).toBeInstanceOf(SandboxBootError);
+    expect(err.message).toMatch(/exit code 1/);
+    expect(err.output).toMatch(/failed to compile/);
+  });
+
+  posixOnly("fails on a clean exit-0 before the ready line (a config fatal, not a boot)", async () => {
+    fakeRust('echo "Bad config"; exit 0');
+    const err = await testServerBoot(serverId, "RUST").catch((e) => e);
+    expect(err).toBeInstanceOf(SandboxBootError);
+    expect(err.message).toMatch(/exited \(code 0\)/);
+  });
+
+  it("skips the test when the server executable is missing", async () => {
+    fs.mkdirSync(path.join(dataDir, "local-servers", "rust-noexe", "rust-server"), { recursive: true });
+    await expect(testServerBoot("rust-noexe", "RUST")).resolves.toBe(true);
   });
 });
