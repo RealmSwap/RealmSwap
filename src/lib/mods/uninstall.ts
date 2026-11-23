@@ -4,7 +4,7 @@ import { dataRoot } from "@/lib/appPaths";
 import { removeZomboidWorkshopMod, zomboidServerIniPath } from "@/lib/mods/zomboid";
 import { removeArkActiveMod, arkGameUserSettingsIniPath } from "@/lib/mods/ark";
 import { uninstallPalworldPackage } from "@/lib/mods/palworld";
-import { removeFicsitMod } from "@/lib/mods/installers";
+import { removeFicsitMod, removeWindroseFiles } from "@/lib/mods/installers";
 import { removeRustUmodPlugin } from "@/lib/mods/umod";
 import { removeTmlWorkshopMod } from "@/lib/mods/tml";
 import { deriveZomboidModIds } from "@/lib/mods/workshopDownload";
@@ -15,6 +15,8 @@ export interface RemovableInstallation {
   provider: string;
   packageId: string;
   workshopModId?: string | null;
+  /** Windrose: the install's pak-file manifest (see ModInstallation.files). */
+  files?: string | null;
 }
 
 /**
@@ -52,6 +54,10 @@ export function removeModFiles(args: {
     // A disabled plugin is parked outside Oxide/plugins — remove it too.
     const parked = path.join(serverRoot, "rust-server", "Oxide", "plugins_disabled", `${packageId}.cs`);
     if (fs.existsSync(parked)) fs.unlinkSync(parked);
+  } else if (game === "WINDROSE") {
+    // Flat pak files in the shared ~mods folder — only the manifest knows
+    // which ones are this mod's.
+    removeWindroseFiles(path.join(serverRoot, "windrose-server"), installation.files);
   } else if (game === "MINECRAFT") {
     for (const jarName of [`${packageId}.jar`, `${packageId}.jar.disabled`]) {
       const jarPath = path.join(serverRoot, "mods", jarName);

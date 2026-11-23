@@ -962,3 +962,120 @@ async function installResolvedFicsit(args: {
 export function removeFicsitMod(satisfactoryDir: string, packageId: string): void {
   fs.rmSync(path.join(satisfactoryDir, "FactoryGame", "Mods", packageId), { recursive: true, force: true });
 }
+
+/* ─── Windrose — CurseForge pak sets ──────────────────────────── */
+
+/**
+ * Windrose is Unreal: CurseForge mods ship pak sets (000_*_P.pak plus the
+ * .ucas/.utoc IOStore siblings) that load from R5/Content/Paks/~mods — the
+ * folder every hosting guide tells admins to create by hand. Files go in
+ * FLAT: the mod zips wrap their pak set in a version folder, and the engine
+ * mounts the ~mods root.
+ */
+export function windrosePaksDir(windroseDir: string): string {
+  return path.join(windroseDir, "R5", "Content", "Paks", "~mods");
+}
+
+/**
+ * Extract every pak-set entry (.pak/.ucas/.utoc) of a CurseForge zip flat
+ * into ~mods, whatever folder the author wrapped them in. Everything else
+ * (readmes, mod.json, dll scripts) is skipped — the engine mounts only pak
+ * containers, and a UE4SS script zip is a client-side ecosystem we don't
+ * ship to a server. Returns the basenames written: the uninstall manifest.
+ */
+export function extractWindrosePakFiles(zip: AdmZip, paksDir: string): string[] {
+  const written: string[] = [];
+  for (const entry of zip.getEntries()) {
+    if (entry.isDirectory) continue;
+    // Backslash separators are a legal-but-rare PKWARE form (see
+    // extractThunderstorePackage) — normalize before taking the basename.
+    const name = entry.entryName.split("\\").join("/").split("/").pop() ?? "";
+    if (!/\.(pak|ucas|utoc)$/i.test(name)) continue;
+    fs.mkdirSync(paksDir, { recursive: true });
+    fs.writeFileSync(safeJoin(paksDir, name), entry.getData());
+    written.push(name);
+  }
+  return written;
+}
+
+/**
+ * Delete exactly the files a Windrose install recorded (plus .disabled
+ * parked copies). The manifest is load-bearing: many mods' pak files share
+ * the flat ~mods folder, so a wildcard cleanup would eat other mods' files.
+ */
+export function removeWindroseFiles(windroseDir: string, filesJson?: string | null): void {
+  let names: string[] = [];
+  try {
+    const parsed = JSON.parse(filesJson ?? "[]");
+    if (Array.isArray(parsed)) names = parsed.filter((n): n is string => typeof n === "string");
+  } catch {
+    // A torn manifest removes nothing — safer than guessing at names.
+  }
+  const roots = [
+    windrosePaksDir(windroseDir),
+    path.join(windroseDir, "R5", "Content", "Paks", "~mods-disabled"),
+  ];
+  for (const root of roots) {
+    for (const name of names) {
+      for (const candidate of [path.join(root, name), `${path.join(root, name)}.disabled`]) {
+        try {
+          fs.unlinkSync(candidate);
+        } catch {
+          // Already gone (or never parked) — removal is idempotent.
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Install a Windrose CurseForge pak mod: resolve the newest release file
+ * (or the search card's pin), download it, and drop its pak set flat into
+ * R5/Content/Paks/~mods. The required-dependency BFS stays a Minecraft
+ * feature — Windrose pak mods are self-contained.
+ */
+export async function installWindroseCurseforge(args: {
+  serverId: string;
+  windroseDir: string;
+  modId: string;
+  /** displayName/fileName pin from a search card; falls back to the newest release file. */
+  version?: string;
+}): Promise<void> {
+  const { serverId, windroseDir, modId, version } = args;
+  if (!fs.existsSync(windroseDir)) {
+    throw new Error("Windrose server directory not found — install the server before adding mods.");
+  }
+
+  // No mcVersion/loader constraints: Windrose files carry neither, and the
+  // newest usable file is always the right target.
+  const candidate = await resolveCfInstall(modId, { displayName: version });
+
+  const tempZip = uniqueStagingZip(windroseDir, "windrose-mod");
+  await downloadFile(curseForgeDownloadUrl(candidate.file), tempZip);
+  let installed: string[];
+  try {
+    installed = extractWindrosePakFiles(new AdmZip(tempZip), windrosePaksDir(windroseDir));
+  } catch (err: any) {
+    throw new Error(`Failed to extract '${candidate.mod.name}': ${err.message}`);
+  } finally {
+    try {
+      fs.unlinkSync(tempZip);
+    } catch {
+      // Staging cleanup is best-effort; the install outcome is decided above.
+    }
+  }
+  if (installed.length === 0) {
+    throw new Error(
+      `'${candidate.mod.name}' ships no pak files (.pak/.ucas/.utoc) — it may be a UE4SS script mod, which is client-side only and can't be installed on a server.`
+    );
+  }
+
+  await prisma.modInstallation.upsert({
+    where: { serverId_provider_packageId: { serverId, provider: "curseforge", packageId: modId } },
+    update: { version: candidate.file.displayName, name: candidate.mod.name, files: JSON.stringify(installed) },
+    create: {
+      serverId, provider: "curseforge", packageId: modId,
+      version: candidate.file.displayName, name: candidate.mod.name, files: JSON.stringify(installed),
+    },
+  });
+}

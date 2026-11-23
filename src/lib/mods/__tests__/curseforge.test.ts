@@ -3,6 +3,7 @@ import {
   curseForgeApiKey, pickCompatibleCfFile, curseForgeDownloadUrl, curseForgeSha1,
   collectRequiredCfMods, resolveCfInstall, searchCurseForgeMods,
   readCurseForgeManifest, cfLoaderRequirement, cfOverridesPrefix, resolveCfPackFiles,
+  CURSEFORGE_GAME_IDS, CURSEFORGE_MODS_CLASS_IDS,
   type CurseForgeFile, type CurseForgeMod,
 } from "../curseforge";
 
@@ -355,5 +356,27 @@ describe("resolveCfPackFiles", () => {
     await expect(resolveCfPackFiles(manifest, deps(undefined))).rejects.toThrow(/no longer exists/);
     await expect(resolveCfPackFiles(manifest, deps(locked))).rejects.toThrow(/disabled third-party distribution/);
     await expect(resolveCfPackFiles(manifest, deps(hashless))).rejects.toThrow(/no sha1 hash/);
+  });
+});
+
+describe("per-game CurseForge maps", () => {
+  it("every game with a mods class also has a game id", () => {
+    for (const game of Object.keys(CURSEFORGE_MODS_CLASS_IDS)) {
+      expect(CURSEFORGE_GAME_IDS[game], `${game} needs a game id`).toBeDefined();
+    }
+  });
+
+  it("search rides the game's own mods class, not Minecraft's generic 6", async () => {
+    let queried = "";
+    const deps = {
+      apiKey: "test-key",
+      fetchImpl: (async (url: string | URL) => {
+        queried = url.toString();
+        return { ok: true, status: 200, json: async () => ({ data: [], pagination: { total: 0 } }) } as any;
+      }) as any,
+    };
+    await searchCurseForgeMods({ gameId: CURSEFORGE_GAME_IDS.WINDROSE, classId: CURSEFORGE_MODS_CLASS_IDS.WINDROSE }, deps);
+    expect(queried).toContain("gameId=99078");
+    expect(queried).toContain("classId=10755");
   });
 });

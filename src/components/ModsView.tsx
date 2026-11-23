@@ -147,7 +147,7 @@ const GAME_THEMES: Record<
     border: "border-teal-500/30",
     text: "text-teal-400",
     icon: "🧭",
-    providerName: "—",
+    providerName: "CurseForge",
   },
 };
 
@@ -513,15 +513,14 @@ export default function ModsView({ user }: ModsViewProps) {
     game === "RUST" ||
     game === "ARK" ||
     game === "PALWORLD" ||
-    game === "SATISFACTORY";
+    game === "SATISFACTORY" ||
+    game === "WINDROSE";
 
   /** Why a game has no mod browsing yet — release-honest copy instead of a
    *  generic "yet" that implies an integration is imminent. */
   const unsupportedModNote: Record<string, string> = {
     ENSHROUDED:
       "Enshrouded's community mods live on Nexus Mods (no programmatic provider we can integrate), most are client-side only, and the community loader has been fragile across game updates — so there's nothing we can install safely on your behalf yet.",
-    WINDROSE:
-      "Windrose's mod scene is brand-new: server mods are manual .pak drops shared on Nexus and CurseForge, with no searchable provider API we can integrate. One-click mod installs land here once that exists.",
   };
   const unsupportedNote = unsupportedModNote[game];
 

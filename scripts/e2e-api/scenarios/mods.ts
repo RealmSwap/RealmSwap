@@ -423,4 +423,55 @@ export const modsScenarios = [
       });
     }
   ),
+
+  scenario(
+    "mods/windrose-cf-search",
+    "Windrose rides CurseForge search (game id 99078, its own mods class) — self-skips when the app has no CurseForge key",
+    ["heavy"],
+    async (ctx: ScenarioContext) => {
+      const { admin } = ctx;
+
+      let windroseId: string | undefined;
+      await step("create an uninstalled Windrose server row (search needs no game files)", async () => {
+        const defs = await admin.get("/api/definitions");
+        expect(defs.status === 200, `GET /api/definitions → ${defs.status}`);
+        const windrose = (defs.body?.definitions ?? []).find((d: any) => d.slug === "WINDROSE");
+        expect(!!windrose, "Windrose definition must be seeded");
+        const created = await admin.post("/api/servers", {
+          name: "E2E Windrose CF Search",
+          definitionId: windrose.id,
+          ramAllocation: 8,
+        });
+        expect(created.status === 201, `create → ${created.status}: ${created.text.slice(0, 300)}`);
+        windroseId = created.body.id;
+      });
+
+      let searched = false;
+      await step("probe: Windrose search returns live CurseForge results", async () => {
+        const res = await admin
+          .get(`/api/servers/${windroseId}/mods/search?q=bigger stacks`)
+          .catch(() => ({ status: 0, body: null as any, text: "" }));
+        expect(res.status === 200, `search → ${res.status}: ${(res.text ?? "").slice(0, 200)}`);
+        const results = res.body?.results ?? [];
+        searched = results.some((r: any) => r.provider === "curseforge");
+        if (!searched) {
+          console.log("      SKIP: no CurseForge key on the app (search returned no CF results)");
+        }
+      });
+      if (!searched) return;
+
+      await step("results are CurseForge-tagged with installable shape", async () => {
+        const res = await admin.get(`/api/servers/${windroseId}/mods/search?q=bigger stacks`);
+        const results = res.body?.results ?? [];
+        expect(results.length >= 1, "live Windrose CF search must return results after a successful probe");
+        expect(
+          results.every((r: any) => r.provider === "curseforge"),
+          `results are provider-tagged curseforge (saw: ${results.slice(0, 5).map((r: any) => r.provider).join(",")})`
+        );
+        for (const key of ["packageId", "name", "version"]) {
+          expect(key in results[0], `search result must carry ${key}`);
+        }
+      });
+    }
+  ),
 ];

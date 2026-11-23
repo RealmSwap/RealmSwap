@@ -34,6 +34,8 @@ interface ToggleInstallation {
   provider: string;
   packageId: string;
   workshopModId?: string | null;
+  /** Windrose: the install's pak-file manifest (see ModInstallation.files). */
+  files?: string | null;
 }
 
 /**
@@ -164,6 +166,32 @@ export async function setModDisabled(args: {
       if (!fs.existsSync(src)) throw new Error(`Parked mod directory '${packageId}' not found — reinstall the mod.`);
       fs.mkdirSync(modsRoot, { recursive: true });
       fs.renameSync(src, path.join(modsRoot, packageId));
+    }
+    return {};
+  }
+
+  if (game === "WINDROSE") {
+    // Park the manifest's pak files outside ~mods (the engine mounts that
+    // root and ignores ~mods-disabled), restoring on enable.
+    const windroseDir = path.join(serverRoot, "windrose-server");
+    const paksDir = path.join(windroseDir, "R5", "Content", "Paks", "~mods");
+    const parkedDir = path.join(windroseDir, "R5", "Content", "Paks", "~mods-disabled");
+    let names: string[] = [];
+    try {
+      const parsed = JSON.parse(installation.files ?? "[]");
+      if (Array.isArray(parsed)) names = parsed.filter((n): n is string => typeof n === "string");
+    } catch {
+      // fall through with nothing — the missing-manifest error below fires
+    }
+    if (names.length === 0) {
+      throw new Error(`'${packageId}' has no recorded file manifest — uninstall and reinstall it to enable toggling.`);
+    }
+    fs.mkdirSync(disabled ? parkedDir : paksDir, { recursive: true });
+    for (const name of names) {
+      const src = path.join(disabled ? paksDir : parkedDir, name);
+      const dest = path.join(disabled ? parkedDir : paksDir, name);
+      if (!fs.existsSync(src)) throw new Error(`'${name}' not found — reinstall the mod.`);
+      fs.renameSync(src, dest);
     }
     return {};
   }

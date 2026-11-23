@@ -337,6 +337,7 @@ exports.Prisma.ModInstallationScalarFieldEnum = {
   name: 'name',
   dependencies: 'dependencies',
   workshopModId: 'workshopModId',
+  files: 'files',
   disabled: 'disabled',
   installedAt: 'installedAt',
   updatedAt: 'updatedAt'
