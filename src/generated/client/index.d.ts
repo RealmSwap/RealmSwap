@@ -31584,6 +31584,7 @@ export namespace Prisma {
     agentVersion: string | null
     dockerVersion: string | null
     lanIp: string | null
+    macAddress: string | null
     totalRamMB: number | null
     freeDiskGB: number | null
     lastSeenAt: Date | null
@@ -31604,6 +31605,7 @@ export namespace Prisma {
     agentVersion: string | null
     dockerVersion: string | null
     lanIp: string | null
+    macAddress: string | null
     totalRamMB: number | null
     freeDiskGB: number | null
     lastSeenAt: Date | null
@@ -31624,6 +31626,7 @@ export namespace Prisma {
     agentVersion: number
     dockerVersion: number
     lanIp: number
+    macAddress: number
     totalRamMB: number
     freeDiskGB: number
     lastSeenAt: number
@@ -31656,6 +31659,7 @@ export namespace Prisma {
     agentVersion?: true
     dockerVersion?: true
     lanIp?: true
+    macAddress?: true
     totalRamMB?: true
     freeDiskGB?: true
     lastSeenAt?: true
@@ -31676,6 +31680,7 @@ export namespace Prisma {
     agentVersion?: true
     dockerVersion?: true
     lanIp?: true
+    macAddress?: true
     totalRamMB?: true
     freeDiskGB?: true
     lastSeenAt?: true
@@ -31696,6 +31701,7 @@ export namespace Prisma {
     agentVersion?: true
     dockerVersion?: true
     lanIp?: true
+    macAddress?: true
     totalRamMB?: true
     freeDiskGB?: true
     lastSeenAt?: true
@@ -31803,6 +31809,7 @@ export namespace Prisma {
     agentVersion: string | null
     dockerVersion: string | null
     lanIp: string | null
+    macAddress: string | null
     totalRamMB: number | null
     freeDiskGB: number | null
     lastSeenAt: Date | null
@@ -31842,6 +31849,7 @@ export namespace Prisma {
     agentVersion?: boolean
     dockerVersion?: boolean
     lanIp?: boolean
+    macAddress?: boolean
     totalRamMB?: boolean
     freeDiskGB?: boolean
     lastSeenAt?: boolean
@@ -31862,6 +31870,7 @@ export namespace Prisma {
     agentVersion?: boolean
     dockerVersion?: boolean
     lanIp?: boolean
+    macAddress?: boolean
     totalRamMB?: boolean
     freeDiskGB?: boolean
     lastSeenAt?: boolean
@@ -31882,6 +31891,7 @@ export namespace Prisma {
     agentVersion?: boolean
     dockerVersion?: boolean
     lanIp?: boolean
+    macAddress?: boolean
     totalRamMB?: boolean
     freeDiskGB?: boolean
     lastSeenAt?: boolean
@@ -31906,6 +31916,7 @@ export namespace Prisma {
       agentVersion: string | null
       dockerVersion: string | null
       lanIp: string | null
+      macAddress: string | null
       totalRamMB: number | null
       freeDiskGB: number | null
       lastSeenAt: Date | null
@@ -32316,6 +32327,7 @@ export namespace Prisma {
     readonly agentVersion: FieldRef<"AgentNode", 'String'>
     readonly dockerVersion: FieldRef<"AgentNode", 'String'>
     readonly lanIp: FieldRef<"AgentNode", 'String'>
+    readonly macAddress: FieldRef<"AgentNode", 'String'>
     readonly totalRamMB: FieldRef<"AgentNode", 'Int'>
     readonly freeDiskGB: FieldRef<"AgentNode", 'Float'>
     readonly lastSeenAt: FieldRef<"AgentNode", 'DateTime'>
@@ -35833,6 +35845,7 @@ export namespace Prisma {
     agentVersion: 'agentVersion',
     dockerVersion: 'dockerVersion',
     lanIp: 'lanIp',
+    macAddress: 'macAddress',
     totalRamMB: 'totalRamMB',
     freeDiskGB: 'freeDiskGB',
     lastSeenAt: 'lastSeenAt',
@@ -38229,6 +38242,7 @@ export namespace Prisma {
     agentVersion?: StringNullableFilter<"AgentNode"> | string | null
     dockerVersion?: StringNullableFilter<"AgentNode"> | string | null
     lanIp?: StringNullableFilter<"AgentNode"> | string | null
+    macAddress?: StringNullableFilter<"AgentNode"> | string | null
     totalRamMB?: IntNullableFilter<"AgentNode"> | number | null
     freeDiskGB?: FloatNullableFilter<"AgentNode"> | number | null
     lastSeenAt?: DateTimeNullableFilter<"AgentNode"> | Date | string | null
@@ -38249,6 +38263,7 @@ export namespace Prisma {
     agentVersion?: SortOrderInput | SortOrder
     dockerVersion?: SortOrderInput | SortOrder
     lanIp?: SortOrderInput | SortOrder
+    macAddress?: SortOrderInput | SortOrder
     totalRamMB?: SortOrderInput | SortOrder
     freeDiskGB?: SortOrderInput | SortOrder
     lastSeenAt?: SortOrderInput | SortOrder
@@ -38272,6 +38287,7 @@ export namespace Prisma {
     agentVersion?: StringNullableFilter<"AgentNode"> | string | null
     dockerVersion?: StringNullableFilter<"AgentNode"> | string | null
     lanIp?: StringNullableFilter<"AgentNode"> | string | null
+    macAddress?: StringNullableFilter<"AgentNode"> | string | null
     totalRamMB?: IntNullableFilter<"AgentNode"> | number | null
     freeDiskGB?: FloatNullableFilter<"AgentNode"> | number | null
     lastSeenAt?: DateTimeNullableFilter<"AgentNode"> | Date | string | null
@@ -38292,6 +38308,7 @@ export namespace Prisma {
     agentVersion?: SortOrderInput | SortOrder
     dockerVersion?: SortOrderInput | SortOrder
     lanIp?: SortOrderInput | SortOrder
+    macAddress?: SortOrderInput | SortOrder
     totalRamMB?: SortOrderInput | SortOrder
     freeDiskGB?: SortOrderInput | SortOrder
     lastSeenAt?: SortOrderInput | SortOrder
@@ -38320,6 +38337,7 @@ export namespace Prisma {
     agentVersion?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
     dockerVersion?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
     lanIp?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
+    macAddress?: StringNullableWithAggregatesFilter<"AgentNode"> | string | null
     totalRamMB?: IntNullableWithAggregatesFilter<"AgentNode"> | number | null
     freeDiskGB?: FloatNullableWithAggregatesFilter<"AgentNode"> | number | null
     lastSeenAt?: DateTimeNullableWithAggregatesFilter<"AgentNode"> | Date | string | null
@@ -41081,6 +41099,7 @@ export namespace Prisma {
     agentVersion?: string | null
     dockerVersion?: string | null
     lanIp?: string | null
+    macAddress?: string | null
     totalRamMB?: number | null
     freeDiskGB?: number | null
     lastSeenAt?: Date | string | null
@@ -41101,6 +41120,7 @@ export namespace Prisma {
     agentVersion?: string | null
     dockerVersion?: string | null
     lanIp?: string | null
+    macAddress?: string | null
     totalRamMB?: number | null
     freeDiskGB?: number | null
     lastSeenAt?: Date | string | null
@@ -41121,6 +41141,7 @@ export namespace Prisma {
     agentVersion?: NullableStringFieldUpdateOperationsInput | string | null
     dockerVersion?: NullableStringFieldUpdateOperationsInput | string | null
     lanIp?: NullableStringFieldUpdateOperationsInput | string | null
+    macAddress?: NullableStringFieldUpdateOperationsInput | string | null
     totalRamMB?: NullableIntFieldUpdateOperationsInput | number | null
     freeDiskGB?: NullableFloatFieldUpdateOperationsInput | number | null
     lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -41141,6 +41162,7 @@ export namespace Prisma {
     agentVersion?: NullableStringFieldUpdateOperationsInput | string | null
     dockerVersion?: NullableStringFieldUpdateOperationsInput | string | null
     lanIp?: NullableStringFieldUpdateOperationsInput | string | null
+    macAddress?: NullableStringFieldUpdateOperationsInput | string | null
     totalRamMB?: NullableIntFieldUpdateOperationsInput | number | null
     freeDiskGB?: NullableFloatFieldUpdateOperationsInput | number | null
     lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -41161,6 +41183,7 @@ export namespace Prisma {
     agentVersion?: string | null
     dockerVersion?: string | null
     lanIp?: string | null
+    macAddress?: string | null
     totalRamMB?: number | null
     freeDiskGB?: number | null
     lastSeenAt?: Date | string | null
@@ -41181,6 +41204,7 @@ export namespace Prisma {
     agentVersion?: NullableStringFieldUpdateOperationsInput | string | null
     dockerVersion?: NullableStringFieldUpdateOperationsInput | string | null
     lanIp?: NullableStringFieldUpdateOperationsInput | string | null
+    macAddress?: NullableStringFieldUpdateOperationsInput | string | null
     totalRamMB?: NullableIntFieldUpdateOperationsInput | number | null
     freeDiskGB?: NullableFloatFieldUpdateOperationsInput | number | null
     lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -41201,6 +41225,7 @@ export namespace Prisma {
     agentVersion?: NullableStringFieldUpdateOperationsInput | string | null
     dockerVersion?: NullableStringFieldUpdateOperationsInput | string | null
     lanIp?: NullableStringFieldUpdateOperationsInput | string | null
+    macAddress?: NullableStringFieldUpdateOperationsInput | string | null
     totalRamMB?: NullableIntFieldUpdateOperationsInput | number | null
     freeDiskGB?: NullableFloatFieldUpdateOperationsInput | number | null
     lastSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -43160,6 +43185,7 @@ export namespace Prisma {
     agentVersion?: SortOrder
     dockerVersion?: SortOrder
     lanIp?: SortOrder
+    macAddress?: SortOrder
     totalRamMB?: SortOrder
     freeDiskGB?: SortOrder
     lastSeenAt?: SortOrder
@@ -43185,6 +43211,7 @@ export namespace Prisma {
     agentVersion?: SortOrder
     dockerVersion?: SortOrder
     lanIp?: SortOrder
+    macAddress?: SortOrder
     totalRamMB?: SortOrder
     freeDiskGB?: SortOrder
     lastSeenAt?: SortOrder
@@ -43205,6 +43232,7 @@ export namespace Prisma {
     agentVersion?: SortOrder
     dockerVersion?: SortOrder
     lanIp?: SortOrder
+    macAddress?: SortOrder
     totalRamMB?: SortOrder
     freeDiskGB?: SortOrder
     lastSeenAt?: SortOrder

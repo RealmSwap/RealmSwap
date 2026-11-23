@@ -20,7 +20,11 @@ import { WAKE_LEAD_MS, type ScheduledStart } from "../wakePlan";
 const now = new Date("2026-11-10T12:00:00");
 const startAt = (hoursAhead: number, label = "Friday Night"): ScheduledStart => {
   const dueAt = new Date(now.getTime() + hoursAhead * 60 * 60_000);
-  return { dueAt, holdUntil: new Date(dueAt.getTime() + 30 * 60_000), serverId: "s1", serverName: "Srv", source: "automation", label };
+  return { dueAt, holdUntil: new Date(dueAt.getTime() + 30 * 60_000), serverId: "s1", serverName: "Srv", source: "automation", label, runnerType: "LOCAL", nodeMac: null };
+};
+const agentStartAt = (hoursAhead: number, serverId = "srv-agent"): ScheduledStart => {
+  const start = startAt(hoursAhead, "Node Night");
+  return { ...start, serverId, runnerType: "AGENT", nodeId: "node-1", nodeMac: "aa:bb:cc:dd:ee:ff" };
 };
 const wakeIso = (start: ScheduledStart) => new Date(start.dueAt.getTime() - WAKE_LEAD_MS).toISOString();
 
@@ -114,6 +118,35 @@ describe("syncWakeTask", () => {
     expect(sync.error).toMatch(/Access is denied/);
     expect(sync.registeredFor).toBeNull();
     expect(store.values.get("power.wakeTask")).toBeUndefined();
+  });
+});
+
+describe("syncWakeTask: agent-hosted starts", () => {
+  it("sends the magic packet once inside the wake window, deduped across ticks", async () => {
+    const wakeNodeFn = vi.fn(async () => true);
+    const start = agentStartAt(0.04); // ~2.4 min out: its wake moment just passed
+    await syncWakeTask(deps([start], { wakeNodeFn }));
+    expect(wakeNodeFn).toHaveBeenCalledTimes(1);
+    await syncWakeTask(deps([start], { wakeNodeFn })); // the minute loop, same moment
+    expect(wakeNodeFn).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not fire outside the wake window, for local starts, or while waking is off", async () => {
+    const wakeNodeFn = vi.fn(async () => true);
+    await syncWakeTask(deps([agentStartAt(2)], { wakeNodeFn })); // wake moment still minutes away
+    await syncWakeTask(deps([startAt(0.04)], { wakeNodeFn })); // local: no MAC to wake
+    expect(wakeNodeFn).not.toHaveBeenCalled();
+
+    await syncWakeTask(deps([agentStartAt(0.04, "srv-other")], { wakeNodeFn, wakeEnabled: async () => false }));
+    expect(wakeNodeFn).not.toHaveBeenCalled();
+  });
+
+  it("re-arms when nothing was sent (node already awake, packet failed)", async () => {
+    const wakeNodeFn = vi.fn(async () => false);
+    const start = agentStartAt(0.04, "srv-rearm");
+    await syncWakeTask(deps([start], { wakeNodeFn }));
+    await syncWakeTask(deps([start], { wakeNodeFn }));
+    expect(wakeNodeFn).toHaveBeenCalledTimes(2);
   });
 });
 

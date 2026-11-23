@@ -17,6 +17,14 @@ export interface ScheduledStart {
   source: "session" | "automation";
   /** Session title or automation name. */
   label: string;
+  /** "AGENT" starts live on a node: the dashboard still wakes itself (the Windows
+   *  task runs the WoL + start), but holding THIS PC awake for arrivals and the
+   *  running-server rules are the node's business. */
+  runnerType: string;
+  /** The node's Wake-on-LAN target, when the start runs on an agent. */
+  nodeMac: string | null;
+  /** Set when runnerType is "AGENT": the node hosting this server. */
+  nodeId?: string | null;
 }
 
 /** Wake this long before a start is due: resume from sleep, reconnect, let the scheduler tick. */
@@ -51,17 +59,14 @@ export function activeStartWindow(starts: ScheduledStart[], now: Date): Schedule
   );
 }
 
-/** Servers hosted on a remote node are that machine's business, not this PC's. */
-const ON_THIS_MACHINE = { runnerType: { not: "AGENT" } } as const;
-
 export async function loadScheduledStarts(now: Date = new Date()): Promise<ScheduledStart[]> {
   const since = new Date(now.getTime() - ARRIVAL_GRACE_MS);
   const until = new Date(now.getTime() + WAKE_HORIZON_MS);
   const starts: ScheduledStart[] = [];
 
   const sessions = await prisma.plannedSession.findMany({
-    where: { startTime: { gt: since, lt: until }, server: ON_THIS_MACHINE },
-    include: { server: { select: { id: true, name: true, autoStartLeadMinutes: true } } },
+    where: { startTime: { gt: since, lt: until } },
+    include: { server: { select: { id: true, name: true, autoStartLeadMinutes: true, runnerType: true, nodeId: true } } },
   });
   for (const session of sessions) {
     const leadMs = (session.server.autoStartLeadMinutes ?? 15) * 60_000;
@@ -72,17 +77,19 @@ export async function loadScheduledStarts(now: Date = new Date()): Promise<Sched
       serverName: session.server.name,
       source: "session",
       label: session.title,
+      runnerType: session.server.runnerType,
+      nodeId: session.server.nodeId,
+      nodeMac: null,
     });
   }
 
   const automations = await prisma.automation.findMany({
     where: {
       enabled: true,
-      server: ON_THIS_MACHINE,
       actions: { some: { type: "START_SERVER" } },
       OR: [{ nextRunAt: { gt: since, lt: until } }, { lastRunAt: { gt: since } }],
     },
-    include: { server: { select: { id: true, name: true } } },
+    include: { server: { select: { id: true, name: true, runnerType: true, nodeId: true } } },
   });
   for (const automation of automations) {
     // An upcoming (or due-but-not-yet-fired) run, and separately the run that
@@ -98,7 +105,24 @@ export async function loadScheduledStarts(now: Date = new Date()): Promise<Sched
         serverName: automation.server.name,
         source: "automation",
         label: automation.name,
+        runnerType: automation.server.runnerType,
+        nodeId: automation.server.nodeId,
+        nodeMac: null,
       });
+    }
+  }
+
+  // Attach the WoL targets for agent-hosted starts (nodeId is a plain column,
+  // no relation) — one lookup for whichever nodes are actually involved.
+  const nodeIds = Array.from(new Set(starts.filter((s) => s.nodeId).map((s) => s.nodeId!)));
+  if (nodeIds.length > 0) {
+    const nodes = await prisma.agentNode.findMany({
+      where: { id: { in: nodeIds } },
+      select: { id: true, macAddress: true },
+    });
+    const macById = new Map(nodes.map((n) => [n.id, n.macAddress]));
+    for (const start of starts) {
+      if (start.nodeId) start.nodeMac = macById.get(start.nodeId) ?? null;
     }
   }
 
