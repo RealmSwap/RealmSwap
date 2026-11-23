@@ -115,6 +115,20 @@ async function uninstallOnAgentNode(
     ]);
   } else if (game === "RUST") {
     await deleteNodePaths(serverId, [`rust-server/Oxide/plugins/${modId}.cs`]);
+  } else if (game === "WINDROSE") {
+    // Only the row's manifest knows which flat ~mods files are this mod's.
+    const names: string[] = (() => {
+      try {
+        const parsed = JSON.parse(installation.files ?? "[]");
+        return Array.isArray(parsed) ? parsed.filter((n: unknown) => typeof n === "string") : [];
+      } catch {
+        return [];
+      }
+    })();
+    await deleteNodePaths(
+      serverId,
+      names.map((n) => `windrose-server/R5/Content/Paks/~mods/${n}`),
+    );
   } else if (game === "MINECRAFT") {
     await deleteNodePaths(serverId, [`mods/${modId}.jar`]);
   } else if (game === "ZOMBOID") {

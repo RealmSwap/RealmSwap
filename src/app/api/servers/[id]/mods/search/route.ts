@@ -62,6 +62,10 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
       results = await umod.search(query, game, options);
     } else if (game === "SATISFACTORY") {
       results = await ficsit.search(query, game, options);
+    } else if (game === "WINDROSE") {
+      // The whole Windrose ecosystem is one CurseForge section (server-side
+      // pak mods); CURSEFORGE_API_KEY absence already yields an empty list.
+      results = await curseforge.search(query, game, options);
     } else {
       // Return empty results with a flag instead of a hard error —
       // the frontend shows a friendly "not supported yet" state

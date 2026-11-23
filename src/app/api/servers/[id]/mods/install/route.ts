@@ -14,7 +14,7 @@ import {
   installArkWorkshopMod, installVRisingThunderstore, installVRisingBepInexCore,
   ensureShimloaderCore, installPalworldThunderstore,
   ensureFicsitSml, installFicsitMod,
-  installTmlWorkshopMod,
+  installTmlWorkshopMod, installWindroseCurseforge,
 } from "@/lib/mods/installers";
 import { installOxideCore, installRustUmodPlugin } from "@/lib/mods/umod";
 import {
@@ -260,6 +260,16 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
           const result = await installFicsitMod({ serverId, satisfactoryDir, modId, versionNumber: version, warnings });
           dependencyCount = result.dependencyCount;
         }
+
+      } else if (game === "WINDROSE") {
+        const windroseDir = path.join(serverRoot, "windrose-server");
+        if (!fs.existsSync(path.join(windroseDir, "WindroseServer.exe"))) {
+          throw new Error("Windrose server is not installed yet — install the server before adding mods.");
+        }
+        if (modType !== "CURSEFORGE" || !modId) {
+          throw new Error("A CurseForge mod id is required for Windrose mods.");
+        }
+        await installWindroseCurseforge({ serverId, windroseDir, modId, version });
 
       } else {
         throw new Error(`Mods are not supported for game: ${server.game}`);

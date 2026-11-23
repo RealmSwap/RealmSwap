@@ -31,7 +31,7 @@ import {
   removeTmlEnabledMods, addTmlEnabledMods,
 } from "@/lib/mods/tml";
 import { fetchUmodPluginMeta, OXIDE_CORE_MARKER, oxidePluginsDir } from "@/lib/mods/umod";
-import { installPalworldThunderstore, installFicsitMod } from "@/lib/mods/installers";
+import { installPalworldThunderstore, installFicsitMod, removeWindroseFiles, windrosePaksDir, extractWindrosePakFiles } from "@/lib/mods/installers";
 import { getFicsitModByReference, getFicsitModVersion, pickFicsitServerDownload } from "@/lib/mods/ficsit";
 import {
   addZomboidWorkshopMod, removeZomboidWorkshopMod, zomboidServerIniPath,
@@ -64,11 +64,58 @@ export class UpdateResolutionError extends Error {
  * combination has no update path or the package is gone from the provider.
  */
 export async function resolveModUpdate(
-  installation: { provider: string; packageId: string; version: string; name?: string; workshopModId?: string | null },
+  installation: { provider: string; packageId: string; version: string; name?: string; workshopModId?: string | null; files?: string | null },
   game: string,
   serverId: string
 ): Promise<ResolvedModUpdate> {
   const serverRoot = path.join(dataRoot(), "local-servers", serverId);
+
+  // Windrose pak sets: newest release file wins; no MC version/loader
+  // machinery applies. The apply swaps the whole manifest — the new file may
+  // name its paks differently, and leftovers would double-mount.
+  if (installation.provider === "curseforge" && game === "WINDROSE") {
+    const modId = Number(installation.packageId);
+    if (!Number.isInteger(modId) || modId <= 0) {
+      throw new UpdateResolutionError(`'${installation.packageId}' is not a CurseForge mod id.`, 404);
+    }
+    const files = await getCurseForgeModFiles(modId);
+    const candidate = pickCompatibleCfFile(files, {});
+    if (!candidate) {
+      throw new UpdateResolutionError(`No installable CurseForge file found for '${installation.name ?? installation.packageId}'.`, 404);
+    }
+    const windroseDir = path.join(serverRoot, "windrose-server");
+    return {
+      newVersionNumber: candidate.displayName,
+      applyUpdate: async () => {
+        const tempZip = uniqueStagingZip(windroseDir, "windrose-update");
+        await downloadFile(curseForgeDownloadUrl(candidate), tempZip);
+        try {
+          removeWindroseFiles(windroseDir, installation.files);
+          const installed = extractWindrosePakFiles(new AdmZip(tempZip), windrosePaksDir(windroseDir));
+          if (installed.length === 0) {
+            throw new Error(
+              `'${candidate.displayName}' ships no pak files (.pak/.ucas/.utoc) — the installed set was removed; reinstall the previous version.`
+            );
+          }
+          await prisma.modInstallation.upsert({
+            where: { serverId_provider_packageId: { serverId, provider: "curseforge", packageId: installation.packageId } },
+            update: { files: JSON.stringify(installed) },
+            create: {
+              serverId, provider: "curseforge", packageId: installation.packageId,
+              version: candidate.displayName, name: installation.name ?? installation.packageId,
+              files: JSON.stringify(installed),
+            },
+          });
+        } finally {
+          try {
+            fs.unlinkSync(tempZip);
+          } catch {
+            // Staging cleanup is best-effort.
+          }
+        }
+      },
+    };
+  }
 
   if (installation.provider === "modrinth") {
     if (game !== "MINECRAFT") {

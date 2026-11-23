@@ -7,7 +7,7 @@ import {
 import {
   installMinecraftMod, installMinecraftCurseforge, installValheimThunderstore, installZomboidWorkshopMod,
   installVRisingThunderstore, installArkWorkshopMod, installFicsitMod, installTmlWorkshopMod, installTmlLoader,
-  installPalworldThunderstore, ensureShimloaderCore,
+  installPalworldThunderstore, ensureShimloaderCore, installWindroseCurseforge,
 } from "@/lib/mods/installers";
 import { SHIMLOADER_PACKAGE_ID } from "@/lib/mods/palworld";
 import { readTmlMarker, tmlInstallDir } from "@/lib/mods/tml";
@@ -242,6 +242,17 @@ export async function replayMods(args: ReplayCollectionArgs): Promise<number> {
         serverId, satisfactoryDir, modId: mod.packageId, versionNumber: mod.version, warnings,
       });
       dependencyCount += result.dependencyCount;
+    } else if (game === "WINDROSE") {
+      if (mod.provider !== "curseforge") {
+        throw new Error(`Realm entry '${mod.packageId}' uses provider '${mod.provider}', which Windrose doesn't support.`);
+      }
+      const windroseDir = path.join(serverRoot, "windrose-server");
+      if (!fs.existsSync(path.join(windroseDir, "WindroseServer.exe"))) {
+        throw new Error("Windrose server is not installed yet — install the server before importing mods.");
+      }
+      // mod.version carries the pinned file's displayName; Windrose packs
+      // install exactly (every published file stays downloadable).
+      await installWindroseCurseforge({ serverId, windroseDir, modId: mod.packageId, version: mod.version });
     } else {
       throw new Error(`Realm mod replay is not supported for game: ${game}`);
     }

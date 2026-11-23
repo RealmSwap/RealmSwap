@@ -164,6 +164,10 @@ npx tsx scripts/e2e-api/run.ts --tag all --only <scenarioId>   # one scenario (d
   newest-compatible file resolution) + update-pack's "already on the newest
   pack file" path. Self-skips when the app has no `CURSEFORGE_API_KEY`, so CI
   without the secret stays green; local runs with `.env` exercise it.
+- **mods/windrose-cf-search** — Windrose rides CurseForge search live (game
+  id 99078, its own mods class 10755): an uninstalled Windrose server row
+  searches `q=bigger stacks` and results come back CurseForge-tagged with
+  installable shape. Self-skips without the key, same as the pack scenario.
 
 The first run downloads the Minecraft `server.jar` (~55 MB) and provisions a
 Temurin JRE for the host platform (a side effect of the platform-aware

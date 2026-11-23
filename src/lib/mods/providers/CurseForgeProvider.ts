@@ -1,7 +1,7 @@
 import { ModProvider, ModSearchResult, SearchOptions } from "./types";
 import {
-  CURSEFORGE_GAME_IDS, CURSEFORGE_SORT_FIELDS, CURSEFORGE_CLASS_IDS, curseForgeApiKey,
-  searchCurseForgeMods, curseForgeCategoryId,
+  CURSEFORGE_GAME_IDS, CURSEFORGE_SORT_FIELDS, CURSEFORGE_CLASS_IDS, CURSEFORGE_MODS_CLASS_IDS,
+  curseForgeApiKey, searchCurseForgeMods, curseForgeCategoryId,
 } from "../curseforge";
 
 export class CurseForgeProvider implements ModProvider {
@@ -88,9 +88,10 @@ export class CurseForgeProvider implements ModProvider {
         offset: options?.offset,
         sortField,
         categoryId,
-        // Mods section only — without this, modpacks (and texture packs etc.)
-        // surface as regular mods and "install" as a useless zip in mods/.
-        classId: CURSEFORGE_CLASS_IDS.mods,
+        // Per-game "mods" section — the generic class 6 only exists for
+        // Minecraft (see CURSEFORGE_MODS_CLASS_IDS). A mapped game without a
+        // class entry searches unfiltered rather than returning nothing.
+        classId: CURSEFORGE_MODS_CLASS_IDS[game.toUpperCase()],
       });
 
       return data.map((mod) => ({

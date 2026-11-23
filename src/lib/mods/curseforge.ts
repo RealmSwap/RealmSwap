@@ -64,6 +64,8 @@ export interface CurseForgeFile {
   dependencies: CurseForgeFileDependency[];
   /** false = the author disabled third-party distribution */
   isAvailable: boolean;
+  /** 1 release, 2 beta, 3 alpha (absent on stale cached responses) */
+  releaseType?: number;
   /** alternates are dev/library artifacts, never install targets */
   isAlternate?: boolean;
   /** File size in bytes as reported by the API, when present. */
@@ -78,18 +80,34 @@ export interface CurseForgeDeps {
 
 const API = "https://api.curseforge.com/v1";
 
-/** Game ids verified live against /v1/games for this key (2026-10-24). */
+/** Game ids verified live against /v1/games for this key (MINECRAFT/
+ * PALWORLD/TERRARIA 2026-10-24, WINDROSE 2026-11-23). */
 export const CURSEFORGE_GAME_IDS: Record<string, number> = {
   MINECRAFT: 432,
   PALWORLD: 85196,
   TERRARIA: 431,
+  WINDROSE: 99078,
 };
 
 /** CFCore loader enum. */
 export const CURSEFORGE_LOADER_IDS = { forge: 1, fabric: 4, quilt: 5, neoforge: 6 } as const;
 
-/** CFCore class ids (top-level section filters for /mods/search). */
-export const CURSEFORGE_CLASS_IDS = { mods: 6, modpacks: 4471 } as const;
+/**
+ * Per-game "mods"-section class id for /mods/search, verified against
+ * /v1/categories per gameId. Only Minecraft publishes its mods under the
+ * generic class 6 — every other game has its own top-level class, and
+ * searching with the wrong classId silently returns zero results
+ * (e.g. Palworld used to get nothing out of CurseForge search for this).
+ */
+export const CURSEFORGE_MODS_CLASS_IDS: Record<string, number> = {
+  MINECRAFT: 6,
+  PALWORLD: 6830, // patch-pak-mods
+  TERRARIA: 4744, // mods (the other top-level class is maps)
+  WINDROSE: 10755,
+};
+
+/** CFCore class ids that are game-independent (top-level section filters). */
+export const CURSEFORGE_CLASS_IDS = { modpacks: 4471 } as const;
 
 /** CFCore sort-field enum (subset we expose). */
 export const CURSEFORGE_SORT_FIELDS = { featured: 1, popularity: 2, lastUpdated: 3, name: 4, totalDownloads: 6 } as const;
