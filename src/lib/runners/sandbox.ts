@@ -40,6 +40,14 @@ export function minecraftBootSucceeded(stdout: string): boolean {
 }
 
 /**
+ * RustDedicated prints this after the map has generated and every Oxide/uMod
+ * plugin has loaded — the Rust equivalent of Minecraft's Done line.
+ */
+export function rustBootSucceeded(stdout: string): boolean {
+  return /Server startup complete/.test(stdout);
+}
+
+/**
  * The java a Minecraft boot test runs on: the cached bundled JRE the real
  * start will use, falling back to PATH java for dev machines. The start path
  * never trusts PATH java (LocalRunner provisions via ensureJava), so a
@@ -82,12 +90,13 @@ export function minecraftBootArgs(serverDir: string): string[] {
 /**
  * Games whose sandbox test actually boots the server (vanilla Minecraft only
  * gets a vacuous pass when its exe is missing, and vanilla Terraria likewise).
- * ARK, RUST, PALWORLD, SATISFACTORY and VRISING have no sandbox launcher —
- * testServerBoot auto-passes them — so install/update messaging must not
- * claim a boot test happened for those.
+ * Every game with a mod pipeline now has a sandbox launcher — the five added
+ * here verify installs the same way the original four do. ENSHROUDED and
+ * WINDROSE have no mod surface (nothing to boot-test) and auto-pass; install
+ * messaging keys off this list so it never claims a boot test that didn't run.
  */
 export function hasRealBootTest(game: string): boolean {
-  return ["MINECRAFT", "VALHEIM", "ZOMBOID", "TERRARIA"].includes(game.toUpperCase());
+  return ["MINECRAFT", "VALHEIM", "ZOMBOID", "TERRARIA", "VRISING", "RUST", "PALWORLD", "SATISFACTORY", "ARK"].includes(game.toUpperCase());
 }
 
 /**
@@ -174,6 +183,61 @@ export async function testServerBoot(
       exePath = resolveSandboxJava(serverDir);
       args = minecraftBootArgs(serverDir);
       sandboxMs = readLoaderMarker(serverDir) ? 600000 : 90000;
+    } else if (game === "VRISING") {
+      // Mirrors the real launch args (builtins) but pins -saveName to a
+      // sandbox-only world, so the boot test never loads or autosaves the
+      // player's world1 — BepInEx and every Thunderstore plugin load before
+      // world init, which is exactly the damage a bad install does.
+      const root = path.join(serverDir, "vrising-server");
+      try { fs.mkdirSync(path.join(root, "save-data"), { recursive: true }); } catch { /* the close handler reports it */ }
+      exePath = path.join(root, "VRisingServer.exe");
+      args = ["-persistentDataPath", "./save-data", "-serverName", "SandboxTest", "-saveName", "sandboxtest"];
+      sandboxMs = 120000;
+    } else if (game === "RUST") {
+      // Mirrors the real launch args (builtins) but pins a small world and a
+      // sandbox-only identity, so map gen is quick and no save data lands in
+      // the real server/servertest dir. The verdict waits for "Server startup
+      // complete" — Oxide plugins load before it, so a broken plugin fails
+      // the test instead of the player's first start.
+      exePath = path.join(serverDir, "rust-server", "RustDedicated.exe");
+      args = [
+        "-batchmode", "+server.port", "28035", "+server.identity", "sandboxtest",
+        "+server.seed", "1337", "+server.worldsize", "1000", "+server.maxplayers", "5",
+        "+server.hostname", "SandboxTest", "+rcon.port", "28036", "+rcon.password", "sandboxtest", "+rcon.web", "1",
+      ];
+      sandboxMs = 300000;
+    } else if (game === "PALWORLD") {
+      // Mirrors the real launch args (builtins) on a port the real server
+      // doesn't use. The game exposes no save-dir override, so this boots in
+      // place like ZOMBOID does — UE4SS/shimloader paks load at boot, which is
+      // the damage a bad install does, and the installer's snapshot/rollback
+      // already guards the files.
+      exePath = path.join(serverDir, "palworld-server", "PalServer.exe");
+      args = ["?port=8219?players=4", "-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS"];
+      sandboxMs = 120000;
+    } else if (game === "SATISFACTORY") {
+      // Mirrors the real launch args (builtins). The dedicated server boots to
+      // its idle ready state without loading a world (sessions are claimed via
+      // the server API), so surviving the window with no crash is the verdict;
+      // SML/ficsit mods load before it, which is the damage a bad install
+      // does. Cold asset loads run minutes — the window fits a first boot.
+      exePath = path.join(serverDir, "satisfactory-server", "FactoryServer.exe");
+      args = ["-log", "-unattended"];
+      sandboxMs = 240000;
+    } else if (game === "ARK") {
+      // Mirrors the real launch args (builtins, minus the password variant —
+      // the sandbox session needs no password) on ports the real server
+      // doesn't use. -automanagemods makes the server fetch its own workshop
+      // mods at boot, so a broken workshop item fails HERE with the server's
+      // own output. First boots of TheIsland with a heavy mod list are slow;
+      // the window is generous and the installer's snapshot/rollback covers a
+      // timeout safely.
+      exePath = path.join(serverDir, "ark-server", "ShooterGame", "Binaries", "Win64", "ShooterGameServer.exe");
+      args = [
+        "TheIsland?SessionName=SandboxTest?Port=7779?QueryPort=27019?MaxPlayers=10",
+        "-server", "-nosound", "-QueryPort=27019", "-automanagemods", "-log",
+      ];
+      sandboxMs = 600000;
     } else {
       // Game not supported for sandbox testing, just assume it works
       return resolve(true);
@@ -197,6 +261,14 @@ export async function testServerBoot(
     let stderrData = "";
     let settled = false;
     const isMinecraft = game === "MINECRAFT";
+    // Games with a confirmed ready line (Minecraft's Done line, Rust's
+    // "Server startup complete"): reaching it is the verdict — any exit or a
+    // window expiry before it fails. The other sandboxed games are survival
+    // games: a non-zero exit fails, surviving the window passes (the pattern
+    // VALHEIM and ZOMBOID ship on).
+    const bootSignal = isMinecraft
+      ? minecraftBootSucceeded
+      : game === "RUST" ? rustBootSucceeded : null;
     // A booting Minecraft server logs nearly continuously; total output
     // silence means the JVM wedged (live: a mod's init exception froze the
     // process with 0ms CPU while the whole window ticked away). Fail the
@@ -241,7 +313,7 @@ export async function testServerBoot(
       if (onLine) for (const line of text.split(/\r?\n/)) if (line.trim()) onLine(line);
       // A successful boot ends the test immediately — no reason to burn the
       // rest of the window (or the machine's RAM on world gen).
-      if (isMinecraft && minecraftBootSucceeded(stdoutData)) succeed();
+      if (bootSignal && bootSignal(stdoutData)) succeed();
     });
 
     proc.stderr.on("data", (data) => {
@@ -285,14 +357,14 @@ export async function testServerBoot(
 
     proc.on("close", (code) => {
       if (settled) return;
-      if (isMinecraft) {
-        // ANY exit before the Done line fails the test. A clean exit-0 was
+      if (bootSignal) {
+        // ANY exit before the ready line fails the test. A clean exit-0 was
         // left pending here until the whole window expired — the install sat
         // "hung" for up to ten minutes after the process was already gone
         // (the EULA prompt exits 0; so do several loader config fatals).
         fail(
           code === 0 || code === null
-            ? "The server exited (code " + (code ?? "null") + ") before reaching a successful boot — no Done line."
+            ? "The server exited (code " + (code ?? "null") + ") before reaching a successful boot — no ready line."
             : `Server crashed immediately with exit code ${code}.`
         );
       } else if (code !== null && code !== 0) {
@@ -326,10 +398,10 @@ export async function testServerBoot(
     }
     setTimeout(async () => {
       if (settled) return;
-      if (isMinecraft) {
+      if (bootSignal) {
         fail(
-          `Minecraft server did not reach a successful boot within ${Math.round(sandboxMs / 1000)}s.` +
-            (stdoutData ? " If this is a heavy modpack on a slow machine, it may genuinely need longer — the output below shows how far it got." : "")
+          `The server did not reach a successful boot within ${Math.round(sandboxMs / 1000)}s.` +
+            (isMinecraft && stdoutData ? " If this is a heavy modpack on a slow machine, it may genuinely need longer — the output below shows how far it got." : "")
         );
       } else {
         settled = true;

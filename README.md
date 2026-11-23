@@ -4,7 +4,7 @@
 
 RealmSwap is a free, locally-hosted game server manager for your gaming PC or home machine. Pick a game, click deploy, and share one invite — your friends join, and the mods their client needs download themselves. No rent, no queues, no oversold nodes, and your world never locks behind a lapsed subscription.
 
-**Mod installs are boot-tested before you see "success" — live today for Minecraft, Valheim, Project Zomboid, and Terraria, with more games on the way.** For those games, RealmSwap installs the modpack into a sandbox, actually boots the server, and only then calls it done — a bad mod, missing dependency, or wrong loader rolls the server back automatically instead of leaving you with a world that won't start.
+**Mod installs are boot-tested before you see "success" — live for every moddable game: Minecraft, Valheim, Project Zomboid, Terraria, V Rising, Rust, Palworld, Satisfactory, and ARK.** For those games, RealmSwap installs the modpack into a sandbox, actually boots the server, and only then calls it done — a bad mod, missing dependency, or wrong loader rolls the server back automatically instead of leaving you with a world that won't start.
 
 <p align="center">
   <a href="docs/demo/realmswap-demo.mp4">
@@ -35,7 +35,7 @@ One-click deployment out of the box:
 ## Key Features
 
 ### Mods that actually work
-- **Verified installs**: every mod install, update, and modpack import runs snapshot → install → auto-rollback, with the **sandbox boot test** live for **Minecraft, Valheim, Project Zomboid, and Terraria** today (more games on the way). Broken installs fail loudly with the server's own boot output — never a silent "success" that doesn't load.
+- **Verified installs**: every mod install, update, and modpack import runs snapshot → install → auto-rollback, with the **sandbox boot test** live for **all nine moddable games** (Minecraft, Valheim, Project Zomboid, Terraria, V Rising, Rust, Palworld, Satisfactory, ARK). Broken installs fail loudly with the server's own boot output — never a silent "success" that doesn't load.
 - **All the loaders**: Fabric, Forge, NeoForge, and Quilt install in one click (and modpacks pin the right one automatically).
 - **CurseForge + Modrinth + Thunderstore + Steam Workshop**: search, one-click install with automatic dependency resolution, real versions, and per-mod updates. Modpack imports for `.mrpack` (Modrinth) and CurseForge manifests.
 - **Client-mod handling**: client-only mods are detected and excluded from servers instead of crashing your boot, and problem jars are quarantined and retried for you.
@@ -120,4 +120,5 @@ Contributions are welcome — branch off `main` and open a pull request. Current
 - **Community game-definition marketplace listings** — first-class browse/review for shared game definitions (the safety gate, consent step, and file sharing already shipped)
 - **Windows code signing** — the build pipeline signs automatically once an Azure Artifact Signing account or certificate is configured (see `docs/code-signing.md`; releases already publish SHA256 checksums)
 - **Docker container abstractions** for true cross-platform hosting
+- **CurseForge mod support for Windrose** — the ecosystem exists (Windrose has an official CurseForge section with native server-side pak mods, installed into `R5/Content/Paks/~mods/`), but the integration needs Windrose's numeric CurseForge game id (the `/games` API endpoint is partner-gated, so it can't be auto-discovered) and an end-to-end pass against a real Windrose server
 - More game definitions — the least-served games first

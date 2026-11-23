@@ -25,13 +25,21 @@ function syncAuthToken(secret: string, method: string, pathname: string): string
 }
 
 function lanAddress(): { ip: string; port: number } | null {
+  // Interface order is OS-arbitrary: on Windows a Tailscale adapter can hold a
+  // link-local 169.254.* address first — the sync route's SSRF guard rejects
+  // exactly those, so the join must skip link-local and prefer a private
+  // range (virtual WSL/VMware adapters come last as a fallback).
   const ifaces = os.networkInterfaces();
+  const ips: string[] = [];
   for (const list of Object.values(ifaces)) {
     for (const iface of list ?? []) {
-      if (iface.family === "IPv4" && !iface.internal) return { ip: iface.address, port: 3001 };
+      if (iface.family === "IPv4" && !iface.internal) ips.push(iface.address);
     }
   }
-  return null;
+  const usable = ips.filter((ip) => !/^169\.254\./.test(ip));
+  const privateIp = usable.find((ip) => /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(ip));
+  const ip = privateIp ?? usable[0];
+  return ip ? { ip, port: 3001 } : null;
 }
 
 async function portClosed(port: number): Promise<boolean> {

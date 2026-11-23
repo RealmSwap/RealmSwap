@@ -24,7 +24,11 @@ function readRealmJson(bytes: Buffer): any {
   try {
     const tarPath = path.join(dir, "export.realm");
     fs.writeFileSync(tarPath, bytes);
-    execFileSync("tar", ["-xzf", tarPath, "-C", dir]);
+    // --force-local + forward slashes: Git Bash's GNU tar reads "C:..." as
+    // host:path otherwise (Windows bsdtar accepts both forms).
+    const forceLocal = process.platform === "win32" ? ["--force-local"] : [];
+    const fwd = (p: string) => p.split("\\").join("/");
+    execFileSync("tar", [...forceLocal, "-xzf", fwd(tarPath), "-C", fwd(dir)]);
     return JSON.parse(fs.readFileSync(path.join(dir, "realm.json"), "utf8"));
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });

@@ -7,7 +7,7 @@
 import fs from "fs";
 import path from "path";
 import https from "https";
-import { execFile } from "child_process";
+import { execFile, spawnSync } from "child_process";
 import AdmZip from "adm-zip";
 import { computePercent } from "@/lib/downloadProgress";
 
@@ -89,6 +89,26 @@ export interface EnsureJavaOpts {
 export interface EnsureJavaDeps {
   exists?: (p: string) => boolean;
   provision?: (major: number, cacheDir: string, opts: EnsureJavaOpts) => Promise<void>;
+  /** Probe a launcher: true when `java -version` runs. Defaults to spawnSync. */
+  validate?: (javaExe: string) => boolean;
+  /** Remove a corrupt cache dir. Defaults to fs.rmSync recursive+force. */
+  remove?: (dir: string) => void;
+}
+
+/**
+ * A corrupt cached runtime poisons every later start: the existence-only cache
+ * lookup short-circuits forever (seen live 2026-11-19 — a partial provision
+ * from October sat in the e2e cache dir and crashed every MC boot since).
+ * `java -version` costs ~100ms and catches partial extractions, wrong-platform
+ * artifacts, and AV-quarantined files; the caller wipes and re-provisions.
+ */
+function probeJava(javaExe: string): boolean {
+  try {
+    const res = spawnSync(javaExe, ["-version"], { timeout: 15000, encoding: "utf8" });
+    return res.status === 0;
+  } catch {
+    return false;
+  }
 }
 
 /** Absolute path to the cached bundled JRE's java launcher for a major version, or
@@ -118,12 +138,20 @@ export async function ensureJava(
 ): Promise<string> {
   const exists = deps.exists ?? fs.existsSync;
   const provision = deps.provision ?? defaultProvision;
+  const validate = deps.validate ?? probeJava;
+  const remove = deps.remove ?? ((dir: string) => fs.rmSync(dir, { recursive: true, force: true }));
   const cacheDir = path.join(opts.dataRoot, "runtimes", `jdk-${major}`);
   const cached = cachedJavaExe(major, opts.dataRoot, exists, opts.platform);
 
-  if (cached) {
+  if (cached && validate(cached)) {
     opts.onLog?.(`Using cached Java ${major} runtime.`);
     return cached;
+  }
+  if (cached) {
+    opts.onLog?.(
+      `Cached Java ${major} runtime is present but failed to run — wiping the corrupt cache and re-provisioning.`
+    );
+    remove(cacheDir);
   }
 
   opts.onLog?.(`Java ${major} runtime not found. Downloading…`);
@@ -132,6 +160,12 @@ export async function ensureJava(
   const provisioned = cachedJavaExe(major, opts.dataRoot, exists, opts.platform);
   if (!provisioned) {
     throw new Error(`Java ${major} runtime did not contain ${javaExeRelPath(opts.platform)} after extraction.`);
+  }
+  if (!validate(provisioned)) {
+    remove(cacheDir);
+    throw new Error(
+      `Java ${major} runtime was downloaded but its launcher failed to run — the corrupt download was cleared; try starting again.`
+    );
   }
   return provisioned;
 }

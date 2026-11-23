@@ -96,12 +96,26 @@ describe("agent timingSafeEqualHex", () => {
   });
 });
 
-import { buildTarArgs, installStagedTree } from "../lib";
+import { buildTarArgs, extractTarArgs, installStagedTree } from "../lib";
 
-describe("agent buildTarArgs", () => {
-  it("roots the archive at baseDir", () => {
+describe("agent buildTarArgs / extractTarArgs", () => {
+  const fwd = (p: string) => p.split("\\").join("/");
+
+  (process.platform !== "win32" ? it : it.skip)("roots the archive at baseDir", () => {
     expect(buildTarArgs("/data", ["srv/world"], "/tmp/out.tar")).toEqual([
       "-cf", "/tmp/out.tar", "-C", "/data", "srv/world",
+    ]);
+  });
+
+  // Windows form (Git Bash GNU tar): --force-local keeps "C:..." from being
+  // read as host:path, forward slashes survive bsdtar too — mirrors
+  // dashboard backupService.systemTarArgs.
+  (process.platform === "win32" ? it : it.skip)("uses --force-local and forward slashes on Windows", () => {
+    expect(buildTarArgs("C:\\data", ["srv\\world"], "C:\\tmp\\out.tar")).toEqual([
+      "--force-local", "-cf", "C:/tmp/out.tar", "-C", "C:/data", "srv\\world",
+    ]);
+    expect(extractTarArgs("C:\\state\\restore.tar", "C:\\data\\world.staging")).toEqual([
+      "--force-local", "-xf", "C:/state/restore.tar", "-C", "C:/data/world.staging",
     ]);
   });
 });

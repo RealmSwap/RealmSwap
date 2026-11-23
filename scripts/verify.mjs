@@ -160,10 +160,12 @@ function runStage(stages, id, cmd, args, opts = {}) {
     console.log(`\n[verify] ▶ ${id}: ${cmd} ${args.join(" ")}`);
     const t0 = Date.now();
     // Streams by default (long stages stay live); template-db captures so its
-    // success marker is assertable.
+    // success marker is assertable. Windows resolves npx/npm through .cmd
+    // shims, which spawnSync can only exec through a shell.
+    const shell = process.platform === "win32";
     const res = opts.capture
-      ? spawnSync(cmd, args, { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"], encoding: "utf8", maxBuffer: 8 * 1024 * 1024 })
-      : spawnSync(cmd, args, { cwd: ROOT, stdio: "inherit" });
+      ? spawnSync(cmd, args, { cwd: ROOT, stdio: ["ignore", "pipe", "pipe"], encoding: "utf8", maxBuffer: 8 * 1024 * 1024, shell })
+      : spawnSync(cmd, args, { cwd: ROOT, stdio: "inherit", shell });
     const ms = Date.now() - t0;
     if (opts.capture && res.stdout) process.stdout.write(res.stdout);
     if (opts.capture && res.stderr) process.stderr.write(res.stderr);
