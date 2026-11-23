@@ -2,7 +2,7 @@
  * API e2e harness entry point (Layer 1 of the zero-human test plan).
  *
  *   npm run e2e:api            # @smoke scenarios — every PR
- *   npm run e2e:api:heavy      # + @heavy scenarios (real installs) — nightly
+ *   npm run e2e:api:heavy      # + @heavy scenarios (real installs) — on demand
  *   npx tsx scripts/e2e-api/run.ts --tag all --only <scenarioId>   # one scenario (debugging)
  *
  * Boots the production server on :3100 against a throwaway DB + data dir with

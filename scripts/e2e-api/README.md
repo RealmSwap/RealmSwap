@@ -7,7 +7,7 @@ cookies, game-server processes, filesystem moves, and ports.
 
 ```bash
 npm run e2e:api          # @smoke — every PR (~5-10 min; CI runs this on ubuntu)
-npm run e2e:api:heavy    # + @heavy scenarios (real installs) — nightly
+npm run e2e:api:heavy    # + @heavy scenarios (real installs) — on demand
 npx tsx scripts/e2e-api/run.ts --tag all --only <scenarioId>   # one scenario (debugging)
 ```
 
@@ -129,7 +129,7 @@ npx tsx scripts/e2e-api/run.ts --tag all --only <scenarioId>   # one scenario (d
   (flat 404 even unauthenticated), system metrics/docker-status, and the
   internal-token shutdown (stops services, not the app — asserted).
 
-## What the heavy scenarios prove (nightly / `npm run e2e:api:heavy`)
+## What the heavy scenarios prove (`npm run e2e:api:heavy`)
 
 - **games/all-games-crud** — every built-in definition (all 11 games) gets a
   real create through POST /api/servers, asserted against its own spec from
