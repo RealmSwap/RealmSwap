@@ -2,7 +2,7 @@
  * gui/mods-install-progress (@heavy) — a real loader + Modrinth install driven
  * entirely through the ModsView, asserting the SSE-driven InstallProgressPanel
  * reaches its "Done" stage twice and the Installed tab reflects the result.
- * Live network; nightly only (the @smoke GUI pass stays offline-capable).
+ * Live network; heavy tier only, on demand (the @smoke GUI pass stays offline-capable).
  *
  * Ground truth (2026-11-02, nightly runs):
  * - The Browse surface opens in Modpacks mode for Minecraft (the pack gallery

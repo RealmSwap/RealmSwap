@@ -1,6 +1,6 @@
 ---
 name: verify
-description: "One entry point for full functional verification of this repo: npm run verify locally, the nightly heavy matrix in CI, and the Windows PC smoke after a release. Use when the user says 'verify', 'run the full checks', 'is everything green', 'pre-merge checks', 'release checks', or asks what testing exists; also use before claiming a risky change is done."
+description: "One entry point for full functional verification of this repo: npm run verify locally, the heavy e2e tier on demand, and the Windows PC smoke after a release. Use when the user says 'verify', 'run the full checks', 'is everything green', 'pre-merge checks', 'release checks', or asks what testing exists; also use before claiming a risky change is done."
 trigger: /verify
 ---
 
@@ -11,12 +11,15 @@ verification is three things, in order of cost:
 
 1. **`npm run verify`** — local, ~15 min. The every-PR tier. Run this before
    claiming any non-trivial change is done.
-2. **A green nightly** — the "Nightly Heavy" GitHub workflow runs the @heavy
-   tier (real loader installs + boots, the full ATM10/Adrenaline pack
+2. **The heavy tier on demand** — `npm run verify:heavy` (or
+   `npm run e2e:api:heavy` / `e2e:gui:heavy` directly) runs the @heavy
+   scenarios (real loader installs + boots, the full ATM10/Adrenaline pack
    pipeline, CurseForge pack, bot boot, all-11-games CRUD sweep, GUI-driven
-   Modrinth install, and the full Windows smoke incl. auto-update proof) on
-   the default branch every night at 08:30 UTC. Check it after merging
-   anything the heavy tier touches. Manual run: `gh workflow run nightly.yml`.
+   Modrinth install). Run it after merging (or before merging) anything the
+   heavy tier touches. The **Windows Smoke** workflow
+   (`gh workflow run windows-smoke.yml`) covers the installer + real MC boot
+   on NTFS + auto-update proof; it also runs automatically after each
+   Release.
 3. **`npm run e2e:win:pc` on a real Windows PC** — after each release cut.
    The only surface a CI VM can't see: UPnP against the real router, external
    reachability, playit tunnel on the real network, full ATM10 on NTFS,
@@ -53,11 +56,9 @@ the summary table, never silently. Report JSON:
 
 - **CI** — every push/PR: vitest, Playwright @public, api-e2e @smoke (real MC
   boot), gui-e2e @smoke.
-- **Windows Smoke** — every PR touching it + after every Release: installer
-  silent-install, real MC boot on NTFS, playit tunnel (when
-  `PLAYIT_AGENT_SECRET` is set), release-artifact auto-update proof. Also
-  called nightly.
-- **Nightly Heavy** — the matrix above, nightly + dispatch.
+- **Windows Smoke** — every PR touching it + after every Release + manual
+  dispatch: installer silent-install, real MC boot on NTFS, playit tunnel
+  (when `PLAYIT_AGENT_SECRET` is set), release-artifact auto-update proof.
 - The **route-ledger guard** (`src/app/api/__tests__/routeLedger.test.ts`)
   fails CI when a new API route ships without a harness entry in
   `scripts/e2e-api/routes-ledger.json` — coverage can't silently rot.

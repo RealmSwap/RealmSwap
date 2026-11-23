@@ -109,7 +109,7 @@ npm run electron:dev   # desktop app
 - **Mods engine**: provider abstraction (Modrinth / CurseForge / Thunderstore / Steam Workshop), dependency BFS resolution, jar-manifest loader detection, sandbox boot testing with bundled JDK
 - **RealmSync engine**: HTTP invite server serving a signed, HMAC-authenticated manifest + config bundle to joining players
 - **Connectivity**: automated playit.gg agent management (claim → tunnel → live address), zero-dependency UPnP client with lease renewal, LAN fallback
-- **Verification ladder**: `npm run verify` — typecheck, ~1,500 unit tests, an API e2e harness that exercises every route (including real Minecraft server boots), Electron GUI e2e, and a Playwright suite over the public surface. A nightly matrix adds the heavy scenarios and a Windows release smoke that installs real released artifacts and proves the auto-update path end to end.
+- **Verification ladder**: `npm run verify` — typecheck, ~1,500 unit tests, an API e2e harness that exercises every route (including real Minecraft server boots), Electron GUI e2e, and a Playwright suite over the public surface. The heavy e2e tier (`npm run e2e:api:heavy`) runs on demand, and a Windows smoke installs real released artifacts and proves the auto-update path end to end after each release.
 
 ## Roadmap & Contributing
 
